@@ -167,6 +167,34 @@ bun eval/score.ts --port 8001   # needs a laya-serve sidecar
 The corpus is whatever sessions are on the machine, so absolute numbers will
 differ. The comparison is what matters, and `eval/baseline.ts` prints it.
 
+## What is verified, and how
+
+Being precise about this, because "it compiles" is not evidence.
+
+| Claim | How |
+|---|---|
+| Scoring beats the model it replaces | 721 labelled calls, held out by session: AUC 0.918 vs 0.694 (`eval/`) |
+| States never overflow the checkpoint | asserted for outputs from 0 to 2,000,000 chars |
+| No orphaned `tool_use`/`tool_result` survives | the hook run over a **real** session from disk; an orphan is rejected by the API and would break the session compaction was meant to save |
+| User and assistant prose is never touched | same real-session test |
+| A dead sidecar never breaks a session | falls back to the built-in summary; asserted |
+| One failed request never deletes anything | that call is kept; asserted |
+| The Codex plugin works against the server | `jev-compact`'s own parser, pairing, scorer and HTTP client, driven over its recorded Codex rollout fixture, produce discriminating scores |
+| The plugin loads in a real engine | `claude --plugin-dir .` with function hooks on |
+| `turn.complete` fires and requests compaction | verified live: the hook was invoked in a real session, `$.session.usage()` returned a real percentage, and `$.session.compact()` was called |
+
+**Not verified:** the engine invoking `session.compact` *in a live session* and
+accepting the replacement message list. Forcing it needs genuine context
+pressure — at 5-31% full the engine correctly declines to compact, and `/compact`
+is a CLI command the model cannot invoke. Everything that handler does is covered
+by the real-session test above; what is untested is the engine-side handoff,
+which is the same API the upstream uses. To close it: open a session with
+`CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude --plugin-dir .`, work until the
+context bar is well along, then type `/compact` — the toast reports the reduction
+and every decision lands in the log.
+
+Also unverified: a live Codex CLI, which needs >= 0.155 (this machine has 0.131).
+
 ## Development
 
 ```sh
