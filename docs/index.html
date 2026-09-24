@@ -18,7 +18,7 @@
   --rule-firm:  oklch(0.760 0.010 45);
   --ink:        oklch(0.245 0.012 45);
   --ink-2:      oklch(0.430 0.011 45);
-  --ink-3:      oklch(0.520 0.010 45);
+  --ink-3:      oklch(0.470 0.010 45);
   /* The one accent. Measured values and honesty markers only. */
   --accent:     oklch(0.505 0.168 38);
   --accent-ink: oklch(0.395 0.140 38);
@@ -94,6 +94,7 @@ a:hover{ color: var(--accent); }
   text-decoration:none; padding-block: 6px; border-bottom: 1px solid transparent;
 }
 .contents a:hover{ color: var(--accent-ink); border-bottom-color: var(--accent); }
+.contents a[aria-current="true"]{ color: var(--ink); border-bottom-color: var(--ink); }
 
 /* ── sections ─────────────────────────────────────────────────────────── */
 section{ scroll-margin-top: var(--space-lg); padding-block: clamp(var(--space-xl), 4.5vw, var(--space-3xl)); border-top: 1px solid var(--rule); }
@@ -138,7 +139,7 @@ table.rows caption{ text-align:left; }
 
 .track{ position:relative; height: 34px; background: var(--paper-sunk); }
 .track::before{ /* the chance baseline, at x=0 of our 0.5..1.0 domain */
-  content:""; position:absolute; inset-block:0; left:0; width:2px; background: var(--rule-firm);
+  content:""; position:absolute; inset-block:0; left:0; width:2px; background: var(--ink-3);
 }
 .bar{
   position:absolute; top: 5px; height: 15px; left:0; width: var(--w);
@@ -273,7 +274,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p class="label">Result</p>
   <h2>It replaces a neural model that it beat.</h2>
   <p class="lede">
-    The plugin started as a port onto <a href="https://github.com/NandhaKishorM/laya">Laya</a>,
+    The plugin started as a port onto <a rel="noopener" href="https://github.com/NandhaKishorM/laya">Laya</a>,
     a 322M-parameter decision model that runs locally. Measured against 1,063 tool calls
     labelled from 18 real sessions, a thirteen-coefficient logistic regression over facts
     already computed for free beat every Laya checkpoint and question wording.
@@ -485,10 +486,12 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 <section class="wrap" id="install">
   <p class="label">Install</p>
   <h2>Function hooks are early access, so turn them on first.</h2>
+  <p class="lede">Needs Claude Code 2.1.274 or newer, where function hooks exist. On an older
+     build the plugin installs and silently never runs, so check <code>claude --version</code> first.</p>
   <div class="cmd">
     <div class="cmd__head">
-      <p class="label">shell</p>
-      <button class="copy" type="button" data-copy>Copy</button>
+      <p class="label">shell — copy all four lines</p>
+      <button class="copy" type="button" data-copy aria-live="polite">Copy</button>
     </div>
     <pre><code id="cmd-text">export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
 
@@ -505,24 +508,56 @@ claude plugin install laya-compact@laya-compact</code></pre>
 
 <footer class="wrap">
   <p>
-    A derivative of <a href="https://github.com/tamaratran/fast-jev-compaction">tamaratran/fast-jev-compaction</a>
-    and <a href="https://github.com/fatelei/jev-compact">fatelei/jev-compact</a>, both MIT, which do this
+    A derivative of <a rel="noopener" href="https://github.com/tamaratran/fast-jev-compaction">tamaratran/fast-jev-compaction</a>
+    and <a rel="noopener" href="https://github.com/fatelei/jev-compact">fatelei/jev-compact</a>, both MIT, which do this
     with TypeSafe’s hosted Jev model. Laya is Apache-2.0. This is MIT, by
-    <a href="https://github.com/AxeForging">AxeForging</a>:
-    <a href="https://github.com/AxeForging/laya-compact">source and the full evaluation</a>.
+    <a rel="noopener" href="https://github.com/AxeForging">AxeForging</a>:
+    <a rel="noopener" href="https://github.com/AxeForging/laya-compact">source and the full evaluation</a>.
   </p>
 </footer>
 
 <script>
-document.querySelector('[data-copy]')?.addEventListener('click', async (e) => {
-  const button = e.currentTarget;
+const command = document.getElementById('cmd-text');
+
+document.querySelector('[data-copy]')?.addEventListener('click', async (event) => {
+  const button = event.currentTarget;
+  const restore = () => { button.textContent = 'Copy'; delete button.dataset.done; };
   try {
-    await navigator.clipboard.writeText(document.getElementById('cmd-text').textContent.trim());
+    await navigator.clipboard.writeText(command.textContent.trim());
     button.textContent = 'Copied';
     button.dataset.done = '1';
-    setTimeout(() => { button.textContent = 'Copy'; delete button.dataset.done; }, 2000);
-  } catch { button.textContent = 'Press ⌘C'; setTimeout(() => { button.textContent = 'Copy'; }, 2000); }
+    setTimeout(restore, 2000);
+  } catch {
+    // Clipboard refused (insecure origin, or permission denied). Select the
+    // command so the keyboard shortcut works, rather than only apologising.
+    const range = document.createRange();
+    range.selectNodeContents(command);
+    const selection = getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    button.textContent = 'Selected — press Ctrl/⌘C';
+    button.dataset.done = '1';
+    setTimeout(restore, 4000);
+  }
 });
+
+// Report which section is being read, in the contents row.
+const links = [...document.querySelectorAll('.contents a')];
+const sections = links.map((a) => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+if ('IntersectionObserver' in window && sections.length) {
+  const seen = new Map();
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) seen.set(entry.target, entry.intersectionRatio);
+    let best = null;
+    let ratio = 0;
+    for (const [element, value] of seen) if (value > ratio) { ratio = value; best = element; }
+    links.forEach((a) => {
+      const active = best !== null && a.getAttribute('href') === '#' + best.id;
+      if (active) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+    });
+  }, { threshold: [0, 0.15, 0.4, 0.75, 1] });
+  sections.forEach((section) => observer.observe(section));
+}
 </script>
 </body>
 </html>
