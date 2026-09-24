@@ -1,0 +1,60 @@
+{
+  "name": "laya-compact",
+  "version": "0.1.0",
+  "description": "Local, offline context compaction: scores every tool call and keeps only what is still needed verbatim. No API key.",
+  "author": {
+    "name": "laya-compact contributors"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/tamaratran/fast-jev-compaction",
+  "userConfig": {
+    "scorer": {
+      "type": "string",
+      "title": "Scorer",
+      "description": "features = built-in logistic model, no network (measured AUC 0.918). laya = a local laya-serve sidecar (measured AUC 0.694 zero-shot; use only with a checkpoint fine-tuned on your own sessions).",
+      "default": "features"
+    },
+    "layaUrl": {
+      "type": "string",
+      "title": "Laya sidecar URL",
+      "description": "Only used when scorer = laya.",
+      "default": "http://127.0.0.1:8000/v1/systemone"
+    },
+    "keepThreshold": {
+      "type": "number",
+      "title": "Keep threshold",
+      "description": "Minimum probability that a tool call or its result is still needed; below it the item is dropped. Lower keeps more.",
+      "default": 0.5
+    },
+    "preserveRecentMessages": {
+      "type": "number",
+      "title": "Recent messages to preserve",
+      "description": "Newest messages pinned from compaction; the first message is always kept.",
+      "default": 6
+    },
+    "compactAtPercent": {
+      "type": "number",
+      "title": "Compaction percentage",
+      "description": "Context percentage at which turn.complete requests compaction.",
+      "default": 60
+    },
+    "minReductionRatio": {
+      "type": "number",
+      "title": "Minimum reduction ratio",
+      "description": "Below this estimated character reduction, delegate to the built-in summary instead.",
+      "default": 0.25
+    },
+    "truncateHeadChars": {
+      "type": "number",
+      "title": "Truncated tool result head",
+      "description": "Characters of a dropped tool result kept, so a wrong drop costs a re-run and not the content.",
+      "default": 300
+    },
+    "maxCallStateTokens": {
+      "type": "number",
+      "title": "Maximum state tokens per call",
+      "description": "Only used when scorer = laya. Must stay under the checkpoint's state budget (768 on multilingual) or the server truncates silently.",
+      "default": 700
+    }
+  }
+}

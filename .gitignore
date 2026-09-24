@@ -1,0 +1,9 @@
+node_modules/
+dist/
+vendor/
+.claude/
+
+# Derived from the operator’s own sessions: contains verbatim excerpts of real
+# tool output (file contents, commands). Regenerate with eval/extract-labels.ts.
+eval/labels.jsonl
+eval/scores.json

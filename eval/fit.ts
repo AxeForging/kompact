@@ -1,0 +1,63 @@
+/**
+ * Fits the shipped scorer and prints a TypeScript coefficient block.
+ *
+ * Both targets are fitted: whether the call still matters, and whether its
+ * output was needed verbatim. Honest generalisation numbers come from
+ * leave-one-session-out; the shipped coefficients are refitted on everything.
+ *
+ * Run: bun eval/fit.ts
+ */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { auc, ece } from './score.js';
+import { FEATURE_NAMES, featureVector } from '../src/features.js';
+import type { LabelRow } from './extract-labels.js';
+
+const rows: LabelRow[] = readFileSync(join(import.meta.dirname, 'labels.jsonl'), 'utf8')
+  .split('\n').filter((l) => l.trim() !== '').map((l) => JSON.parse(l) as LabelRow);
+
+const sigmoid = (z: number): number => 1 / (1 + Math.exp(-z));
+const dot = (x: readonly number[], w: readonly number[]): number =>
+  x.reduce((s, v, j) => s + v * w[j]!, 0);
+
+/** Logistic regression, full-batch, L2-regularised. No library, no framework. */
+function fit(x: number[][], y: number[], steps = 20_000, lr = 0.5, l2 = 1e-3): number[] {
+  const d = x[0]!.length;
+  const w = new Array<number>(d).fill(0);
+  for (let step = 0; step < steps; step += 1) {
+    const g = new Array<number>(d).fill(0);
+    for (let i = 0; i < x.length; i += 1) {
+      const e = sigmoid(dot(x[i]!, w)) - y[i]!;
+      for (let j = 0; j < d; j += 1) g[j]! += (e * x[i]![j]!) / x.length;
+    }
+    for (let j = 1; j < d; j += 1) g[j]! += l2 * w[j]!;
+    for (let j = 0; j < d; j += 1) w[j]! -= lr * g[j]!;
+  }
+  return w;
+}
+
+const sessions = [...new Set(rows.map((r) => r.session))];
+const x = rows.map((r) => featureVector(r.state, r.tool, r.is_error));
+
+function evaluate(target: (r: LabelRow) => boolean, name: string): number[] {
+  const y = rows.map((r) => (target(r) ? 1 : 0));
+  const oof = new Array<number>(rows.length).fill(0.5);
+  for (const held of sessions) {
+    const trainIdx = rows.map((r, i) => [r, i] as const).filter(([r]) => r.session !== held).map(([, i]) => i);
+    const testIdx = rows.map((r, i) => [r, i] as const).filter(([r]) => r.session === held).map(([, i]) => i);
+    if (trainIdx.length === 0 || testIdx.length === 0) continue;
+    const w = fit(trainIdx.map((i) => x[i]!), trainIdx.map((i) => y[i]!));
+    for (const i of testIdx) oof[i] = sigmoid(dot(x[i]!, w));
+  }
+  const labels = y.map(Boolean);
+  console.log(`${name}: LOSO AUC ${auc(oof, labels).toFixed(3)}  ECE ${ece(oof, labels).toFixed(3)}  positives ${y.reduce<number>((a, b) => a + b, 0)}/${y.length}`);
+  return fit(x, y);
+}
+
+const wResult = evaluate((r) => r.result_needed, 'result_needed');
+const wCall = evaluate((r) => r.call_needed, 'call_needed  ');
+
+const block = (w: number[]): string =>
+  '[\n' + w.map((v, j) => `  ${v.toFixed(6)},${' '.repeat(Math.max(1, 12 - v.toFixed(6).length))}// ${FEATURE_NAMES[j]}`).join('\n') + '\n]';
+console.log(`\nexport const KEEP_RESULT_WEIGHTS: readonly number[] = ${block(wResult)};`);
+console.log(`\nexport const KEEP_CALL_WEIGHTS: readonly number[] = ${block(wCall)};`);

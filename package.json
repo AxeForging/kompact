@@ -1,0 +1,37 @@
+{
+  "name": "laya-compact",
+  "version": "0.1.0",
+  "description": "Laya-scored context compaction for coding agents. Local, offline, no API key.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc -p tsconfig.all.json && tsc -p tsconfig.hooks.json",
+    "test": "vitest run",
+    "eval": "bun eval/extract-labels.ts && bun eval/baseline.ts",
+    "validate": "claude plugin validate .claude-plugin/plugin.json",
+    "serve": "bun bin/laya-compact-serve.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "bin": {
+    "laya-compact-serve": "./dist/bin/laya-compact-serve.js"
+  }
+}

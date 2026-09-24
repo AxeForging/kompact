@@ -1,0 +1,184 @@
+# laya-compact
+
+Context compaction that scores every tool call before it compacts, keeps what is
+still needed verbatim, and drops the rest. Local, offline, no API key.
+
+A fork of [tamaratran/fast-jev-compaction][up1] (Claude Code) and
+[fatelei/jev-compact][up2] (Codex CLI), which do the same thing with TypeSafe's
+hosted **Jev** model. This one does not send your session to anyone.
+
+[up1]: https://github.com/tamaratran/fast-jev-compaction
+[up2]: https://github.com/fatelei/jev-compact
+
+## What changed, and why
+
+The port started out as "point the client at a local [Laya][laya] sidecar
+instead of Jev". Laya speaks Jev's wire protocol, so that part really is a
+one-line change. Measuring it is what took the work, and the measurements
+changed the design twice.
+
+[laya]: https://github.com/NandhaKishorM/laya
+
+### 1. One big state does not survive the swap
+
+Both upstreams send the **entire conversation** — up to 25,000 tokens — as the
+state with every request, and point the questions at calls inside it. Jev reads
+32k. Laya's English checkpoint reads **512 tokens in total**, ~320 of them
+state; multilingual reads 1024.
+
+Over-long states are **truncated silently**: HTTP 200, no warning, a score
+computed from the first few percent. Measured on a state padded with irrelevant
+filler around one decisive sentence:
+
+| state | chars | tokens read | answer |
+|---|---|---|---|
+| the sentence alone | 78 | 48 | 0.611 |
+| sentence + filler | 4,278 | 512 | 0.4113 |
+| sentence + filler | 21,078 | **512** | **0.4113** |
+
+The 4k and 21k rows are bit-identical. Diluted, the English checkpoint answered
+**0.41 — below any sane threshold — for a fact the state stated verbatim**.
+
+So the state is inverted: **one small prose state per tool call**, sized to the
+checkpoint's real budget and asserted in the test suite. Every number is turned
+into words first (`describeSize`, `describeAge`) because Laya cannot read
+digits — its own docs record that no checkpoint could tell which of two
+altitudes was lower.
+
+### 2. The decision model loses to a logistic regression
+
+With that fixed, 721 tool calls were labelled from real sessions — no
+hand-labelling and no teacher model. The signal is behavioural: if the assistant
+later reproduced a distinctive run of eight words from an output, in its prose or
+inside a later tool input such as an `Edit`'s `old_string`, that output was
+needed verbatim. If it simply read the same target again, the output was
+reproducible by definition.
+
+Then every checkpoint and question wording was scored against those labels, held
+out by session:
+
+| scorer | AUC | ECE | chars freed at 90% safety |
+|---|---|---|---|
+| **built-in logistic, 13 features** | **0.918** | **0.053** | **26.4%** |
+| output size alone | 0.890 | — | 7.6% |
+| laya multilingual, "direct" wording | 0.694 | 0.575 | 4.5% |
+| laya typed-decisions, "direct" | 0.676 | 0.422 | 11.5% |
+| laya english, "reproducible" | 0.566 | 0.383 | 4.0% |
+| keep everything | 0.500 | — | 0.0% |
+
+AUC 0.5 is a coin flip. The features that go into a call's state carry the
+signal, and a 322M-parameter encoder asked to read the same facts as prose does
+**worse than a thirteen-coefficient logistic model that needs no sidecar, no GPU
+and no network call** — and is calibrated an order of magnitude better, which is
+what makes `keepThreshold` mean anything.
+
+This is not a criticism of Laya. Its own README says the base checkpoints score
+near chance on typed-decision workflows and that it should be treated as a fast
+base to specialise, not a zero-shot decision engine. That is exactly what was
+measured. **A fine-tuned checkpoint now has to beat 0.918, not 0.5** — so
+fine-tuning was not done, and `eval/` is set up to re-run the comparison for
+anyone who tries.
+
+So the default scorer is the logistic model, and Laya stays a drop-in behind the
+same `JevAsker` seam.
+
+## Install (Claude Code)
+
+Function hooks are early access and must be enabled:
+
+```sh
+CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude --plugin-dir .
+```
+
+Claude Code's `session.compact` hook returns a replacement message list, so the
+plugin *replaces* compaction rather than repairing it: user and assistant text is
+never touched, only tool calls and tool results are dropped or truncated.
+
+The type declarations in `types/` were written by Claude Code 2.1.274.
+**Regenerate them with `/plugin-types` after upgrading**, then run
+`npm run typecheck`.
+
+## Configuration
+
+| Option | Default | Meaning |
+|---|---:|---|
+| `scorer` | `features` | `features` (offline, AUC 0.918) or `laya` (a sidecar) |
+| `layaUrl` | `http://127.0.0.1:8000/v1/systemone` | only read when `scorer` is `laya` |
+| `keepThreshold` | `0.5` | below this probability an item is dropped |
+| `preserveRecentMessages` | `6` | newest messages pinned; the first is always kept |
+| `compactAtPercent` | `60` | context percentage that triggers compaction |
+| `minReductionRatio` | `0.25` | below this saving, delegate to the built-in summary |
+| `truncateHeadChars` | `300` | head kept of a dropped result |
+| `maxCallStateTokens` | `700` | `scorer=laya` only; must stay under the checkpoint's budget |
+
+A dropped result is **not deleted**: its first `truncateHeadChars` characters
+survive with a note, and the assistant can re-run the tool. That is why 90%
+safety is a defensible setting — a miss costs a re-run, not the work.
+
+Any failure at all — scorer down, malformed response, saving below
+`minReductionRatio` — falls back to Claude Code's built-in compaction. A single
+failed request keeps its call: a wrong keep costs context, a wrong drop destroys
+something unrecoverable.
+
+## Using Laya instead
+
+```sh
+uv tool install "laya[serve]"
+LAYA_HOST=127.0.0.1 LAYA_DEVICE=cuda LAYA_PRELOAD=1 LAYA_MODELS=multilingual laya-serve
+```
+
+`LAYA_HOST` defaults to `0.0.0.0`; set it explicitly. Then set `scorer` to
+`laya`. Expect it to be worse until you fine-tune on your own sessions — and
+watch for `STATES TRUNCATED` in the compaction toast, which means states are
+overflowing the checkpoint and the scores are being computed on fragments.
+
+## Codex CLI, and anything else that speaks the protocol
+
+The scorer is also served on Jev's wire protocol, so an existing Jev client
+works against it by repointing one URL — no second plugin to write:
+
+```sh
+npm run serve        # http://127.0.0.1:8770/v1/systemone, no model, no GPU
+```
+
+For Codex CLI, install [fatelei/jev-compact][up2] and put this in
+`~/.codex/fast-jev-compaction.json`:
+
+```json
+{ "baseUrl": "http://127.0.0.1:8770/v1/systemone", "apiKey": "unused" }
+```
+
+`apiKey` is only there because that plugin refuses to start without one; the
+server ignores it unless started with `--api-key`.
+
+**Not verified against a live Codex.** That plugin needs Codex >= 0.155 and this
+was built on 0.131, so the protocol side is covered by tests and curl but the
+Codex integration itself is not. The Claude Code path is the one that has run.
+
+## Reproducing the numbers
+
+```sh
+bun eval/extract-labels.ts   # labels from ~/.claude/projects/**/*.jsonl
+bun eval/baseline.ts         # cheap-feature baselines vs every Laya config
+bun eval/fit.ts              # refit the shipped coefficients, print LOSO AUC
+bun eval/score.ts --port 8001   # needs a laya-serve sidecar
+```
+
+The corpus is whatever sessions are on the machine, so absolute numbers will
+differ. The comparison is what matters, and `eval/baseline.ts` prints it.
+
+## Development
+
+```sh
+bun install
+npm run typecheck   # src + test + eval + hooks
+npm run test        # 40 tests
+npm run validate    # plugin manifest
+```
+
+`vendor/` holds both upstreams, unmodified, so their fixes stay diffable. The
+`Jev*` type names are kept for the same reason; the model behind them is not Jev.
+
+## License
+
+MIT, as both upstreams. Laya is Apache-2.0.

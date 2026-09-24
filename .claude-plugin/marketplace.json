@@ -1,0 +1,13 @@
+{
+  "name": "laya-compact",
+  "description": "Local, offline context compaction for coding agents \u2014 scores every tool call and keeps only what is still needed verbatim.",
+  "owner": {
+    "name": "laya-compact"
+  },
+  "plugins": [
+    {
+      "source": "./",
+      "name": "laya-compact"
+    }
+  ]
+}

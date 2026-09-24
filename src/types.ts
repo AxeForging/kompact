@@ -1,0 +1,243 @@
+import type { Phrasing } from './questions.js';
+
+export type Role = 'user' | 'assistant';
+
+/**
+ * A tool_use block of an assistant message. `text` and `isError` mirror the
+ * outcome once the transcript holds it (Claude Code attaches them).
+ */
+export interface ToolUse {
+  tool_use_id: string;
+  tool: string;
+  input: Record<string, unknown>;
+  text?: string;
+  isError?: boolean;
+}
+
+/** A tool_result block of a user message. */
+export interface ToolResult {
+  tool_use_id: string;
+  text: string;
+  isError?: boolean;
+}
+
+/**
+ * One transcript message. The shape is a subset of Claude Code's
+ * `SessionMessage`, so a session transcript can be passed in as is.
+ */
+export interface Message {
+  role: Role;
+  text: string;
+  toolUses: ToolUse[];
+  toolResults?: ToolResult[];
+}
+
+/** A tool call paired with its result by `tool_use_id`. */
+export interface ToolCall {
+  /** Short id used in the state and question names (`t1`, `t2`, ...). */
+  id: string;
+  tool_use_id: string;
+  tool: string;
+  input: Record<string, unknown>;
+  /** Index of the message holding the tool_use block. */
+  callIndex: number;
+  /** Index of the message holding the tool_result block. */
+  resultIndex: number;
+  /** The tool output itself; the per-call state excerpts it. */
+  resultText: string;
+  resultChars: number;
+  isError: boolean;
+  /** In the first or the newest preserved messages; never a candidate. */
+  pinned: boolean;
+}
+
+/**
+ * Facts about one call, already reduced to words. Every comparison and count
+ * happens in `state.ts`; the model only ever reads a sentence.
+ */
+export interface CallContext {
+  /** How far back the call sits, e.g. `long ago in the session`. */
+  age: string;
+  /** Output size as words, e.g. `very long`. */
+  size: string;
+  /** A later call changed the same target, so this output is stale. */
+  targetTouchedAfter: boolean;
+  /** The assistant ran the same tool on the same target again later. */
+  rerunLater: boolean;
+}
+
+export interface CallAnswer {
+  /** Probability that the call itself still matters. */
+  keepCall: number;
+  /** Probability that the full result still needs to stay verbatim. */
+  keepResult: number;
+}
+
+export type CallAction = 'keep' | 'drop_result' | 'drop_call';
+
+export interface CallDecision extends CallAnswer {
+  id: string;
+  tool: string;
+  action: CallAction;
+  reason: 'pinned' | 'kept' | 'result_dropped' | 'call_dropped';
+}
+
+export interface HistoryToolCall {
+  id: string;
+  tool: string;
+  input: string;
+  result: string;
+}
+
+export interface HistoryEntry {
+  i: number;
+  role: Role;
+  text: string;
+  /** Structured per call, or one compact line per call once the state has to shrink. */
+  tool_calls?: HistoryToolCall[] | string[];
+}
+
+/** A whole-conversation state, as the upstreams sent it. Superseded by the
+ * per-call prose states in `state.ts`; kept because `applyDecisions` and the
+ * host adapters still speak this vocabulary. */
+export interface CompactionState {
+  context: string;
+  goal: string;
+  history: HistoryEntry[];
+}
+
+export interface FittedState {
+  state: CompactionState;
+  tokens: number;
+  /** Which fitting stage produced the state, for diagnostics. */
+  stage: string;
+}
+
+export interface CompactOptions {
+  /** Ongoing task description; defaults to the last few user prompts. */
+  goal?: string;
+  /** Minimum keep probability for a call or result to stay. Default 0.5. */
+  keepThreshold?: number;
+  /** Newest messages never touched (the first message is always kept). Default 6. */
+  preserveRecentMessages?: number;
+  /**
+   * Estimated token ceiling for ONE call's state. Default 700, which sits under
+   * the multilingual checkpoint's 768-token state budget; anything above the
+   * checkpoint's context length is discarded silently by the server.
+   */
+  maxCallStateTokens?: number;
+  /** Requests in flight at once. Default 8. */
+  concurrency?: number;
+  /** Question wording variant. Default `reproducible`. */
+  phrasing?: Phrasing;
+  /** Characters of a dropped tool result to retain. Default 300. */
+  truncateHeadChars?: number;
+}
+
+export interface ResolvedCompactOptions {
+  goal: string;
+  keepThreshold: number;
+  preserveRecentMessages: number;
+  maxCallStateTokens: number;
+  concurrency: number;
+  phrasing: Phrasing;
+  truncateHeadChars: number;
+}
+
+export interface CompactResult {
+  /** The compacted transcript; untouched messages are the input objects. */
+  messages: Message[];
+  decisions: CallDecision[];
+  stats: {
+    messagesBefore: number;
+    messagesAfter: number;
+    charsBefore: number;
+    charsAfter: number;
+    calls: number;
+    kept: number;
+    resultsDropped: number;
+    callsDropped: number;
+    pinned: number;
+    /**
+     * Largest per-question-row token count any request read. NOT
+     * `usage.input_tokens`, which is that figure times the number of questions.
+     */
+    maxRowTokens: number;
+    /**
+     * Requests whose state the server truncated — detected by comparing
+     * reported `input_tokens` against the checkpoint's context length. Any
+     * value above zero means some decisions were made on partial states.
+     */
+    truncatedRequests: number;
+    /** Checkpoint the router actually used, from `routing.model`. */
+    checkpoint: string;
+    requests: number;
+    /** Requests that failed; their calls are kept, never dropped. */
+    failedRequests: number;
+    ms: number;
+  };
+}
+
+/** The `state` of a System One request: a string or any JSON-serialisable object. */
+export type SystemOneState = string | object;
+
+export interface NoulQuestion {
+  type: 'noul';
+  instructions: string;
+  criteria?: {
+    true?: string;
+    false?: string;
+  };
+}
+
+export interface ChoiceQuestion {
+  type: 'choice';
+  instructions: string;
+  criteria: Record<string, string | null>;
+}
+
+export interface ScoreQuestion {
+  type: 'score';
+  instructions: string;
+  criteria: string[];
+}
+
+export type SystemOneQuestion = NoulQuestion | ChoiceQuestion | ScoreQuestion;
+export type SystemOneQuestions = Record<string, SystemOneQuestion>;
+
+export interface NoulAnswer {
+  type?: 'noul';
+  noul: number;
+}
+
+export interface ChoiceAnswer {
+  type?: 'choice';
+  choice: string;
+  confidence: number;
+  probabilities: Record<string, number>;
+}
+
+export interface ScoreAnswer {
+  type?: 'score';
+  score: number;
+  confidence: number;
+  probabilities: Record<string, number>;
+}
+
+export type SystemOneAnswer = NoulAnswer | ChoiceAnswer | ScoreAnswer;
+
+export interface SystemOneResponse {
+  model?: string;
+  answers: Record<string, SystemOneAnswer>;
+  usage?: {
+    input_tokens?: number;
+    output_tokens?: number;
+  };
+  [key: string]: unknown;
+}
+
+/** Anything that can answer the two questions: `FeatureAsker` (default),
+ * `LayaClient` (a sidecar), or a host-provided adapter. */
+export interface Asker {
+  ask(state: SystemOneState, questions: SystemOneQuestions): Promise<SystemOneResponse>;
+}
