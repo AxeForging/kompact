@@ -129,11 +129,54 @@ export function toolFromState(state: string): string {
  * `Asker` seam as `LayaClient`, so it is a drop-in swap and `compact()` does
  * not know the difference.
  */
+export interface Weights {
+  keepResult: readonly number[];
+  keepCall: readonly number[];
+  /** Free-form note: which corpus these came from, when, and how they scored. */
+  fittedOn?: string;
+}
+
+/**
+ * Environment variable carrying weights refitted on the operator's own
+ * sessions, as JSON. `eval/calibrate.ts` produces its value. Hooks have no
+ * filesystem, so this is the channel rather than a file path.
+ */
+export const WEIGHTS_ENV = 'LAYA_COMPACT_WEIGHTS';
+
+/**
+ * Validates a weights file. Shipped defaults are fitted on one person's
+ * sessions; a different operator's tools and habits differ, so refitting
+ * locally is expected. A malformed file must never be silently half-applied.
+ */
+export function parseWeights(text: string): Weights {
+  const parsed: unknown = JSON.parse(text);
+  const ok = (value: unknown): value is number[] =>
+    Array.isArray(value) &&
+    value.length === FEATURE_NAMES.length &&
+    value.every((v) => typeof v === 'number' && Number.isFinite(v));
+  const record = parsed as { keepResult?: unknown; keepCall?: unknown; fittedOn?: unknown };
+  if (!ok(record.keepResult) || !ok(record.keepCall)) {
+    throw new Error(
+      `weights must hold keepResult and keepCall, each ${FEATURE_NAMES.length} finite numbers`,
+    );
+  }
+  const weights: Weights = { keepResult: record.keepResult, keepCall: record.keepCall };
+  if (typeof record.fittedOn === 'string') weights.fittedOn = record.fittedOn;
+  return weights;
+}
+
 export class FeatureAsker implements Asker {
   constructor(
     private readonly keepResult: readonly number[] = KEEP_RESULT_WEIGHTS,
     private readonly keepCall: readonly number[] = KEEP_CALL_WEIGHTS,
   ) {}
+
+  /** An asker using weights refitted locally, or the shipped ones. */
+  static fromWeights(weights?: Weights): FeatureAsker {
+    return weights === undefined
+      ? new FeatureAsker()
+      : new FeatureAsker(weights.keepResult, weights.keepCall);
+  }
 
   async ask(state: SystemOneState, questions: SystemOneQuestions): Promise<SystemOneResponse> {
     const stateText = typeof state === 'string' ? state : JSON.stringify(state);

@@ -1,0 +1,34 @@
+name: ci
+
+on:
+  push: { branches: [main] }
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+
+      - run: bun install --frozen-lockfile
+
+      # vendor/ is gitignored, but the Codex interop test drives jev-compact's
+      # own parser, scorer and client against our server. Without these it
+      # skips silently, which is worse than failing.
+      - name: fetch upstreams for the interop test
+        run: |
+          mkdir -p vendor
+          git clone --depth 1 https://github.com/tamaratran/fast-jev-compaction.git vendor/fast-jev-compaction
+          git clone --depth 1 https://github.com/fatelei/jev-compact.git vendor/jev-compact
+
+      - run: bun x tsc -p tsconfig.all.json
+      - run: bun x tsc -p tsconfig.hooks.json
+      - run: bun x tsc
+      - run: bun x vitest run
+
+      # The interop test skips when vendor/ is missing; fail loudly if the
+      # clone above stopped working rather than quietly losing the coverage.
+      - name: the interop test must have run
+        run: bun x vitest run test/codex-interop.test.ts --reporter=verbose 2>&1 | grep -q "codex plugin interop"

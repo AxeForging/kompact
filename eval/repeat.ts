@@ -15,7 +15,8 @@
  */
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { auc, droppableAt } from './score.js';
+import { dot, fitLogistic as fit, sigmoid } from './logistic.js';
+import { auc, droppableAt } from './metrics.js';
 import { FEATURE_NAMES, featureVector } from '../src/features.js';
 import type { LabelRow } from './extract-labels.js';
 
@@ -45,24 +46,7 @@ function rng(seed: number): () => number {
   };
 }
 
-const sigmoid = (z: number): number => 1 / (1 + Math.exp(-z));
-const dot = (a: readonly number[], b: readonly number[]): number =>
-  a.reduce((s, v, j) => s + v * (b[j] ?? 0), 0);
 
-function fit(xs: number[][], ys: number[], steps = 6_000, lr = 0.5, l2 = 1e-3): number[] {
-  const d = xs[0]!.length;
-  const w = new Array<number>(d).fill(0);
-  for (let step = 0; step < steps; step += 1) {
-    const g = new Array<number>(d).fill(0);
-    for (let i = 0; i < xs.length; i += 1) {
-      const e = sigmoid(dot(xs[i]!, w)) - ys[i]!;
-      for (let j = 0; j < d; j += 1) g[j]! += (e * xs[i]![j]!) / xs.length;
-    }
-    for (let j = 1; j < d; j += 1) g[j]! += l2 * w[j]!;
-    for (let j = 0; j < d; j += 1) w[j]! -= lr * g[j]!;
-  }
-  return w;
-}
 
 const cache: Record<string, Record<string, { result: number }>> = existsSync(join(dir, 'scores.json'))
   ? JSON.parse(readFileSync(join(dir, 'scores.json'), 'utf8'))

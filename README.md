@@ -98,8 +98,21 @@ same `JevAsker` seam.
 Function hooks are early access and must be enabled:
 
 ```sh
+export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
+
+claude plugin marketplace add AxeForging/laya-compact
+claude plugin install laya-compact@laya-compact
+```
+
+For local development, point at a checkout instead:
+
+```sh
 CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude --plugin-dir .
 ```
+
+The plugin ships one skill, `laya-compact`, covering how to read its decision
+log, choose a threshold, calibrate, and diagnose a compaction that kept or
+dropped the wrong thing. It costs ~178 tokens a session.
 
 Claude Code's `session.compact` hook returns a replacement message list, so the
 plugin *replaces* compaction rather than repairing it: user and assistant text is
@@ -142,6 +155,29 @@ LAYA_HOST=127.0.0.1 LAYA_DEVICE=cuda LAYA_PRELOAD=1 LAYA_MODELS=multilingual lay
 `laya`. Expect it to be worse until you fine-tune on your own sessions — and
 watch for `STATES TRUNCATED` in the compaction toast, which means states are
 overflowing the checkpoint and the scores are being computed on fragments.
+
+## Calibrate it on your own sessions
+
+**The shipped coefficients were fitted on one person's 18 sessions.** Someone
+whose work is mostly `Bash`, or mostly web research, or who works in a language
+the labeller's eight-word shingles do not match, has a different distribution.
+Nothing here detects that for you, so refitting is the expected step, not an
+advanced one:
+
+```sh
+npm run calibrate           # extract labels, then compare shipped vs refit
+bun eval/calibrate.ts --write
+```
+
+It labels your own `~/.claude/projects` transcripts behaviourally — nothing is
+sent anywhere — reports shipped against refit held out by session, and emits a
+`LAYA_COMPACT_WEIGHTS` value for the `env` block of `~/.claude/settings.json`.
+It refuses to fit on fewer than 3 sessions or 20 positives, which is too thin to
+mean anything.
+
+Read the delta before adopting it. On the machine the shipped weights were
+fitted on, their column is in-sample and will flatter itself; for anyone else
+the comparison is fair.
 
 ## Codex CLI, and anything else that speaks the protocol
 
@@ -216,9 +252,14 @@ Also unverified: a live Codex CLI, which needs >= 0.155 (this machine has 0.131)
 ```sh
 bun install
 npm run typecheck   # src + test + eval + hooks
-npm run test        # 40 tests
+npm run test        # 66 tests
 npm run validate    # plugin manifest
 ```
+
+The Codex interop test needs both upstreams checked out under `vendor/`; without
+them it skips rather than fails. CI clones them and asserts it ran. See
+[CONTRIBUTING.md](CONTRIBUTING.md) — in particular, re-run `eval/repeat.ts` and
+quote mean, sd and worst split if you touch the scorer.
 
 `vendor/` holds both upstreams, unmodified, so their fixes stay diffable. The
 `Jev*` type names are kept for the same reason; the model behind them is not Jev.

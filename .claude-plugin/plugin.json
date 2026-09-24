@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "description": "Local, offline context compaction: scores every tool call and keeps only what is still needed verbatim. No API key.",
   "author": {
-    "name": "laya-compact contributors"
+    "name": "AxeForging",
+    "url": "https://github.com/AxeForging"
   },
   "license": "MIT",
-  "homepage": "https://github.com/tamaratran/fast-jev-compaction",
+  "homepage": "https://github.com/AxeForging/laya-compact",
   "userConfig": {
     "scorer": {
       "type": "string",

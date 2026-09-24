@@ -9,7 +9,7 @@ import type {
 } from 'claude-code';
 
 import { compact, reductionRatio } from '../src/compact.js';
-import { FeatureAsker } from '../src/features.js';
+import { FeatureAsker, WEIGHTS_ENV, parseWeights, type Weights } from '../src/features.js';
 import { buildSystemOneRequest, parseSystemOneResponse } from '../src/request.js';
 import type {
   CompactOptions,
@@ -97,8 +97,57 @@ export function layaAsker(fetchFn: HookFetch, baseUrl?: string): Asker {
  * zero-shot Laya checkpoint and phrasing reached 0.694 — and it needs no
  * sidecar, no GPU and no network call.
  */
-export function askerFor(config: HookConfig, fetchFn: HookFetch): Asker {
-  return config.scorer === 'laya' ? layaAsker(fetchFn, config.layaUrl) : new FeatureAsker();
+export function askerFor(config: HookConfig, fetchFn: HookFetch, weights?: Weights): Asker {
+  return config.scorer === 'laya'
+    ? layaAsker(fetchFn, config.layaUrl)
+    : FeatureAsker.fromWeights(weights);
+}
+
+/**
+ * Weights refitted on this operator's own sessions, if they ran `calibrate`.
+ *
+ * Read from the environment, then from `settings.json`'s `env` block — the two
+ * channels a hook actually has. Hooks get no filesystem, so the weights travel
+ * as JSON in `LAYA_COMPACT_WEIGHTS` rather than as a file path.
+ *
+ * This matters because the shipped defaults are fitted on one person's 18
+ * sessions. Another operator's tool mix differs, so a local fit should win. A
+ * broken value is reported and ignored rather than allowed to change decisions
+ * silently.
+ */
+export async function readLocalWeights(
+  $: {
+    env?: { get: (name: string) => Promise<string | undefined> };
+    settings?: { read: () => Promise<Readonly<Record<string, unknown>>> };
+  },
+  log: (text: string) => void,
+): Promise<Weights | undefined> {
+  // Either channel may be absent on a given host; neither is worth failing a
+  // compaction over, so every lookup degrades to the shipped weights.
+  let raw: string | undefined;
+  try {
+    raw = await $.env?.get(WEIGHTS_ENV);
+  } catch {
+    raw = undefined;
+  }
+  if (!raw) {
+    try {
+      const env = (await $.settings?.read())?.['env'];
+      const value = env && typeof env === 'object' ? (env as Record<string, unknown>)[WEIGHTS_ENV] : undefined;
+      if (typeof value === 'string') raw = value;
+    } catch {
+      return undefined;
+    }
+  }
+  if (!raw) return undefined;
+  try {
+    const weights = parseWeights(raw);
+    log(`using locally calibrated weights${weights.fittedOn ? ` (${weights.fittedOn})` : ''}`);
+    return weights;
+  } catch (error) {
+    log(`ignoring ${WEIGHTS_ENV}: ${error instanceof Error ? error.message : String(error)}`);
+    return undefined;
+  }
 }
 
 function toolUseSummary(tool: ToolUse): ToolUseSummary {
@@ -158,8 +207,9 @@ export async function compactSession(
   messages: readonly SessionMessage[],
   config: HookConfig,
   fetchFn: HookFetch,
+  weights?: Weights,
 ): Promise<SessionCompaction> {
-  const result = await compact(messages, askerFor(config, fetchFn), config);
+  const result = await compact(messages, askerFor(config, fetchFn, weights), config);
   return { result, messages: toSessionMessages(messages, result.messages) };
 }
 
@@ -224,10 +274,11 @@ export const register: Register = (on: On, options: PluginOptions) => {
 
   on('session.compact', async ($, event, next) => {
     try {
+      const weights = await readLocalWeights($, (text) => $.ui.log(text));
       const { result, messages } = await compactSession(event.messages, config, async (url, init) => {
         const response = await $.http.fetch(url, init);
         return { status: response.status, ok: response.ok, text: response.text };
-      });
+      }, weights);
       for (const line of decisionLogLines(result)) $.ui.log(line);
       // Too little saved is not worth losing the summary's narrative over.
       if (reductionRatio(result) < config.minReductionRatio) {

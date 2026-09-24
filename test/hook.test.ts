@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
-  askerFor, compactSession, decisionLogLines, layaAsker, register, resolveHookConfig, summarize, toSessionMessages,
+  askerFor, compactSession, decisionLogLines, layaAsker, readLocalWeights, register, resolveHookConfig, summarize, toSessionMessages,
 } from '../hooks/laya-compact.js';
-import { FeatureAsker } from '../src/features.js';
+import { FeatureAsker, parseWeights } from '../src/features.js';
 import type { CompactResult, Message } from '../src/index.js';
 
 /** The fixture is structurally what the engine passes; it carries no handles. */
@@ -207,5 +207,67 @@ describe('register', () => {
     const result = await registered().get('turn.complete')!(engine.$, {}, () => 'NEXT');
     expect(result).toBe('NEXT');
     expect(engine.logs.join(' ')).toContain('auto-compact skipped');
+  });
+});
+
+describe('locally calibrated weights', () => {
+  const valid = JSON.stringify({
+    keepResult: new Array(13).fill(0.1),
+    keepCall: new Array(13).fill(0.2),
+    fittedOn: '500 calls, 9 sessions, 2026-01-01',
+  });
+
+  it('parses a well-formed weights value', () => {
+    const weights = parseWeights(valid);
+    expect(weights.keepResult).toHaveLength(13);
+    expect(weights.fittedOn).toContain('9 sessions');
+  });
+
+  it('refuses the wrong shape rather than half-applying it', () => {
+    expect(() => parseWeights('{}')).toThrow();
+    expect(() => parseWeights(JSON.stringify({ keepResult: [1, 2], keepCall: [1, 2] }))).toThrow();
+    expect(() => parseWeights(JSON.stringify({
+      keepResult: new Array(13).fill(0), keepCall: new Array(13).fill(Number.NaN),
+    }))).toThrow();
+  });
+
+  it('prefers the environment, then settings', async () => {
+    const logs: string[] = [];
+    const fromEnv = await readLocalWeights(
+      { env: { get: async () => valid }, settings: { read: async () => ({}) } },
+      (t) => logs.push(t),
+    );
+    expect(fromEnv?.keepResult[0]).toBe(0.1);
+    const fromSettings = await readLocalWeights(
+      { env: { get: async () => undefined }, settings: { read: async () => ({ env: { LAYA_COMPACT_WEIGHTS: valid } }) } },
+      (t) => logs.push(t),
+    );
+    expect(fromSettings?.keepResult[0]).toBe(0.1);
+    expect(logs.join(' ')).toContain('9 sessions');
+  });
+
+  // A bad value must cost the operator nothing but a log line.
+  it('ignores a malformed value and says so', async () => {
+    const logs: string[] = [];
+    const weights = await readLocalWeights(
+      { env: { get: async () => 'not json' }, settings: { read: async () => ({}) } },
+      (t) => logs.push(t),
+    );
+    expect(weights).toBeUndefined();
+    expect(logs.join(' ')).toContain('ignoring LAYA_COMPACT_WEIGHTS');
+  });
+
+  it('survives a host that offers neither channel', async () => {
+    expect(await readLocalWeights({}, () => {})).toBeUndefined();
+  });
+
+  it('actually changes the scores it returns', async () => {
+    const flat = { keepResult: new Array(13).fill(0), keepCall: new Array(13).fill(0) };
+    const asker = FeatureAsker.fromWeights(flat);
+    const { answers } = await asker.ask('The assistant ran the Read tool on the file a.ts.', {
+      result_t1: { type: 'noul', instructions: 'x' },
+    });
+    // All-zero weights mean every state scores exactly one half.
+    expect((answers.result_t1 as { noul: number }).noul).toBeCloseTo(0.5, 6);
   });
 });

@@ -13,7 +13,8 @@
  */
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { auc, droppableAt } from './score.js';
+import { dot, fitLogistic as fit, sigmoid } from './logistic.js';
+import { auc, droppableAt } from './metrics.js';
 import type { LabelRow } from './extract-labels.js';
 
 const dir = import.meta.dirname;
@@ -44,25 +45,7 @@ function features(row: LabelRow): number[] {
   ];
 }
 
-function sigmoid(z: number): number {
-  return 1 / (1 + Math.exp(-z));
-}
 
-/** Plain logistic regression, full-batch gradient descent. No library. */
-function fit(x: number[][], y: number[], steps = 4000, lr = 0.3): number[] {
-  const d = x[0]!.length;
-  const w = new Array(d).fill(0);
-  for (let step = 0; step < steps; step += 1) {
-    const g = new Array(d).fill(0);
-    for (let i = 0; i < x.length; i += 1) {
-      const p = sigmoid(x[i]!.reduce((s, v, j) => s + v * w[j]!, 0));
-      const e = p - y[i]!;
-      for (let j = 0; j < d; j += 1) g[j] += (e * x[i]![j]!) / x.length;
-    }
-    for (let j = 0; j < d; j += 1) w[j] -= lr * g[j]!;
-  }
-  return w;
-}
 
 const sessions = [...new Set(rows.map((r) => r.session))];
 console.log(`rows ${rows.length}  positives ${rows.filter((r) => r.result_needed).length}  sessions ${sessions.length}\n`);

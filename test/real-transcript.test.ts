@@ -65,6 +65,8 @@ const engine = () => {
     logs,
     $: {
       ui: { log: (t: string) => logs.push(t), toast: () => {} },
+      env: { get: async () => undefined },
+      settings: { read: async () => ({}) },
       http: { fetch: async () => { throw new Error('offline'); } },
       session: { usage: async () => ({ context: { percent: 0 } }), compact: async () => {} },
     },

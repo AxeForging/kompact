@@ -9,32 +9,15 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { auc, ece } from './score.js';
+import { dot, fitLogistic as fit, sigmoid } from './logistic.js';
+import { auc, ece } from './metrics.js';
 import { FEATURE_NAMES, featureVector } from '../src/features.js';
 import type { LabelRow } from './extract-labels.js';
 
 const rows: LabelRow[] = readFileSync(join(import.meta.dirname, 'labels.jsonl'), 'utf8')
   .split('\n').filter((l) => l.trim() !== '').map((l) => JSON.parse(l) as LabelRow);
 
-const sigmoid = (z: number): number => 1 / (1 + Math.exp(-z));
-const dot = (x: readonly number[], w: readonly number[]): number =>
-  x.reduce((s, v, j) => s + v * w[j]!, 0);
 
-/** Logistic regression, full-batch, L2-regularised. No library, no framework. */
-function fit(x: number[][], y: number[], steps = 20_000, lr = 0.5, l2 = 1e-3): number[] {
-  const d = x[0]!.length;
-  const w = new Array<number>(d).fill(0);
-  for (let step = 0; step < steps; step += 1) {
-    const g = new Array<number>(d).fill(0);
-    for (let i = 0; i < x.length; i += 1) {
-      const e = sigmoid(dot(x[i]!, w)) - y[i]!;
-      for (let j = 0; j < d; j += 1) g[j]! += (e * x[i]![j]!) / x.length;
-    }
-    for (let j = 1; j < d; j += 1) g[j]! += l2 * w[j]!;
-    for (let j = 0; j < d; j += 1) w[j]! -= lr * g[j]!;
-  }
-  return w;
-}
 
 const sessions = [...new Set(rows.map((r) => r.session))];
 const x = rows.map((r) => featureVector(r.state, r.tool, r.is_error));

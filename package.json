@@ -24,7 +24,8 @@
     "test": "vitest run",
     "eval": "bun eval/extract-labels.ts && bun eval/baseline.ts",
     "validate": "claude plugin validate .claude-plugin/plugin.json",
-    "serve": "bun bin/laya-compact-serve.ts"
+    "serve": "bun bin/laya-compact-serve.ts",
+    "calibrate": "bun eval/extract-labels.ts && bun eval/calibrate.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
@@ -33,5 +34,23 @@
   },
   "bin": {
     "laya-compact-serve": "./dist/bin/laya-compact-serve.js"
-  }
+  },
+  "author": "AxeForging",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AxeForging/laya-compact.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AxeForging/laya-compact/issues"
+  },
+  "homepage": "https://github.com/AxeForging/laya-compact#readme",
+  "keywords": [
+    "claude-code",
+    "codex",
+    "context",
+    "compaction",
+    "plugin",
+    "llm",
+    "agent"
+  ]
 }
