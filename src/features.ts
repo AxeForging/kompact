@@ -2,11 +2,18 @@
  * The shipped scorer: a logistic model over facts already computed while
  * building a call's state. No model call, no sidecar, no network, no GPU.
  *
- * This exists because it was measured to be better. Against 721 labelled calls
- * from real sessions, leave-one-session-out, this scores AUC 0.917 where the
- * best Laya checkpoint and phrasing managed 0.694; at a 90% safety setting it
- * frees 26% of tool-output characters against Laya's 4.5%. The features carry
- * the signal, and an encoder asked to read the same facts as prose does worse.
+ * This exists because it was measured to be better, repeatedly. Over 1063
+ * labelled calls from 18 real sessions: leave-one-session-out AUC 0.862, and
+ * across 10 grouped splits holding out 30% of sessions each time it averages
+ * 0.895 (sd 0.073, worst split 0.687) against 0.721 for the best Laya
+ * checkpoint and phrasing. It won 10 of 10 splits — though by as little as
+ * 0.002 on the closest one. At a 90% safety setting it frees 39% of tool-output
+ * characters against Laya's 12%. The features carry the signal, and an encoder
+ * asked to read the same facts as prose does worse.
+ *
+ * Earlier drafts of this comment claimed 0.917 from a single split on 721 calls.
+ * Repeated evaluation on a wider corpus put it at 0.895 and Laya's best rose
+ * from 0.694 to 0.721: one split flatters whatever it measures.
  *
  * Laya stays available behind the same `Asker` seam (`LayaClient`) for anyone
  * with a checkpoint fine-tuned on their own sessions — the bar it has to clear
@@ -88,19 +95,19 @@ export function score(weights: readonly number[], features: readonly number[]): 
 }
 
 /**
- * Fitted on 721 labelled calls from real sessions (`eval/fit.ts`).
- * Leave-one-session-out: AUC 0.918, ECE 0.053.
+ * Fitted on 1063 labelled calls from 18 real sessions (`eval/fit.ts`).
+ * Leave-one-session-out: AUC 0.862, ECE 0.019.
  * `size=long` and `age=a while back` are the reference levels, hence absent.
  */
 export const KEEP_RESULT_WEIGHTS: readonly number[] = [
-  0.181125, -0.040728, -1.652361, -2.341452, 0.0, -0.576143, 1.900781, 0.017374,
-  -3.710076, -2.025578, -1.345933, 0.011502, -0.660754,
+  -0.515007, -0.479497, -1.354382, -2.356925, 0.0, -0.854025, 2.120442, 0.033473,
+  -3.085024, -1.400197, -1.648371, 0.037077, -0.356110,
 ];
 
-/** Same fit, for whether the call itself still matters. LOSO AUC 0.987, ECE 0.050. */
+/** Same fit, for whether the call itself still matters. LOSO AUC 0.971, ECE 0.026. */
 export const KEEP_CALL_WEIGHTS: readonly number[] = [
-  0.094899, -0.645405, -1.582841, 0.400460, 0.0, -0.215684, 3.697537, 5.758080,
-  -3.103545, -1.480751, -0.651458, 0.000897, -0.241406,
+  -0.562089, -0.749362, -1.413913, 0.469736, 0.0, -0.242158, 3.793540, 5.486919,
+  -2.518247, -0.957991, -0.588688, 0.054670, 0.046405,
 ];
 
 /**

@@ -15,19 +15,33 @@ function textOf(content: unknown): string {
     .join('\n');
 }
 
-/** Claude Code's session JSONL to the `Message[]` the library consumes. */
+/**
+ * Claude Code's session JSONL to the `Message[]` the library consumes.
+ *
+ * Sidechain rows belong to subagents, and mixing them into their parent would
+ * interleave two conversations. But a subagent's own transcript file is made
+ * *entirely* of sidechain rows, so dropping them unconditionally throws those
+ * files away whole. Hence: skip sidechain rows only when the file has non-
+ * sidechain rows to keep.
+ */
 export function readTranscript(path: string): Message[] {
-  const messages: Message[] = [];
-  for (const line of readFileSync(path, 'utf8').split('\n')) {
+  const lines = readFileSync(path, 'utf8').split('\n');
+  const rows: any[] = [];
+  for (const line of lines) {
     if (line.trim() === '') continue;
-    let row: any;
     try {
-      row = JSON.parse(line);
+      rows.push(JSON.parse(line));
     } catch {
-      continue;
+      /* a session being written to can end mid-line */
     }
+  }
+  const conversational = rows.filter((row) => row.type === 'assistant' || row.type === 'user');
+  const skipSidechain = conversational.some((row) => !row.isSidechain);
+
+  const messages: Message[] = [];
+  for (const row of rows) {
     if (row.type !== 'assistant' && row.type !== 'user') continue;
-    if (row.isSidechain) continue;
+    if (skipSidechain && row.isSidechain) continue;
     const content = row.message?.content;
     const blocks = Array.isArray(content) ? content : [];
     const toolUses: ToolUse[] = blocks

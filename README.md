@@ -47,30 +47,41 @@ altitudes was lower.
 
 ### 2. The decision model loses to a logistic regression
 
-With that fixed, 721 tool calls were labelled from real sessions — no
+With that fixed, 1063 tool calls from 18 real sessions were labelled — no
 hand-labelling and no teacher model. The signal is behavioural: if the assistant
 later reproduced a distinctive run of eight words from an output, in its prose or
 inside a later tool input such as an `Edit`'s `old_string`, that output was
 needed verbatim. If it simply read the same target again, the output was
 reproducible by definition.
 
-Then every checkpoint and question wording was scored against those labels, held
-out by session:
+Then every checkpoint and question wording was scored against those labels.
+**Not once** — a single split flatters whatever it measures, and this was caught
+happening: on an earlier 721-call corpus the built-in scorer looked like 0.918
+and Laya's best like 0.694, and both moved once the corpus grew. The numbers
+below are the mean over **10 grouped splits**, each holding out 30% of sessions,
+with every scorer judged on the same split so the comparison is paired
+(`eval/repeat.ts`):
 
-| scorer | AUC | ECE | chars freed at 90% safety |
+| scorer | AUC (mean ± sd) | worst split | chars freed at 90% safety |
 |---|---|---|---|
-| **built-in logistic, 13 features** | **0.918** | **0.053** | **26.4%** |
-| output size alone | 0.890 | — | 7.6% |
-| laya multilingual, "direct" wording | 0.694 | 0.575 | 4.5% |
-| laya typed-decisions, "direct" | 0.676 | 0.422 | 11.5% |
-| laya english, "reproducible" | 0.566 | 0.383 | 4.0% |
+| **built-in logistic, 13 features** | **0.895 ± 0.073** | 0.687 | **38.9%** |
+| output size alone | 0.876 ± 0.011 | 0.855 | 11.4% |
+| laya typed-decisions, "direct" | 0.721 ± 0.021 | 0.686 | 12.1% |
+| laya multilingual, "direct" | 0.667 ± 0.022 | 0.644 | 4.5% |
+| laya english, "entailment" | 0.628 ± 0.015 | 0.610 | 18.0% |
+| laya typed-decisions, "reproducible" | 0.419 ± 0.024 | 0.393 | 8.2% |
 | keep everything | 0.500 | — | 0.0% |
 
-AUC 0.5 is a coin flip. The features that go into a call's state carry the
-signal, and a 322M-parameter encoder asked to read the same facts as prose does
-**worse than a thirteen-coefficient logistic model that needs no sidecar, no GPU
-and no network call** — and is calibrated an order of magnitude better, which is
-what makes `keepThreshold` mean anything.
+AUC 0.5 is a coin flip. The logistic beat the best Laya config on **10 of 10
+splits**, by +0.174 on average — but by as little as **+0.002** on the closest
+one, so the margin is not uniform. Leave-one-session-out over all 18 sessions
+puts it at AUC 0.862 with ECE 0.019, an order of magnitude better calibrated
+than Laya's 0.42-0.71, which is what makes `keepThreshold` mean anything.
+
+Note also that **output size alone** scores 0.876 with a quarter of the
+variance. Most of the signal is "big outputs get reused"; the other twelve
+features earn their place on the product metric (39% of characters freed against
+11%), not on ranking.
 
 This is not a criticism of Laya. Its own README says the base checkpoints score
 near chance on typed-decision workflows and that it should be treated as a fast
@@ -158,11 +169,16 @@ Codex integration itself is not. The Claude Code path is the one that has run.
 ## Reproducing the numbers
 
 ```sh
-bun eval/extract-labels.ts   # labels from ~/.claude/projects/**/*.jsonl
-bun eval/baseline.ts         # cheap-feature baselines vs every Laya config
-bun eval/fit.ts              # refit the shipped coefficients, print LOSO AUC
-bun eval/score.ts --port 8001   # needs a laya-serve sidecar
+bun eval/extract-labels.ts      # labels from ~/.claude/projects/**/*.jsonl
+bun eval/score.ts --port 8001   # score every checkpoint x phrasing (needs laya-serve)
+bun eval/repeat.ts              # 10 grouped splits: mean, sd, worst case, paired wins
+bun eval/baseline.ts            # cheap-feature baselines, plus a label-confound check
+bun eval/fit.ts                 # refit the shipped coefficients, print LOSO AUC
 ```
+
+`eval/repeat.ts` is the one to trust. Subagent transcripts count as their own
+sessions; they are entirely sidechain rows, and dropping sidechains
+unconditionally threw those files away whole.
 
 The corpus is whatever sessions are on the machine, so absolute numbers will
 differ. The comparison is what matters, and `eval/baseline.ts` prints it.
@@ -173,7 +189,7 @@ Being precise about this, because "it compiles" is not evidence.
 
 | Claim | How |
 |---|---|
-| Scoring beats the model it replaces | 721 labelled calls, held out by session: AUC 0.918 vs 0.694 (`eval/`) |
+| Scoring beats the model it replaces | 1063 labelled calls, 18 sessions, 10 grouped splits: AUC 0.895 ± 0.073 vs 0.721, winning 10/10 paired splits (`eval/repeat.ts`) |
 | States never overflow the checkpoint | asserted for outputs from 0 to 2,000,000 chars |
 | No orphaned `tool_use`/`tool_result` survives | the hook run over a **real** session from disk; an orphan is rejected by the API and would break the session compaction was meant to save |
 | User and assistant prose is never touched | same real-session test |
