@@ -3,6 +3,8 @@
 Context compaction that scores every tool call before it compacts, keeps what is
 still needed verbatim, and drops the rest. Local, offline, no API key.
 
+**[The measurements, presented →](https://axeforging.github.io/laya-compact/)**
+
 A fork of [tamaratran/fast-jev-compaction][up1] (Claude Code) and
 [fatelei/jev-compact][up2] (Codex CLI), which do the same thing with TypeSafe's
 hosted **Jev** model. This one does not send your session to anyone.
