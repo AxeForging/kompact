@@ -173,7 +173,12 @@ a:hover{ color: var(--accent); }
 }
 .upfront p{ margin:0; font-size: var(--text-sm); line-height:1.45; color: var(--on-flood-2); }
 .upfront b{
-  display:block; font-family: var(--display); font-optical-sizing: auto;
+  /* `auto` puts this on Bodoni's opsz 30 drawing, where the hairlines are thin
+     by design and disappear on the flood: the figure one lost both serifs and
+     read as a bare stem, `I90 ms`. `none` pins the family default, opsz 11 — the
+     text-size drawing, which keeps the Didone contrast but at a weight that
+     survives light-on-dark at 30px. */
+  display:block; font-family: var(--display); font-optical-sizing: none;
   font-size: 1.9rem; line-height:1.1; font-weight:700; color: var(--on-flood);
   font-variant-numeric: tabular-nums; letter-spacing:0;
 }
@@ -564,6 +569,12 @@ details.more > *:not(summary):last-child{ margin-bottom: var(--space-md); }
 .stream__track{ height: 10px; background: var(--paper-sunk); position:relative; }
 .stream__fill{ position:absolute; inset:0 auto 0 0; width:0; background: var(--accent-ink); }
 .stream__n{ text-align:right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+/* The row the draft below came from. Marked, not coloured: this is the one place
+   the page has to say "this bar is that file". */
+.stream__row--drafted{ border-bottom-color: var(--accent); }
+.stream__row--drafted code{ color: var(--accent-ink); font-weight:600; }
+.stream__row--drafted .stream__n{ color: var(--accent-ink); font-weight:700; }
+.stream__row--drafted .stream__n::after{ content: " \2193"; }
 /* The end of the story: the row at the top becomes a file. This is the real
    output of `npm run propose -- --write 1`, rendered by the same function the
    CLI calls, so the page shows the product rather than a picture of it. */
@@ -575,6 +586,8 @@ details.more > *:not(summary):last-child{ margin-bottom: var(--space-md); }
   font-size: var(--text-xs); line-height:1.65; white-space: pre-wrap; overflow-wrap:anywhere;
 }
 .stream__draft[data-pending="1"]{ opacity: 0.25; }
+/* Sits above the file it introduces, not below a figure like every other caption. */
+.stream__says{ margin: 0 0 var(--space-xs); color: var(--ink-2); max-width: 64ch; }
 @media (max-width: 560px){
   /* Two rows, not three. Auto-placement put the count on its own line below the
      bar, where it sat nearer the next shape's name than to the bar it counts. */
@@ -1227,7 +1240,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </div>
     <ol class="stream__list" id="stream-list"></ol>
     <div class="stream__draft" id="stream-draft">
-      <p class="label">and what <code>npm run propose -- --write 1</code> then writes</p>
+      <p class="caption stream__says" id="stream-draft-label"></p>
       <pre><code id="stream-draft-text"></code></pre>
     </div>
     <p class="caption" id="stream-caption"></p>
@@ -1739,7 +1752,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <div class="cmd">
     <div class="cmd__head">
       <p class="label">shell &#183; nothing installed</p>
-      <button class="copy" type="button" data-copy hidden>Copy</button>
+      <button class="copy" type="button" data-copy hidden aria-label="Copy the commands that try it without installing">Copy</button>
       <p class="visually-hidden" role="status" aria-live="polite"></p>
     </div>
     <pre tabindex="0" data-label="Shell commands to try it without installing"><code><span class="cmd__line">git clone https://github.com/AxeForging/laya-compact</span><span class="cmd__line">cd laya-compact</span><span class="cmd__line">npm install</span><span class="cmd__line">npm run dry-run</span></code></pre>
@@ -1747,7 +1760,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <div class="cmd">
     <div class="cmd__head">
       <p class="label">shell &#183; then install it</p>
-      <button class="copy" type="button" data-copy hidden>Copy</button>
+      <button class="copy" type="button" data-copy hidden aria-label="Copy the commands that install it">Copy</button>
       <p class="visually-hidden" role="status" aria-live="polite"></p>
     </div>
     <pre tabindex="0" data-label="Shell commands to install it"><code><span class="cmd__line">export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1</span><span class="cmd__gap"></span><span class="cmd__line">claude plugin marketplace add AxeForging/laya-compact</span><span class="cmd__line">claude plugin install laya-compact@laya-compact</span></code></pre>
@@ -2060,6 +2073,7 @@ if (streamBox && streamData && streamData.stream.length) {
     playing = false;
     paint(streamData.stream.length);
     if (draftBox) draftBox.removeAttribute('data-pending');
+    markTop(true);
     label();
   };
   const label = () => { runEl.textContent = playing ? 'Stop' : 'Watch it count'; };
@@ -2067,6 +2081,7 @@ if (streamBox && streamData && streamData.stream.length) {
     if (playing) return;
     playing = true;
     if (draftBox) draftBox.setAttribute('data-pending', '1');
+    markTop(false);
     label();
     const started = performance.now();
     const step = (now) => {
@@ -2084,10 +2099,29 @@ if (streamBox && streamData && streamData.stream.length) {
   const draftBox = document.getElementById('stream-draft');
   const draftText = document.getElementById('stream-draft-text');
   if (draftText) draftText.textContent = streamData.draft;
+  // Name the row the file came from. The bars and the draft sat beside each other
+  // saying nothing about each other, so the step the whole feature turns on — a
+  // shape that repeats becomes a file — was left for the reader to infer.
+  const draftLabel = document.getElementById('stream-draft-label');
+  if (draftLabel && streamData.top) {
+    const sig = document.createElement('code');
+    sig.textContent = streamData.top;
+    const where = document.createElement('code');
+    where.textContent = streamData.path;
+    const cmd = document.createElement('code');
+    cmd.textContent = 'npm run propose -- --write 1';
+    draftLabel.append('The marked row, ', sig, ', is what ', cmd, ' writes to ', where, ':');
+  }
+  // The row the draft came from, marked once the count settles.
+  const markTop = (on) => {
+    const first = list.firstElementChild;
+    if (first) first.classList.toggle('stream__row--drafted', on);
+  };
 
   // Settled first, so with the script starved the numbers on screen are the true
   // ones rather than a half-run.
   paint(streamData.stream.length);
+  markTop(true);
   streamBox.hidden = false;
   // The element ships hidden, so a `#stream` link is resolved by the browser
   // before this runs and lands on whitespace. Put the reader where they asked.

@@ -15,7 +15,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { estimateSaved } from '../src/signals.js';
-import { type Proposal, draft } from './propose.js';
+import { type Proposal, draft, slugFor } from './propose.js';
 
 type Row = {
   kind: string;
@@ -155,6 +155,11 @@ writeFileSync(join(dir, '..', 'docs', 'signals-data.js'),
       sig: ranked[0]?.sig ?? '',
       saved: ranked[0]?.saved ?? 0,
     } as Proposal),
+    // Which row the draft came from, and where `--write 1` puts it. The bars and
+    // the file sat next to each other saying nothing about each other; a reader
+    // could watch the whole run and not see that one becomes the other.
+    top: ranked[0]?.sig ?? '',
+    path: `.laya/proposals/${slugFor('command', ranked[0]?.sig ?? '')}/SKILL.md`,
     shapes: fixture.meta.shapes,
     repeated: fixture.meta.repeated,
   })};\n`);
