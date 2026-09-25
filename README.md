@@ -3,6 +3,11 @@
 Context compaction that scores every tool call before it compacts, keeps what is
 still needed verbatim, and drops the rest. Local, offline, no API key.
 
+It answers up to **six compactions** before Claude Code's own model summary
+runs — about 8 ms each, each handing back nine points of your context window —
+so the summary is deferred rather than replaced, and the file you read is still
+the file rather than a description of it.
+
 **[The measurements, presented →](https://axeforging.github.io/kompact/)**
 
 A fork of [tamaratran/fast-jev-compaction][up1] (Claude Code) and
