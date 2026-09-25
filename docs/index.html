@@ -2082,12 +2082,14 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <summary><h3>If nothing happens</h3></summary>
   <p>
     It says so, every time it fires. On each compaction the plugin raises a notice reading
-    <code>kept 34/212 messages, no summary (23% reduction;
-    34&nbsp;kept,&nbsp;1&nbsp;results&nbsp;truncated,&nbsp;2&nbsp;calls&nbsp;dropped,&nbsp;4&nbsp;pinned;
-    41&nbsp;scored;&nbsp;compacted&nbsp;in&nbsp;4ms)</code> — and writes the
-    same line, plus one per decision, to the session log. The parts sum to what was scored, and
-    the time is the whole compaction — collecting the calls, scoring them, deciding, and
-    rebuilding the transcript — for the 41 calls in that one, not the 1,762 in
+    <code>kept 202/260 messages, no summary (pass 1 of 6, freed 10.9% of the context window;
+    17%&nbsp;reduction;
+    40&nbsp;kept,&nbsp;2&nbsp;results&nbsp;truncated,&nbsp;29&nbsp;calls&nbsp;dropped,&nbsp;2&nbsp;pinned;
+    71&nbsp;scored;&nbsp;compacted&nbsp;in&nbsp;16ms)</code> — and writes the
+    same line, plus one per decision, to the session log. The pass number says where in
+    <a href="#demo">the ladder</a> you are, the parts sum to what was scored, and the time is
+    the whole compaction — collecting the calls, scoring them, deciding, and rebuilding the
+    transcript — for the 71 calls in that one, not the 1,762 in
     <a href="#cost">section 06, Cost</a>. If anything at all goes wrong you get
     the other notice instead, naming the reason:
     <code>fallback to built-in summary (…)</code>. Silence at a compaction is

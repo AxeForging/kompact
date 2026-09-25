@@ -374,6 +374,22 @@ export function decideHandover(input: {
   return { take: true, why: `freed ${points.toFixed(1)}% of the context window` };
 }
 
+/**
+ * The line a reader sees, and the one the page quotes.
+ *
+ * Exported and pure so the page's example can be bound to it. The `summarize`
+ * half was already bound and the wrapper around it was not, so the pass counter
+ * arrived and the page went on showing a notice that had not existed for a
+ * version — on the one string someone compares against their own terminal.
+ */
+export function compactionNotice(input: {
+  kept: number; before: number; pass: number; maxPasses: number; why: string; result: CompactResult;
+}): string {
+  const { kept, before, pass, maxPasses, why, result } = input;
+  return `kept ${kept}/${before} messages, no summary ` +
+    `(pass ${pass} of ${maxPasses}, ${why}; ${summarize(result)})`;
+}
+
 const UI_LOG_MAX_CHARS = 4096;
 
 export function decisionLog(result: CompactResult): string {
@@ -522,8 +538,10 @@ export const register: Register = (on: On, options: PluginOptions) => {
         };
         await writePasses($, store);
       }
-      notify($, `kept ${messages.length}/${event.messages.length} messages, no summary ` +
-        `(pass ${seen + 1} of ${config.maxPasses}, ${verdict.why}; ${summarize(result)})`);
+      notify($, compactionNotice({
+        kept: messages.length, before: event.messages.length,
+        pass: seen + 1, maxPasses: config.maxPasses, why: verdict.why, result,
+      }));
       return { messages, tokensBefore: stats.tokensBefore, tokensAfter: stats.tokensAfter };
     } catch (error) {
       // Any failure at all falls back rather than risking a broken session.

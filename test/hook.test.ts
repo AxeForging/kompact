@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  askerFor, compactSession, decisionLogLines, readLocalWeights, register, resolveHookConfig, summarize, toSessionMessages,
+  askerFor, compactSession, compactionNotice, decisionLogLines, readLocalWeights, register,
+  resolveHookConfig, summarize, toSessionMessages,
 } from '../hooks/kompact.js';
 import { FeatureAsker, parseWeights } from '../src/features.js';
 import type { CompactResult, Message } from '../src/index.js';
@@ -136,11 +137,17 @@ describe('summarize', () => {
   it('emits the exact line the page tells readers to look for', () => {
     // Bind the whole line, not fragments: summarize() puts its semicolon after
     // whichever part comes last, so asserting "calls dropped;" broke the moment
-    // the example gained a `pinned` part it needed to balance.
-    const line = summarize(stats({
-      charsBefore: 1000, charsAfter: 770,
-      kept: 34, resultsDropped: 1, callsDropped: 2, pinned: 4, requests: 41, ms: 4,
-    }));
+    // the example gained a `pinned` part it needed to balance. And bind the
+    // wrapper too, which was not bound when the pass counter was added — the
+    // page then quoted a notice the hook had stopped emitting.
+    const line = compactionNotice({
+      kept: 202, before: 260, pass: 1, maxPasses: 6,
+      why: 'freed 10.9% of the context window',
+      result: stats({
+        charsBefore: 1000, charsAfter: 830,
+        kept: 40, resultsDropped: 2, callsDropped: 29, pinned: 2, requests: 71, ms: 16,
+      }),
+    });
     // The page wraps inside the <code>, so compare on collapsed whitespace.
     const page = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'docs', 'index.html'), 'utf8')
       .replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
