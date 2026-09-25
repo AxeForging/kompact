@@ -15,7 +15,10 @@ import { loadCorpus } from './corpus.js';
 import { FEATURE_NAMES, featureVector } from '../src/features.js';
 import type { LabelRow } from './extract-labels.js';
 
-const { rows, from } = loadCorpus(import.meta.dirname);
+// `--fixture` forces the committed corpus, so a clone and this machine can be
+// shown to agree rather than assumed to.
+const { rows, from } = loadCorpus(import.meta.dirname,
+  process.argv.includes('--fixture') ? { fixtureOnly: true } : {});
 console.log(`corpus (${from}): ${rows.length} calls, ${new Set(rows.map((r) => r.session)).size} sessions\n`);
 
 

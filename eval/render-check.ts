@@ -78,6 +78,26 @@ const PROBE = String.raw`
   say(document.documentElement.scrollWidth <= innerWidth + 1, 'no horizontal page scroll @' + w,
       document.documentElement.scrollWidth + ' vs ' + innerWidth);
 
+  // Every in-page anchor has to land clear of the sticky contents bar. They
+  // used to land 29px behind it on a laptop and 116px behind it on a phone,
+  // where the heading and the first fact were simply not on screen.
+  const bar = document.querySelector('.contents-bar');
+  const barH = bar ? Math.round(bar.getBoundingClientRect().height) : 0;
+  for (const link of document.querySelectorAll('.contents a[href^="#"]')) {
+    const target = document.querySelector(link.getAttribute('href'));
+    if (!target) { say(false, 'nav target exists @' + w, link.getAttribute('href')); continue; }
+    const margin = parseFloat(getComputedStyle(target).scrollMarginTop) || 0;
+    say(margin >= barH, 'anchor clears the sticky bar @' + w,
+        link.getAttribute('href') + ' margin=' + Math.round(margin) + ' bar=' + barH);
+  }
+
+  // A focusable box that cannot scroll is a tab stop that does nothing.
+  for (const el of document.querySelectorAll('.scroller, .plate__scroll, .cmd pre')) {
+    const focusable = el.getAttribute('tabindex') === '0';
+    say(focusable === scrolls(el), 'focusable only where it scrolls @' + w,
+        (el.dataset.label || el.className).slice(0, 38) + ' focusable=' + focusable + ' scrolls=' + scrolls(el));
+  }
+
   // Every figure the page prints as a table cell must be reachable, not clipped
   // off the end of a scroller that cannot scroll.
   for (const el of document.querySelectorAll('.scroller')) {

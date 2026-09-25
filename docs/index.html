@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>laya-compact — context compaction you can check</title>
-<meta name="description" content="A Claude Code plugin that scores every tool call before compaction and keeps only what is still needed verbatim. Local, no API key, no GPU. AUC 0.905 ± 0.078 over 10 grouped splits of 1063 paired calls; 0.789 leave-one-out over all 41 sessions.">
+<meta name="description" content="A Claude Code plugin that scores every tool call before compaction and keeps only what is still needed verbatim. Local, no API key, no GPU. AUC 0.905 ± 0.078, worst split 0.684, over 10 grouped splits of 1063 paired calls; 0.789 leave-one-out over all 41 sessions.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,700&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap" rel="stylesheet">
@@ -13,7 +13,9 @@
   color-scheme: light;
   /* Neutrals tinted toward the accent hue (iron oxide, 38) — AxeForging. */
   --paper:      oklch(0.983 0.004 45);
-  --paper-sunk: oklch(0.957 0.006 45);
+  /* 0.957 put the chart’s 0.50–1.00 reference track at 1.08:1 on paper — the
+     frame every bar is read against, all but invisible. */
+  --paper-sunk: oklch(0.935 0.010 45);
   --rule:       oklch(0.885 0.008 45);
   --rule-firm:  oklch(0.760 0.010 45);
   --ink:        oklch(0.245 0.012 45);
@@ -190,7 +192,11 @@ ul.plain li::marker{ color: var(--ink-3); }
 /* The rule sits on an inner pseudo-element rather than on the section box: on
    the box it spanned the padding too, so every section divider ran 64px wider
    each side than the rubric underline directly beneath it. */
-section{ scroll-margin-top: var(--space-lg); padding-block: clamp(var(--space-xl), 4.5vw, var(--space-3xl)); position:relative; }
+/* Every anchor used to land behind the sticky contents bar: 29px on a laptop
+   and 116px on a phone, where the heading and the first fact were invisible.
+   --nav-h is set from the bar’s measured height in retune(). */
+section, [id]{ scroll-margin-top: calc(var(--nav-h, 56px) + var(--space-sm)); }
+section{ padding-block: clamp(var(--space-xl), 4.5vw, var(--space-3xl)); position:relative; }
 section.wrap::before{
   content:""; position:absolute; top:0;
   left: clamp(20px, 5vw, 64px); right: clamp(20px, 5vw, 64px);
@@ -239,7 +245,8 @@ table.rows caption{ text-align:left; }
 }
 .row__value b{ font-weight:400; color: var(--ink-3); display:block; font-size: var(--text-xs); }
 
-.track{ position:relative; height: 34px; background: var(--paper-sunk); }
+.track{ position:relative; height: 34px; background: var(--paper-sunk);
+  border-right: 1px solid var(--ink-3); }
 .track::before{ /* the chance baseline, at x=0 of our 0.5..1.0 domain */
   content:""; position:absolute; inset-block:0; left:0; width:2px; background: var(--ink-3);
 }
@@ -282,7 +289,7 @@ table.rows caption{ text-align:left; }
 /* The shadow says "there is more"; this says which way, for anyone who reads the
    caption before dragging a table. Only where a table cannot fit. */
 @media (max-width: 560px){
-  .scroller::before{
+  .scroller::before, .cmd pre::before{
     content: "drag the table sideways for the rest of it";
     display:block; font-family: var(--sans); font-size: var(--text-xs);
     letter-spacing:0.06em; text-transform:uppercase; color: var(--ink-3);
@@ -295,7 +302,7 @@ table.data th, table.data td{ text-align:left; padding: var(--space-xs) var(--sp
 table.data thead th{ font-size: var(--text-xs); letter-spacing:0.01em;
   color: var(--ink-3); font-weight:600; border-bottom: 1px solid var(--rule-firm); }
 table.data td.n, table.data th.n{ text-align:right; }
-table.data tbody tr:last-child td{ border-bottom: 1px solid var(--rule-firm); }
+table.data tbody tr:last-child > *{ border-bottom: 1px solid var(--rule-firm); }
 table.data tr.same td, table.data tr.same th{ background: var(--accent-wash); }
 table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink); font-weight:700; }
 .caption{ font-family: var(--sans); font-size: var(--text-xs); color: var(--ink-3);
@@ -363,7 +370,8 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 .demo__who{ min-width:0; }
 .demo__who b{ display:block; font-size: var(--text-sm); font-weight:600; color: var(--ink); }
 .demo__who span{ display:block; color: var(--ink-3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.demo__track{ position:relative; height: 16px; background: var(--paper-sunk); min-width:0; }
+.demo__track{ position:relative; height: 16px; background: var(--paper-sunk); min-width:0;
+  border-right: 1px solid var(--ink-3); }
 .demo__fill{
   position:absolute; inset-block:0; left:0; width: var(--w); background: var(--ink-2);
   transform-origin: left center; transform: scaleX(var(--keep, 1));
@@ -412,6 +420,7 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 
 /* ── quote / finding ──────────────────────────────────────────────────── */
 .finding{ margin: var(--space-xl) 0 0; padding: var(--space-lg) 0; border-top: 2px solid var(--ink); border-bottom:1px solid var(--rule); }
+.finding--loss{ border-top-color: var(--ink-3); }
 .finding p{ font-size: var(--text-lg); line-height:1.35; margin:0; max-width: 40ch; font-weight:500; }
 .finding p .val{ white-space:nowrap; }
 
@@ -507,7 +516,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </p>
   </div>
   <div class="colophon reveal" style="--d:170ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>138</b> tests</span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>139</b> tests</span>
     <span><b>0</b> network calls by default</span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
 </div>
@@ -526,7 +535,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p class="lede">
     The plugin started as a port onto <a rel="noopener" href="https://github.com/NandhaKishorM/laya">Laya</a>,
     a 322M-parameter decision model that runs locally. Measured against 1,063 tool calls
-    labelled from 18 real sessions, a twelve-coefficient logistic regression over facts
+    labelled from 18 real sessions, a thirteen-coefficient logistic regression over facts
     already computed for free beat every Laya checkpoint and question wording.
   </p>
 
@@ -559,7 +568,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
           <td class="row__value">0.905 <span style="font-weight:400">± 0.078</span><b>worst split 0.684</b></td>
         </tr>
         <tr class="reveal" style="--d:290ms">
-          <th scope="row" class="row__name">Output size alone<span>1 coefficient</span></th>
+          <th scope="row" class="row__name">Output size alone<span>one raw feature, nothing fitted</span></th>
           <td class="row__plot">
             <div class="track">
               <div class="bar" style="--w:75.6%;--d:330ms"></div>
@@ -619,6 +628,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <p>The built-in scorer won <span class="val">10 of 10</span> paired splits, by
        <span class="val">+0.186</span> on average and by <span class="val">+0.018</span> on the closest.</p>
   </div>
+  <div class="finding finding--loss reveal" style="--d:700ms">
+    <p>Held out one session at a time across all <span class="val">41</span>, the same scorer
+       gets <span class="val">0.789</span>, not <span class="val">0.905</span>.
+       That is the number to plan around.</p>
+  </div>
   <p class="caption">
     <b>Read that bar as the narrow corpus.</b> Those splits hold out 30% of 18 sessions — the
     sessions every Laya config was scored against, so the comparison is possible at all. The
@@ -652,7 +666,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <!-- Below ~760px the 1200-unit plate scales to a third and its 13px labels
          render at ~4px. Rather than ship a second asset, it keeps its size and
          drags, the same way the six tables on this page do. -->
-    <div class="plate__scroll" tabindex="0" role="region" aria-label="Plot: the score distribution">
+    <div class="plate__scroll" tabindex="0" data-label="Plot: the score distribution">
     <img src="distribution.svg" width="1200" height="420" decoding="async"
          alt="A strip plot of 2,239 tool calls. The upper band holds the 247 whose output was reused
               verbatim later; the lower band the 1,992 that were not. Position is the model's
@@ -713,7 +727,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     The transcript is constructed — every real session on this machine is someone's work and
     this page is public. The decisions are not: the list is produced by running the shipped
     scorer with the shipped defaults, and nothing in it was chosen by hand. Regenerate it with
-    <code>npm run docs:demo</code>.
+    <code>npm&nbsp;run&nbsp;docs:demo</code>.
   </p>
 
   <h3>The Edit it wanted to delete</h3>
@@ -749,7 +763,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     Compaction stops being a model call and becomes arithmetic. These are whole session
     logs, so the totals span more than one context window, so the ratio is what transfers.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: per-session results on this machine">
+  <div class="scroller" tabindex="0" data-label="Table: per-session results on this machine">
     <table class="data">
       <caption class="visually-hidden">per-session results on this machine</caption>
       <thead><tr>
@@ -768,7 +782,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </div>
   <p class="caption">
     Modest on purpose. The absolute cut this replaced frees 95.3% of the labelled corpus and
-    keeps 8.9% of the outputs that were reused later — the first row of the table above, and
+    keeps 8.9% of the outputs that were reused later — the first row of the policy table below, and
     the reason a fifth is the honest number. Measured on one machine’s own
     transcripts, which grow as work continues — the per-session column is the figure that carries.
   </p>
@@ -802,7 +816,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     the keep threshold acting as a floor that nothing is dropped above. Simulated per session on
     the labelled corpus, scored leave-one-session-out:
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: the policy sweep">
+  <div class="scroller" tabindex="0" data-label="Table: the policy sweep">
     <table class="data">
       <caption class="visually-hidden">the policy sweep</caption>
       <thead><tr>
@@ -831,7 +845,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     what running it costs. One <code>laya-serve</code> process loads every checkpoint and routes
     per request, so memory and start-up belong to the router, not to the checkpoint you pick.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: what the sidecar costs to run">
+  <div class="scroller" tabindex="0" data-label="Table: what the sidecar costs to run">
     <table class="data">
       <caption class="visually-hidden">what the sidecar costs to run</caption>
       <thead><tr>
@@ -861,7 +875,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     deployment was rolled back</em> — of four states. Every one of them states the fact
     verbatim. Only the position of the sentence changes.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: the truncation test">
+  <div class="scroller" tabindex="0" data-label="Table: the truncation test">
     <table class="data">
       <caption class="visually-hidden">the truncation test</caption>
       <thead><tr>
@@ -901,7 +915,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     on where a partial head counts. Neither is rounded to hide it.) Held-out scores, shipped policy, per session: <strong>55 of the 247 reused
     outputs are dropped</strong> — 1.34 a session, and only one of them kept a head.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: what a wrong drop costs">
+  <div class="scroller" tabindex="0" data-label="Table: what a wrong drop costs">
     <table class="data">
       <caption class="visually-hidden">what a wrong drop costs</caption>
       <thead><tr>
@@ -934,7 +948,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     actually compact — 60% of a session's tool output — decide only the calls present at that
     moment, then count the reuses that come <em>afterwards</em> whose source was dropped.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: what the work loses">
+  <div class="scroller" tabindex="0" data-label="Table: what the work loses">
     <table class="data">
       <caption class="visually-hidden">what the work loses</caption>
       <thead><tr>
@@ -1086,9 +1100,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <h3>Isn't this just a heuristic with extra steps?</h3>
       <p>It is a heuristic with error bars, which is the difference. Twelve coefficients fitted
         on labelled data, evaluated on sessions held out whole, calibrated well enough that the
-        threshold means a probability — expected calibration error 0.019 on the 18-session corpus,
-        0.051 on all 41. “Big outputs get reused”
-        alone reaches 0.878, so most of the signal really is one feature; the other eleven earn
+        threshold means a probability — expected calibration error 0.019 leave-one-session-out on the
+        18-session corpus and 0.051 on all 41 — the 0.044 in section 01 is the same quantity
+        averaged over ten grouped splits instead. “Big outputs get reused”
+        alone reaches 0.878, so most of the signal really is one feature — three coefficients of the
+        twelve, since size is banded — and the other eight earn
         their place on characters freed at a fixed safety level, not on ranking.</p>
     </div>
     <div class="faq__item">
@@ -1136,8 +1152,45 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </div>
 </section>
 
+<section class="wrap" id="session" aria-labelledby="session-h">
+  <p class="rubric"><span class="rubric__n">09</span>Your session</p>
+  <h2 id="session-h">What it touches, what it never touches, and how you know.</h2>
+  <p class="lede">
+    Everything below is the shipped behaviour, not a policy: each line is a default in
+    <code>src/compact.ts</code> or a guard the scorer does not get a vote on.
+  </p>
+
+  <h3>How you know it is running</h3>
+  <p>
+    It says so, every time it fires. On each compaction the plugin raises a notice —
+    <code>kept 34/212 messages, no summary (23% freed, 0.2 floor)</code> — and writes the same
+    line, plus one line per decision, to the session log. If anything at all goes wrong you get
+    the other notice instead, naming the reason:
+    <code>fallback to built-in summary (…)</code>. Silence at a compaction means the hook never
+    ran, which is the <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> or the version check in
+    <a href="#install">section 10</a>, not a bad decision.
+    <code>claude&nbsp;plugin&nbsp;list</code> confirms it is installed; only the notice confirms
+    it is running.
+  </p>
+
+  <h3>What it does to a session, in full</h3>
+  <ul class="plain">
+    <li>The <b>last six messages</b> are never touched, whatever they contain.</li>
+    <li>Your prose and the assistant’s is never touched. Only tool results and tool calls.</li>
+    <li>A shortened result <b>keeps its first 300 characters</b>, so the call is still legible
+      and the tool can be run again.</li>
+    <li>A call that recorded a change — <code>Edit</code>, <code>Write</code>,
+      <code>MultiEdit</code>, <code>NotebookEdit</code> — is <b>never dropped</b>, whatever it scores.</li>
+    <li>Nothing on disk changes. Compaction rewrites what is sent to the model for the rest of
+      the session; the transcript in <code>~/.claude/projects</code> is untouched.</li>
+    <li>Remove it with <code>claude plugin uninstall laya-compact</code>, or unset
+      <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> to turn every function hook off. Either way
+      the next compaction is Claude Code’s own summary again.</li>
+  </ul>
+</section>
+
 <section class="wrap" id="install" aria-labelledby="install-h">
-  <p class="rubric"><span class="rubric__n">09</span>Install</p>
+  <p class="rubric"><span class="rubric__n">10</span>Install</p>
   <h2 id="install-h">Function hooks are early access, so turn them on first.</h2>
   <p class="lede">Tested on Claude Code 2.1.281, which has function hooks. Which release first
      shipped them is <em>not established here</em> — on a build without them the plugin installs
@@ -1155,7 +1208,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <button class="copy" type="button" data-copy hidden>Copy</button>
       <p class="visually-hidden" id="copy-status" role="status" aria-live="polite"></p>
     </div>
-    <pre tabindex="0" role="region" aria-label="Shell commands"><code id="cmd-text">export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
+    <pre tabindex="0" data-label="Shell commands"><code id="cmd-text">export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
 
 claude plugin marketplace add AxeForging/laya-compact
 claude plugin install laya-compact@laya-compact</code></pre>
@@ -1166,32 +1219,7 @@ claude plugin install laya-compact@laya-compact</code></pre>
     response, or a saving below the minimum) falls back to the built-in summary.
   </p>
 
-  <h3>How you know it is running</h3>
-  <p>
-    It says so, every time it fires. On each compaction the plugin raises a notice —
-    <code>kept 34/212 messages, no summary (23% freed, 0.2 floor)</code> — and writes the same
-    line, plus one line per decision, to the session log. If anything at all goes wrong you get
-    the other notice instead, naming the reason:
-    <code>fallback to built-in summary (…)</code>. Silence at a compaction means the hook never
-    ran, which is the <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> or the version check above,
-    not a bad decision. <code>claude&nbsp;plugin&nbsp;list</code> confirms it is installed;
-    only the notice confirms it is running.
-  </p>
 
-  <h3 id="session">What it does to a session, in full</h3>
-  <ul class="plain">
-    <li>The <b>last six messages</b> are never touched, whatever they contain.</li>
-    <li>Your prose and the assistant’s is never touched. Only tool results and tool calls.</li>
-    <li>A shortened result <b>keeps its first 300 characters</b>, so the call is still legible
-      and the tool can be run again.</li>
-    <li>A call that recorded a change — <code>Edit</code>, <code>Write</code>,
-      <code>MultiEdit</code>, <code>NotebookEdit</code> — is <b>never dropped</b>, whatever it scores.</li>
-    <li>Nothing on disk changes. Compaction rewrites what is sent to the model for the rest of
-      the session; the transcript in <code>~/.claude/projects</code> is untouched.</li>
-    <li>Remove it with <code>claude plugin uninstall laya-compact</code>, or unset
-      <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> to turn every function hook off. Either way
-      the next compaction is Claude Code’s own summary again.</li>
-  </ul>
 </section>
 </main>
 
@@ -1244,17 +1272,18 @@ copyButton?.addEventListener('click', async (event) => {
 // markup ships the handle so it survives with scripts blocked, and this takes
 // it away again wherever there is nothing to scroll to.
 const boxes = [...document.querySelectorAll('.scroller, .plate__scroll, .cmd pre')];
+const bar = document.querySelector('.contents-bar');
 const retune = () => {
+  // Anchors have to clear the sticky bar, whose height changes with the width
+  // it wraps at: 53px on a laptop, 140px on a phone.
+  if (bar) document.documentElement.style.setProperty('--nav-h', `${Math.round(bar.offsetHeight)}px`);
   for (const box of boxes) {
-    const overflows = box.scrollWidth > box.clientWidth + 1;
-    if (overflows) {
+    if (box.scrollWidth > box.clientWidth + 1) {
       box.setAttribute('tabindex', '0');
+      box.setAttribute('role', 'region');
       if (box.dataset.label) box.setAttribute('aria-label', box.dataset.label);
-      if (box.dataset.role) box.setAttribute('role', box.dataset.role);
     } else {
       box.removeAttribute('tabindex');
-      if (box.hasAttribute('aria-label')) box.dataset.label = box.getAttribute('aria-label');
-      if (box.hasAttribute('role')) box.dataset.role = box.getAttribute('role');
       box.removeAttribute('role');
       box.removeAttribute('aria-label');
     }

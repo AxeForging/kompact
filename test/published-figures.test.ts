@@ -72,6 +72,9 @@ const shipped = policyRow('budget 0.5, floor 0.20');
 const rejected = policyRow('threshold only, 0.5 (old)');
 const alsoSwept = ['budget 0.6, floor 0.20', 'budget 0.7, floor 0.20'].map(policyRow);
 const closest = /range ([\d.]+) to [\d.]+/.exec(results)?.[1];
+// The figure an installer actually gets. It was quoted in six places and bound
+// in none, because eval/RESULTS.md had no block for it until eval/fit.ts got one.
+const loso = /result_needed: LOSO AUC ([\d.]+)\s+ECE ([\d.]+)/.exec(results);
 
 describe('published figures match eval/RESULTS.md', () => {
   const quoting: Array<[string, string[]]> = [
@@ -145,6 +148,15 @@ describe('published figures match eval/RESULTS.md', () => {
       const pretty = Number(ms).toLocaleString('en-GB');
       expect(`${readme}\n${page}`, `no file quotes the measured ${ms} ms`)
         .toMatch(new RegExp(`\\b(${ms}|${pretty.replace(',', ',')})\\b`));
+    }
+  });
+
+  it('binds the generalisation figure, not only the headline one', () => {
+    expect(loso, 'eval/RESULTS.md has no leave-one-session-out block').not.toBeNull();
+    const [, auc, ece] = loso!;
+    for (const path of ['docs/index.html', 'README.md', 'src/features.ts']) {
+      expect(read(path), `${path} does not quote the LOSO AUC ${auc}`).toContain(auc!);
+      expect(read(path), `${path} does not quote the LOSO ECE ${ece}`).toContain(ece!);
     }
   });
 

@@ -36,6 +36,20 @@ paired vs best laya (typed-decisions/direct):
 features: 13 (tool=Read, tool=Bash, tool=Edit|Write, ...)
 ```
 
+## What the shipped coefficients generalise to — `eval/fit.ts`
+
+The figure above holds out 30% of the eighteen sessions every Laya config was
+scored against. These are the coefficients that actually ship, fitted on all
+2,239 calls and held out one session at a time. It is the lower number, and it
+is the one to plan around. `bun eval/fit.ts --fixture` reproduces it from the
+committed corpus.
+
+```
+corpus (fixture): 2239 calls, 41 sessions
+result_needed: LOSO AUC 0.789  ECE 0.051  positives 247/2239
+call_needed  : LOSO AUC 0.909  ECE 0.047  positives 544/2239
+```
+
 ## Decision policy — `eval/policy.ts`
 
 The scorer produces a ranking; this turns it into a decision. The shipped

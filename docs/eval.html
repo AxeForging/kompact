@@ -116,7 +116,7 @@ footer p{ max-width: 68ch; }
 <header>
   <div class="wrap">
     <h1>Evaluation results</h1>
-    <nav class="contents" aria-label="Contents"><a class="back" href="./">← laya-compact</a><a href="#ranking-quality-eval-repeat-ts">Ranking quality</a><a href="#decision-policy-eval-policy-ts">Decision policy</a><a href="#what-a-wrong-drop-costs-eval-recovery-ts">What a wrong drop costs</a><a href="#whether-the-work-survives-eval-outcome-ts">Whether the work survives</a><a href="#what-it-frees-in-practice-eval-sessions-ts">What it frees in practice</a><a href="#where-the-sidecar-fails-quietly-eval-truncation-ts">Where the sidecar fails quietly</a><a href="#what-the-sidecar-costs-to-run-eval-laya-bench-ts">What the sidecar costs to run</a></nav>
+    <nav class="contents" aria-label="Contents"><a class="back" href="./">← laya-compact</a><a href="#ranking-quality-eval-repeat-ts">Ranking quality</a><a href="#what-the-shipped-coefficients-generalise-to-eval-fit-ts">What the shipped coefficients generalise to</a><a href="#decision-policy-eval-policy-ts">Decision policy</a><a href="#what-a-wrong-drop-costs-eval-recovery-ts">What a wrong drop costs</a><a href="#whether-the-work-survives-eval-outcome-ts">Whether the work survives</a><a href="#what-it-frees-in-practice-eval-sessions-ts">What it frees in practice</a><a href="#where-the-sidecar-fails-quietly-eval-truncation-ts">Where the sidecar fails quietly</a><a href="#what-the-sidecar-costs-to-run-eval-laya-bench-ts">What the sidecar costs to run</a></nav>
   </div>
 </header>
 <main>
@@ -146,6 +146,11 @@ paired vs best laya (typed-decisions/direct):
   -&gt; the free scorer wins on every split; the sidecar is not justified for this task.
 
 features: 13 (tool=Read, tool=Bash, tool=Edit|Write, ...)</pre></div>
+<h2 id="what-the-shipped-coefficients-generalise-to-eval-fit-ts">What the shipped coefficients generalise to — <code>eval/fit.ts</code></h2>
+<p>The figure above holds out 30% of the eighteen sessions every Laya config was scored against. These are the coefficients that actually ship, fitted on all 2,239 calls and held out one session at a time. It is the lower number, and it is the one to plan around. <code>bun eval/fit.ts --fixture</code> reproduces it from the committed corpus.</p>
+<div class="scroller" tabindex="0" role="region" aria-label="What the shipped coefficients generalise to — measured output"><pre>corpus (fixture): 2239 calls, 41 sessions
+result_needed: LOSO AUC 0.789  ECE 0.051  positives 247/2239
+call_needed  : LOSO AUC 0.909  ECE 0.047  positives 544/2239</pre></div>
 <h2 id="decision-policy-eval-policy-ts">Decision policy — <code>eval/policy.ts</code></h2>
 <p>The scorer produces a ranking; this turns it into a decision. The shipped defaults are <strong>budget 0.5, floor 0.20</strong>.</p>
 <div class="scroller" tabindex="0" role="region" aria-label="Decision policy — measured output"><pre>local labels: 2239 calls, 247 genuinely needed, 41 sessions

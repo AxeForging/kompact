@@ -58,6 +58,15 @@ nowhere near its centre.
 ${run('repeat.ts')}
 \`\`\`
 
+## What the shipped coefficients generalise to — \`eval/fit.ts\`
+
+The figure above holds out 30% of the eighteen sessions every Laya config was
+scored against. These are the coefficients that actually ship, fitted on all
+2,239 calls and held out one session at a time. It is the lower number, and it
+is the one to plan around.
+
+${optional('fit.ts')}
+
 ## Decision policy — \`eval/policy.ts\`
 
 The scorer produces a ranking; this turns it into a decision. The shipped
