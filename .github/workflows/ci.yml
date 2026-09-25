@@ -63,6 +63,11 @@ jobs:
       # The published AUC and retention, recomputed from the committed corpus.
       - run: bun run eval:ci
 
+      # The Laya comparison used to vanish on a clone: its cached answers were
+      # gitignored, so the paired block never ran and 0.721 survived as text.
+      - name: the fixture must reproduce the Laya comparison, not just ours
+        run: bun eval/repeat.ts --fixture | grep -q "logistic won 10/10 splits"
+
       # The two published pages are generated; regenerate and fail on a diff, so
       # a stale demonstration or evaluation cannot reach the site.
       - name: the published pages must be up to date

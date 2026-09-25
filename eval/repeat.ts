@@ -13,12 +13,11 @@
  *
  * Run: bun eval/repeat.ts [--iterations 10] [--test-frac 0.3]
  */
-import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { dot, fitLogistic as fit, sigmoid } from './logistic.js';
 import { auc, droppableAt } from './metrics.js';
 import { FEATURE_NAMES, featureVector } from '../src/features.js';
-import { loadCorpus, rowKey } from './corpus.js';
+import { loadCorpus, loadScores, rowKey } from './corpus.js';
 
 const dir = import.meta.dirname;
 const args = process.argv.slice(2);
@@ -47,11 +46,9 @@ function rng(seed: number): () => number {
 
 
 
-const cache: Record<string, Record<string, { result: number }>> = existsSync(join(dir, 'scores.json'))
-  ? JSON.parse(readFileSync(join(dir, 'scores.json'), 'utf8'))
-  : {};
+const { scores: cache, from: scoresFrom } = loadScores(dir, rows);
 const layaConfigs = Object.keys(cache)
-  .filter((key) => rows.filter((r) => cache[key]![r.tool_use_id]).length >= rows.length * 0.95)
+  .filter((key) => rows.filter((r) => cache[key]![rowKey(r)]).length >= rows.length * 0.95)
   .sort();
 
 interface Run { auc: number; drop90: number }
@@ -87,7 +84,7 @@ while (iteration < ITERATIONS && attempts < ITERATIONS * 50) {
   record('logistic (features)', scoreRun(test.map((r) => sigmoid(dot(x.get(rowKey(r))!, w)))));
   record('output size only', scoreRun(test.map((r) => Math.min(1, r.output_chars / 50_000))));
   for (const key of layaConfigs) {
-    record(`laya ${key}`, scoreRun(test.map((r) => cache[key]![r.tool_use_id]?.result ?? 0.5)));
+    record(`laya ${key}`, scoreRun(test.map((r) => cache[key]![rowKey(r)]?.result ?? 0.5)));
   }
 }
 
@@ -98,7 +95,7 @@ function stats(values: number[]): { mean: number; sd: number; lo: number; hi: nu
   return { mean, sd, lo: sorted[0]!, hi: sorted[sorted.length - 1]! };
 }
 
-console.log(`corpus (${from}): ${rows.length} calls, ${rows.filter((r) => r.result_needed).length} positives, ${sessions.length} sessions`);
+console.log(`corpus (${from}), laya answers (${scoresFrom}): ${rows.length} calls, ${rows.filter((r) => r.result_needed).length} positives, ${sessions.length} sessions`);
 console.log(`${iteration} grouped splits, ${Math.round(100 * TEST_FRAC)}% of sessions held out each time\n`);
 
 const header = `${'scorer'.padEnd(34)}${'AUC mean'.padStart(9)}${'sd'.padStart(7)}${'min'.padStart(7)}${'max'.padStart(7)}${'drop@90%'.padStart(10)}`;

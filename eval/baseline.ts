@@ -11,18 +11,14 @@
  *
  * Run: bun eval/baseline.ts
  */
-import { readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
 import { dot, fitLogistic as fit, sigmoid } from './logistic.js';
-import { rowKey } from './corpus.js';
+import { loadCorpus, loadScores, rowKey } from './corpus.js';
 import { auc, droppableAt } from './metrics.js';
 import type { LabelRow } from './extract-labels.js';
 
 const dir = import.meta.dirname;
-const rows: LabelRow[] = readFileSync(join(dir, 'labels.jsonl'), 'utf8')
-  .split('\n')
-  .filter((l) => l.trim() !== '')
-  .map((l) => JSON.parse(l) as LabelRow);
+const { rows, from } = loadCorpus(dir);
+console.log(`corpus (${from}): ${rows.length} calls\n`);
 
 /** Features are read back out of the state prose the model was given, so the
  * baseline sees exactly the same information and nothing more. */
@@ -93,14 +89,13 @@ report('hand rule: Edit/Write+stale drop', rows.map((r) =>
   r.tool === 'Edit' || r.tool === 'Write' ? 0.1 : r.state.includes('changed afterwards') ? 0.3 : 0.9));
 report('logistic on cheap features (LOSO)', rows.map((r) => oof.get(rowKey(r)) ?? 0.5));
 
-const scoresPath = join(dir, 'scores.json');
-if (existsSync(scoresPath)) {
-  const cache = JSON.parse(readFileSync(scoresPath, 'utf8')) as Record<string, Record<string, { result: number }>>;
+const { scores: cache } = loadScores(dir, rows);
+if (Object.keys(cache).length > 0) {
   console.log();
   for (const key of Object.keys(cache).sort()) {
     const got = cache[key]!;
-    if (rows.filter((r) => got[r.tool_use_id]).length < rows.length * 0.9) continue;
-    report(`laya ${key}`, rows.map((r) => got[r.tool_use_id]?.result ?? 0.5));
+    if (rows.filter((r) => got[rowKey(r)]).length < rows.length * 0.9) continue;
+    report(`laya ${key}`, rows.map((r) => got[rowKey(r)]?.result ?? 0.5));
   }
 }
 
@@ -119,8 +114,7 @@ console.log(`${'model'.padEnd(34)}${'AUC'.padStart(6)}${SAFETIES.map((s) => `dro
 console.log('-'.repeat(72));
 report('output size (bigger = keep)', rows.map((r) => Math.min(1, r.output_chars / 50_000)), rateLabels);
 report('logistic (LOSO, count-trained)', rows.map((r) => oof.get(rowKey(r)) ?? 0.5), rateLabels);
-if (existsSync(scoresPath)) {
-  const cache = JSON.parse(readFileSync(scoresPath, 'utf8')) as Record<string, Record<string, { result: number }>>;
+{
   const key = 'multilingual/direct';
-  if (cache[key]) report(`laya ${key}`, rows.map((r) => cache[key]![r.tool_use_id]?.result ?? 0.5), rateLabels);
+  if (cache[key]) report(`laya ${key}`, rows.map((r) => cache[key]![rowKey(r)]?.result ?? 0.5), rateLabels);
 }

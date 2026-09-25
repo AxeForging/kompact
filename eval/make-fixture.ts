@@ -14,9 +14,10 @@
  * target, the output excerpt — no feature reads. So the fixture is required to
  * produce a bit-identical feature matrix, and this script fails if it does not.
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { rowKey } from './corpus.js';
 import { featureVector } from '../src/features.js';
 import { estimateTokens } from '../src/state.js';
 
@@ -111,5 +112,35 @@ for (const [what, pattern] of [
 
 const path = join(here, 'fixtures', 'labels.jsonl');
 writeFileSync(path, serialised);
+
+// The Laya answers, re-keyed so a clone can reproduce the comparison.
+//
+// Without this the published 0.721 +/- 0.021 was unreproducible by anyone:
+// `scores.json` is gitignored, so `repeat.ts` found no Laya rows and printed the
+// logistic scorer alone, while the figure survived as text in RESULTS.md. The
+// file holds only numbers, so nothing needs scrubbing — only the keys change,
+// from `tool_use_id` (which collapses the one call recorded in two sessions,
+// 1,062 entries for 1,063 rows) to `rowKey`.
+const scoresPath = join(here, 'scores.json');
+if (existsSync(scoresPath)) {
+  const raw = JSON.parse(readFileSync(scoresPath, 'utf8')) as
+    Record<string, Record<string, { result?: number; call?: number }>>;
+  const out2: Record<string, Record<string, { result: number; call: number }>> = {};
+  let missing = 0;
+  for (const [config, byId] of Object.entries(raw)) {
+    const mapped: Record<string, { result: number; call: number }> = {};
+    rows.forEach((row, index) => {
+      const found = byId[row.tool_use_id];
+      if (found?.result === undefined || found.call === undefined) { missing += 1; return; }
+      mapped[rowKey(out[index]!)] = { result: found.result, call: found.call };
+    });
+    out2[config] = mapped;
+  }
+  const scoresOut = join(here, 'fixtures', 'scores.json');
+  writeFileSync(scoresOut, `${JSON.stringify(out2)}\n`);
+  console.log(`wrote ${scoresOut}: ${Object.keys(out2).length} configs, ` +
+    `${Object.values(out2)[0] ? Object.keys(Object.values(out2)[0]!).length : 0} rows each` +
+    (missing > 0 ? `, ${missing} lookups had no cached answer` : ''));
+}
 console.log(`wrote ${path}: ${out.length} calls, ${out.filter((r) => r.result_needed).length} positives, ` +
   `${new Set(out.map((r) => r.session)).size} sessions, features bit-identical`);

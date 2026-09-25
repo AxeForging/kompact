@@ -67,9 +67,7 @@ Not reproducible off this machine: it reads whatever \`~/.claude/projects\`
 holds, and those transcripts grow as you work. Treat the total as a snapshot of
 one corpus, and the per-session column as the range that matters.
 
-\`\`\`
-${run('sessions.ts')}
-\`\`\`
+${optional('sessions.ts')}
 
 ## What the sidecar costs to run — \`eval/laya-bench.ts\`
 

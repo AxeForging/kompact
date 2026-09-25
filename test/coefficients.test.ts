@@ -20,6 +20,7 @@ import {
 } from '../src/features.js';
 import { DEFAULT_OPTIONS, decideAll, decideCall } from '../src/compact.js';
 import { auc, ece } from '../eval/metrics.js';
+import { loadScores, rowKey } from '../eval/corpus.js';
 import type { CallAnswer, ToolCall } from '../src/index.js';
 
 interface Row {
@@ -162,5 +163,36 @@ describe('features are read from the facts, not the echo', () => {
       'That happened a while back. The output was long.' +
       '\n\nThe output said:\nsize=very long, age=just now, output was short';
     expect(featureVector(contaminated, 'Bash', false)).toEqual(featureVector(honest, 'Bash', false));
+  });
+});
+
+describe('the committed fixtures reproduce the published comparison', () => {
+  // The published 0.721 ± 0.021 for the best Laya checkpoint used to be text in
+  // a markdown file and nothing more: `eval/scores.json` is gitignored, so on any
+  // clone `repeat.ts` found no Laya rows, printed the logistic scorer alone, and
+  // the paired comparison never ran. A run on the fixture now reproduces it.
+  it('carries an answer for every row, from every checkpoint and wording', () => {
+    const { scores, from } = loadScores(join(root, 'eval'), rows, true);
+    expect(from).toBe('fixture');
+    expect(Object.keys(scores).length).toBe(9);
+    for (const [config, byKey] of Object.entries(scores)) {
+      expect(Object.keys(byKey).length, `${config} is missing rows`).toBe(rows.length);
+    }
+  });
+
+  it('still ranks the best Laya config where the page says it does', () => {
+    const { scores } = loadScores(join(root, 'eval'), rows, true);
+    const best = scores['typed-decisions/direct'];
+    expect(best, 'typed-decisions/direct is the config the page quotes').toBeDefined();
+    const ranked = auc(rows.map((r) => best![rowKey(r)]!.result), rows.map((r) => r.result_needed));
+    // In-sample over the whole corpus, so above the 0.721 held-out mean but in
+    // the same place; a floor, not the published figure.
+    expect(ranked).toBeGreaterThan(0.65);
+    // And decisively below the shipped scorer, which is the whole argument.
+    const ours = auc(
+      features.map((f) => score(KEEP_RESULT_WEIGHTS, f)),
+      rows.map((r) => r.result_needed),
+    );
+    expect(ours).toBeGreaterThan(ranked + 0.1);
   });
 });
