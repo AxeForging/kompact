@@ -42,8 +42,8 @@
     "maxPasses": {
       "type": "number",
       "title": "Passes before handing over",
-      "description": "Compactions kompact answers on one transcript before the engine's summary runs regardless. A backstop: on measured sessions the floor is reached first.",
-      "default": 4
+      "description": "Compactions kompact answers on one transcript before the engine's summary runs regardless. A backstop rather than the binding constraint: on every measured session the floor ended the loop first, the largest at six passes (eval/passes.ts).",
+      "default": 6
     },
     "truncateHeadChars": {
       "type": "number",

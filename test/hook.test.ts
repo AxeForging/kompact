@@ -35,7 +35,7 @@ describe('resolveHookConfig', () => {
     const config = resolveHookConfig({});
     expect(config.compactAtPercent).toBe(60);
     expect(config.minFreedPercent).toBe(5);
-    expect(config.maxPasses).toBe(4);
+    expect(config.maxPasses).toBe(6);
   });
 
   // The sidecar is gone from the product. A config still naming it must not

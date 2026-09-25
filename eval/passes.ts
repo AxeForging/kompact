@@ -43,8 +43,10 @@ const WINDOW = num('--window', 200_000);
 const AT = num('--at', 60);
 /** Percentage points of the window a pass must reclaim to be worth taking. */
 const FLOOR = num('--floor', 5);
-const MAX_PASSES = num('--max', 4);
+const MAX_PASSES = num('--max', 6);
 const SESSIONS = num('--sessions', 24);
+/** `maxKeptChars`; -1 leaves the shipped default alone. */
+const CAP = num('--cap', -1);
 
 function walk(dir: string): string[] {
   const out: string[] = [];
@@ -101,7 +103,7 @@ async function runSession(all: readonly Message[]): Promise<Pass[]> {
     next += 1;
     if (tokens < trigger) continue;
     const started = performance.now();
-    const result = await compact(live, asker);
+    const result = await compact(live, asker, CAP >= 0 ? { maxKeptChars: CAP } : {});
     const ms = performance.now() - started;
     const after = tokensOf(result.messages);
     const freed = tokens - after;

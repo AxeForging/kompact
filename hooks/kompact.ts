@@ -23,7 +23,7 @@ import type {
 const HOOK_DEFAULTS = {
   compactAtPercent: 60,
   minFreedPercent: 5,
-  maxPasses: 4,
+  maxPasses: 6,
 };
 
 /** Where the per-transcript pass count lives, beside the recorder's own key. */

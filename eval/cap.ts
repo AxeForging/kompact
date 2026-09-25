@@ -37,6 +37,13 @@ import { MUTATING, buildCallState, callContexts, collectToolCalls, goalFromMessa
 import { questionsFor } from '../src/questions.js';
 import { readTranscript } from './transcript.js';
 
+/** `keepResult` above which an output keeps the wide cap; then wide, then tight. */
+const GRADED: [number, number, number][] = [
+  [0.6, 32_000, 12_000],
+  [0.6, 24_000, 8_000],
+  [0.8, 48_000, 8_000],
+];
+
 const SHINGLE = 8;
 const MAX_SHINGLES = 2_000;
 const BOILERPLATE_OWNERS = 3;
@@ -187,21 +194,45 @@ const reused = all.reduce((s, c) => s + c.hits.length, 0);
  * Characters surviving one policy, and how many reused shingles survive with
  * them. `drop` applies the floor; `cap` truncates whatever is still there.
  */
-function run(drop: boolean, cap: number): { kept: number; shingles: number } {
+type Cap = number | ((call: Call) => number);
+const capOf = (cap: Cap, call: Call): number => (typeof cap === 'number' ? cap : cap(call));
+
+/**
+ * A cap that varies with how sure the scorer is.
+ *
+ * The flat cap and the ranking overlap badly in the tail: at 16,000 the corpus
+ * frees 29.5% but the number of sessions keeping under half of what was quoted
+ * from them goes from 2 to 3. The cap cannot tell a 40,000-character output the
+ * scorer was confident about from one it merely did not drop, and the ranking
+ * has that information already. This spends the tight cap only on the outputs
+ * the scorer was lukewarm about, and leaves the confident ones long.
+ *
+ * It does not work, and the rows below are why it is not shipped: every grading
+ * frees more than the flat 24,000 cap and costs more than the flat 16,000 one,
+ * taking the sessions that keep under half of what was quoted from them from 2
+ * to 4 or 5. `keepResult` is the probability the output is needed *at all*; it
+ * says nothing about where in the output the reuse sits, and among the outputs
+ * that survived the floor it has already spent its information.
+ */
+const graded = (strong: number, wide: number, tight: number): Cap =>
+  (call: Call): number => (call.keepResult >= strong ? wide : tight);
+
+function run(drop: boolean, cap: Cap): { kept: number; shingles: number } {
   let kept = 0;
   let shingles = 0;
   for (const call of all) {
     // What the policy leaves of this output, as a prefix length.
     let prefix = call.chars;
     if (drop && !call.mutating && call.keepResult < FLOOR) prefix = Math.min(HEAD, call.chars);
-    if (cap > 0) prefix = Math.min(prefix, cap);
+    const limit = capOf(cap, call);
+    if (limit > 0) prefix = Math.min(prefix, limit);
     kept += prefix;
     shingles += call.hits.filter((at) => at < prefix).length;
   }
   return { kept, shingles };
 }
 
-const show = (name: string, drop: boolean, cap: number): void => {
+const show = (name: string, drop: boolean, cap: Cap): void => {
   const { kept, shingles } = run(drop, cap);
   console.log(`${name.padEnd(26)}${(100 * (1 - kept / corpus)).toFixed(1).padStart(8)}%` +
     `${((100 * shingles) / reused).toFixed(1).padStart(14)}%`);
@@ -216,6 +247,9 @@ show('keep everything', false, 0);
 show('ranking only (shipped)', true, 0);
 for (const cap of [32_000, 24_000, 16_000, 8_000, 4_000]) show(`cap ${cap.toLocaleString()} only`, false, cap);
 for (const cap of [32_000, 24_000, 16_000, 8_000, 4_000]) show(`ranking + cap ${cap.toLocaleString()}`, true, cap);
+for (const [strong, wide, tight] of GRADED) {
+  show(`ranking + graded ${strong}/${(wide / 1000)}k/${tight / 1000}k`, true, graded(strong, wide, tight));
+}
 console.log('\nfreed = share of all output characters removed.');
 console.log('reuse kept = share of shingles later text quoted that are still present.');
 
@@ -226,7 +260,7 @@ console.log('reuse kept = share of shingles later text quoted that are still pre
  */
 const bySession = new Map<string, Call[]>();
 for (const call of all) bySession.set(call.session, [...(bySession.get(call.session) ?? []), call]);
-const per = (calls: Call[], drop: boolean, cap: number): { freed: number; kept: number } => {
+const per = (calls: Call[], drop: boolean, cap: Cap): { freed: number; kept: number } => {
   const total = calls.reduce((s, c) => s + c.chars, 0);
   const reusedHere = calls.reduce((s, c) => s + c.hits.length, 0);
   let keptChars = 0;
@@ -234,7 +268,8 @@ const per = (calls: Call[], drop: boolean, cap: number): { freed: number; kept: 
   for (const call of calls) {
     let prefix = call.chars;
     if (drop && !call.mutating && call.keepResult < FLOOR) prefix = Math.min(HEAD, call.chars);
-    if (cap > 0) prefix = Math.min(prefix, cap);
+    const limit = capOf(cap, call);
+    if (limit > 0) prefix = Math.min(prefix, limit);
     keptChars += prefix;
     keptHits += call.hits.filter((at) => at < prefix).length;
   }
@@ -261,7 +296,9 @@ for (const [name, drop, cap] of [
   ['ranking + cap 32,000', true, 32_000],
   ['ranking + cap 24,000', true, 24_000],
   ['ranking + cap 16,000', true, 16_000],
-] as [string, boolean, number][]) {
+  ...GRADED.map(([strong, wide, tight]) =>
+    [`ranking + graded ${strong}/${wide / 1000}k/${tight / 1000}k`, true, graded(strong, wide, tight)] as [string, boolean, Cap]),
+] as [string, boolean, Cap][]) {
   const runs = scored.map((c) => per(c, drop, cap));
   const kepts = runs.map((r) => r.kept);
   console.log(`${name.padEnd(26)}${quart(runs.map((r) => r.freed), 0.5).toFixed(1).padStart(10)}%` +

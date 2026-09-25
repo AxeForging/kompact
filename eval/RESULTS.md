@@ -183,38 +183,41 @@ Same caveat as `sessions.ts`: this machine's transcripts, which grow as you
 work, so it is a snapshot rather than a constant.
 
 ```
-window 200,000 tokens, compacting at 60%, floor 5 pp, ceiling 4 passes
+window 200,000 tokens, compacting at 60%, floor 5 pp, ceiling 6 passes
 
-session       msgs  passes   pp reclaimed per pass    ms per pass
------------------------------------------------------------------
-20628921      7049       4   11.2 10.8 10.6 10.3 8.9*  33 27 27 27 27
-25e65eab      1455       2   13.2 8.9 5.0*             27 24 24
-78d7d176      1140       1   5.6 3.0*                  19 21
-agent-a2       294       1   5.6                       28
-agent-ad       201       1   5.3 3.7*                  24 25
+session       msgs  passes   pp reclaimed per pass          ms per pass
+-----------------------------------------------------------------------
+20628921      7085       6   11.2 10.8 10.6 10.3 8.9 8.4 4.6*  39 32 31 31 32 31 32
+25e65eab      1455       2   13.2 8.9 5.0*                     30 29 29
+78d7d176      1140       1   5.6 3.0*                          25 23
+agent-a2       294       1   5.6                               29
+agent-ad       201       1   5.3 3.7*                          24 25
 
 * = the pass that fell below the floor. That is the hand-over; it is not taken.
 ```
 
-**9 engine summaries avoided across 5 sessions.** Slowest single pass 33 ms.
+**11 engine summaries avoided across 5 sessions.** Slowest single pass 39 ms.
 
 The decay is much flatter than compacting one transcript repeatedly suggests —
-11.2, 10.8, 10.6, 10.3 percentage points on the largest session — because fresh
-tool output arrives between passes. What ends the loop is the floor, not
-exhaustion.
+11.2, 10.8, 10.6, 10.3, 8.9, 8.4 percentage points on the largest session —
+because fresh tool output arrives between passes. What ends the loop is the
+floor, not exhaustion, and raising the ceiling past 6 changes nothing: at 8 and
+at 12 the same session still stops at 6, because the seventh pass reclaims 4.6
+points and the floor refuses it. That is what makes the ceiling a backstop
+rather than the dial that decides anything.
 
 ### Which bar to use
 
 Every pass above, scored by both candidate rules:
 
-| bar | passes taken, of 13 |
+| bar | passes taken, of 15 |
 |---|---|
 | `minReductionRatio` 0.25 *(what shipped)* | **0** |
 | `minReductionRatio` 0.15 | 5 |
-| `minReductionRatio` 0.08 | 10 |
-| `minFreedPercent` 3 | 12 |
-| **`minFreedPercent` 5** *(shipped now)* | **10** |
-| `minFreedPercent` 7 | 7 |
+| `minReductionRatio` 0.08 | 11 |
+| `minFreedPercent` 3 | 14 |
+| **`minFreedPercent` 5** *(shipped now)* | **11** |
+| `minFreedPercent` 7 | 8 |
 | `minFreedPercent` 10 | 5 |
 
 `minReductionRatio: 0.25` took none of them. It asks whether a pass was a large
@@ -232,7 +235,49 @@ before another compaction can be requested.
 **Not verified:** whether deferring the engine's summary costs the assistant
 anything. `applyDecisions` never touches prose, so what kompact leaves behind is
 verbatim tool calls and the user's and assistant's own words — not a narrative.
-`maxPasses: 4` is the backstop for that, and it is a guess, not a measurement.
+`maxPasses: 6` is the backstop for that, and it is a guess, not a measurement.
+
+## What the cap costs, and one idea that did not work — `eval/cap.ts`
+
+The cap (`maxKeptChars`) shortens outputs the *ranking kept*. It is a separate
+lever from the floor, and it composes: the ranking alone frees 23.1% of the
+corpus, the cap alone 10.8%, and both 25.6%.
+
+Retention here is the share of **reused shingles** still present — the only
+measure both levers share, since dropping loses whole outputs and capping loses
+the far end of one.
+
+| policy | freed | reuse kept | sessions keeping under half |
+|---|---|---|---|
+| ranking only | 23.1% | 81.8% | 2 |
+| ranking + cap 32,000 | 24.6% | 81.7% | 2 |
+| **ranking + cap 24,000** *(shipped)* | **25.6%** | **81.6%** | **2** |
+| ranking + cap 16,000 | 29.5% | 81.0% | 3 |
+| ranking + cap 8,000 | 42.1% | 77.9% | 5 |
+
+16,000 frees four more points of the corpus and takes the sessions that keep
+under half of what was quoted from them from 2 to 3. That is the reason the
+shipped cap is still 24,000 rather than 16,000: it is faster and it frees more,
+but it is not *more reliable*, and the condition was both.
+
+### Dead end: a cap graded by the scorer's confidence
+
+The cap cannot tell a 40,000-character output the scorer was confident about
+from one it merely did not drop. The ranking has that number already, so the
+obvious move is to spend the tight cap only on outputs the scorer was lukewarm
+about. Measured:
+
+| policy | freed | reuse kept | sessions keeping under half |
+|---|---|---|---|
+| ranking + cap 24,000 | 25.6% | 81.6% | 2 |
+| graded ≥0.6 → 32,000, else 12,000 | 33.5% | 80.1% | 4 |
+| graded ≥0.6 → 24,000, else 8,000 | 41.4% | 78.6% | 5 |
+| graded ≥0.8 → 48,000, else 8,000 | 41.8% | 78.4% | 5 |
+
+Every grading is worse in the tail than the flat cap that frees the same amount.
+`keepResult` is the probability an output is needed *at all*; it says nothing
+about where inside the output the reuse sits, and among the outputs that already
+survived the floor it has spent its information. Not shipped.
 
 ## Where the sidecar fails quietly — `eval/truncation.ts`
 
