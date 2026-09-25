@@ -65,11 +65,18 @@
      a clipped wordmark. 2.6rem clears it. */
   --text-display: clamp(2.2rem, 1.4rem + 7.6vw, 7rem);
 
-  /* 68ch of Literata renders 67 characters on the body column, which is the
-     number to aim for. A review reported 88 and recommended narrowing this;
-     measuring both settings put 68ch at 67 and 56ch at 57, so the recommendation
-     was wrong and this stayed. eval/render-check.ts asserts the rendered count. */
-  --measure: 68ch;
+  /* Measured per character, this rendered 84 on the median full line — half again
+     the comfortable band, and the answer to a reader who said the page was hard
+     to read.
+
+     A previous comment here claimed 68ch rendered 67 characters and said a review
+     reporting 88 was therefore wrong. The review was right. The 67 came from
+     eval/render-check.ts dividing a paragraph's characters by its number of line
+     tops, which averages in the ragged last line and any short fragment that
+     starts one: 401 characters over lines of [87, 4, 88, 86, 84, 60] reports 67.
+     That check now buckets characters by line top, drops each block's last line
+     and asserts the median. */
+  --measure: 55ch;
 }
 
 *,*::before,*::after{ box-sizing: border-box; }
@@ -128,6 +135,10 @@ a:hover{ color: var(--accent); }
 }
 .rubric--accent{ color: var(--accent-ink); }
 .rubric--accent .rubric__n{ color: var(--accent); }
+/* The glossary was a numbered peer of Evidence and Install holding one folded
+   list, and it sat between the argument and the install command. It is an
+   appendix: no number, and after the thing a convinced reader came for. */
+.rubric--appendix{ color: var(--ink-3); }
 
 /* ── masthead ─────────────────────────────────────────────────────────── */
 .flooded{ background: var(--flood); color: var(--on-flood); }
@@ -594,14 +605,17 @@ table.data tr.same td, table.data tr.same th{ background: var(--accent-wash); }
 table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink); font-weight:700; }
 /* A caption that labels a figure sits above it and keeps its distance. */
 .caption--fig{ margin: 0 0 var(--space-sm); caption-side: top; text-align: left; }
-.caption{ font-family: var(--sans); font-size: var(--text-xs); color: var(--ink-3);
-  margin-top: var(--space-xs); max-width: 74ch; line-height:1.5; }
+/* A caption here is not a tick label: several of them are the explanation of the
+   figure above, and one defines the floor the whole policy turns on. 13px was
+   carrying 38% of the page's visible characters, running prose included. */
+.caption{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-3);
+  margin-top: var(--space-xs); max-width: 56ch; line-height:1.55; }
 
 /* ── the plate: the one image, and it is made of the data ─────────────────── */
 .plate{ margin: var(--space-xl) 0 0; }
 .plate figcaption{
-  font-family: var(--sans); font-size: var(--text-xs); line-height:1.6;
-  color: var(--on-flood-2); margin-top: var(--space-sm); max-width: 74ch;
+  font-family: var(--sans); font-size: var(--text-sm); line-height:1.6;
+  color: var(--on-flood-2); margin-top: var(--space-sm); max-width: 56ch;
 }
 .plate figcaption em{ color: var(--on-flood); font-style: italic; }
 .rubric--flood{ color: var(--on-flood-2); border-bottom-color: var(--flood-rule); }
@@ -1287,7 +1301,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <summary><h3>Get this table for your own machine first</h3></summary>
     <p>
     Clone the repository and run <code>npm&nbsp;run&nbsp;dry-run</code> — the commands are in
-    <a href="#install">section 09, Install</a>. It reads
+    <a href="#install">section 08, Install</a>. It reads
     <code>~/.claude/projects</code>, scores every tool call in every transcript it finds, and
     prints the table above for your sessions instead of these. It writes nothing, installs no
     plugin, and needs no key — it is the same <code>compact</code> the hook calls, run against
@@ -1371,7 +1385,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 <section class="wrap" id="losses" aria-labelledby="losses-h">
   <p class="rubric rubric--accent"><span class="rubric__n">06</span>Where it loses</p>
-  <h2 id="losses-h">The model we dropped fails quietly, which is worse than failing.</h2>
+  <h2 id="losses-h">The model this replaced fails quietly, which is worse than failing.</h2>
   <p>
     Laya’s English checkpoint reads 512 tokens and discards the rest with HTTP 200 and no
     warning. <code>eval/truncation.ts</code> asks one question — <em>the text says the
@@ -1445,8 +1459,17 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
 
   </details>
+  <div class="finding reveal">
+    <p>Compacting where the engine would actually fire, <span class="val">27</span> of
+      <span class="val">32</span> sessions lost nothing at all. Across the rest,
+      <span class="val">6</span> outputs were dropped that a later step went back to:
+      <span class="val">0.19</span> a session, and <span class="val">8.8%</span> of what was
+      genuinely still needed. Nothing here replays an assistant against the compacted
+      transcript, so whether that changed the work stays
+      <a href="#checked">not verified</a>.</p>
+  </div>
   <details class="more">
-    <summary><h3>What a real compaction costs the work</h3></summary>
+    <summary><h3>How that was counted, and what the looser count says</h3></summary>
     <p>
     Every figure above asks whether an output was reused <em>somewhere</em> later, which counts
     reuses that had already happened by the time a compaction fired and could never have been
@@ -1694,72 +1717,15 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 
 
-<section class="wrap" id="glossary" aria-labelledby="glossary-h">
-  <p class="rubric"><span class="rubric__n">08</span>Glossary</p>
-  <h2 id="glossary-h">What the words mean.</h2>
-  <p class="gloss-back" hidden><button type="button" id="gloss-back">&#8592; Back to where you were</button></p>
-
-    <p>
-    Every term this page uses for its own machinery, in one place, because most readers arrive in
-    the middle of it rather than at the top.
-  </p>
-    <details class="more">
-    <summary><h3>The twelve terms this page uses for its own machinery</h3></summary>
-<dl class="glossary">
-    <dt id="g-auc">AUC</dt>
-    <dd>How often the scorer ranks a call that turned out to be needed above one that did not, over
-      every possible pair. 0.5 is a coin flip; 1.0 never gets a pair the wrong way round.</dd>
-    <dt id="g-calibration-error">Calibration error</dt>
-    <dd>The average gap between a score and what actually happens at it. At 0.035, calls scored
-      near 0.30 are genuinely needed about 30% of the time — which is what makes a threshold mean
-      something rather than just order things.</dd>
-    <dt id="g-keep-8209-result-keep-8209-call">keep&#8209;result, keep&#8209;call</dt>
-    <dd>The two probabilities scored for every call: whether its <em>output</em> is still needed
-      word for word, and whether the <em>call itself</em> should stay. They differ often, which is
-      why both exist.</dd>
-    <dt id="g-function-hooks">Function hooks</dt>
-    <dd>The Claude Code extension point this plugin runs on: a module that the engine
-      calls at named moments, rather than a shell command it spawns. Early access, which is
-      why <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> exists.</dd>
-    <dt id="g-sidecar">Sidecar</dt>
-    <dd>A local <code>laya-serve</code> process scoring calls over HTTP instead of the
-      built-in model. Optional, slower, and the only path here that wants a GPU — which is
-      why the default is not it.</dd>
-    <dt id="g-leave-one-session-out">Leave-one-session-out</dt>
-    <dd>Fit on every session but one, test on the one held out, repeat for each. It is the
-      honest number when sessions differ from each other more than calls within a session
-      do, and it is lower than the grouped-split figure for exactly that reason.</dd>
-    <dt id="g-minyieldchars"><code>minYieldChars</code></dt>
-    <dd>The smallest result worth dropping. Below it, dropping frees less than it risks, so
-      the call is refused outright — the <em>too small</em> outcome in <a href="#demo">section 02, Watch it decide</a>.</dd>
-    <dt id="g-the-floor">The floor</dt>
-    <dd><code>keepThreshold</code>, 0.2 by default. At or above it nothing is dropped, whatever the
-      budget still wants. It is the guard the budget cannot argue with.</dd>
-    <dt id="g-the-budget">The budget</dt>
-    <dd><code>targetReduction</code>, 0.5 by default. The fraction of droppable characters to free.
-      Calls are dropped lowest-score-first until it is met, and then dropping stops — so a session
-      with little to gain loses little.</dd>
-    <dt id="g-head-only">Head only</dt>
-    <dd>The call survives and its result is cut to its first 300 characters. Enough to see what it
-      was and to run it again.</dd>
-    <dt id="g-pinned">Pinned</dt>
-    <dd>Inside the six newest messages, which are never touched. A pinned call is not scored for
-      dropping at all, so its 1.000 is a statement about the rule, not about the call.</dd>
-    <dt id="g-dry-run">Dry run</dt>
-    <dd><code>npm run dry-run</code>: scores the transcripts already on your machine and prints what
-      it would have freed. It writes nothing, installs nothing, and needs no plugin.</dd>
-  </dl>
-  </details>
-</section>
 
 <section class="wrap" id="install" aria-labelledby="install-h">
-  <p class="rubric"><span class="rubric__n">09</span>Install</p>
+  <p class="rubric"><span class="rubric__n">08</span>Install</p>
   <h2 id="install-h">Function hooks are early access, so turn them on first.</h2>
   <p class="lede">Tested on Claude Code 2.1.281, which has function hooks. So the rule is
      <b>2.1.281 or later works; below it is unknown rather than broken</b> — which release first
      shipped them is <em>not established here</em>, and on a build without them the plugin
      installs and silently never runs. Check <code>claude&nbsp;--version</code>, then
-     <a href="#session">what it touches, in section 09</a> for the notice that proves it fired, and the
+     <a href="#session">what it touches, in section 08</a> for the notice that proves it fired, and the
      <a href="#checked">verification ledger</a> for what is and is not established.</p>
   <p>
     <strong>Or don’t install it yet.</strong> Clone
@@ -1824,7 +1790,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       your shell's startup file.</li>
     <li><code>claude&nbsp;plugin&nbsp;list</code> must show <code>laya-compact</code>. If it does,
       the variable is <code>1</code>, and no notice ever appears, the build is older than function
-      hooks: see the version rule in <a href="#install">section 09, Install</a>.</li>
+      hooks: see the version rule in <a href="#install">section 08, Install</a>.</li>
   </ul>
   </details>
   <details class="more">
@@ -1844,6 +1810,60 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </ul>
   </details>
 
+</section>
+
+<section class="wrap" id="glossary" aria-labelledby="glossary-h">
+  <p class="rubric rubric--appendix">Glossary</p>
+  <h2 id="glossary-h">What the words mean.</h2>
+  <p class="gloss-back" hidden><button type="button" id="gloss-back">&#8592; Back to where you were</button></p>
+
+    <details class="more">
+    <summary><h3>The twelve terms this page uses for its own machinery</h3></summary>
+<dl class="glossary">
+    <dt id="g-auc">AUC</dt>
+    <dd>How often the scorer ranks a call that turned out to be needed above one that did not, over
+      every possible pair. 0.5 is a coin flip; 1.0 never gets a pair the wrong way round.</dd>
+    <dt id="g-calibration-error">Calibration error</dt>
+    <dd>The average gap between a score and what actually happens at it. At 0.035, calls scored
+      near 0.30 are genuinely needed about 30% of the time — which is what makes a threshold mean
+      something rather than just order things.</dd>
+    <dt id="g-keep-8209-result-keep-8209-call">keep&#8209;result, keep&#8209;call</dt>
+    <dd>The two probabilities scored for every call: whether its <em>output</em> is still needed
+      word for word, and whether the <em>call itself</em> should stay. They differ often, which is
+      why both exist.</dd>
+    <dt id="g-function-hooks">Function hooks</dt>
+    <dd>The Claude Code extension point this plugin runs on: a module that the engine
+      calls at named moments, rather than a shell command it spawns. Early access, which is
+      why <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> exists.</dd>
+    <dt id="g-sidecar">Sidecar</dt>
+    <dd>A local <code>laya-serve</code> process scoring calls over HTTP instead of the
+      built-in model. Optional, slower, and the only path here that wants a GPU — which is
+      why the default is not it.</dd>
+    <dt id="g-leave-one-session-out">Leave-one-session-out</dt>
+    <dd>Fit on every session but one, test on the one held out, repeat for each. It is the
+      honest number when sessions differ from each other more than calls within a session
+      do, and it is lower than the grouped-split figure for exactly that reason.</dd>
+    <dt id="g-minyieldchars"><code>minYieldChars</code></dt>
+    <dd>The smallest result worth dropping. Below it, dropping frees less than it risks, so
+      the call is refused outright — the <em>too small</em> outcome in <a href="#demo">section 02, Watch it decide</a>.</dd>
+    <dt id="g-the-floor">The floor</dt>
+    <dd><code>keepThreshold</code>, 0.2 by default. At or above it nothing is dropped, whatever the
+      budget still wants. It is the guard the budget cannot argue with.</dd>
+    <dt id="g-the-budget">The budget</dt>
+    <dd><code>targetReduction</code>, 0.5 by default. The fraction of droppable characters to free.
+      Calls are dropped lowest-score-first until it is met, and then dropping stops — so a session
+      with little to gain loses little.</dd>
+    <dt id="g-head-only">Head only</dt>
+    <dd>The call survives and its result is cut to its first 300 characters. Enough to see what it
+      was and to run it again.</dd>
+    <dt id="g-pinned">Pinned</dt>
+    <dd>Inside the six newest messages, which are never touched. A pinned call is not scored for
+      dropping at all, so its 1.000 is a statement about the rule, not about the call.</dd>
+    <dt id="g-dry-run">Dry run</dt>
+    <dd><code>npm run dry-run</code>: scores the transcripts already on your machine and prints what
+      it would have freed. It writes nothing, installs nothing, and needs no plugin.</dd>
+  </dl>
+  </details>
 </section>
 </main>
 
@@ -2022,7 +2042,9 @@ if (streamBox && streamData && streamData.stream.length) {
     let once = 0;
     for (let i = 0; i < upto; i += 1) {
       const seat = streamData.stream[i];
-      if (seat >= 0) counts[seat] += 1; else once += 1;
+      // -2 is a shape that repeated but is not one of the six drawn. Counting it
+      // here would put it among the commands nothing else shares, which it is not.
+      if (seat >= 0) counts[seat] += 1; else if (seat === -1) once += 1;
     }
     counts.forEach((count, i) => {
       fills[i].fill.style.width = `${(count / top) * 100}%`;

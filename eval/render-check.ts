@@ -162,7 +162,10 @@ const PROBE = String.raw`
     const seen = document.getElementById('stream-seen');
     const once = document.getElementById('stream-once');
     const num = (el) => Number((el ? el.textContent : '0').replace(/[^0-9]/g, ''));
-    const singles = streamData.stream.filter((x) => x < 0).length;
+    // Only -1 is a command nothing else shares. -2 is a shape that repeated and
+    // is simply not one of the six drawn, and counting those here is what put
+    // 1,638 under that label where the fixture says 1,625.
+    const singles = streamData.stream.filter((x) => x === -1).length;
     say(num(seen) === streamData.stream.length, 'the stream rests on its real total @' + w,
         num(seen) + ' of ' + streamData.stream.length);
     say(num(once) === singles, 'the stream rests on the real singleton count @' + w,
@@ -174,23 +177,48 @@ const PROBE = String.raw`
   }
 
   // A ch unit is the width of a zero, and Literata's zero is far wider than its
-  // average lowercase, so a 68ch measure rendered 88 characters — well past the
-  // 45-75 band. Measure the characters, not the declaration.
+  // average lowercase, so a declared measure renders far more characters than it
+  // says. Measure the characters, not the declaration.
+  //
+  // This check used to divide a paragraph's character count by its number of
+  // line tops and report 67 for lines that were really 84 to 88 long: the mean
+  // includes the ragged last line and any four-character fragment that happens
+  // to start one. It then got quoted in a CSS comment as evidence that a
+  // reviewer who said 88 was wrong. Bucket per character, drop each block's last
+  // line, and report the median of what is left.
   if (w > 1000) {
-    const para = [...document.querySelectorAll('section p')]
-      .find((p) => (p.textContent || '').length > 400 && !p.closest('.caption'));
-    if (para) {
-      const range = document.createRange();
-      range.selectNodeContents(para);
-      // One rect per inline fragment, not per line: a paragraph with links and
-      // code in it reports far more rects than it has lines. Group by top edge.
-      const tops = new Set();
-      for (const rect of range.getClientRects()) tops.add(Math.round(rect.top));
-      const lines = tops.size;
-      const chars = (para.textContent || '').trim().length;
-      const per = Math.round(chars / Math.max(1, lines));
-      say(per >= 45 && per <= 78, 'body measure is inside the readable band @' + w,
-          per + ' characters a line over ' + lines + ' lines');
+    for (const group of [
+      { name: 'body', sel: 'section > p, .lede', hi: 76 },
+      { name: 'caption', sel: '.caption', hi: 80 },
+    ]) {
+      const full = [];
+      for (const el of document.querySelectorAll(group.sel)) {
+        if (el.offsetHeight === 0) continue;
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        const byTop = new Map();
+        let node;
+        while ((node = walker.nextNode())) {
+          const text = node.nodeValue || '';
+          for (let i = 0; i < text.length; i++) {
+            if (text[i] === '\n' || text[i] === '\t') continue;
+            const r = document.createRange();
+            r.setStart(node, i);
+            r.setEnd(node, i + 1);
+            const rect = r.getBoundingClientRect();
+            if (rect.width === 0 && rect.height === 0) continue;
+            const key = Math.round(rect.top);
+            byTop.set(key, (byTop.get(key) || 0) + 1);
+          }
+        }
+        const tops = [...byTop.keys()].sort((a, b) => a - b);
+        for (let i = 0; i < tops.length - 1; i++) full.push(byTop.get(tops[i]));
+      }
+      if (full.length < 10) continue;
+      full.sort((a, b) => a - b);
+      const median = full[Math.floor(full.length / 2)];
+      say(median >= 45 && median <= group.hi,
+          group.name + ' measure is inside the readable band @' + w,
+          median + ' characters on the median full line, over ' + full.length + ' lines');
     }
   }
 

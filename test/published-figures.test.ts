@@ -426,6 +426,19 @@ describe('published figures match eval/RESULTS.md', () => {
 
     // On the page, wherever the repeated command shapes are counted — prose or
     // CSS comment — the count has to be the fixture's.
+    // The animation's own counter. It is labelled "on a shape nothing else
+    // shares", and it read 1,638 against the fixture's 1,625 because every
+    // arrival outside the six drawn bars — including 13 on shapes that did
+    // repeat — was collapsed into one bucket.
+    const data = read('docs/signals-data.js');
+    const stream = JSON.parse((/"stream":(\[[^\]]*\])/.exec(data) ?? [])[1] ?? '[]') as number[];
+    expect(stream.length, 'no stream in docs/signals-data.js').toBeGreaterThan(0);
+    const keys = Object.keys(fixture.rows);
+    const alone = (JSON.parse(read('eval/fixtures/signals.json')) as { order: number[] }).order
+      .filter((i) => keys[i] === undefined).length;
+    expect(stream.filter((v) => v === -1).length,
+      'the stream counts an arrival on a repeated shape as one nothing else shares').toBe(alone);
+
     // Tags out first: the generated half wraps its figure in `<span class="val">`,
     // so the raw file never reads as "10 repeated command shapes" the way a
     // reader sees it.
