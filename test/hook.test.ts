@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import {
   askerFor, compactSession, decisionLogLines, layaAsker, readLocalWeights, register, resolveHookConfig, summarize, toSessionMessages,
 } from '../hooks/laya-compact.js';
@@ -44,6 +45,30 @@ describe('resolveHookConfig', () => {
     const config = resolveHookConfig({ keepThreshold: 0.8, preserveRecentMessages: 'no' });
     expect(config.keepThreshold).toBe(0.8);
     expect(config.preserveRecentMessages).toBeUndefined();
+  });
+
+  // Every option the manifest offers has to reach `compact`. Two did not:
+  // `targetReduction` — the main dial — was missing from the numeric list, and
+  // `phrasing` had no handling at all, so the wording comparison it exists for
+  // could not be run from the plugin.
+  it('carries every option the manifest offers', () => {
+    const manifest = JSON.parse(
+      readFileSync(new URL('../.claude-plugin/plugin.json', import.meta.url), 'utf8'),
+    ) as { userConfig: Record<string, { type: string; default?: unknown }> };
+    const sample: Record<string, unknown> = {};
+    for (const [key, spec] of Object.entries(manifest.userConfig)) {
+      sample[key] = spec.type === 'number' ? 0.42 : spec.default;
+    }
+    const config = resolveHookConfig(sample as never) as unknown as Record<string, unknown>;
+    for (const key of Object.keys(manifest.userConfig)) {
+      expect(config[key], `${key} is offered in plugin.json but never read`).toBeDefined();
+    }
+  });
+
+  it('accepts the three phrasings and nothing else', () => {
+    expect(resolveHookConfig({ phrasing: 'direct' }).phrasing).toBe('direct');
+    expect(resolveHookConfig({ phrasing: 'entailment' }).phrasing).toBe('entailment');
+    expect(resolveHookConfig({ phrasing: 'shouty' }).phrasing).toBeUndefined();
   });
 });
 

@@ -57,6 +57,9 @@ export function resolveHookConfig(options: PluginOptions): HookConfig {
   const numbers: Partial<Omit<CompactOptions, 'goal' | 'phrasing'>> = {};
   for (const key of [
     'keepThreshold',
+    // `targetReduction` is the main dial and the manifest has always offered it,
+    // but it was missing from this list, so setting it did nothing.
+    'targetReduction',
     'preserveRecentMessages',
     'maxCallStateTokens',
     'truncateHeadChars',
@@ -79,6 +82,13 @@ export function resolveHookConfig(options: PluginOptions): HookConfig {
   }
   const goal = optionString(options, 'goal');
   if (goal) config.goal = goal;
+  // Only meaningful with `scorer: laya` — the built-in scorer reads facts, not
+  // wording. Unreachable until now: `phrasing` existed so the wording comparison
+  // could be re-run, and no plugin option carried it through.
+  const phrasing = optionString(options, 'phrasing');
+  if (phrasing === 'reproducible' || phrasing === 'direct' || phrasing === 'entailment') {
+    config.phrasing = phrasing;
+  }
   return config;
 }
 

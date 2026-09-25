@@ -62,6 +62,12 @@
       "title": "Maximum state tokens per call",
       "description": "Only used when scorer = laya. Must stay under the checkpoint's state budget (768 on multilingual) or the server truncates silently.",
       "default": 700
+    },
+    "phrasing": {
+      "type": "string",
+      "title": "Question phrasing",
+      "description": "Question wording sent to a Laya sidecar: reproducible (default), direct or entailment. Ignored by the built-in scorer, which reads facts rather than wording. Measured over ten grouped splits: on the typed-decisions checkpoint direct reaches AUC 0.721 and reproducible 0.419, so the wording matters more than the checkpoint.",
+      "default": "reproducible"
     }
   }
 }

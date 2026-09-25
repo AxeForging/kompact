@@ -9,8 +9,8 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
     }
   },
   "files": [
@@ -28,7 +28,8 @@
     "calibrate": "bun eval/extract-labels.ts && bun eval/calibrate.ts",
     "eval:results": "bun eval/results.ts",
     "eval:ci": "bun eval/repeat.ts --fixture && bun eval/policy.ts --fixture && bun eval/recovery.ts --fixture",
-    "eval:fixtures": "bun eval/make-fixture.ts && bun eval/make-session-fixture.ts"
+    "eval:fixtures": "bun eval/make-fixture.ts && bun eval/make-session-fixture.ts",
+    "prepack": "npm run build"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

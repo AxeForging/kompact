@@ -1,0 +1,67 @@
+/**
+ * The parts of a release that only fail after you have published.
+ *
+ * `package.json`'s `bin` pointed at `dist/bin/laya-compact-serve.js` while
+ * `tsc` compiled only `src/`, so `npx laya-compact-serve` would have failed for
+ * every installer and nothing here would have noticed. The version lives in
+ * three files and drifted silently. The LICENSE said upstream notices were
+ * "preserved below" and they were not.
+ */
+import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const read = (path: string): string => readFileSync(join(root, path), 'utf8');
+const pkg = JSON.parse(read('package.json')) as {
+  version: string;
+  bin: Record<string, string>;
+  exports: Record<string, { import: string; types: string }>;
+  files: string[];
+  scripts: Record<string, string>;
+};
+const manifest = JSON.parse(read('.claude-plugin/plugin.json')) as { version: string };
+const tsconfig = JSON.parse(read('tsconfig.json')) as {
+  compilerOptions: { rootDir: string; outDir: string };
+  include: string[];
+};
+
+describe('release mechanics', () => {
+  it('states one version in every file that states one', () => {
+    expect(manifest.version).toBe(pkg.version);
+    const changelog = read('CHANGELOG.md');
+    expect(changelog, 'CHANGELOG has no heading for the current version')
+      .toContain(`## ${pkg.version}`);
+  });
+
+  it('compiles everything the published entry points name', () => {
+    // `bin` and `exports` both resolve inside `dist`, so `include` and `rootDir`
+    // have to cover both trees or one of the two paths will not exist.
+    const trees = tsconfig.include.map((glob) => glob.split('/')[0]);
+    for (const entry of [...Object.values(pkg.bin), pkg.exports['.']!.import, pkg.exports['.']!.types]) {
+      expect(entry.startsWith(`./${tsconfig.compilerOptions.outDir}/`), `${entry} is outside outDir`).toBe(true);
+      const tree = entry.split('/')[2];
+      expect(trees, `${entry} comes from a tree tsc does not compile`).toContain(tree);
+    }
+    expect(pkg.scripts['prepack'], 'nothing builds dist before packing').toBeDefined();
+  });
+
+  it('ships the upstream notices the licence promises', () => {
+    const licence = read('LICENSE');
+    expect(licence).toContain('Their notices are preserved below');
+    // Named upstreams must each have an actual notice, not just a citation.
+    for (const upstream of ['tamaratran/fast-jev-compaction', 'fatelei/jev-compact']) {
+      expect(licence).toContain(`Upstream notice: ${upstream}`);
+    }
+    expect(licence.match(/Permission is hereby granted/g)?.length).toBe(3);
+    expect(pkg.files).toContain('LICENSE');
+  });
+
+  it('deploys the page the README links to', () => {
+    const workflow = read('.github/workflows/pages.yml');
+    expect(workflow).toContain('actions/deploy-pages');
+    expect(workflow).toContain('path: docs');
+    expect(read('README.md')).toContain('axeforging.github.io/laya-compact');
+  });
+});

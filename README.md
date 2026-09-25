@@ -201,6 +201,32 @@ LAYA_HOST=127.0.0.1 LAYA_DEVICE=cuda LAYA_PRELOAD=1 LAYA_MODELS=multilingual lay
 watch for `STATES TRUNCATED` in the compaction toast, which means states are
 overflowing the checkpoint and the scores are being computed on fragments.
 
+`phrasing` is worth setting if you do: on `typed-decisions`, `direct` scores AUC
+0.721 and `reproducible` 0.419, so the wording matters more than the checkpoint.
+
+### What it costs to run
+
+Measured on one machine, RTX 4060 Laptop, one `laya-serve` process
+(`eval/laya-bench.ts`, which needs the sidecar live):
+
+| | |
+|---|---|
+| cold start to first answer | **7.6 s** |
+| resident memory | **3.1 GB** at first answer, **4.9 GB** warm |
+| VRAM | **~5.0 GB** |
+| latency, `multilingual`, 8 questions | **735 ms** median |
+| latency, `english` / `typed-decisions`, 8 questions | 1,820 ms / 1,943 ms |
+
+`laya-serve` loads every checkpoint at startup and routes per request, so memory
+and start-up are properties of the router, not of the checkpoint you pick. Only
+latency is per checkpoint.
+
+Scoring one real session — 1,071 calls, two questions a request, eight in flight
+— takes **14.5 s on the fastest checkpoint against 108 ms for the built-in
+scorer**, holding ~5 GB the whole time. That is 134x the time for a lower AUC,
+which is the arithmetic behind the default. Fine-tuning changes the AUC; it does
+not change this table.
+
 ## Calibrate it on your own sessions
 
 **The shipped coefficients were fitted on one person's 18 sessions.** Someone

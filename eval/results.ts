@@ -12,8 +12,17 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const run = (script: string): string =>
-  execFileSync('bun', [join(here, script)], { encoding: 'utf8', maxBuffer: 1 << 24 }).trimEnd();
+const run = (script: string, ...extra: string[]): string =>
+  execFileSync('bun', [join(here, script), ...extra], { encoding: 'utf8', maxBuffer: 1 << 24 }).trimEnd();
+
+/** The sidecar benchmark needs a live `laya-serve`; say so rather than omitting it. */
+function optional(script: string, ...extra: string[]): string {
+  try {
+    return `\`\`\`\n${run(script, ...extra)}\n\`\`\``;
+  } catch (error) {
+    return `_Not run: ${error instanceof Error ? error.message.split('\n')[0] : String(error)}_`;
+  }
+}
 
 const today = new Date().toISOString().slice(0, 10);
 const body = `# Evaluation results
@@ -61,6 +70,14 @@ one corpus, and the per-session column as the range that matters.
 \`\`\`
 ${run('sessions.ts')}
 \`\`\`
+
+## What the sidecar costs to run — \`eval/laya-bench.ts\`
+
+Needs a live \`laya-serve\`, so this section is empty on a machine without one.
+One process serves all three checkpoints, so memory and start-up are properties
+of the router; only latency is per checkpoint.
+
+${optional('laya-bench.ts', '--cold')}
 `;
 const out = join(here, 'RESULTS.md');
 writeFileSync(out, body);
