@@ -398,6 +398,47 @@ describe('published figures match eval/RESULTS.md', () => {
     }
   });
 
+  /**
+   * The signals figures, against the fixture the page is generated from.
+   *
+   * `eval/signals-page.ts` writes section 04 from `eval/fixtures/signals.json`,
+   * so that section is always right. The prose around it is not generated: the
+   * README and the verification ledger both said "nine repeated command shapes"
+   * and "25 of 2,000" while the generated table two thousand pixels above said
+   * 10 and 27, because a later replay moved the fixture and only the generated
+   * half followed. A reader who checks two numbers against each other finds a
+   * page arguing that every figure comes from `eval/` and failing its own claim.
+   */
+  it('states the signals figures its own fixture reports', () => {
+    const fixture = JSON.parse(read('eval/fixtures/signals.json')) as {
+      meta: { sessions: number; calls: number; shapes: number; repeated: number };
+      rows: Record<string, unknown>;
+    };
+    const commands = Object.keys(fixture.rows).filter((k) => k.startsWith('command::')).length;
+    expect(commands, 'the fixture has no command rows, so this test proves nothing')
+      .toBeGreaterThan(0);
+
+    const readme = read('README.md');
+    expect(readme).toContain(`${fixture.meta.calls.toLocaleString('en-GB')} tool`);
+    expect(readme).toContain(
+      `${fixture.meta.repeated} of ${fixture.meta.shapes.toLocaleString('en-GB')}`);
+    expect(readme).toContain(`all ${commands} of the repeated`);
+
+    // On the page, wherever the repeated command shapes are counted — prose or
+    // CSS comment — the count has to be the fixture's.
+    // Tags out first: the generated half wraps its figure in `<span class="val">`,
+    // so the raw file never reads as "10 repeated command shapes" the way a
+    // reader sees it.
+    const page = read('docs/index.html').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+    const claims = [...page.matchAll(/(\S+) repeated command shapes/g)];
+    expect(claims.length, 'the page never counts the repeated command shapes')
+      .toBeGreaterThan(0);
+    for (const claim of claims) {
+      expect(claim[1], `the page says "${claim[0]}", but the fixture has ${commands}`)
+        .toBe(String(commands));
+    }
+  });
+
   // These do mean something — as history. Retracted claims may be named by the
   // files that narrate the retraction, and nowhere else.
   it('states a retracted claim only where it is retracted', () => {

@@ -148,7 +148,10 @@ export function draft(row: Proposal): string {
   const description =
     `Use when the work matches ${describe(row)}. ` +
     `Recorded ${row.n} times across ${row.sessions.length} sessions on this machine` +
-    `${perOccurrence >= 1 ? `, about ${perOccurrence.toFixed(1)} tool calls each time` : ''}. ` +
+    // Below 1.5 this rounds to "about 1.0 tool calls each time", which tells the
+    // model nothing it cannot infer from the word "command". Say it only when the
+    // repetition costs more than one call.
+    `${perOccurrence >= 1.5 ? `, about ${perOccurrence.toFixed(1)} tool calls each time` : ''}. ` +
     'Draft: the steps below have not been written yet.';
   // The validator's hard limit. `describe` already caps the signature, so this is
   // the belt behind that brace rather than the thing doing the work.

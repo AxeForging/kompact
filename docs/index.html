@@ -19,7 +19,12 @@
   --rule:       oklch(0.885 0.008 45);
   --rule-firm:  oklch(0.760 0.010 45);
   --ink:        oklch(0.245 0.012 45);
-  --ink-2:      oklch(0.430 0.011 45);
+  /* Three tiers only work if a reader can see three. At 0.430 and 0.470 these two
+     sat 1.19:1 apart — one grey under two names, across 55 declarations. Darkening
+     the secondary tier rather than lightening the quiet one opens the gap to
+     1.47:1 and takes secondary prose from 7.7:1 to 9.6:1 on paper, which is the
+     direction a reader who called the page hard to read wants. */
+  --ink-2:      oklch(0.380 0.011 45);
   --ink-3:      oklch(0.470 0.010 45);
   /* The one accent. Measured values and honesty markers only. Chroma raised
      from 0.168: on a wide-gamut display it reads at full strength, and sRGB
@@ -103,6 +108,9 @@ a:hover{ color: var(--accent); }
   margin: 0 0 var(--space-sm);
 }
 .label--accent{ color: var(--accent-ink); }
+/* A label may contain a command, and a command is case-sensitive: uppercasing it
+   put `NPM RUN PROPOSE -- --WRITE 1` on the page, which does not run. */
+.label code{ text-transform: none; letter-spacing: 0; font-size: 0.95em; }
 
 /* A numbered running head, as a standards paper sets one — not the tracked-caps
    chip that sits above every AI hero. The number does the signalling, so the
@@ -159,6 +167,13 @@ a:hover{ color: var(--accent); }
   font-variant-numeric: tabular-nums; letter-spacing:0;
 }
 .upfront span b{ display:inline; font-size:inherit; font-family:inherit; font-weight:600; }
+/* The two operators the headline numbers cannot lose, set in the text face.
+   Bodoni Moda is a Didone and its optical-size axis thins horizontal strokes as
+   the size grows: measured on the shipped woff2, the en dash is 38 units of the
+   em at opsz 11 and 13 at opsz 30, which at this 1.9rem is 0.40px. It rendered
+   as nothing, so `3.6–32.6%` read as two unrelated numbers, and ± kept only the
+   vertical stem of its plus. Literata draws both solid. */
+.upfront p > b .op{ font-family: var(--serif); font-weight:600; font-size:0.86em; }
 .upfront__do{ grid-column: 1 / -1; font-size: var(--text-base); }
 .upfront__do a{ color: var(--on-flood); text-decoration-thickness:1px; text-underline-offset:3px; }
 .upfront__do code{ color: var(--on-flood); }
@@ -281,6 +296,17 @@ ul.plain li::marker{ color: var(--ink-3); }
   text-decoration:none; white-space:nowrap;
 }
 .contents__all{ cursor:pointer; }
+/* The one action in the bar, and the only bordered thing in it. Install was the
+   ninth of nine links in the scrolling row, indistinguishable from a contents
+   entry, and on a phone it sat off the right edge: across 15,000px a reader who
+   had decided had nothing to press. It leaves the row and becomes a control. */
+.contents__go{
+  font-family: var(--sans); font-size: var(--text-sm); font-weight:600;
+  color: var(--accent-ink); text-decoration:none; white-space:nowrap;
+  border:1px solid var(--accent); padding: 5px var(--space-sm);
+}
+.contents__go:hover{ color: var(--paper); background: var(--accent-ink); border-color: var(--accent-ink); }
+.contents__go:focus-visible{ outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 /* The tools were taking 130px of a 390px screen, which left the bar showing two
    of nine sections — a navigation bar hiding the navigation. Below 640px the
    word goes and "Open all" goes with it: it is a convenience for reading the
@@ -289,6 +315,10 @@ ul.plain li::marker{ color: var(--ink-3); }
 @media (max-width: 640px){
   .contents__all{ display:none; }
   .contents__word{ display:none; }
+  /* The action stays at every width — it is the point of the bar — but it pays
+     for its place: at 320px the full-size chip left only two sections visible. */
+  .contents__go{ font-size: var(--text-xs); padding: 4px var(--space-xs); }
+  .contents__tools{ gap: var(--space-sm); }
   /* Short forms rather than truncation: nine sections you can see beats two you
      can read in full. Written out as two spans so the wide label keeps its own
      capitalisation instead of being transformed into it. */
@@ -535,8 +565,12 @@ details.more > *:not(summary):last-child{ margin-bottom: var(--space-md); }
 }
 .stream__draft[data-pending="1"]{ opacity: 0.25; }
 @media (max-width: 560px){
+  /* Two rows, not three. Auto-placement put the count on its own line below the
+     bar, where it sat nearer the next shape's name than to the bar it counts. */
   .stream__row{ grid-template-columns: minmax(0,1fr) 5ch; }
-  .stream__track{ grid-column: 1 / -1; }
+  .stream__row code{ grid-area: 1 / 1; }
+  .stream__n{ grid-area: 1 / 2; }
+  .stream__track{ grid-area: 2 / 1 / 2 / -1; }
 }
 table.data{ width:100%; min-width: 30rem; border-collapse: collapse; font-family: var(--sans); font-size: var(--text-sm); }
 table.data th, table.data td{ text-align:left; padding: var(--space-xs) var(--space-md) var(--space-xs) 0;
@@ -552,7 +586,7 @@ table.data tr > *:last-child{ padding-right: 0; }
    mobile pass was laying out at 591px and reporting the page clean. */
 code{ overflow-wrap: anywhere; }
 /* A row that repeated and is still not worth a skill. Greyed rather than hidden:
-   it is every one of the nine repeated command shapes, which is the finding. */
+   it is every one of the 10 repeated command shapes, which is the finding. */
 table.data tr.dim td{ color: var(--ink-3); }
 table.data tr.dim code{ color: var(--ink-3); }
 table.data tbody tr:last-child > *{ border-bottom: 1px solid var(--rule-firm); }
@@ -807,10 +841,12 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     the one path that uses either.</span>
   </p>
   <div class="upfront reveal" style="--d:150ms">
-    <p><b>0.905 &#177; 0.078</b><span>ranking quality, 10 grouped splits of 18 sessions; worst split 0.684.
-      <b>0.789</b> leave&#8209;one&#8209;out over all 41. Beat the 322M&#8209;parameter model it was
-      built on, 10 of 10 paired splits.</span></p>
-    <p><b>3.6&#8211;32.6%</b><span>of tokens freed, per session, on four real ones. Over the whole
+    <p><b>0.789</b><span>ranking quality, held out one session at a time across all 41 &#8212; the
+      number to plan around. On the narrower 18&#8209;session corpus every Laya configuration was
+      scored against: <b>0.905 &#177; 0.078</b>, worst split 0.684, beating the
+      322M&#8209;parameter model it was built on &#8212; un&#8209;fine&#8209;tuned, on a call it
+      was never trained to make &#8212; 10 of 10 paired splits.</span></p>
+    <p><b>3.6<span class="op">&#8211;</span>32.6%</b><span>of tokens freed, per session, on four real ones. Over the whole
       corpus the shipped code frees 22.2% and keeps 77.7% of the outputs that were reused later.</span></p>
     <p><b>190&#8239;ms</b><span>to score 1,762 calls, against 122&#215; that for the neural
       sidecar it replaced, on an RTX&#160;4060 Laptop.</span></p>
@@ -832,9 +868,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 <nav class="contents-bar" aria-label="Contents">
   <div class="contents-bar__row wrap">
     <div class="contents">
-    <a href="#result"><span class="contents__long">Evidence</span><span class="contents__short">Evidence</span></a><a href="#demo"><span class="contents__long">Watch it decide</span><span class="contents__short">Watch</span></a><a href="#shape"><span class="contents__long">The shape of it</span><span class="contents__short">Shape</span></a><a href="#signals"><span class="contents__long">What you repeat</span><span class="contents__short">Repeats</span></a><a href="#cost">Cost</a><a href="#losses"><span class="contents__long">Where it loses</span><span class="contents__short">Losses</span></a><a href="#checked"><span class="contents__long">Verification</span><span class="contents__short">Verified</span></a><a href="#glossary">Glossary</a><a href="#install">Install</a></div>
+    <a href="#result"><span class="contents__long">Evidence</span><span class="contents__short">Evidence</span></a><a href="#demo"><span class="contents__long">Watch it decide</span><span class="contents__short">Watch</span></a><a href="#shape"><span class="contents__long">The shape of it</span><span class="contents__short">Shape</span></a><a href="#signals"><span class="contents__long">What you repeat</span><span class="contents__short">Repeats</span></a><a href="#cost">Cost</a><a href="#losses"><span class="contents__long">Where it loses</span><span class="contents__short">Losses</span></a><a href="#checked"><span class="contents__long">Verification</span><span class="contents__short">Verified</span></a><a href="#glossary">Glossary</a></div>
     <p class="contents__tools">
       <button class="contents__all" type="button" id="open-all" hidden>Open all</button>
+      <a class="contents__go" href="#install">Install</a>
       <a class="contents__top" href="#top" aria-label="Back to top"><span class="contents__word">Top&nbsp;</span>&#8593;</a>
     </p>
   </div>
@@ -1059,8 +1096,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     probabilities say; only their output can go. The rule covers
     <span class="num val">220</span> calls in the corpus, and re-running the same decisions with
     the guard removed shows what it actually saves: <span class="num val">15</span> of them
-    would otherwise lose their call or their output. It costs nothing — exactly one of the 220
-    had an output that was ever needed verbatim.
+    would otherwise lose their call or their output, against the single output in those 220
+    that was ever needed verbatim.
   </p>
   <p>
     A second rule came from the same place. The <code>Grep</code> in the list above scored 0.020
@@ -1110,7 +1147,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       there are far too many genuinely-needed outputs to sweep. The marks fall into columns
       because twelve of the thirteen inputs are yes-or-no, so the model has only a few dozen
       distinct scores to give — a ranking this coarse is still enough to beat a 322M-parameter
-      network at the same task.
+      network asked the same question without being fine-tuned on it.
     </figcaption>
   </figure>
   </div>
@@ -1156,7 +1193,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <div class="finding finding--loss reveal">
     <p>Of <span class="val">2,000</span> shapes recorded,
       <span class="val">27</span> repeated enough to propose — and
-      <span class="val">10</span> of the 10 repeated command shapes are generic
+      all <span class="val">10</span> repeated command shapes are generic
       shell verbs. The highest-ranked thing this found is
       <code>sed -n</code>.</p>
   </div>
@@ -1257,11 +1294,13 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     your own history. If the number it prints is not worth having, you have lost a minute.
   </p>
   <p>
-    Expect somewhere in <span class="num val">3.6%</span> to <span class="num val">32.6%</span>,
-    and expect the spread to be your tool mix and your session’s length rather than noise. The
-    32.6% session is mostly commands whose output is never quoted afterwards; the 12.8% one is
-    mostly large reads that get read again; the 3.6% one is 33 calls long, and a session that
-    short has almost nothing to free. The dry run tells you which of those you are.
+    Expect somewhere in <span class="num val">3.6%</span> to <span class="num val">32.6%</span> —
+    the range four sessions covered, which is not a distribution. What moved it here was tool mix
+    and length: the 32.6% session is mostly commands whose output is never quoted afterwards; the
+    12.8% one is mostly large reads that get read again; the 3.6% one is 33 calls long, and a
+    session that short has almost nothing to free. At four sessions that is a reading of these
+    four and not a rule — nothing here has measured how much of the spread is noise. The dry run
+    tells you which of those you are.
   </p>
 
   </details>
@@ -1481,7 +1520,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p class="ledger__claim">That a proposed skill is worth having <span class="flag">— not verified</span></p>
       <p class="ledger__how">The repetition in <a href="#signals">section 04, What you repeat</a> is measured, and
         the drafts validate as skills. Whether writing one saves anyone anything is not measured at
-        all: it needs the same work done twice, once with the skill and once without. Every one of the nine
+        all: it needs the same work done twice, once with the skill and once without. Every one of the 10
         repeated command shapes is a generic shell verb, which is evidence against rather than for.</p>
     </div>
     <div class="ledger__row ledger__row--open">
@@ -1733,7 +1772,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
   <div class="cmd">
     <div class="cmd__head">
-      <p class="label">shell — try it without installing anything</p>
+      <p class="label">shell &#183; nothing installed</p>
       <button class="copy" type="button" data-copy hidden>Copy</button>
       <p class="visually-hidden" role="status" aria-live="polite"></p>
     </div>
@@ -1741,7 +1780,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </div>
   <div class="cmd">
     <div class="cmd__head">
-      <p class="label">shell — then install it</p>
+      <p class="label">shell &#183; then install it</p>
       <button class="copy" type="button" data-copy hidden>Copy</button>
       <p class="visually-hidden" role="status" aria-live="polite"></p>
     </div>
@@ -1772,7 +1811,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     one per decision, to the session log. The parts sum to what was scored, and the time is for
     the 41 calls in that compaction, not the 1,762 in <a href="#cost">section 05, Cost</a>. If anything at all goes wrong you get
     the other notice instead, naming the reason:
-    <code>fallback to built-in summary (…)</code>, naming the reason. Silence at a compaction is
+    <code>fallback to built-in summary (…)</code>. Silence at a compaction is
     different: it means the hook never ran at all, which is a setup answer rather than a bad
     decision. <code>claude&nbsp;plugin&nbsp;list</code> confirms it is installed; only the notice
     confirms it is running. Two checks, in this order:

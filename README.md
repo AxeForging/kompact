@@ -333,9 +333,9 @@ to `~/.claude/laya-signals.json` so the CLI can read it. No raw output is stored
 nothing is sent anywhere, and drafts land in `.laya/proposals/`, which Claude Code
 does not read — promoting one is a `mv` you do yourself.
 
-**This part is new and its usefulness is not established.** Replaying 2,166 tool
-calls from 40 real sessions through the recorder's own functions, 25 of 2,000
-recorded shapes repeated at all — and all nine of the repeated *command* shapes
+**This part is new and its usefulness is not established.** Replaying 2,417 tool
+calls from 40 real sessions through the recorder's own functions, 27 of 2,000
+recorded shapes repeated at all — and all 10 of the repeated *command* shapes
 were generic shell verbs (`sed -n`, `grep -n | head`, `cat`). The classifier
 works; whether what it proposes is worth writing is measured by nobody yet, and
 has its own row in the verification ledger. `bun eval/signals-fixture.ts` runs

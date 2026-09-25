@@ -103,7 +103,9 @@ ${rows}
   <div class="finding finding--loss reveal">
     <p>Of <span class="val">${fixture.meta.shapes.toLocaleString()}</span> shapes recorded,
       <span class="val">${fixture.meta.repeated}</span> repeated enough to propose — and
-      <span class="val">${generic}</span> of the ${commands} repeated command shapes are generic
+      ${generic === commands
+        ? `all <span class="val">${generic}</span>`
+        : `<span class="val">${generic}</span> of the ${commands}`} repeated command shapes are generic
       shell verbs. The highest-ranked thing this found is
       <code>${escape(top.sig)}</code>.</p>
   </div>
