@@ -698,23 +698,14 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
   <p class="caption">
     <b>Read that bar as the narrow corpus.</b> Those splits hold out 30% of 18 sessions — the
-    sessions every Laya config was scored against, so the comparison is possible at all. The
-    coefficients that ship are fitted on all <span class="num val">41</span>, and
-    leave-one-session-out across those 41 gives <span class="num val">0.789</span> with
-    calibration error <span class="num val">0.051</span>. The same measurement on the 18 paired
-    sessions gives <span class="num val">0.879</span> and <span class="num val">0.035</span>, so
-    widening the corpus inside one person's own work costs <span class="num val">nine</span>
-    points of AUC and half again the calibration error. That is the honest figure for a session
-    like this operator's, and <a href="#next">section 07</a> has why.
-  </p>
-  <p class="caption">
-    Every scorer judged on the same held-out sessions each split, so the comparison is paired.
-    Splitting by session, not by row: calls inside one session are correlated and splitting on
-    rows would leak. Across those same splits the calibration error is
-    <span class="num val">0.044</span> against every Laya config’s
-    <span class="num val">0.380–​0.642</span>, which is what makes the keep-threshold mean
-    anything. Held out one session at a time instead, the shipped fit is 0.051, and
-    <a href="#next">section 07</a> says why that is the number to plan around.
+    ones every Laya config was scored against, so the comparison is possible at all — and every
+    scorer is judged on the same held-out sessions each split, which is what makes it paired.
+    Splitting by session rather than by row, because calls inside one session are correlated.
+    Across those splits the calibration error is <span class="num val">0.044</span> against every
+    Laya config’s <span class="num val">0.380–0.642</span>. The coefficients that ship are fitted
+    on all <span class="num val">41</span> sessions, where the same measurement gives
+    <span class="num val">0.789</span> and <span class="num val">0.051</span> —
+    <a href="#next">section 07</a> says why that is the pair to plan around.
   </p>
 </section>
 
@@ -1260,8 +1251,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p class="rubric"><span class="rubric__n">09</span>Your session</p>
   <h2 id="session-h">What it touches, what it never touches, and how you know.</h2>
   <p class="lede">
-    Everything below is the shipped behaviour, not a policy: each line is a default in
-    <code>src/compact.ts</code> or a guard the scorer does not get a vote on.
+    <strong>Nothing on disk changes.</strong> Compaction rewrites what is sent to the model for
+    the rest of the session; the transcript in <code>~/.claude/projects</code> is untouched, and
+    uninstalling puts the next compaction back to Claude Code’s own summary. Everything below is
+    the shipped behaviour, not a policy: each line is a default in <code>src/compact.ts</code> or
+    a guard the scorer does not get a vote on.
   </p>
 
   <h3>How you know it is running</h3>
