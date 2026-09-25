@@ -311,6 +311,11 @@ works against it by repointing one URL — no second plugin to write:
 npm run serve        # http://127.0.0.1:8770/v1/systemone, no model, no GPU
 ```
 
+Two scripts need a live Laya sidecar and so are not part of `npm test`:
+`npm run smoke` checks the sidecar answers in the direction the wording implies,
+and `npm run ckpt` compares checkpoints on one transcript. Neither ran under any
+script until now, which is how `eval/score.ts` came to default to the wrong port.
+
 `npx laya-compact-serve --help` lists the rest: `--port`, `--host`, `--api-key`,
 or `LAYA_COMPACT_PORT` / `LAYA_COMPACT_HOST` / `LAYA_COMPACT_API_KEY`. It also
 answers `GET /health`, and rejects a body over 1 MB with `413`. Binding beyond
@@ -389,7 +394,7 @@ And a live Codex CLI, which needs >= 0.155 (this machine has 0.131).
 ```sh
 bun install
 npm run typecheck   # src + test + eval + hooks
-npm run test        # 117 tests
+npm run test        # 122 tests
 npm run validate    # plugin manifest
 ```
 

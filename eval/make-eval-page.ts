@@ -54,7 +54,7 @@ for (let i = 0; i < lines.length; i += 1) {
     // to reach them and a screen reader must be able to say which section they belong to.
     const nth = (blockCount.get(section) ?? 0) + 1;
     blockCount.set(section, nth);
-    const label = escape(nth > 1 ? `${section} results (${nth})` : `${section} results`);
+    const label = escape(`${section} — measured output${nth > 1 ? ` (${nth})` : ''}`);
     blocks.push(
       `<div class="scroller" tabindex="0" role="region" aria-label="${label}"><pre>${escape(body.join('\n'))}</pre></div>`,
     );
