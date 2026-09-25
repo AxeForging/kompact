@@ -111,6 +111,8 @@ for (const target of [0.5, 0.6, 0.7, 0.8]) {
   let kept = 0;
   let mutatingDropped = 0;
   let mutatingRescued = 0;
+  let neededChars = 0;
+  let neededCharsKept = 0;
   for (const session of sessions) {
     const calls = rows.filter((row) => row.session === session);
     const asToolCalls: ToolCall[] = calls.map((row) => ({
@@ -155,12 +157,26 @@ for (const target of [0.5, 0.6, 0.7, 0.8]) {
       if (!row.result_needed) continue;
       needed += 1;
       if (action === 'keep') kept += 1;
+      /**
+       * What the cap costs, which nothing here was measuring.
+       *
+       * `freed` above models `maxKeptChars` and this did not, so the shipped
+       * pair reported a gain from the cap and no loss from it — on a page whose
+       * rule is that negative findings get equal weight. A capped output is
+       * partly kept, not kept: counting it in `kept` and nowhere else published
+       * the benefit alone.
+       */
+      neededChars += row.output_chars;
+      neededCharsKept += prefix;
     }
   }
   console.log(`\nshipped code path (src/compact.ts decideAll, the same defaults):`);
   console.log(`  ${((100 * freed) / total).toFixed(1)}% freed, ` +
     `${((100 * kept) / needed).toFixed(1)}% of reused outputs kept, ` +
     `${mutatingDropped} of ${rows.filter((r) => MUTATING.has(r.tool)).length} mutating calls dropped`);
+  const capLost = 100 - (100 * neededCharsKept) / neededChars;
+  console.log(`  ${((100 * neededCharsKept) / neededChars).toFixed(1)}% of reused CHARACTERS kept ` +
+    `(${capLost.toFixed(1)}% lost, almost all of it to the ${DEFAULT_OPTIONS.maxKeptChars.toLocaleString()}-char cap)`);
   console.log(`  without that guard ${mutatingRescued} of them would lose their call or output, ` +
     `so the rule saves ${mutatingRescued}, not ${rows.filter((r) => MUTATING.has(r.tool)).length}`);
 }

@@ -85,6 +85,7 @@ budget 0.8, floor 0.20         35.7%      89      4     64.0%      87.3%
 
 shipped code path (src/compact.ts decideAll, the same defaults):
   33.7% freed, 77.7% of reused outputs kept, 0 of 220 mutating calls dropped
+  87.9% of reused CHARACTERS kept (12.1% lost, almost all of it to the 24,000-char cap)
   without that guard 15 of them would lose their call or output, so the rule saves 15, not 220
 
 wrong  = needed outputs that were dropped anyway

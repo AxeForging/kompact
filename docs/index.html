@@ -893,7 +893,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       322M&#8209;parameter model it was built on &#8212; un&#8209;fine&#8209;tuned, on a call it
       was never trained to make &#8212; 10 of 10 paired splits.</span></p>
     <p><b>3.6<span class="op">&#8211;</span>32.6%</b><span>of tokens freed, per session, on four real ones. Over the whole
-      corpus the shipped code frees 33.7% and keeps 77.7% of the outputs that were reused later.</span></p>
+      corpus the shipped code frees 33.7%, keeps 77.7% of the outputs that were reused later and
+      87.9% of their characters &#8212; the missing <a href="#losses">12.1%</a> is mostly the cap.</span></p>
     <p><b>190&#8239;ms</b><span>to score 1,762 calls, against 216&#215; that for the neural
       sidecar it replaced, on an RTX&#160;4060 Laptop.</span></p>
     <p><b>Never</b><span>drops an <code>Edit</code>, <code>Write</code>, <code>MultiEdit</code> or
@@ -1443,6 +1444,16 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       </tbody>
     </table>
   </div>
+  <p class="caption">
+    <strong>What the cap costs, priced.</strong> The <span class="val">33.7%</span> above
+    includes it; so does this. Of the 247 outputs that were genuinely reused later,
+    <span class="val">5</span> are longer than the cap, and shortening them removes
+    <span class="val">76,466</span> characters those later steps had quoted &#8212;
+    <span class="val">6.2%</span> of every reused character. Counting the wrong drops beside it,
+    <span class="val">87.9%</span> of reused characters survive the shipped defaults and
+    <span class="val">12.1%</span> do not. The gain and the loss are measured the same way,
+    because for a while only the gain was.
+  </p>
   <p class="caption">
     Freeing nearly everything is easy and nearly worthless. Run through the shipped code rather
     than this simulation, the same defaults give <strong>33.7% freed and 77.7% kept</strong>. The
