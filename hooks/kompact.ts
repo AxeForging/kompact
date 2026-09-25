@@ -425,10 +425,18 @@ async function readPasses($: PassEngine): Promise<PassStore> {
   }
 }
 
-/** `$.session.turns()` is not worth failing a compaction over. */
-async function turnsOr($: { session: { turns: () => Promise<number> } }, fallback: number): Promise<number> {
+/**
+ * Bookkeeping must not fail a compaction that worked.
+ *
+ * Everything the pass counter needs — the session id, the turn number, the
+ * clock — is an engine call that can reject, and the handler's catch turns any
+ * throw into "fall back to the built-in summary". That is the right answer when
+ * *scoring* failed and the wrong one when the compaction is sitting there
+ * finished and only the id lookup went wrong.
+ */
+async function askOr<T>(ask: () => Promise<T>, fallback: T): Promise<T> {
   try {
-    return await $.session.turns();
+    return await ask();
   } catch {
     return fallback;
   }
@@ -472,7 +480,9 @@ export const register: Register = (on: On, options: PluginOptions) => {
       // not come — so it must not spend a pass off the ceiling.
       const speculative = event.trigger === 'precompute';
       const store = speculative ? {} : await readPasses($);
-      const key = speculative ? '' : passKey(await $.session.id(), event.agentId);
+      const key = speculative
+        ? ''
+        : passKey(await askOr(() => $.session.id(), 'unknown'), event.agentId);
       const seen = store[key]?.passes ?? 0;
       let windowTokens = 0;
       try {
@@ -498,7 +508,7 @@ export const register: Register = (on: On, options: PluginOptions) => {
          * got a second summary of an already-summarised transcript.
          */
         if (!speculative) {
-          store[key] = { passes: 0, lastTurn: await turnsOr($, 0), lastAt: await $.clock.now() };
+          store[key] = { passes: 0, lastTurn: await askOr(() => $.session.turns(), 0), lastAt: await askOr(() => $.clock.now(), 0) };
           await writePasses($, store);
         }
         notify($, `fallback to built-in summary (${verdict.why}: ${summarize(result)})`);
@@ -507,8 +517,8 @@ export const register: Register = (on: On, options: PluginOptions) => {
       if (!speculative) {
         store[key] = {
           passes: seen + 1,
-          lastTurn: await turnsOr($, 0),
-          lastAt: await $.clock.now(),
+          lastTurn: await askOr(() => $.session.turns(), 0),
+          lastAt: await askOr(() => $.clock.now(), 0),
         };
         await writePasses($, store);
       }
@@ -534,8 +544,8 @@ export const register: Register = (on: On, options: PluginOptions) => {
        * makes it impossible before the engine's own number catches up.
        */
       const store = await readPasses($);
-      const record = store[passKey(await $.session.id())];
-      const turns = await turnsOr($, 0);
+      const record = store[passKey(await askOr(() => $.session.id(), 'unknown'))];
+      const turns = await askOr(() => $.session.turns(), 0);
       if (record && turns - record.lastTurn < COOLDOWN_TURNS) return next(event);
       compacting = true;
       await $.session.compact();

@@ -316,6 +316,24 @@ describe('register', () => {
     expect(stored['fixture-session|main']?.lastTurn).toBe(20);
   });
 
+  /**
+   * The handler's catch turns any throw into a fallback, which is right when
+   * scoring failed and wrong when the compaction is finished and only the
+   * bookkeeping went wrong.
+   */
+  it('keeps a finished compaction when the pass counter cannot be read', async () => {
+    const handlers = registered({ preserveRecentMessages: 2, keepThreshold: 0.9 });
+    const engine = fakeEngine();
+    engine.$.session.id = async () => { throw new Error('no id'); };
+    engine.$.session.turns = async () => { throw new Error('no turns'); };
+    engine.$.store.get = async () => { throw new Error('no store'); };
+    const result = await handlers.get('session.compact')!(
+      engine.$, { messages: asSession(transcript()) }, () => 'FELL_BACK');
+    expect(result, 'a working compaction was thrown away over bookkeeping')
+      .not.toBe('FELL_BACK');
+    expect(engine.toasts.join(' ')).toContain('no summary');
+  });
+
   it('does not ask again on the turn straight after handing over', async () => {
     const handlers = registered({ preserveRecentMessages: 2, minFreedPercent: 99 });
     const engine = fakeEngine(80);
