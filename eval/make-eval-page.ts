@@ -90,7 +90,7 @@ const page = `<!doctype html>
 <meta name="description" content="Every number laya-compact publishes, with the script that produced it: ranking quality over ten grouped splits, the decision-policy sweep, what a wrong drop costs, and what the optional sidecar costs to run.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,700&family=Literata:opsz,wght@7..72,400;7..72,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,700&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap" rel="stylesheet">
 <style>
 :root{
   color-scheme: light;
@@ -128,12 +128,12 @@ header{ background: var(--flood); color: var(--on-flood); }
 /* Optical sizing pinned to the text cut: Bodoni's large-opsz hairlines — the em-dash
    among them — fall below one device pixel and drop out of the raster entirely. */
 h1{
-  font-family: var(--display); font-optical-sizing:none; font-weight:500; color: var(--on-flood);
+  font-family: var(--display); font-optical-sizing:none; font-weight:700; color: var(--on-flood);
   font-size: clamp(3rem, 1.3rem + 6vw, 6rem); line-height:0.92; letter-spacing:-0.015em;
   text-wrap: balance; margin:0 0 clamp(24px, 3.5vw, 40px);
 }
 h2{
-  font-family: var(--display); font-optical-sizing:none; font-weight:500;
+  font-family: var(--display); font-optical-sizing:none; font-weight:700;
   font-size: clamp(1.85rem, 1.25rem + 2.3vw, 2.9rem); line-height:1.06; letter-spacing:-0.01em;
   text-wrap: balance; margin: clamp(56px, 8vw, 88px) 0 14px; padding-top: 24px;
   border-top: 2px solid var(--ink); scroll-margin-top: 16px;

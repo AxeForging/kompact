@@ -72,6 +72,7 @@ a:hover{ color: var(--accent); }
 :focus-visible{ outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
 
 .skip{ position:absolute; left:-9999px; }
+.skip + .skip:focus{ top: calc(var(--space-md) + 2.4rem); }
 .skip:focus{ left: var(--space-md); top: var(--space-md); z-index:9; background: var(--paper);
   padding: var(--space-xs) var(--space-sm); border:1px solid var(--rule-firm); font-family: var(--sans); }
 
@@ -405,7 +406,7 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 .faq{ margin-top: var(--space-lg); border-top:1px solid var(--rule-firm); }
 .faq__item{ border-bottom:1px solid var(--rule); padding: var(--space-md) 0; }
 .faq__item h3{ margin: 0 0 var(--space-2xs); font-size: 1.15rem; letter-spacing:0.01em; }
-.faq__item p{ margin:0 0 var(--space-xs); font-size: var(--text-sm); color: var(--ink-2); max-width: 66ch; }
+.faq__item p{ margin:0 0 var(--space-xs); font-size: var(--text-sm); color: var(--ink-2); max-width: 62ch; }
 .faq__item p:last-child{ margin-bottom:0; }
 
 /* ── what's next: the one place allowed the future tense ──────────────── */
@@ -429,7 +430,7 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 .ledger__row{ display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1.25fr);
   gap: var(--space-md); padding: var(--space-md) 0; border-bottom:1px solid var(--rule); align-items:start; }
 .ledger__claim{ font-family: var(--sans); font-weight:600; font-size: var(--text-sm); margin:0; }
-.ledger__how{ margin:0; font-size: var(--text-sm); color: var(--ink-2); max-width: 60ch; }
+.ledger__how{ margin:0; font-size: var(--text-sm); color: var(--ink-2); max-width: 62ch; }
 .ledger__row--open .ledger__claim{ color: var(--accent-ink); }
 .ledger__row--open .ledger__claim .flag{ font-weight:500; }
 
@@ -491,6 +492,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </style>
 </head>
 <body>
+<a class="skip" href="#result">Skip to the evidence</a>
 <a class="skip" href="#install">Skip to install</a>
 
 <header class="flooded">
@@ -541,7 +543,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
   <div class="chart">
     <table class="rows">
-      <caption class="label" style="margin-bottom:var(--space-xs)">Area under ROC</caption>
+      <caption class="label" style="margin-bottom:var(--space-xs)">Area under ROC — the chance
+        that a needed output outranks an unneeded one, picked at random</caption>
       <colgroup><col style="width:21ch"><col><col style="width:15ch"></colgroup>
       <tbody>
         <tr class="rows__ticks">
@@ -634,6 +637,14 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
        That is the number to plan around.</p>
   </div>
   <p class="caption">
+    <b>What these two numbers are.</b> <span class="num val">AUC</span> is the chance that a
+    needed output outranks an unneeded one, if you pick one of each at random: 0.5 is a coin
+    flip, 1.0 is perfect ordering. <span class="num val">Calibration error</span> is how far the
+    probabilities are from the truth — if it says 0.3 for a hundred outputs, about thirty
+    should turn out to be needed. The first decides whether the ranking is any good; the second
+    decides whether a fixed floor can be trusted to mean anything.
+  </p>
+  <p class="caption">
     <b>Read that bar as the narrow corpus.</b> Those splits hold out 30% of 18 sessions — the
     sessions every Laya config was scored against, so the comparison is possible at all. The
     coefficients that ship are fitted on all <span class="num val">41</span>, and
@@ -723,6 +734,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <!-- /demo:render -->
   </div>
 
+  <p class="caption">
+    <b>Freed is not a slice of tool output.</b> Dropping a call takes its input with it, so a
+    few of those characters were never in the column to its left. The <code>Grep</code> below is
+    the clearest case, and it is priced further down.
+  </p>
   <p class="caption">
     The transcript is constructed — every real session on this machine is someone's work and
     this page is public. The decisions are not: the list is produced by running the shipped

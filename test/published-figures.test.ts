@@ -82,8 +82,10 @@ describe('published figures match eval/RESULTS.md', () => {
       `**${logistic.mean} ± ${logistic.sd}**`, `| ${logistic.min} |`, `**${logistic.drop}**`,
       `${laya.mean} ± ${laya.sd}`, `${sizeOnly.mean} ± ${sizeOnly.sd}`, `**+${closest}**`,
     ]],
-    ['docs/index.html', [`± ${logistic.sd}`, `worst split ${logistic.min}`, `+${closest}`,
-      `${sizeOnly.mean} with an`,
+    // The page bound the spread but not the mean beside it, so a typo in 0.905
+    // would have survived on the one file a reader actually looks at.
+    ['docs/index.html', [`${logistic.mean} <span`, `± ${logistic.sd}`,
+      `worst split ${logistic.min}`, `+${closest}`, `${sizeOnly.mean} with an`,
       // Every row of the policy table, not only the one the product ships.
       // `>x<` rather than a bare match, so it has to be a cell and not prose.
       ...[rejected, shipped, ...alsoSwept].flatMap(
