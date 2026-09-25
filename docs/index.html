@@ -341,8 +341,8 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 .demo__call[data-state="dropped"] .demo__who b,
 .demo__call[data-state="dropped"] .demo__who span{ color: var(--ink-3); }
 .demo__call[data-state="deciding"]{ background: var(--accent-wash); }
-.demo__call[data-state="pending"] .demo__outcome{ color: var(--ink-3); opacity: .75; }
-.demo__call[data-state="pending"] .demo__scores{ color: var(--ink-3); opacity: .75; }
+.demo__call[data-state="pending"] .demo__outcome{ color: var(--ink-3); font-style: italic; }
+.demo__call[data-state="pending"] .demo__scores{ color: var(--ink-3); }
 
 @media (prefers-reduced-motion: no-preference){
   .demo__fill{ transition: transform 520ms cubic-bezier(0.16,1,0.3,1), background-color 220ms ease-out; }
@@ -393,10 +393,19 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
   padding: var(--space-xs) var(--space-sm) var(--space-xs) var(--space-md); border-bottom:1px solid var(--rule); }
 .cmd__head .label{ margin:0; }
 .cmd pre{ margin:0; padding: var(--space-md); overflow-x:auto; font-size: var(--text-sm); line-height:1.75;
-  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; font-variant-ligatures:none; }
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; font-variant-ligatures:none;
+  /* At 390px the longest command runs 92px past the edge. The six tables got
+     edge shadows and a keyboard handle; the one block the page asks you to copy
+     did not. Same treatment, on the sunk ground it sits on. */
+  background:
+    linear-gradient(to right, var(--paper-sunk) 40%, transparent) left / 52px 100% no-repeat local,
+    linear-gradient(to left,  var(--paper-sunk) 40%, transparent) right / 52px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, oklch(0.245 0.012 45 / 0.30), transparent) left / 24px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, oklch(0.245 0.012 45 / 0.30), transparent) right / 24px 100% no-repeat scroll; }
+.cmd pre:focus-visible{ outline: 2px solid var(--accent); outline-offset: -2px; }
 .cmd .c{ color: var(--ink-3); }
 .copy{ font-family: var(--sans); font-size: var(--text-xs); letter-spacing:0.08em; text-transform:uppercase;
-  font-weight:600; color: var(--ink-2); background:none; border:1px solid var(--rule-firm);
+  font-weight:600; color: var(--ink-2); background:none; border:1px solid var(--ink-3);
   padding: 6px var(--space-sm); cursor:pointer; }
 .copy:hover{ color: var(--accent-ink); border-color: var(--accent); }
 .copy[data-done="1"]{ color: var(--accent-ink); border-color: var(--accent); }
@@ -696,6 +705,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
   <div class="scroller" tabindex="0" role="region" aria-label="Table: per-session results on this machine — scrolls sideways">
     <table class="data">
+      <caption class="visually-hidden">per-session results on this machine</caption>
       <thead><tr>
         <th scope="col">Session</th><th scope="col" class="n">Calls</th>
         <th scope="col" class="n">Tokens before</th><th scope="col" class="n">After</th>
@@ -747,6 +757,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
   <div class="scroller" tabindex="0" role="region" aria-label="Table: the policy sweep — scrolls sideways">
     <table class="data">
+      <caption class="visually-hidden">the policy sweep</caption>
       <thead><tr>
         <th scope="col">Policy</th><th scope="col" class="n">Output freed</th>
         <th scope="col" class="n">Reused outputs kept</th><th scope="col" class="n">Reused characters kept</th>
@@ -775,6 +786,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
   <div class="scroller" tabindex="0" role="region" aria-label="Table: what the sidecar costs to run — scrolls sideways">
     <table class="data">
+      <caption class="visually-hidden">what the sidecar costs to run</caption>
       <thead><tr>
         <th scope="col">Scoring 1,543 calls, the four sessions above</th><th scope="col" class="n">Time</th>
         <th scope="col" class="n">Memory held</th><th scope="col" class="n">VRAM</th>
@@ -803,6 +815,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
   <div class="scroller" tabindex="0" role="region" aria-label="Table: the truncation test — scrolls sideways">
     <table class="data">
+      <caption class="visually-hidden">the truncation test</caption>
       <thead><tr>
         <th scope="col">State</th><th scope="col" class="n">Characters</th>
         <th scope="col" class="n">Tokens read</th><th scope="col" class="n">Answer</th>
@@ -828,6 +841,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
   <div class="scroller" tabindex="0" role="region" aria-label="Table: what a wrong drop costs — scrolls sideways">
     <table class="data">
+      <caption class="visually-hidden">what a wrong drop costs</caption>
       <thead><tr>
         <th scope="col">How it would be recovered</th><th scope="col" class="n">Outputs</th>
         <th scope="col" class="n">Characters</th><th scope="col">Produced by</th>
@@ -860,6 +874,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
   <div class="scroller" tabindex="0" role="region" aria-label="Table: what the work loses — scrolls sideways">
     <table class="data">
+      <caption class="visually-hidden">what the work loses</caption>
       <thead><tr>
         <th scope="col">Compacting at 60%, across 32 sessions</th><th scope="col" class="n">Count</th>
       </tr></thead>
@@ -1014,7 +1029,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         was measured, and the wording mattered more than the checkpoint: on
         <code>typed-decisions</code>, asking what the assistant should <em>do</em> next scores
         <span class="num val">0.719</span>, and asking what is <em>true</em> of the text scores
-        <span class="num val">0.416</span> — barely above the coin flip. That is the reverse of
+        <span class="num val">0.416</span> — below the coin flip, which is worse
+        than not scoring at all. That is the reverse of
         what Laya's own documentation suggests, which is the finding rather than an
         embarrassment: the checkpoint is better at a decision than at an entailment.</p>
     </div>
@@ -1067,7 +1083,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <button class="copy" type="button" data-copy hidden>Copy</button>
       <p class="visually-hidden" id="copy-status" role="status" aria-live="polite"></p>
     </div>
-    <pre><code id="cmd-text">export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
+    <pre tabindex="0" role="region" aria-label="Shell commands — scrolls sideways"><code id="cmd-text">export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
 
 claude plugin marketplace add AxeForging/laya-compact
 claude plugin install laya-compact@laya-compact</code></pre>
