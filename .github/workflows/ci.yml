@@ -51,7 +51,7 @@ jobs:
           # the separator has to be stripped before the name can be matched.
           bun x vitest run test/real-transcript.test.ts --reporter=verbose 2>&1 \
             | sed -r 's/\x1b\[[0-9;]*m//g' \
-            | grep -q "committed session fixture > compacts offline and leaves no orphaned"
+            | grep -q "committed session fixture > introduces no orphaned tool call or result"
 
       # `claude plugin validate` is the only check that reads the manifest the way
       # the engine does — it is what caught `$.env?.get` being unreadable — so the
