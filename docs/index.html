@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>laya-compact — context compaction you can check</title>
-<meta name="description" content="A Claude Code plugin that scores every tool call before compaction and keeps only what is still needed verbatim. Local, no API key, no GPU. AUC 0.895 ± 0.073 over 10 grouped splits of 1063 labelled calls.">
+<meta name="description" content="A Claude Code plugin that scores every tool call before compaction and keeps only what is still needed verbatim. Local, no API key, no GPU. AUC 0.905 ± 0.078 over 10 grouped splits of 1063 paired calls; 0.789 leave-one-out over all 41 sessions.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Big+Shoulders+Display:wght@600;700;800&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap" rel="stylesheet">
@@ -404,52 +404,52 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
           <th scope="row" class="row__name">Built&#8209;in scorer<span>12 fitted coefficients</span></th>
           <td class="row__plot">
             <div class="track">
-              <div class="bar bar--best" style="--w:79%;--d:260ms"></div>
-              <div class="whisker" style="--lo:64.4%;--hi:93.6%;--d:260ms"></div>
-              <div class="worst" style="--x:37.6%;--d:260ms"></div>
+              <div class="bar bar--best" style="--w:81%;--d:260ms"></div>
+              <div class="whisker" style="--lo:65.4%;--hi:96.6%;--d:260ms"></div>
+              <div class="worst" style="--x:36.8%;--d:260ms"></div>
             </div>
           </td>
-          <td class="row__value">0.895 <span style="font-weight:400">± 0.073</span><b>worst split 0.688</b></td>
+          <td class="row__value">0.905 <span style="font-weight:400">± 0.078</span><b>worst split 0.684</b></td>
         </tr>
         <tr class="reveal" style="--d:290ms">
           <th scope="row" class="row__name">Output size alone<span>1 coefficient</span></th>
           <td class="row__plot">
             <div class="track">
-              <div class="bar" style="--w:75.2%;--d:330ms"></div>
-              <div class="whisker" style="--lo:73%;--hi:77.4%;--d:330ms"></div>
+              <div class="bar" style="--w:75.6%;--d:330ms"></div>
+              <div class="whisker" style="--lo:73.6%;--hi:77.6%;--d:330ms"></div>
             </div>
           </td>
-          <td class="row__value">0.876 <span style="font-weight:400">± 0.011</span><b>most of the signal</b></td>
+          <td class="row__value">0.878 <span style="font-weight:400">± 0.010</span><b>most of the signal</b></td>
         </tr>
         <tr class="reveal" style="--d:360ms">
           <th scope="row" class="row__name">Laya typed&#8209;decisions<span>“direct” wording</span></th>
           <td class="row__plot">
             <div class="track">
-              <div class="bar" style="--w:44.2%;--d:400ms"></div>
-              <div class="whisker" style="--lo:40%;--hi:48.4%;--d:400ms"></div>
+              <div class="bar" style="--w:43.8%;--d:400ms"></div>
+              <div class="whisker" style="--lo:38.6%;--hi:49%;--d:400ms"></div>
             </div>
           </td>
-          <td class="row__value">0.721 <span style="font-weight:400">± 0.021</span><b>best of nine configs</b></td>
+          <td class="row__value">0.719 <span style="font-weight:400">± 0.026</span><b>best of nine configs</b></td>
         </tr>
         <tr class="reveal" style="--d:430ms">
           <th scope="row" class="row__name">Laya multilingual<span>“direct” wording</span></th>
           <td class="row__plot">
             <div class="track">
               <div class="bar" style="--w:33.4%;--d:470ms"></div>
-              <div class="whisker" style="--lo:29%;--hi:37.8%;--d:470ms"></div>
+              <div class="whisker" style="--lo:28.8%;--hi:38%;--d:470ms"></div>
             </div>
           </td>
-          <td class="row__value">0.667 <span style="font-weight:400">± 0.022</span></td>
+          <td class="row__value">0.667 <span style="font-weight:400">± 0.023</span></td>
         </tr>
         <tr class="reveal" style="--d:500ms">
           <th scope="row" class="row__name">Laya english<span>“entailment” wording</span></th>
           <td class="row__plot">
             <div class="track">
-              <div class="bar" style="--w:25.6%;--d:540ms"></div>
-              <div class="whisker" style="--lo:22%;--hi:29.2%;--d:540ms"></div>
+              <div class="bar" style="--w:25%;--d:540ms"></div>
+              <div class="whisker" style="--lo:21.8%;--hi:28.2%;--d:540ms"></div>
             </div>
           </td>
-          <td class="row__value">0.628 <span style="font-weight:400">± 0.015</span></td>
+          <td class="row__value">0.625 <span style="font-weight:400">± 0.016</span></td>
         </tr>
         <tr class="reveal" style="--d:570ms">
           <th scope="row" class="row__name">Keep everything<span>no scoring</span></th>
@@ -470,7 +470,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
   <div class="finding reveal" style="--d:640ms">
     <p>The built-in scorer won <span class="val">10 of 10</span> paired splits, by
-       <span class="val">+0.174</span> on average and by <span class="val">+0.002</span> on the closest.</p>
+       <span class="val">+0.186</span> on average and by <span class="val">+0.018</span> on the closest.</p>
   </div>
   <p class="caption">
     Every scorer judged on the same held-out sessions each split, so the comparison is paired.
@@ -486,7 +486,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p class="lede">
     A session that finds a test failing only on CI, tracks it to a timezone in a fixture, and
     fixes it. Press the button and the calls are decided in the order the scorer ranks them,
-    lowest first, until half the droppable output is freed.
+    lowest first. Watch what survives: two calls are refused outright as <em>too small</em> —
+    dropping them would free less than it risks.
   </p>
 
   <div class="demo">
@@ -518,15 +519,22 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     So a mutating call is no longer the scorer’s decision. <code>Edit</code>, <code>Write</code>,
     <code>MultiEdit</code> and <code>NotebookEdit</code> keep their call whatever the
     probabilities say; only their output can go. Across the corpus that rescues
-    <span class="num val">21 of 138</span> such calls, leaves reused-output retention unchanged
-    at <span class="num val">84.6%</span>, and moves freed from 42.9% to
-    <span class="num val">43.0%</span>, because the budget then continues down the ranking.
+    <span class="num val">220</span> such calls from ever being dropped, and it costs nothing:
+    exactly one of them had an output that was needed verbatim.
+  </p>
+  <p>
+    A second rule came from the same place. The <code>Grep</code> in the list above scored 0.020
+    and 0.037 — about as low as this scorer goes — and dropping it would have freed
+    <span class="num val">126 characters</span>. Roughly thirty tokens, against a real chance of
+    losing something the session still needed. Below <code>minYieldChars</code> the ranking is
+    not worth acting on however confident it is, so that call reads <em>too small</em> rather
+    than <em>dropped</em>.
   </p>
 </section>
 
 <section class="wrap" id="cost">
   <p class="rubric"><span class="rubric__n">03</span>Cost</p>
-  <h2>139&nbsp;ms to score 1,442 tool calls.</h2>
+  <h2>164&nbsp;ms to score 1,543 tool calls.</h2>
   <p class="lede">
     Compaction stops being a model call and becomes arithmetic. These are whole session
     logs, so the totals span more than one context window, so the ratio is what transfers.
@@ -539,11 +547,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         <th scope="col" class="n">Freed</th><th scope="col" class="n">Scoring</th>
       </tr></thead>
       <tbody>
-        <tr><th scope="row">25e65eab</th><td class="n">473</td><td class="n">273,749</td><td class="n">215,853</td><td class="n val">21.1%</td><td class="n">51 ms</td></tr>
-        <tr><th scope="row">20628921</th><td class="n">576</td><td class="n">587,002</td><td class="n">397,801</td><td class="n val">32.2%</td><td class="n">53 ms</td></tr>
-        <tr><th scope="row">agent-aca4b</th><td class="n">58</td><td class="n">32,560</td><td class="n">23,815</td><td class="n val">26.9%</td><td class="n">3 ms</td></tr>
-        <tr><th scope="row">78d7d176</th><td class="n">335</td><td class="n">391,638</td><td class="n">366,311</td><td class="n val">6.5%</td><td class="n">32 ms</td></tr>
-        <tr><th scope="row">Total</th><td class="n">1,442</td><td class="n">1,284,949</td><td class="n">1,003,780</td><td class="n val">21.9%</td><td class="n">139 ms</td></tr>
+        <tr><th scope="row">25e65eab</th><td class="n">473</td><td class="n">273,749</td><td class="n">222,052</td><td class="n val">18.9%</td><td class="n">52 ms</td></tr>
+        <tr><th scope="row">20628921</th><td class="n">677</td><td class="n">635,869</td><td class="n">429,763</td><td class="n val">32.4%</td><td class="n">74 ms</td></tr>
+        <tr><th scope="row">agent-aca4b</th><td class="n">58</td><td class="n">32,560</td><td class="n">25,029</td><td class="n val">23.1%</td><td class="n">4 ms</td></tr>
+        <tr><th scope="row">78d7d176</th><td class="n">335</td><td class="n">391,638</td><td class="n">341,578</td><td class="n val">12.8%</td><td class="n">33 ms</td></tr>
+        <tr><th scope="row">Total</th><td class="n">1,543</td><td class="n">1,333,816</td><td class="n">1,018,422</td><td class="n val">23.6%</td><td class="n">164 ms</td></tr>
       </tbody>
     </table>
   </div>
@@ -574,15 +582,15 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       </tr></thead>
       <tbody>
         <tr><th scope="row">Absolute cut at 0.5</th><td class="n">97.6%</td><td class="n">5.1%</td><td class="n">8.5%</td></tr>
-        <tr class="same"><th scope="row">Budget 0.5, floor 0.1 (shipped)</th><td class="n">42.4%</td><td class="n mark">84.6%</td><td class="n mark">87.5%</td></tr>
-        <tr><th scope="row">Budget 0.7, floor 0.1</th><td class="n">52.9%</td><td class="n">82.1%</td><td class="n">79.2%</td></tr>
-        <tr><th scope="row">Budget 0.7, floor 0.05</th><td class="n">8.6%</td><td class="n">92.3%</td><td class="n">98.9%</td></tr>
+        <tr class="same"><th scope="row">Budget 0.5, floor 0.2 (shipped)</th><td class="n">23.4%</td><td class="n mark">77.3%</td><td class="n mark">92.2%</td></tr>
+        <tr><th scope="row">Budget 0.6, floor 0.2</th><td class="n">28.3%</td><td class="n">72.1%</td><td class="n">91.4%</td></tr>
+        <tr><th scope="row">Budget 0.7, floor 0.2</th><td class="n">33.9%</td><td class="n">68.8%</td><td class="n">90.2%</td></tr>
       </tbody>
     </table>
   </div>
   <p class="caption">
     Freeing nearly everything is easy and nearly worthless. Run through the shipped code rather
-    than this simulation, the same defaults give <strong>43.0% freed and 84.6% kept</strong>; the
+    than this simulation, the same defaults give <strong>22.2% freed and 77.7% kept</strong>; the
     difference is the one rule the sweep has no notion of, which is that a call recording a change
     is never dropped. Calibrating on your own sessions is an accuracy upgrade rather than a
     prerequisite, because the policy adapts to your distribution on its own.
@@ -597,19 +605,19 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <div class="scroller">
     <table class="data">
       <thead><tr>
-        <th scope="col">Scoring one session, 1,442 calls</th><th scope="col" class="n">Time</th>
+        <th scope="col">Scoring one session, 1,543 calls</th><th scope="col" class="n">Time</th>
         <th scope="col" class="n">Memory held</th><th scope="col" class="n">VRAM</th>
         <th scope="col" class="n">Cold start</th>
       </tr></thead>
       <tbody>
-        <tr class="same"><th scope="row">Built-in scorer</th><td class="n mark">139 ms</td><td class="n">none</td><td class="n">none</td><td class="n">none</td></tr>
-        <tr><th scope="row">Laya, fastest checkpoint</th><td class="n">21.5 s</td><td class="n">4.9 GB</td><td class="n">~5.0 GB</td><td class="n">7.7 s</td></tr>
+        <tr class="same"><th scope="row">Built-in scorer</th><td class="n mark">164 ms</td><td class="n">none</td><td class="n">none</td><td class="n">none</td></tr>
+        <tr><th scope="row">Laya, fastest checkpoint</th><td class="n">21.5 s</td><td class="n">5.0 GB</td><td class="n">~5.0 GB</td><td class="n">7.1 s</td></tr>
       </tbody>
     </table>
   </div>
   <p class="caption">
-    155× the time, for a lower AUC, on an RTX 4060 Laptop. Per request the fastest checkpoint
-    answers eight questions in 736 ms and the slowest in 2,228 ms. Fine-tuning moves the AUC; it
+    131× the time, for a lower AUC, on an RTX 4060 Laptop. Per request the fastest checkpoint
+    answers eight questions in 665 ms and the slowest in 1,974 ms. Fine-tuning moves the AUC; it
     does not move this table.
   </p>
 </section>
@@ -641,12 +649,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     send the whole conversation, up to 25,000 tokens, as one state.
   </p>
 
-  <h3>What the other 15.4% costs</h3>
+  <h3>What the other 22.7% costs</h3>
   <p>
-    “84.6% of reused outputs kept” invites you to supply your own answer for the rest, so here
-    it is, priced. Held-out scores, shipped policy, per session: <strong>10 of the 78 reused
-    outputs are dropped and actually shortened</strong> — 0.56 a session. Two more are dropped
-    but short enough to sit inside the retained head, so nothing is removed at all.
+    “77.3% of reused outputs kept” invites you to supply your own answer for the rest, so here
+    it is, priced. Held-out scores, shipped policy, per session: <strong>55 of the 247 reused
+    outputs are dropped</strong> — 1.34 a session, and only one of them kept a head.
   </p>
   <div class="scroller">
     <table class="data">
@@ -655,17 +662,49 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         <th scope="col" class="n">Characters</th><th scope="col">Produced by</th>
       </tr></thead>
       <tbody>
-        <tr class="same"><th scope="row">Re-run the command, side effects unknown</th><td class="n mark">9</td><td class="n">38,046</td><td>Bash</td></tr>
-        <tr><th scope="row">Read the file again</th><td class="n">1</td><td class="n">1,162</td><td>Read</td></tr>
+        <tr class="same"><th scope="row">Re-run the command, side effects unknown</th><td class="n mark">47</td><td class="n">42,389</td><td>Bash</td></tr>
+        <tr><th scope="row">Read the file again</th><td class="n">4</td><td class="n">53,680</td><td>Read</td></tr>
+        <tr><th scope="row">Not repeatable at all</th><td class="n">4</td><td class="n">2,122</td><td>AskUserQuestion</td></tr>
       </tbody>
     </table>
   </div>
   <p class="caption">
-    None of the ten kept a head, because both scores were low enough to drop the call outright.
-    Nine of the ten are command output that a later tool input quoted verbatim — the shape this
-    scorer is worst at, since <code>tool=Bash</code> carries a −1.36 coefficient because most
-    command output is never referred to again, and the minority that is gets swept along.
-    <strong>This is recovery cost, not task outcome</strong>; see the ledger below.
+    Only one of the 55 kept a head, because when a result scores below the floor the call
+    usually does too. Forty-seven are command output that a later tool input quoted verbatim —
+    the shape this scorer is worst at, since most command output is never referred to again and
+    the minority that is gets swept along with it. Four are <code>AskUserQuestion</code>: a
+    human answer, which no amount of re-running brings back.
+    <strong>This is recovery cost, and it over-counts</strong> — it includes reuses that had
+    already happened when a real compaction fired. The next section measures what is actually
+    at risk.
+  </p>
+
+  <h3>What a real compaction actually costs the work</h3>
+  <p>
+    Every figure above asks whether an output was reused <em>somewhere</em> later, which counts
+    reuses that had already happened by the time a compaction fired and could never have been
+    lost. <code>eval/outcome.ts</code> asks it in the right order: find where the engine would
+    actually compact — 60% of a session's tool output — decide only the calls present at that
+    moment, then count the reuses that come <em>afterwards</em> whose source was dropped.
+  </p>
+  <div class="scroller">
+    <table class="data">
+      <thead><tr>
+        <th scope="col">Compacting at 60%, across 32 sessions</th><th scope="col" class="n">Count</th>
+      </tr></thead>
+      <tbody>
+        <tr><th scope="row">Calls present when it fires</th><td class="n">1,038</td></tr>
+        <tr><th scope="row">Reused only <em>after</em> that point</th><td class="n">68</td></tr>
+        <tr class="same"><th scope="row">…and dropped anyway</th><td class="n mark">6</td></tr>
+        <tr><th scope="row">Sessions that lose nothing at all</th><td class="n">27 of 32</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="caption">
+    <span class="num val">0.19</span> lost outputs a session, and
+    <span class="num val">8.8%</span> of what was genuinely still needed. This is the necessary
+    condition for the work to suffer, not proof that it did: nothing here replays an assistant
+    against the compacted transcript, and that remains unverified.
   </p>
 
   <h3>Three more things this does not do</h3>
@@ -718,9 +757,13 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p class="ledger__claim">Works for Codex CLI, against a fixture</p>
       <p class="ledger__how">jev-compact’s own parser, scorer and HTTP client driven over its recorded rollout fixture against our server. Not run against a live Codex: that plugin needs Codex ≥ 0.155 and this machine has 0.131.</p>
     </div>
+    <div class="ledger__row">
+      <p class="ledger__claim">What a compaction costs the work</p>
+      <p class="ledger__how">Compaction simulated where the engine would fire it, then the reuses that come afterwards counted: 6 of 68, 0.19 a session, 27 of 32 sessions losing nothing. <code>eval/outcome.ts</code></p>
+    </div>
     <div class="ledger__row ledger__row--open">
-      <p class="ledger__claim">Task outcome</p>
-      <p class="ledger__how">Every figure on this page is tokens, ranking or recovery cost. Whether the assistant still finishes the job after a compaction has not been measured; that needs the same session replayed both ways and the following tool calls compared.</p>
+      <p class="ledger__claim">An assistant still finishing the job</p>
+      <p class="ledger__how">The measurement above shows how often the information would no longer be there. Whether that changes what the assistant does needs the same session replayed with and without compaction, which needs a live A/B.</p>
     </div>
     <div class="ledger__row ledger__row--open">
       <p class="ledger__claim">The engine calling <code>session.compact</code> live</p>
@@ -739,10 +782,17 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <div class="next">
     <div class="next__item">
       <p class="next__when">Blocks a 1.0</p>
-      <p class="next__what"><b>Task outcome.</b> Every figure on this page is tokens, ranking or
-        recovery cost. None of them is whether the assistant still finishes the job. Closing it
-        means replaying the same session with and without compaction and comparing the tool calls
-        that follow.</p>
+      <p class="next__what"><b>A live A/B.</b> Task outcome is measured above as far as a
+        transcript allows — how often the information would no longer be there. Whether that
+        changes what an assistant does needs the same session replayed both ways, against a real
+        model, and it has not been.</p>
+    </div>
+    <div class="next__item">
+      <p class="next__when">Open</p>
+      <p class="next__what"><b>The corpus is still one person's.</b> Widening it from 18 sessions
+        to 41 — all the same person — cost seven points of AUC and nearly tripled the calibration
+        error. A second operator's corpus would say how much of what is left is this person's
+        habits.</p>
     </div>
     <div class="next__item">
       <p class="next__when">Blocks a 1.0</p>

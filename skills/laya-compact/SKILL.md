@@ -95,8 +95,8 @@ Set `scorer` to `laya`. Expect it to be worse: measured over 10 grouped splits,
 the built-in scorer averaged AUC 0.895 against 0.721 for the best Laya
 checkpoint and wording. Only worth it with a checkpoint fine-tuned on your own
 sessions — the bar is the built-in scorer, not chance. Budget for it too: one
-`laya-serve` holds ~4.9 GB and ~5.0 GB of VRAM, starts in 7.7 s, and takes 21.5 s
-to score a session the built-in scorer scores in 139 ms.
+`laya-serve` holds ~4.9 GB and ~5.0 GB of VRAM, starts in 7.1 s, and takes 21.5 s
+to score a session the built-in scorer scores in 164 ms.
 
 `phrasing` matters more than the checkpoint. On `typed-decisions`, `direct`
 scores 0.721 where `reproducible` scores 0.419.

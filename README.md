@@ -68,23 +68,33 @@ which `npm run eval:results` regenerates and
 
 | scorer | AUC (mean ± sd) | worst split | chars freed at 90% safety |
 |---|---|---|---|
-| **built-in logistic, 12 fitted features** | **0.895 ± 0.073** | 0.688 | **38.8%** |
-| output size alone | 0.876 ± 0.011 | 0.855 | 11.4% |
-| laya typed-decisions, "direct" | 0.721 ± 0.021 | 0.686 | 12.1% |
-| laya multilingual, "direct" | 0.667 ± 0.022 | 0.644 | 4.5% |
-| laya english, "entailment" | 0.628 ± 0.015 | 0.610 | 18.0% |
-| laya typed-decisions, "reproducible" | 0.419 ± 0.024 | 0.393 | 8.2% |
+| **built-in logistic, 12 fitted features** | **0.905 ± 0.078** | 0.684 | **35.4%** |
+| output size alone | 0.878 ± 0.010 | 0.855 | 11.9% |
+| laya typed-decisions, "direct" | 0.719 ± 0.026 | 0.666 | 12.1% |
+| laya multilingual, "direct" | 0.667 ± 0.023 | 0.638 | 4.5% |
+| laya english, "entailment" | 0.625 ± 0.016 | 0.602 | 18.0% |
+| laya typed-decisions, "reproducible" | 0.419 ± 0.025 | 0.393 | 8.2% |
 | keep everything | 0.500 | — | 0.0% |
 
 AUC 0.5 is a coin flip. The logistic beat the best Laya config on **10 of 10
-splits**, by +0.174 on average — but by as little as **+0.002** on the closest
-one, so the margin is not uniform. Leave-one-session-out over all 18 sessions
-puts it at AUC 0.862 with ECE 0.019, an order of magnitude better calibrated
-than Laya's 0.42-0.71, which is what makes `keepThreshold` mean anything.
+splits**, by +0.186 on average and by **+0.018** on the closest one.
 
-Note also that **output size alone** scores 0.876 with a quarter of the
+That table is the **paired** corpus: 1,063 calls from the 18 sessions every
+checkpoint and wording was scored against. The shipped coefficients are fitted on
+all 2,239 labelled calls from 41 sessions, and that is where the uncomfortable
+number lives. **Leave-one-session-out over 41 sessions gives AUC 0.789 with ECE
+0.051** — against 0.862 and 0.019 on 18 of those same sessions. Widening the
+corpus *within one person's own work* cost seven points of AUC and nearly tripled
+the calibration error. That is the most direct evidence available that these
+coefficients do not transfer as far as one number suggests, and the reason
+`npm run calibrate` is not politeness. The clearest single case:
+`targetReadAgain` was +0.03 on the narrow corpus and is **−0.59** here, because
+with more sessions "the assistant read this again later" turns out to mean the
+output was reproducible.
+
+Note also that **output size alone** scores 0.878 with a quarter of the
 variance. Most of the signal is "big outputs get reused"; the other features
-earn their place on the product metric (39% of characters freed against 11%),
+earn their place on the product metric (35% of characters freed against 12%),
 not on ranking.
 
 And one of the thirteen was never fitted. **The corpus contains no `Grep` and no
@@ -96,7 +106,7 @@ is search-heavy, `npm run calibrate` is not optional politeness.
 This is not a criticism of Laya. Its own README says the base checkpoints score
 near chance on typed-decision workflows and that it should be treated as a fast
 base to specialise, not a zero-shot decision engine. That is exactly what was
-measured. **A fine-tuned checkpoint now has to beat 0.895, not 0.5** — so
+measured. **A fine-tuned checkpoint now has to beat 0.905, not 0.5** — so
 fine-tuning was not done, and `eval/` is set up to re-run the comparison for
 anyone who tries.
 
@@ -137,9 +147,9 @@ The type declarations in `types/` were written by Claude Code 2.1.281.
 
 | Option | Default | Meaning |
 |---|---:|---|
-| `scorer` | `features` | `features` (offline, AUC 0.895) or `laya` (a sidecar) |
+| `scorer` | `features` | `features` (offline, AUC 0.905) or `laya` (a sidecar) |
 | `layaUrl` | `http://127.0.0.1:8000/v1/systemone` | only read when `scorer` is `laya` |
-| `keepThreshold` | `0.1` | a **floor**: at or above this, never dropped |
+| `keepThreshold` | `0.2` | a **floor**: at or above this, never dropped |
 | `targetReduction` | `0.5` | fraction of droppable tool output to free |
 | `preserveRecentMessages` | `6` | newest messages pinned; the first is always kept |
 | `compactAtPercent` | `60` | context percentage that triggers compaction |
@@ -202,31 +212,34 @@ corpus the rule rescues **21 of 138** such calls and costs nothing — reused-ou
 retention is unchanged at 84.6%, and freed rises from 42.9% to 43.0%, because the
 budget then continues down the ranking.
 
-### What the other 15.4% costs
+### What the other 22.7% costs
 
-"84.6% of reused outputs kept" invites you to supply your own answer for the
+"77.3% of reused outputs kept" invites you to supply your own answer for the
 rest, so `eval/recovery.ts` prices it. Held-out scores, shipped policy, per
-session: **10 of the 78 reused outputs are dropped and actually shortened** —
-0.56 per session. Two more are "dropped" but short enough to fit inside the
-retained head, so nothing is removed at all.
+session: **55 of the 247 reused outputs are dropped** — 1.34 per session, and
+only one of them kept a head.
 
-None of the ten kept a head, because both their scores were low enough to drop
-the call outright. **Nine of the ten are `Bash` output reused verbatim in a later
-tool input.** That is the shape this scorer is worst at: `tool=Bash` carries a
--1.36 coefficient because most command output is never referred to again, and the
-minority that is gets swept with it. One was a `Read` of an unchanged file, which
-re-reading recovers exactly.
+Forty-seven are command output reused verbatim in a later tool input. That is the
+shape this scorer is worst at: most command output is never referred to again,
+and the minority that is gets swept along with it. Four are `AskUserQuestion` — a
+human's answer, which no amount of re-running brings back.
 
-**This is recovery cost, not task outcome.** Nothing here shows an assistant
-given the compacted transcript still finishing the job — that needs a live A/B
-and is listed as unverified below. The figure also over-counts: a reuse that had
-already happened by the time a real compaction fired costs nothing when the
-output is dropped now.
+### What a real compaction actually costs the work
 
-Any failure at all — scorer down, malformed response, saving below
-`minReductionRatio` — falls back to Claude Code's built-in compaction. A single
-failed request keeps its call: a wrong keep costs context, a wrong drop destroys
-something unrecoverable.
+That figure over-counts, because it includes reuses that had already happened by
+the time a compaction fired and so were never at risk. `eval/outcome.ts` asks the
+question in the right order: find where the engine would actually fire — 60% of a
+session's tool output — decide only the calls present at that moment, then count
+the reuses that come *afterwards* whose source was dropped.
+
+Across 32 sessions: 1,038 calls present when it fires, **68 reused only
+afterwards, and 6 of those dropped**. That is **0.19 lost outputs per session**,
+8.8% of what was genuinely still needed, and **27 of the 32 sessions lose nothing
+at all**.
+
+This is the necessary condition for the work to suffer, not proof that it did.
+Nothing here replays an assistant against the compacted transcript, and that
+remains unverified below.
 
 ## Using Laya instead
 
@@ -250,19 +263,19 @@ Measured on one machine, RTX 4060 Laptop, one `laya-serve` process
 
 | | |
 |---|---|
-| cold start to first answer | **7.7 s** |
+| cold start to first answer | **7.1 s** |
 | resident memory | **3.1 GB** at first answer, **4.9 GB** warm |
 | VRAM | **~5.0 GB** |
-| latency, `multilingual`, 8 questions | **736 ms** median |
-| latency, `english` / `typed-decisions`, 8 questions | 1,684 ms / 2,228 ms |
+| latency, `multilingual`, 8 questions | **665 ms** median |
+| latency, `english` / `typed-decisions`, 8 questions | 1,719 ms / 1,974 ms |
 
 `laya-serve` loads every checkpoint at startup and routes per request, so memory
 and start-up are properties of the router, not of the checkpoint you pick. Only
 latency is per checkpoint.
 
-Scoring one real session — 1,442 calls, two questions a request, eight in flight
-— takes **21.5 s on the fastest checkpoint against 139 ms for the built-in
-scorer**, holding ~5 GB the whole time. That is 155x the time for a lower AUC,
+Scoring one real session — 1,543 calls, two questions a request, eight in flight
+— takes **21.5 s on the fastest checkpoint against 164 ms for the built-in
+scorer**, holding ~5 GB the whole time. That is 131x the time for a lower AUC,
 which is the arithmetic behind the default. Fine-tuning changes the AUC; it does
 not change this table.
 
@@ -343,7 +356,8 @@ Being precise about this, because "it compiles" is not evidence.
 
 | Claim | How |
 |---|---|
-| Scoring beats the model it replaces | 1063 labelled calls, 18 sessions, 10 grouped splits: AUC 0.895 ± 0.073 vs 0.721 ± 0.021, winning 10/10 paired splits (`eval/repeat.ts`, transcribed into `eval/RESULTS.md`) |
+| A compaction rarely costs the work | 32 sessions compacted where the engine would fire it: 6 of the 68 outputs reused afterwards were dropped, 0.19 a session, 27 sessions losing nothing (`eval/outcome.ts`) |
+| Scoring beats the model it replaces | 1063 labelled calls, 18 sessions, 10 grouped splits: AUC 0.905 ± 0.078 vs 0.719 ± 0.026, winning 10/10 paired splits (`eval/repeat.ts`, transcribed into `eval/RESULTS.md`) |
 | States never overflow the checkpoint | asserted for outputs from 0 to 2,000,000 chars |
 | No orphaned `tool_use`/`tool_result` survives | the hook run over a **real** session from disk; an orphan is rejected by the API and would break the session compaction was meant to save |
 | User and assistant prose is never touched | same real-session test |
@@ -363,10 +377,10 @@ which is the same API the upstream uses. To close it: open a session with
 context bar is well along, then type `/compact` — the toast reports the reduction
 and every decision lands in the log.
 
-Also unverified: **task outcome**. Every metric here is tokens, ranking or
-recovery cost; none is whether the assistant still finishes. Closing it needs the
-same session replayed with and without compaction and the tool calls compared,
-which is the next thing worth building.
+Also unverified: **an assistant still finishing the job**. The measurement above
+shows how often the information would no longer be there; whether that changes
+what an assistant does needs the same session replayed both ways against a real
+model, which is the next thing worth building.
 
 And a live Codex CLI, which needs >= 0.155 (this machine has 0.131).
 

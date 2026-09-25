@@ -70,11 +70,11 @@ const closest = /range ([\d.]+) to [\d.]+/.exec(results)?.[1];
 describe('published figures match eval/RESULTS.md', () => {
   const quoting: Array<[string, string[]]> = [
     ['README.md', [
-      `**0.895 ± ${logistic.sd}**`, `| ${logistic.min} |`, `**${logistic.drop}**`,
-      `0.721 ± ${laya.sd}`, `${sizeOnly.mean} ± ${sizeOnly.sd}`, `**+${closest}**`,
+      `**${logistic.mean} ± ${logistic.sd}**`, `| ${logistic.min} |`, `**${logistic.drop}**`,
+      `${laya.mean} ± ${laya.sd}`, `${sizeOnly.mean} ± ${sizeOnly.sd}`, `**+${closest}**`,
     ]],
     ['docs/index.html', [`± ${logistic.sd}`, `worst split ${logistic.min}`, `+${closest}`]],
-    ['.claude-plugin/plugin.json', [`0.895 \\u00b1 ${logistic.sd}`, `0.721 \\u00b1 ${laya.sd}`]],
+    ['.claude-plugin/plugin.json', [`${logistic.mean} \\u00b1 ${logistic.sd}`, `${laya.mean} \\u00b1 ${laya.sd}`]],
     ['src/features.ts', [`sd ${logistic.sd}`, `worst split ${logistic.min}`]],
     ['src/compact.ts', [shipped.freed, shipped.kept]],
     ['.claude-plugin/plugin.json', [shipped.kept]],

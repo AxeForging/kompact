@@ -12,7 +12,7 @@
     "scorer": {
       "type": "string",
       "title": "Scorer",
-      "description": "features = built-in logistic model, no network (measured AUC 0.895 \u00b1 0.073 over ten grouped splits). laya = a local laya-serve sidecar (measured AUC 0.721 \u00b1 0.021 zero-shot on the same splits; use only with a checkpoint fine-tuned on your own sessions).",
+      "description": "features = built-in logistic model, no network (measured AUC 0.905 \u00b1 0.078 over ten grouped splits). laya = a local laya-serve sidecar (measured AUC 0.719 \u00b1 0.026 zero-shot on the same splits; use only with a checkpoint fine-tuned on your own sessions).",
       "default": "features"
     },
     "layaUrl": {
@@ -30,7 +30,7 @@
     "targetReduction": {
       "type": "number",
       "title": "Reduction target",
-      "description": "Fraction of droppable tool-output characters to free, 0-1. Calls are dropped lowest-score-first until this is met, then dropping stops. Measured: 0.5 frees 42.4% of tool output and leaves 87.5% of the characters reused later; 0.7 frees 52.9% and leaves 79.2%.",
+      "description": "Fraction of droppable tool-output characters to free, 0-1. Calls are dropped lowest-score-first until this is met, then dropping stops. Measured: 0.5 frees 23.4% of tool output, keeps 77.3% of the outputs reused later and 92.2% of their characters; 0.7 frees 33.9% and keeps 68.8%.",
       "default": 0.5
     },
     "preserveRecentMessages": {

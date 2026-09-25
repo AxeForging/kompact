@@ -14,11 +14,22 @@ TypeSafe's hosted Jev model.
   the rest silently, so the state is now one small prose description per call,
   sized to the checkpoint's real budget and asserted in the suite.
 - **A logistic scorer as the default**, over facts already computed for the
-  state: no sidecar, no GPU, no network. Measured over 10 grouped splits of 1063
-  calls from 18 real sessions, AUC 0.895 ± 0.073 against 0.721 ± 0.021 for the
-  best Laya checkpoint and wording, winning 10 of 10 paired splits. With the
-  shipped defaults it frees 42.4% of droppable tool output on the labelled
-  corpus and 6–32% of a real session's tokens, scoring ~1,400 calls in ~140 ms.
+  state: no sidecar, no GPU, no network. Measured over 10 grouped splits of the
+  1063 calls from 18 sessions every checkpoint was scored against, AUC
+  0.905 ± 0.078 against 0.719 ± 0.026 for the best Laya checkpoint and wording,
+  winning 10 of 10 paired splits. With the shipped defaults it frees 23.4% of
+  droppable tool output and 13–32% of a real session's tokens, scoring ~1,500
+  calls in ~160 ms.
+- **Fitted on 2239 calls from 41 sessions, and that is worse than it sounds.**
+  Leave-one-session-out AUC is 0.789 with ECE 0.051, against 0.862 and 0.019 on
+  18 of those same sessions. Widening the corpus within one person's own work
+  cost seven points of AUC. Run `npm run calibrate`.
+- **What a compaction costs the work**, measured rather than assumed
+  (`eval/outcome.ts`): compacting where the engine would fire it, 6 of the 68
+  outputs reused afterwards are dropped — 0.19 a session, with 27 of 32 sessions
+  losing nothing.
+- **No drop that frees less than it risks.** `minYieldChars` refuses to trade a
+  real chance of losing content for thirty tokens.
   The 50–88% figure an earlier draft of this entry carried came from the
   threshold-only policy, which also dropped 74 of 78 outputs that were reused
   later; see `eval/RESULTS.md`.
@@ -28,9 +39,9 @@ TypeSafe's hosted Jev model.
   costs nothing: reused-output retention is unchanged at 84.6%.
 - **Laya stays available** behind the same `Asker` seam for anyone with a
   checkpoint fine-tuned on their own sessions, and is now measurable rather than
-  only comparable: `eval/laya-bench.ts` reports 7.7 s to start, ~4.9 GB resident,
+  only comparable: `eval/laya-bench.ts` reports 7.1 s to start, ~4.9 GB resident,
   ~5.0 GB of VRAM, and 21.5 s to score a session the built-in scorer scores in
-  139 ms.
+  164 ms.
 - **Local calibration.** `npm run calibrate` refits on your own transcripts and
   emits `LAYA_COMPACT_WEIGHTS`; the shipped coefficients come from one person's
   sessions and should not be assumed to transfer.

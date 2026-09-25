@@ -4,10 +4,10 @@ window.DEMO = {
   "calls": 9,
   "outputChars": 116266,
   "charsBefore": 116984,
-  "charsAfter": 67810,
-  "kept": 6,
+  "charsAfter": 108592,
+  "kept": 5,
   "resultsDropped": 1,
-  "callsDropped": 2
+  "callsDropped": 1
  },
  "decisions": [
   {
@@ -17,11 +17,11 @@ window.DEMO = {
    "chars": 7186,
    "isError": true,
    "pinned": false,
-   "action": "keep",
-   "reason": "budget",
-   "freed": 0,
-   "keepResult": 0.066,
-   "keepCall": 0.965
+   "action": "drop_result",
+   "reason": "result_dropped",
+   "freed": 6796,
+   "keepResult": 0.158,
+   "keepCall": 0.973
   },
   {
    "id": "t2",
@@ -33,8 +33,8 @@ window.DEMO = {
    "action": "keep",
    "reason": "kept",
    "freed": 0,
-   "keepResult": 0.381,
-   "keepCall": 0.875
+   "keepResult": 0.762,
+   "keepCall": 0.946
   },
   {
    "id": "t3",
@@ -43,11 +43,11 @@ window.DEMO = {
    "chars": 89,
    "isError": false,
    "pinned": false,
-   "action": "drop_call",
-   "reason": "call_dropped",
-   "freed": 126,
-   "keepResult": 0.027,
-   "keepCall": 0.044
+   "action": "keep",
+   "reason": "too small",
+   "freed": 0,
+   "keepResult": 0.02,
+   "keepCall": 0.037
   },
   {
    "id": "t4",
@@ -59,8 +59,8 @@ window.DEMO = {
    "action": "keep",
    "reason": "kept",
    "freed": 0,
-   "keepResult": 0.27,
-   "keepCall": 0.212
+   "keepResult": 0.282,
+   "keepCall": 0.27
   },
   {
    "id": "t5",
@@ -69,11 +69,11 @@ window.DEMO = {
    "chars": 1547,
    "isError": false,
    "pinned": false,
-   "action": "keep",
-   "reason": "budget",
-   "freed": 0,
-   "keepResult": 0.037,
-   "keepCall": 0.05
+   "action": "drop_call",
+   "reason": "call_dropped",
+   "freed": 1597,
+   "keepResult": 0.081,
+   "keepCall": 0.093
   },
   {
    "id": "t6",
@@ -85,8 +85,8 @@ window.DEMO = {
    "action": "keep",
    "reason": "kept",
    "freed": 0,
-   "keepResult": 0.27,
-   "keepCall": 0.212
+   "keepResult": 0.282,
+   "keepCall": 0.27
   },
   {
    "id": "t7",
@@ -95,11 +95,11 @@ window.DEMO = {
    "chars": 49001,
    "isError": false,
    "pinned": false,
-   "action": "drop_call",
-   "reason": "call_dropped",
-   "freed": 49048,
-   "keepResult": 0.029,
-   "keepCall": 0.071
+   "action": "keep",
+   "reason": "kept",
+   "freed": 0,
+   "keepResult": 0.228,
+   "keepCall": 0.305
   },
   {
    "id": "t8",
@@ -108,11 +108,11 @@ window.DEMO = {
    "chars": 29,
    "isError": false,
    "pinned": false,
-   "action": "drop_result",
-   "reason": "result_dropped",
+   "action": "keep",
+   "reason": "too small",
    "freed": 0,
-   "keepResult": 0.002,
-   "keepCall": 0.072
+   "keepResult": 0.003,
+   "keepCall": 0.059
   },
   {
    "id": "t9",
@@ -122,10 +122,10 @@ window.DEMO = {
    "isError": false,
    "pinned": false,
    "action": "keep",
-   "reason": "budget",
+   "reason": "kept",
    "freed": 0,
-   "keepResult": 0.097,
-   "keepCall": 0.127
+   "keepResult": 0.297,
+   "keepCall": 0.277
   }
  ]
 };

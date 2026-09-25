@@ -130,9 +130,9 @@ export interface CompactOptions {
    * budget, so on a session where everything matters, little is freed.
    *
    * 0.5 rather than 0.7 because a wrong drop costs work and under-freeing only
-   * costs context. Measured per session on the labelled corpus: 0.5 frees 42.4%
-   * of tool output and leaves 87.5% of the characters that were reused later;
-   * 0.7 frees 52.9% and leaves 79.2%.
+   * costs context. Measured per session on the labelled corpus: 0.5 frees 23.4%
+   * of tool output and leaves 92.2% of the characters that were reused later;
+   * 0.7 frees 33.9% and leaves 90.2%.
    */
   targetReduction?: number;
   /** Question wording variant. Default `reproducible`. */

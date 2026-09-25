@@ -55,13 +55,13 @@ budget 0.7, floor 0.15         11.9%      65      4     73.7%      91.6%
 budget 0.7, floor 0.10          9.6%      58      7     76.5%      96.1%
 budget 0.7, floor 0.05          3.7%      31     28     87.4%      98.7%
 
-budget 0.5, floor 0.10          6.9%      38      1     84.6%      97.4%
-budget 0.6, floor 0.10          8.3%      48      2     80.6%      96.6%
-budget 0.7, floor 0.10          9.6%      58      7     76.5%      96.1%
-budget 0.8, floor 0.10         10.9%      64      9     74.1%      95.9%
+budget 0.5, floor 0.20         23.4%      56      4     77.3%      92.2%
+budget 0.6, floor 0.20         28.3%      69      4     72.1%      91.4%
+budget 0.7, floor 0.20         33.9%      77      4     68.8%      90.2%
+budget 0.8, floor 0.20         35.7%      89      4     64.0%      87.3%
 
 shipped code path (src/compact.ts decideAll, the same defaults):
-  5.7% freed, 84.6% of reused outputs kept, 0 of 220 mutating calls dropped
+  22.2% freed, 77.7% of reused outputs kept, 0 of 220 mutating calls dropped
 
 wrong  = needed outputs that were dropped anyway
 +head  = of those, how many kept their first 300 characters
@@ -137,12 +137,12 @@ one corpus, and the per-session column as the range that matters.
 ```
 session              calls  tok before  tok after    freed  scoring
 -------------------------------------------------------------------
-25e65eab-4941-41ea     473     273,749    217,627    20.5%     50ms
-20628921-046d-4fc0     658     627,179    423,305    32.5%     73ms
-78d7d176-4c84-4936     335     391,638    366,317     6.5%     34ms
-agent-aca4b44fdb68      58      32,560     23,834    26.8%      4ms
+25e65eab-4941-41ea     473     273,749    222,052    18.9%     52ms
+20628921-046d-4fc0     677     635,869    429,763    32.4%     74ms
+78d7d176-4c84-4936     335     391,638    341,578    12.8%     33ms
+agent-aca4b44fdb68      58      32,560     25,029    23.1%      4ms
 -------------------------------------------------------------------
-total                 1524   1,325,126  1,031,083    22.2%    161ms
+total                 1543   1,333,816  1,018,422    23.6%    164ms
 ```
 
 ## What the sidecar costs to run — `eval/laya-bench.ts`
@@ -161,31 +161,31 @@ whole router. Latency is per checkpoint, 5 runs, median and worst:
 
 checkpoint           questions    median    worst  per question  input tok
 --------------------------------------------------------------------------
-english                      1    383 ms   388 ms      383.3 ms        104
-english                      2    573 ms   583 ms      286.7 ms        208
-english                      4    968 ms  1048 ms      242.1 ms        416
-english                      8   2014 ms  2152 ms      251.8 ms        832
-multilingual                 1    133 ms   143 ms      133.4 ms         99
-multilingual                 2    218 ms   225 ms      109.0 ms        198
-multilingual                 4    390 ms   438 ms       97.5 ms        396
-multilingual                 8    808 ms   813 ms      101.0 ms        792
-typed-decisions              1    455 ms   702 ms      455.1 ms        104
-typed-decisions              2    695 ms   807 ms      347.5 ms        208
-typed-decisions              4   1133 ms  1140 ms      283.3 ms        416
-typed-decisions              8   1910 ms  1971 ms      238.7 ms        832
+english                      1    413 ms   687 ms      413.2 ms        104
+english                      2    587 ms   593 ms      293.5 ms        208
+english                      4    966 ms   973 ms      241.6 ms        416
+english                      8   1719 ms  1757 ms      214.9 ms        832
+multilingual                 1    111 ms   115 ms      110.6 ms         99
+multilingual                 2    184 ms   191 ms       92.1 ms        198
+multilingual                 4    309 ms   318 ms       77.3 ms        396
+multilingual                 8    665 ms   677 ms       83.1 ms        792
+typed-decisions              1    461 ms   731 ms      460.9 ms        104
+typed-decisions              2    815 ms  1229 ms      407.6 ms        208
+typed-decisions              4   1167 ms  1207 ms      291.7 ms        416
+typed-decisions              8   1974 ms  2016 ms      246.7 ms        832
 
 input tok is usage.input_tokens, which is the per-question row count times the
 number of questions — not the size of the state.
 
-Scoring one session: 1524 calls, 2 questions a request, 8 in flight.
-  fastest checkpoint: 23.0 s and 4944 MB resident held for the session
+Scoring one session: 1543 calls, 2 questions a request, 8 in flight.
+  fastest checkpoint: 21.5 s and 4958 MB resident held for the session
   built-in scorer:    0.16 s and no process at all
-  ratio:              143x the time
-(1524 calls and 161 ms come from the eval/sessions.ts run in
+  ratio:              131x the time
+(1543 calls and 164 ms come from the eval/sessions.ts run in
  this same report, so the two sides are the same work.)
 
 cold start:   7.1 s to first answer
-  memory:     3087 MB resident (pid 2036432)
-  gpu after:  NVIDIA GeForce RTX 4060 Laptop GPU, 5173 MiB, 8188 MiB
-  gpu before: NVIDIA GeForce RTX 4060 Laptop GPU, 176 MiB, 8188 MiB
+  memory:     3085 MB resident (pid 2039361)
+  gpu after:  NVIDIA GeForce RTX 4060 Laptop GPU, 5162 MiB, 8188 MiB
+  gpu before: NVIDIA GeForce RTX 4060 Laptop GPU, 165 MiB, 8188 MiB
 ```

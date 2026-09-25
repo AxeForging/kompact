@@ -5,10 +5,10 @@
  * This exists because it was measured to be better, repeatedly. Over 1063
  * labelled calls from 18 real sessions: leave-one-session-out AUC 0.862, and
  * across 10 grouped splits holding out 30% of sessions each time it averages
- * 0.895 (sd 0.073, worst split 0.688) against 0.721 for the best Laya
- * checkpoint and phrasing. It won 10 of 10 splits — though by as little as
- * +0.002 on the closest one. At a 90% safety setting it frees 39% of tool-output
- * characters against Laya's 12%. The features carry the signal, and an encoder
+ * 0.905 (sd 0.078, worst split 0.684) against 0.719 for the best Laya
+ * checkpoint and phrasing. It won 10 of 10 splits, by as little as +0.018 on the
+ * closest one. At a 90% safety setting it frees 35% of tool-output characters
+ * against Laya's 12%. The features carry the signal, and an encoder
  * asked to read the same facts as prose does worse.
  *
  * Earlier drafts of this comment claimed 0.918 from a single split on 721 calls.

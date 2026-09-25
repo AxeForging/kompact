@@ -48,7 +48,7 @@ order, following Jev's:
    new centrepiece and the only animated element on the page.
 4. **What it costs** — tokens freed and scoring latency on real sessions, and
    what the optional sidecar costs in memory, VRAM and seconds.
-5. **Where it loses** — the silent-truncation finding, the +0.002 near-tie, the
+5. **Where it loses** — the silent-truncation finding, the +0.018 closest split, the
    ten reused outputs it drops anyway, and the compression trade-off against a
    summary. Same typographic weight as the evidence. This is the differentiator.
 6. **Verification ledger** — each claim and how it was checked, including the
@@ -100,9 +100,9 @@ Without JavaScript the demonstration shows its end state, fully labelled. With
 
 ## 7. Content requirements
 
-Every figure carries its spread, worst case or n. Specifically: `0.895 ± 0.073`
-never appears without `worst split 0.688`; `10/10 splits` never without
-`+0.002 on the closest`. Figures come from `eval/RESULTS.md`, which is generated
+Every figure carries its spread, worst case or n. Specifically: `0.905 ± 0.078`
+never appears without `worst split 0.684`; `10/10 splits` never without
+`+0.018 on the closest`. Figures come from `eval/RESULTS.md`, which is generated
 — never retyped from a remembered run. Copy is plain and declarative — no "blazing", no "10x",
 no exclamation marks. The truncation finding is quoted as data: two rows whose
 probabilities are *identical* so the eye sees the point before reading it.

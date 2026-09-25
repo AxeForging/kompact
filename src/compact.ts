@@ -25,9 +25,9 @@ export const DEFAULT_OPTIONS: ResolvedCompactOptions = {
    * the ones that matter — a 0.5 floor protects almost nothing. Simulated per
    * session on 1063 labelled calls (`eval/policy.ts`), a 0.5 floor retained 5%
    * of genuinely-needed outputs. Re-swept against the coefficients fitted on 41
-   * sessions: 0.2 retains 85.4% and frees 20.7%, 0.25 retains 83.0% and frees
-   * 26.0%, and past 0.25 it falls off a cliff — 0.3 frees 50.7% by keeping 58.3%.
-   * 0.2 is chosen to hold the retention the previous default achieved.
+   * sessions and scored out of fold, 0.2 frees 23.4% and keeps 77.3% of the
+   * outputs that were reused later; past 0.25 it falls off a cliff. 0.2 is the
+   * last floor that protects most of what mattered.
    */
   keepThreshold: 0.2,
   preserveRecentMessages: 6,
