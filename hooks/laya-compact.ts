@@ -8,6 +8,7 @@ import type {
   TurnCompleteInput,
 } from 'claude-code';
 
+import { registerSignals } from './laya-signals.js';
 import { compact, reductionRatio } from '../src/compact.js';
 import { FeatureAsker, WEIGHTS_ENV, parseWeights, type Weights } from '../src/features.js';
 import { buildSystemOneRequest, parseSystemOneResponse } from '../src/request.js';
@@ -178,9 +179,10 @@ export function askerFor(
 /**
  * Weights refitted on this operator's own sessions, if they ran `calibrate`.
  *
- * Read from the environment, then from `settings.json`'s `env` block — the two
- * channels a hook actually has. Hooks get no filesystem, so the weights travel
- * as JSON in `LAYA_COMPACT_WEIGHTS` rather than as a file path.
+ * Read from the environment, then from `settings.json`'s `env` block. Not from a
+ * file, though `$.fs.read` does exist and this comment used to claim otherwise:
+ * a path would have to be configured somewhere anyway, and the JSON in
+ * `LAYA_COMPACT_WEIGHTS` is the thing `npm run calibrate` already prints.
  *
  * This matters because the shipped defaults are fitted on one person's 18
  * sessions. Another operator's tool mix differs, so a local fit should win. A
@@ -347,6 +349,15 @@ function notify(
 export const register: Register = (on: On, options: PluginOptions) => {
   const config = resolveHookConfig(options);
   let compacting = false;
+
+  // `hooks.json` names exactly one module per plugin — a second entry is refused —
+  // so the recorder is registered from here rather than listed beside this file.
+  // It shares nothing with compaction and returns `next(event)` on every path.
+  // `on("turn.complete")` may not be registered twice without a matcher either,
+  // a value derived from `on` may not be kept, and `$` may not cross an import —
+  // so the recorder owns its own events end to end and this line is the whole
+  // connection between the two capabilities.
+  registerSignals(on, options);
 
   on('session.compact', async ($, event, next) => {
     try {

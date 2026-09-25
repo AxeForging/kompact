@@ -13,7 +13,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { SIGNALS_FILE, STORE_KEY, asAggregate, prune, register } from '../hooks/laya-signals.js';
+import { SIGNALS_FILE, STORE_KEY, asAggregate, prune, registerSignals } from '../hooks/laya-signals.js';
 
 /** Assembled, not written out: see the note in `test/signals.test.ts`. */
 const FAKE = {
@@ -25,8 +25,8 @@ type Handler = (dollar: unknown, event: unknown, next: (event: unknown) => unkno
 
 // `types/claude-code.d.ts` is an ambient declaration file rather than a module,
 // so `On` and `PluginOptions` are read off `register` instead of imported.
-type On = Parameters<typeof register>[0];
-type PluginOptions = Parameters<typeof register>[1];
+type On = Parameters<typeof registerSignals>[0];
+type PluginOptions = Parameters<typeof registerSignals>[1];
 
 function harness(options: Record<string, unknown> = {}) {
   const store = new Map<string, unknown>();
@@ -49,9 +49,12 @@ function harness(options: Record<string, unknown> = {}) {
 
   const handlers = new Map<string, Handler>();
   const on = ((name: string, handler: Handler) => void handlers.set(name, handler)) as unknown as On;
-  register(on, options as PluginOptions);
+  registerSignals(on, options as PluginOptions);
 
   const fire = async (name: string, event: Record<string, unknown>): Promise<void> => {
+    // There is no `turn.complete` here: the recorder flushes at the next prompt,
+    // because `$` cannot cross an import to the module that owns that event.
+    if (name === 'turn.complete') return;
     const handler = handlers.get(name);
     if (!handler) throw new Error(`nothing registered on ${name}`);
     await handler(engine, event, (e) => e);

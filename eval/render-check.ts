@@ -200,11 +200,22 @@ try {
   for (const width of [1400, 390]) {
     const { targetId } = await cdp.send('Target.createTarget', { url: 'about:blank' });
     const { sessionId } = await cdp.send('Target.attachToTarget', { targetId, flatten: true });
+    // `mobile: true` let the layout viewport widen to the content, so the "390px"
+    // pass was measuring 591px and every phone-width check was a lie — including
+    // the horizontal-overflow one, which passed while the page scrolled sideways
+    // by 201px on a real phone. Desktop metrics at a narrow width exercise the
+    // same media queries and keep innerWidth honest.
     await cdp.send('Emulation.setDeviceMetricsOverride',
-      { width, height: 900, deviceScaleFactor: 1, mobile: width < 700 }, sessionId);
+      { width, height: 900, deviceScaleFactor: 1, mobile: false }, sessionId);
     await cdp.send('Page.enable', {}, sessionId);
     await cdp.send('Page.navigate', { url }, sessionId);
     await sleep(2500);
+    // A harness that silently measures the wrong width is worse than no harness.
+    const { result: got } = await cdp.send('Runtime.evaluate',
+      { expression: 'innerWidth', returnByValue: true }, sessionId);
+    if (got?.value !== width) {
+      throw new Error(`asked for ${width}px and got ${String(got?.value)}px: emulation did not take`);
+    }
     const { result } = await cdp.send('Runtime.evaluate',
       { expression: PROBE, returnByValue: true, awaitPromise: false }, sessionId);
     const lines = String(result?.value ?? '').trim();

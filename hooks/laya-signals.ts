@@ -28,7 +28,7 @@
  * Recording is local and never leaves the machine. Set `recordSignals` to false
  * in the plugin's settings to turn it off entirely.
  */
-import type { On, PluginOptions, Register } from 'claude-code';
+import type { On, PluginOptions } from 'claude-code';
 
 import {
   type SignalKind,
@@ -204,18 +204,80 @@ export function responseChars(response: unknown): number {
   }
 }
 
-export const register: Register = (on: On, options: PluginOptions) => {
-  if (options['recordSignals'] === false) return;
+/**
+ * What the flush needs from the engine. Structural, so the compaction module can
+ * hand its own `$` straight through.
+ */
+type SignalsEngine = {
+  clock: { now: () => Promise<number> };
+  store: { get: (key: string) => Promise<unknown>; set: (key: string, value: unknown) => Promise<void> };
+  env: { get: (name: string) => Promise<string | undefined> };
+  fs: { write: (path: string, text: string) => Promise<void> };
+};
 
-  // Session-lived and deliberately not stored: what the next event needs to
-  // know about the last one. A hot reload resets it, which costs at most the
-  // first batch of one session.
-  let batches = 0;
-  let lastSequence = '';
-  /** The last three tool steps, across batches. See the note at the 3-gram below. */
-  const recent: Array<{ tool: string; command?: string }> = [];
-  const awaitingFix = new Set<string>();
-  let unflushed = false;
+/*
+ * Module scope, not a closure, and the hook surface left no choice. Five of its
+ * rules bear on this, and not one was guessable from the types — each arrived as a
+ * `claude plugin validate` refusal:
+ *
+ *   1. `hooks.json` names **exactly one** module per plugin.
+ *   2. `on("turn.complete")` may not be registered **twice** without a matcher,
+ *      and the compaction module already owns that event.
+ *   3. A value derived from `on` may not be **kept**, so this cannot hand a
+ *      closure back for that handler to call.
+ *   4. `$` may not be **passed across an import** — it is followed only into a
+ *      function declared in the same file.
+ *   5. And only into one declared at that file's **top level**, not a nested one.
+ *
+ * Together those say the flush has to happen on a hook this module registers
+ * itself. So it runs at the next `UserPromptSubmit`, which is the same moment
+ * `turn.complete` would have been: the sequence that ran immediately before the
+ * person spoke again *is* what ran last before handing back. A session whose last
+ * turn is never followed by a prompt keeps that turn in the store, which is
+ * durable, and flushes it at the first prompt of the next one.
+ *
+ * A hooks module is instantiated once, so module scope is session scope. A hot
+ * reload resets it, costing at most one batch.
+ */
+let recording = true;
+let batches = 0;
+let lastSequence = '';
+/** The last three tool steps, across batches. See the note at the 3-gram below. */
+const recent: Array<{ tool: string; command?: string }> = [];
+const awaitingFix = new Set<string>();
+let unflushed = false;
+
+/**
+ * Mirrors the store to a file the CLI can open.
+ *
+ * Top level of this file, and not by preference: `$` may only be passed to a
+ * function declared at a file's top level — rule 5, which arrived the same way
+ * the other four did. It cannot be exported either, by rule 4.
+ *
+ * Written as `$.env.get('HOME')` with the name spelled out, since the validator
+ * lists the variables a module reads and cannot follow an identifier or an
+ * optional chain.
+ */
+async function flush($: SignalsEngine, rows: Aggregate, at: number): Promise<void> {
+  const home = await $.env.get('HOME');
+  if (!home) return;
+  await $.fs.write(`${home}/${SIGNALS_FILE}`, JSON.stringify({ version: 1, writtenAt: at, rows }));
+  unflushed = false;
+}
+
+/** Registers the two recording hooks. Nothing it returns may be kept, so it returns nothing. */
+export function registerSignals(on: On, options: PluginOptions): void {
+  // Module scope is session scope only because a module is instantiated once, so
+  // registering twice has to start clean rather than inherit half a session. The
+  // recorder tests found this by leaking `batches` from one case into the next and
+  // silently recording no session opening at all.
+  recording = options['recordSignals'] !== false;
+  batches = 0;
+  lastSequence = '';
+  recent.length = 0;
+  awaitingFix.clear();
+  unflushed = false;
+  if (!recording) return;
 
   on('classic.PostToolBatch', async ($, event, next) => {
     try {
@@ -240,7 +302,6 @@ export const register: Register = (on: On, options: PluginOptions) => {
         }
       }
 
-      const sequence = sequenceSignature(steps);
       // A run of tools has to be counted across batches, not inside one. Measured
       // on 2,145 calls of real sessions, a batch is almost always a single call,
       // so keying on the batch produced exactly zero sequences — the thing this
@@ -250,9 +311,12 @@ export const register: Register = (on: On, options: PluginOptions) => {
       if (recent.length === 3 && isSequenceWorthKeeping(recent)) {
         bump(rows, 'sequence', sequenceSignature(recent), '', session, 3, 0, at);
       }
-      // The first batch of a session is context being rebuilt from nothing,
-      // which is the largest repeated cost in agentic work.
-      if (batches === 0 && steps.length > 0) bump(rows, 'orient', sequence, '', session, steps.length, 0, at);
+      const sequence = sequenceSignature(steps);
+      // The first batch of a session is context being rebuilt from nothing, which
+      // is the largest repeated cost in agentic work.
+      if (batches === 0 && steps.length > 0) {
+        bump(rows, 'orient', sequence, '', session, steps.length, 0, at);
+      }
       batches += 1;
       lastSequence = sequence;
 
@@ -270,47 +334,25 @@ export const register: Register = (on: On, options: PluginOptions) => {
       if ((event.source && event.source !== 'user') || event.agent_id) return next(event);
       const at = await $.clock.now();
       const rows = asAggregate(await $.store.get(STORE_KEY));
-      // A correction only reads as one when it follows work: "no, not like
-      // that" opening a session is a request, not a correction. Each one is a
-      // standing preference the assistant keeps missing, so it earns a line in
-      // CLAUDE.md rather than a skill — which is why it is its own kind.
+      // A correction only reads as one when it follows work: "no, not like that"
+      // opening a session is a request, not a correction. Each one is a standing
+      // preference the assistant keeps missing, so it earns a line in CLAUDE.md
+      // rather than a skill — which is why it is its own kind.
       const kind: SignalKind = batches > 0 && isCorrection(event.prompt) ? 'correction' : 'intent';
       bump(rows, kind, intentSignature(event.prompt), event.prompt, event.session_id, 0, 0, at);
-      await $.store.set(STORE_KEY, prune(rows));
-      unflushed = true;
-    } catch {
-      // As above.
-    }
-    return next(event);
-  });
-
-  on('turn.complete', async ($, event, next) => {
-    try {
-      if (!unflushed) return next(event);
-      const at = await $.clock.now();
-      const rows = asAggregate(await $.store.get(STORE_KEY));
-      // Whatever ran last before handing back is the verification ritual, and
-      // it is only knowable as last once the turn is over.
+      // Whatever ran last before the person spoke again is the verification
+      // ritual, and this is the first moment it is knowable as last.
       if (lastSequence) {
         bump(rows, 'verify', lastSequence, '', '', 0, 0, at);
-        await $.store.set(STORE_KEY, prune(rows));
         lastSequence = '';
       }
-      // The store is the plugin's own file in a shape only the engine reads, so
-      // the CLI gets a copy it can open. Written as `$.env.get('HOME')` with the
-      // name spelled out: the plugin validator lists the variables a module
-      // reads and cannot follow an identifier or an optional chain.
-      const home = await $.env.get('HOME');
-      if (home) {
-        await $.fs.write(
-          `${home}/${SIGNALS_FILE}`,
-          JSON.stringify({ version: 1, writtenAt: at, rows }),
-        );
-        unflushed = false;
-      }
+      const pruned = prune(rows);
+      await $.store.set(STORE_KEY, pruned);
+      unflushed = true;
+      await flush($, pruned, at);
     } catch {
-      // A failed flush leaves `unflushed` set, so the next turn retries.
+      // A failed flush leaves `unflushed` set, so the next prompt retries.
     }
     return next(event);
   });
-};
+}

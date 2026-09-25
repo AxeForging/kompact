@@ -363,6 +363,10 @@ table.data th, table.data td{ text-align:left; padding: var(--space-xs) var(--sp
 table.data thead th{ font-size: var(--text-xs); letter-spacing:0.01em;
   color: var(--ink-3); font-weight:600; border-bottom: 1px solid var(--rule-firm); }
 table.data td.n, table.data th.n{ text-align:right; }
+/* Backstop. Two &nbsp;-joined runs put 201px of horizontal scroll on a 390px
+   screen, and the worse part was that the render check could not see it: its
+   mobile pass was laying out at 591px and reporting the page clean. */
+code{ overflow-wrap: anywhere; }
 /* A row that repeated and is still not worth a skill. Greyed rather than hidden:
    it is every one of the nine repeated command shapes, which is the finding. */
 table.data tr.dim td{ color: var(--ink-3); }
@@ -1400,7 +1404,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <h3>How you know it is running</h3>
   <p>
     It says so, every time it fires. On each compaction the plugin raises a notice reading
-    <code>kept&nbsp;34/212&nbsp;messages,&nbsp;no&nbsp;summary&nbsp;(23%&nbsp;reduction;
+    <code>kept 34/212 messages, no summary (23% reduction;
     34&nbsp;kept,&nbsp;1&nbsp;results&nbsp;truncated,&nbsp;2&nbsp;calls&nbsp;dropped,&nbsp;4&nbsp;pinned;
     41&nbsp;scored&nbsp;via&nbsp;features&nbsp;in&nbsp;4ms)</code> — and writes the same line, plus
     one per decision, to the session log. The parts sum to what was scored, and the time is for
@@ -1412,7 +1416,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     confirms it is running. Two checks, in this order:
   </p>
   <ul class="plain">
-    <li><code>echo&nbsp;$CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> must print <code>1</code>.
+    <li><code>echo $CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> must print <code>1</code>.
       Empty is the usual answer and the usual cause. It has to be exported <em>before</em> Claude
       Code starts, so typing <code>export</code> into a session that is already running changes
       nothing for that session — and nothing for the next terminal either, unless the line is in

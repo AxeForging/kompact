@@ -218,9 +218,17 @@ function registered(options: Record<string, unknown> = {}) {
 }
 
 describe('register', () => {
-  it('registers both hooks', () => {
+  it('registers compaction and recording from the one module the manifest allows', () => {
+    // `hooks.json` names exactly one module per plugin, so this file registers the
+    // recorder's events too. Four, and no duplicate on `turn.complete`, which the
+    // validator refuses.
     const handlers = registered();
-    expect([...handlers.keys()].sort()).toEqual(['session.compact', 'turn.complete']);
+    expect([...handlers.keys()].sort()).toEqual([
+      'classic.PostToolBatch',
+      'classic.UserPromptSubmit',
+      'session.compact',
+      'turn.complete',
+    ]);
   });
 
   it('replaces the history instead of summarising when it saves enough', async () => {
