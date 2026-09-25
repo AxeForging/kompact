@@ -268,6 +268,17 @@ describe('published figures match eval/RESULTS.md', () => {
       .toContain(scorerRow('laya multilingual/direct').mean);
   });
 
+  // `eval/render-check.ts` builds its browser probe as a template literal, so a
+  // single backtick anywhere inside it ends the string early and the entire check
+  // stops running. That has happened twice, both times in a comment, and both
+  // times the run printed a parse error where results should have been.
+  it('keeps the render probe free of the character that silently ends it', () => {
+    const check = read('eval/render-check.ts');
+    const probe = /const PROBE = String\.raw`([\s\S]*?)`;/.exec(check)?.[1];
+    expect(probe, 'the probe is no longer a single template literal').toBeDefined();
+    expect(probe, 'a backtick inside the probe ends it early').not.toContain('`');
+  });
+
   // The masthead claims a number of unverified claims. That is the page's most
   // unusual asset stated as a fact, so it has to stay true as the ledger changes —
   // and a hand-typed count beside a hand-maintained list is the oldest way for a

@@ -170,6 +170,27 @@ const PROBE = String.raw`
         'every bar rests on its own count @' + w, bars.join(','));
   }
 
+  // A ch unit is the width of a zero, and Literata's zero is far wider than its
+  // average lowercase, so a 68ch measure rendered 88 characters — well past the
+  // 45-75 band. Measure the characters, not the declaration.
+  if (w > 1000) {
+    const para = [...document.querySelectorAll('section p')]
+      .find((p) => (p.textContent || '').length > 400 && !p.closest('.caption'));
+    if (para) {
+      const range = document.createRange();
+      range.selectNodeContents(para);
+      // One rect per inline fragment, not per line: a paragraph with links and
+      // code in it reports far more rects than it has lines. Group by top edge.
+      const tops = new Set();
+      for (const rect of range.getClientRects()) tops.add(Math.round(rect.top));
+      const lines = tops.size;
+      const chars = (para.textContent || '').trim().length;
+      const per = Math.round(chars / Math.max(1, lines));
+      say(per >= 45 && per <= 78, 'body measure is inside the readable band @' + w,
+          per + ' characters a line over ' + lines + ' lines');
+    }
+  }
+
   // Every in-page link, not just the nav: the glossary's twelve term anchors are
   // the ones a reader arrives at mid-argument, and nothing was checking them.
   const seenTarget = new Set();

@@ -55,6 +55,10 @@
      a clipped wordmark. 2.6rem clears it. */
   --text-display: clamp(2.2rem, 1.4rem + 7.6vw, 7rem);
 
+  /* 68ch of Literata renders 67 characters on the body column, which is the
+     number to aim for. A review reported 88 and recommended narrowing this;
+     measuring both settings put 68ch at 67 and 56ch at 57, so the recommendation
+     was wrong and this stayed. eval/render-check.ts asserts the rendered count. */
   --measure: 68ch;
 }
 
@@ -121,8 +125,10 @@ a:hover{ color: var(--accent); }
 .flooded :focus-visible{ outline-color: var(--on-flood); }
 .wordmark{ white-space: nowrap;
   font-family: var(--display); font-weight: 700; font-size: var(--text-display);
-  font-optical-sizing: none;
-  line-height: 1.0; letter-spacing: -0.015em; margin: 0 0 var(--space-lg);
+  font-optical-sizing: auto;
+  /* No negative tracking: it was compensating for the sidebearings of an
+     11-opsz master rendered at 112px, and the optical axis handles that now. */
+  line-height: 1.0; margin: 0 0 var(--space-lg);
 }
 .wordmark em{ font-style: italic; font-weight: 400; }
 .standfirst{ max-width: var(--measure); font-size: var(--text-lg); line-height: 1.45; margin:0 0 var(--space-xl); color: var(--on-flood-2); }
@@ -143,7 +149,7 @@ a:hover{ color: var(--accent); }
 }
 .upfront p{ margin:0; font-size: var(--text-sm); line-height:1.45; color: var(--on-flood-2); }
 .upfront b{
-  display:block; font-family: var(--display); font-optical-sizing: none;
+  display:block; font-family: var(--display); font-optical-sizing: auto;
   font-size: 1.9rem; line-height:1.1; font-weight:700; color: var(--on-flood);
   font-variant-numeric: tabular-nums; letter-spacing:0;
 }
@@ -295,7 +301,7 @@ section.flooded{ border-top: none; padding-block: clamp(var(--space-2xl), 5.5vw,
 .masthead.flooded{ max-width: none; }
 h2{
   font-family: var(--display); font-weight: 700; font-size: var(--text-xl);
-  font-optical-sizing: none;
+  font-optical-sizing: auto;
   line-height: 1.06; letter-spacing:0; margin: 0 0 var(--space-md);
   /* 26ch of Bodoni computes to 1,124px against a 952px column, so it never bound
      and the measure was always the column. Balance instead: four headings ended
@@ -305,7 +311,7 @@ h2{
 }
 h3{ font-family: var(--display); font-weight:600; font-size: var(--text-lg); line-height:1.15;
   text-wrap: balance;
-  font-optical-sizing: none;
+  font-optical-sizing: auto;
   letter-spacing:0.005em; margin: var(--space-2xl) 0 var(--space-xs); }
 p{ max-width: var(--measure); margin: 0 0 var(--space-md); }
 p, .lede, .caption, .glossary dd{ text-wrap: pretty; }
@@ -1317,7 +1323,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     “77.3% of reused outputs kept” invites you to supply your own answer for the rest, so here
     it is, priced. (77.3 and 22.3 sum to 99.6, not 100: the two figures come from
     <code>eval/policy.ts</code> and <code>eval/recovery.ts</code>, which disagree by one output
-    on where a partial head counts. Neither is rounded to hide it.) Held-out scores, shipped policy, per session: <strong>55 of the 247 reused
+    on where a partial head counts. Neither is rounded to hide it. Both are the simulation; run through the shipped code the same defaults give 22.2% and 77.7%, which is the pair the masthead quotes.) Held-out scores, shipped policy, per session: <strong>55 of the 247 reused
     outputs are dropped</strong> — 1.34 a session, and only one of them kept a head.
   </p>
   <div class="scroller" tabindex="0" data-label="Table: what a wrong drop costs">

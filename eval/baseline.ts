@@ -12,6 +12,7 @@
  * Run: bun eval/baseline.ts
  */
 import { fitLogistic as fit, sigmoid } from './logistic.js';
+import { featureVector } from '../src/features.js';
 import { loadCorpus, loadScores, rowKey } from './corpus.js';
 import { auc, droppableAt } from './metrics.js';
 import type { LabelRow } from './extract-labels.js';
@@ -20,29 +21,18 @@ const dir = import.meta.dirname;
 const { rows, from } = loadCorpus(dir, { paired: true });
 console.log(`corpus (${from}): ${rows.length} calls\n`);
 
-/** Features are read back out of the state prose the model was given, so the
- * baseline sees exactly the same information and nothing more. */
-function features(row: LabelRow): number[] {
-  const s = row.state;
-  const tool = row.tool;
-  return [
-    1,
-    tool === 'Read' ? 1 : 0,
-    tool === 'Bash' ? 1 : 0,
-    tool === 'Edit' || tool === 'Write' ? 1 : 0,
-    tool === 'Grep' || tool === 'Glob' ? 1 : 0,
-    row.is_error ? 1 : 0,
-    s.includes('changed afterwards') ? 1 : 0,
-    s.includes('again later') ? 1 : 0,
-    s.includes('very short') ? 1 : 0,
-    s.includes('The output was short.') ? 1 : 0,
-    s.includes('very long') ? 1 : 0,
-    s.includes('long ago in the session') ? 1 : 0,
-    s.includes('just now') ? 1 : 0,
-  ];
-}
-
-
+/**
+ * The scorer's own feature vector, not a copy of it.
+ *
+ * This file used to restate `featureVector` inline, with a comment claiming the
+ * baseline "sees exactly the same information and nothing more". It had drifted:
+ * the copy searched the whole state instead of the facts paragraph, and its
+ * `Edit|Write` feature had never learned about `MultiEdit` and `NotebookEdit`.
+ * Measured against the real one on the paired corpus, one row in 1,063 came out
+ * different — small, and entirely avoidable, since the comparison is only
+ * meaningful if both sides compute the same thing.
+ */
+const features = (row: LabelRow): number[] => featureVector(row.state, row.tool, row.is_error);
 
 const sessions = [...new Set(rows.map((r) => r.session))];
 console.log(`rows ${rows.length}  positives ${rows.filter((r) => r.result_needed).length}  sessions ${sessions.length}\n`);
