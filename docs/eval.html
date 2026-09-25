@@ -157,7 +157,7 @@ result_needed: LOSO AUC 0.879  ECE 0.035  positives 75/1063
 call_needed  : LOSO AUC 0.982  ECE 0.040  positives 297/1063</pre></div>
 <h2 id="decision-policy-eval-policy-ts">Decision policy — <code>eval/policy.ts</code></h2>
 <p>The scorer produces a ranking; this turns it into a decision. The shipped defaults are <strong>budget 0.5, floor 0.20</strong>.</p>
-<div class="scroller" tabindex="0" role="region" aria-label="Decision policy — measured output"><pre>local labels: 2239 calls, 247 genuinely needed, 41 sessions
+<div class="scroller" tabindex="0" role="region" aria-label="Decision policy — measured output"><pre>fixture: 2239 calls, 247 genuinely needed, 41 sessions
 
 policy                         freed   wrong  +head     kept chars kept
 -----------------------------------------------------------------------
@@ -176,7 +176,8 @@ budget 0.7, floor 0.20         33.9%      77      4     68.8%      90.2%
 budget 0.8, floor 0.20         35.7%      89      4     64.0%      87.3%
 
 shipped code path (src/compact.ts decideAll, the same defaults):
-  22.2% freed, 77.7% of reused outputs kept, 0 of 220 mutating calls dropped
+  33.7% freed, 77.7% of reused outputs kept, 0 of 220 mutating calls dropped
+  without that guard 15 of them would lose their call or output, so the rule saves 15, not 220
 
 wrong  = needed outputs that were dropped anyway
 +head  = of those, how many kept their first 300 characters
@@ -278,11 +279,26 @@ input tok is usage.input_tokens, which is the per-question row count times the
 number of questions — not the size of the state.
 
 Scoring 1762 calls, the sessions above: 2 questions a request, 8 in flight.
-  fastest checkpoint: 23.1 s and 4958 MB resident held for the session
+  fastest checkpoint: 41.0 s and 4958 MB resident held for the session
   built-in scorer:    0.19 s and no process at all
-  ratio:              122x the time
+  ratio:              216x the time
 (1762 calls and 190 ms come from the eval/sessions.ts run in
  this same report, so the two sides are the same work.)
+
+CORRECTED. This block read 23.1 s and 122x until the projection was checked: it
+divided the request count by the questions in a request, but a request carries
+one call's two questions, so there is one request per call and it halved itself.
+Verified end to end rather than re-derived — 159 calls through a CUDA sidecar on
+the multilingual checkpoint took 3,960 ms at concurrency 8, i.e. 24.9 ms a call,
+where this arithmetic predicts 3,696 ms for the same 159. Within 7%.
+
+Concurrency buys nothing: 928 ms a call at one request in flight, 1,002 ms at
+eight. The GPU serialises, so dividing by it flatters the sidecar and is kept
+only because the latency row above is measured the same way.
+
+The `gpu:` line above was read from a router started with LAYA_DEVICE=cpu, which
+is why it shows almost no VRAM. Resident on the card, one checkpoint holds about
+1.4 GB.
 
 cold start:   7.6 s to first answer
   memory:     3088 MB resident (pid 2211697)

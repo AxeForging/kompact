@@ -366,7 +366,12 @@ section.flooded{ border-top: none; padding-block: clamp(var(--space-2xl), 5.5vw,
 .masthead.flooded{ max-width: none; }
 h2{
   font-family: var(--display); font-weight: 700; font-size: var(--text-xl);
-  font-optical-sizing: auto;
+  /* Same reason as `.upfront b`, found later and in a worse place: at this size
+     Bodoni's optical axis strips the serifs from the figure one and thins the
+     thousands comma to nothing, so "190 ms to score 1,762 tool calls" set itself
+     as "I90 ms to score I.762" — and on a page where every other number is a
+     three-decimal probability, "I.762" reads as a score rather than a count. */
+  font-optical-sizing: none;
   line-height: 1.06; letter-spacing:0; margin: 0 0 var(--space-md);
   /* 26ch of Bodoni computes to 1,124px against a 952px column, so it never bound
      and the measure was always the column. Balance instead: four headings ended
@@ -624,6 +629,19 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 .caption{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-3);
   margin-top: var(--space-xs); max-width: 56ch; line-height:1.55; }
 
+/* ── who it is for ────────────────────────────────────────────────────────── */
+/* A definition list, not cards: each shape is a term and what it gets is the
+   definition, which is what this actually is. */
+.cases{ margin: var(--space-xl) 0 0; max-width: var(--measure); }
+.cases dt{
+  font-family: var(--sans); font-size: var(--text-base); font-weight:600; color: var(--ink);
+  margin-top: var(--space-lg); padding-top: var(--space-sm); border-top: 1px solid var(--rule);
+}
+.cases dd{ margin: var(--space-xs) 0 0; }
+/* The one that argues against installing. Marked, because a reader skimming the
+   terms alone should see that one of them is a warning. */
+.cases dt.cases__against{ color: var(--accent-ink); border-top-color: var(--accent); }
+
 /* ── the plate: the one image, and it is made of the data ─────────────────── */
 .plate{ margin: var(--space-xl) 0 0; }
 .plate figcaption{
@@ -858,7 +876,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 <header class="flooded" id="top">
 <div class="masthead wrap">
   <div class="masthead__rule reveal" style="--d:0ms"></div>
-  <h1 class="wordmark reveal" style="--d:40ms">laya-<em>compact</em></h1>
+  <h1 class="wordmark reveal" style="--d:40ms">k<em>ompact</em></h1>
   <p class="standfirst reveal" style="--d:110ms">
     Claude Code compacts by asking a model to summarise your session, and the exact wording
     goes with it. This scores every tool call instead and <strong>keeps what survives
@@ -866,7 +884,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     still the file, not a description of it. On your machine: no API key, no GPU, no network
     call &#8212; <span class="standfirst__note">no exceptions and no optional path that has any,
     since the neural <a href="#g-sidecar">sidecar</a> this was named after
-    <a href="#losses">lost to thirteen coefficients</a> and was removed.</span>
+    <a href="#result">lost to thirteen coefficients</a> and was removed.</span>
   </p>
   <div class="upfront reveal" style="--d:150ms">
     <p><b>0.789</b><span>ranking quality, held out one session at a time across all 41 &#8212; the
@@ -876,19 +894,19 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       was never trained to make &#8212; 10 of 10 paired splits.</span></p>
     <p><b>3.6<span class="op">&#8211;</span>32.6%</b><span>of tokens freed, per session, on four real ones. Over the whole
       corpus the shipped code frees 33.7% and keeps 77.7% of the outputs that were reused later.</span></p>
-    <p><b>190&#8239;ms</b><span>to score 1,762 calls, against 122&#215; that for the neural
+    <p><b>190&#8239;ms</b><span>to score 1,762 calls, against 216&#215; that for the neural
       sidecar it replaced, on an RTX&#160;4060 Laptop.</span></p>
     <p><b>Never</b><span>drops an <code>Edit</code>, <code>Write</code>, <code>MultiEdit</code> or
       <code>NotebookEdit</code> call, whatever it scores. Only their output can be trimmed.</span></p>
     <p class="upfront__do">
       <a href="#install">Install it</a> &#8212; or run <code>npm&#160;run&#160;dry&#8209;run</code>
       first and see what it frees on your own sessions, installing nothing
-      (<a href="#cost">section 05, Cost</a>).
+      (<a href="#cost">section 06, Cost</a>).
     </p>
   </div>
   <div class="colophon reveal" style="--d:170ms">
     <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>204</b> tests</span>
-    <span><b>0</b> network calls by default</span><span><b>4</b> claims <a href="#checked">not verified</a></span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
+    <span><b>0</b> network calls</span><span><b>4</b> claims <a href="#checked">not verified</a></span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
 </div>
 </header>
@@ -896,7 +914,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 <nav class="contents-bar" aria-label="Contents">
   <div class="contents-bar__row wrap">
     <div class="contents">
-    <a href="#result"><span class="contents__long">Evidence</span><span class="contents__short">Evidence</span></a><a href="#demo"><span class="contents__long">Watch it decide</span><span class="contents__short">Watch</span></a><a href="#shape"><span class="contents__long">The shape of it</span><span class="contents__short">Shape</span></a><a href="#signals"><span class="contents__long">What you repeat</span><span class="contents__short">Repeats</span></a><a href="#cost">Cost</a><a href="#losses"><span class="contents__long">Where it loses</span><span class="contents__short">Losses</span></a><a href="#checked"><span class="contents__long">Verification</span><span class="contents__short">Verified</span></a><a href="#glossary">Glossary</a></div>
+    <a href="#result"><span class="contents__long">Evidence</span><span class="contents__short">Evidence</span></a><a href="#for"><span class="contents__long">Who it is for</span><span class="contents__short">Who for</span></a><a href="#demo"><span class="contents__long">Watch it decide</span><span class="contents__short">Watch</span></a><a href="#shape"><span class="contents__long">The shape of it</span><span class="contents__short">Shape</span></a><a href="#signals"><span class="contents__long">What you repeat</span><span class="contents__short">Repeats</span></a><a href="#cost">Cost</a><a href="#losses"><span class="contents__long">Where it loses</span><span class="contents__short">Losses</span></a><a href="#checked"><span class="contents__long">Verification</span><span class="contents__short">Verified</span></a><a href="#glossary">Glossary</a></div>
     <p class="contents__tools">
       <button class="contents__all" type="button" id="open-all" hidden>Open all</button>
       <a class="contents__go" href="#install">Install</a>
@@ -1030,13 +1048,77 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     Laya config’s <span class="num val">0.380–0.642</span>. The coefficients that ship are fitted
     on all <span class="num val">41</span> sessions, where the same measurement gives
     <span class="num val">0.789</span> and <span class="num val">0.051</span> —
-    <a href="#next">the gaps in section 07</a> says why that is the pair to plan around.
+    <a href="#next">the gaps in section 08</a> says why that is the pair to plan around.
   </p>
   </details>
 </section>
 
+<section class="wrap" id="for" aria-labelledby="for-h">
+  <p class="rubric"><span class="rubric__n">02</span>Who it is for</p>
+  <h2 id="for-h">Four shapes of session, and what each one gets.</h2>
+  <p class="lede">
+    The saving is not one number, it is a property of how you work. Every figure below is
+    somewhere else on this page; what is added here is which of them applies to you. Each
+    comes with the thing it costs, because for one of these shapes the answer is
+    <em>raise the floor</em>.
+  </p>
+
+  <dl class="cases">
+    <dt>Your session is mostly shell.</dt>
+    <dd>
+      <code>gh</code>, <code>git log</code>, test runs, <code>kubectl</code>. This is the shape
+      with the most to free: the <span class="val">32.6%</span> session in
+      <a href="#cost">section 06, Cost</a> is mostly commands whose output is never quoted
+      afterwards. <strong>It is also the shape this scorer is worst at</strong> &#8212;
+      <span class="val">47</span> of the 55 outputs it wrongly dropped were command output that
+      a later tool input quoted verbatim. Both facts come from the same habit: most command
+      output is never referred to again, and the minority that is gets swept along with it.
+    </dd>
+
+    <dt>You read large files.</dt>
+    <dd>
+      Monorepo sources, lockfiles, generated clients, long logs. The ranking keeps these, which
+      is correct and is why the <a href="#g-the-cap">cap</a> sits beside it:
+      <span class="val">27</span> of the 2,239 calls are longer than 24,000 characters, and
+      shortening those 27 alone frees <span class="val">20.7%</span> of every character in the
+      corpus. On this shape most of the saving is the cap rather than the model. The cost is
+      that a cap cannot tell which end of a file you will want, because
+      <a href="#losses">reuse falls evenly through an output</a>.
+    </dd>
+
+    <dt>You are hours into one bug.</dt>
+    <dd>
+      The transcript holds the <code>Edit</code> that fixed it, and its output &#8212; "Applied
+      1 edit" &#8212; is worthless. Exactly <span class="val">1</span> of the 220 mutating calls
+      in this corpus had an output that was ever needed verbatim, so a scorer reading outputs
+      will drop it, and <a href="#demo">this page's own demonstration did</a>. The guard covers
+      all 220 and saves <span class="val">15</span> of them their call or their output. The
+      input is the only record that the change happened, and unlike a read it cannot be
+      recovered by running it again.
+    </dd>
+
+    <dt>Nothing may leave the machine.</dt>
+    <dd>
+      Compaction here is arithmetic over facts already computed: <span class="val">1,762</span>
+      calls scored in <span class="val">190&#8239;ms</span>, no process, no card, no key, no
+      request. That is not a setting you choose &#8212; the neural path that needed one was
+      removed after it lost. Uninstalling puts the next compaction back to Claude Code's own
+      summary, and nothing on disk changes either way.
+    </dd>
+
+    <dt class="cases__against">And one shape to think twice about.</dt>
+    <dd>
+      If your work asks the operator questions, a human answer is the one output no amount of
+      re-running brings back. Four of the 55 wrong drops are <code>AskUserQuestion</code>,
+      <span class="val">2,122</span> characters in total &#8212; small, and the only ones on
+      this page that cannot be restored. Raising <code>keepThreshold</code> keeps more and frees
+      less; the sweep in <a href="#cost">section 06</a> prices that trade.
+    </dd>
+  </dl>
+</section>
+
 <section class="wrap" id="demo" aria-labelledby="demo-h">
-  <p class="rubric"><span class="rubric__n">02</span>Watch it decide</p>
+  <p class="rubric"><span class="rubric__n">03</span>Watch it decide</p>
   <h2 id="demo-h">Nine calls, two probabilities each, one ranking.</h2>
   <p class="lede">
     A session that finds a test failing only on CI, tracks it to a timezone in a fixture, and
@@ -1140,7 +1222,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 <section class="flooded" id="shape" aria-labelledby="shape-h">
   <div class="wrap">
-  <p class="rubric rubric--flood"><span class="rubric__n">03</span>The shape of it</p>
+  <p class="rubric rubric--flood"><span class="rubric__n">04</span>The shape of it</p>
   <h2 id="shape-h">Two thousand two hundred and thirty‑nine decisions.</h2>
   <p class="lede lede--flood">
     Every labelled call in the corpus, placed by the probability the shipped model gives it.
@@ -1182,7 +1264,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </section>
 
 <section class="wrap" id="signals" aria-labelledby="signals-h">
-  <p class="rubric"><span class="rubric__n">04</span>What you repeat</p>
+  <p class="rubric"><span class="rubric__n">05</span>What you repeat</p>
   <h2 id="signals-h">The same reading of every call answers a second question.</h2>
   <p class="lede">
     Deciding what to keep means looking at every tool call in a session. That same
@@ -1281,7 +1363,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </section>
 
 <section class="wrap" id="cost" aria-labelledby="cost-h">
-  <p class="rubric"><span class="rubric__n">05</span>Cost</p>
+  <p class="rubric"><span class="rubric__n">06</span>Cost</p>
   <h2 id="cost-h">190&nbsp;ms to score 1,762 tool calls.</h2>
   <p class="lede">
     Compaction stops being a model call and becomes arithmetic. These are whole session
@@ -1307,7 +1389,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p class="caption">
     Modest on purpose. The absolute cut this replaced frees 95.3% of the labelled corpus and
     keeps 8.9% of the outputs that were reused later — the first row of the policy table below, and
-    the reason a fifth is the honest number. Measured on one machine’s own
+    the reason a third is the honest number. Measured on one machine’s own
     transcripts, which grow as work continues — the per-session column is the figure that carries.
   </p>
 
@@ -1315,7 +1397,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <summary><h3>Get this table for your own machine first</h3></summary>
     <p>
     Clone the repository and run <code>npm&nbsp;run&nbsp;dry-run</code> — the commands are in
-    <a href="#install">section 08, Install</a>. It reads
+    <a href="#install">section 09, Install</a>. It reads
     <code>~/.claude/projects</code>, scores every tool call in every transcript it finds, and
     prints the table above for your sessions instead of these. It writes nothing, installs no
     plugin, and needs no key — it is the same <code>compact</code> the hook calls, run against
@@ -1332,10 +1414,12 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
 
   </details>
-  <h3>Why it frees a fifth and not four fifths</h3>
+  <h3>Why it frees a third and not four fifths</h3>
   <p>
-    The scorer produces a <em>ranking</em>, and the ranking holds up on sessions it has never
-    seen. An absolute probability cut does not, because every session has its own mix of tools
+    The scorer produces a <em>ranking</em>, and a ranking transfers across sessions better than
+    an absolute probability cut &#8212; <span class="val">0.789</span> held out one session at a
+    time against <span class="val">0.879</span> on the narrower corpus, so it degrades rather
+    than collapses. A cut does not travel at all, because every session has its own mix of tools
     and so its own distribution: a Bash-heavy session scores low throughout, and a fixed cut
     sweeps all of it. Barely 11% of tool outputs are ever reused verbatim — 247 of 2,239 — so a well-calibrated
     scorer seldom passes 0.5 even for the ones that matter.
@@ -1373,13 +1457,15 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <details class="more">
     <summary><h3>What the neural sidecar would have cost to run</h3></summary>
     <p>
-    Laya stays available for anyone with a checkpoint fine-tuned on their own sessions, so here is
-    what running it costs. One <code>laya-serve</code> process loads every checkpoint and routes
-    per request, so memory and start-up belong to the router, not to the checkpoint you pick.
+    Laya is not in this product any more &#8212; there is no option that turns it on, and nothing
+    shipped imports it. What it cost to run is a large part of why. The <code>eval/</code>
+    scripts still measure all of this against a live sidecar, so every row below is reproducible
+    rather than remembered. One <code>laya-serve</code> process loads every checkpoint and routes
+    per request, so memory and start-up belong to the router rather than to any one checkpoint.
   </p>
-  <div class="scroller" tabindex="0" data-label="Table: what the sidecar costs to run">
+  <div class="scroller" tabindex="0" data-label="Table: what the sidecar would have cost to run">
     <table class="data">
-      <caption class="visually-hidden">what the sidecar costs to run</caption>
+      <caption class="visually-hidden">what the sidecar would have cost to run</caption>
       <thead><tr>
         <th scope="col">Scoring 1,762 calls, the four sessions above</th><th scope="col" class="n">Time</th>
         <th scope="col" class="n">Memory held</th><th scope="col" class="n">VRAM</th>
@@ -1387,7 +1473,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       </tr></thead>
       <tbody>
         <tr class="same"><th scope="row">Built-in scorer</th><td class="n mark">190 ms</td><td class="n">none</td><td class="n">none</td><td class="n">none</td></tr>
-        <tr><th scope="row">Laya, fastest checkpoint, on a GPU</th><td class="n">41 s</td><td class="n">5.0 GB</td><td class="n">1.4 GB</td><td class="n">7.6 s</td></tr>
+        <tr><th scope="row">Laya, fastest checkpoint, on a GPU</th><td class="n">41 s</td><td class="n">4.9 GB</td><td class="n">1.4 GB</td><td class="n">7.6 s</td></tr>
       </tbody>
     </table>
   </div>
@@ -1413,7 +1499,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </section>
 
 <section class="wrap" id="losses" aria-labelledby="losses-h">
-  <p class="rubric rubric--accent"><span class="rubric__n">06</span>Where it loses</p>
+  <p class="rubric rubric--accent"><span class="rubric__n">07</span>Where it loses</p>
   <h2 id="losses-h">The model this replaced fails quietly, which is worse than failing.</h2>
   <p>
     Laya’s English checkpoint reads 512 tokens and discards the rest with HTTP 200 and no
@@ -1531,7 +1617,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <details class="more">
     <summary><h3>Four more things it does not do</h3></summary>
     <p>
-    <strong>A summary compresses harder.</strong> Freeing a fifth of the tokens is less than
+    <strong>A summary compresses harder.</strong> Freeing a third of the tokens is less than
     replacing the conversation with a few thousand tokens of prose. What you buy with the
     difference is not re-running tools to recover what a summary threw away.
   </p>
@@ -1557,7 +1643,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </section>
 
 <section class="wrap" id="checked" aria-labelledby="checked-h">
-  <p class="rubric"><span class="rubric__n">07</span>Verification</p>
+  <p class="rubric"><span class="rubric__n">08</span>Verification</p>
   <h2 id="checked-h">Including the one that was not.</h2>
   <div class="ledger">
     <div class="ledger__row ledger__row--open">
@@ -1570,7 +1656,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </div>
     <div class="ledger__row ledger__row--open">
       <p class="ledger__claim">That a proposed skill is worth having <span class="flag">— not verified</span></p>
-      <p class="ledger__how">The repetition in <a href="#signals">section 04, What you repeat</a> is measured, and
+      <p class="ledger__how">The repetition in <a href="#signals">section 05, What you repeat</a> is measured, and
         the drafts validate as skills. Whether writing one saves anyone anything is not measured at
         all: it needs the same work done twice, once with the skill and once without. Every one of the 10
         repeated command shapes is a generic shell verb, which is evidence against rather than for.</p>
@@ -1623,7 +1709,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <div class="next">
     <div class="next__item">
       <p class="next__when">Blocks a 1.0</p>
-      <p class="next__what"><b>A live A/B.</b> Task outcome is measured in <a href="#checked">section 07, Verification</a> as far as a
+      <p class="next__what"><b>A live A/B.</b> Task outcome is measured in <a href="#checked">section 08, Verification</a> as far as a
         transcript allows — how often the information would no longer be there. Whether that
         changes what an assistant does needs the same session replayed both ways, against a real
         model, and it has not been.</p>
@@ -1652,7 +1738,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p class="next__when">Wanted</p>
       <p class="next__what"><b>A fine-tuned Laya checkpoint that wins.</b> The bar is 0.905, not
         chance. <code>eval/</code> re-runs the whole comparison for anyone who tries, and the
-        <a href="#cost">section 05, Cost</a> is the other half of that decision.</p>
+        <a href="#cost">section 06, Cost</a> is the other half of that decision.</p>
     </div>
     <div class="next__item">
       <p class="next__when">Structural</p>
@@ -1708,7 +1794,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p>Sometimes — <span class="num val">0.19</span> outputs a session where it would actually
         cost you something, and 27 of 32 sessions lose nothing at all. Counting every reuse
         anywhere later, including ones that had already happened before a real compaction could
-        fire, the upper bound is 1.34 a session. Both are in <a href="#losses">section 06, Where it loses</a>, and 47 of the 55 are
+        fire, the upper bound is 1.34 a session. Both are in <a href="#losses">section 07, Where it loses</a>, and 47 of the 55 are
         command output. A dropped result keeps its first 300 characters when the call survives, and a call
         that recorded a change is never dropped at all. Every failure mode falls back to Claude
         Code's own summary rather than to a half-compacted transcript, and a single failed request
@@ -1731,7 +1817,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <details class="more">
       <summary><h3>How is this different from the built-in <code>/compact</code>?</h3></summary>
       <p>The built-in asks a model to summarise the session and replaces it with prose, which
-        compresses far harder than a fifth. This keeps what survives <em>verbatim</em>, so a file
+        compresses far harder than a third. This keeps what survives <em>verbatim</em>, so a file
         you read is still the file, not a description of it. It is not a better compressor; it is a
         different trade — and it hands the session back to the built-in summary whenever it cannot
         do its job.</p>
@@ -1748,13 +1834,13 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 
 <section class="wrap" id="install" aria-labelledby="install-h">
-  <p class="rubric"><span class="rubric__n">08</span>Install</p>
+  <p class="rubric"><span class="rubric__n">09</span>Install</p>
   <h2 id="install-h">Function hooks are early access, so turn them on first.</h2>
   <p class="lede">Tested on Claude Code 2.1.281, which has function hooks. So the rule is
      <b>2.1.281 or later works; below it is unknown rather than broken</b> — which release first
      shipped them is <em>not established here</em>, and on a build without them the plugin
      installs and silently never runs. Check <code>claude&nbsp;--version</code>, then
-     <a href="#session">what it touches, in section 08</a> for the notice that proves it fired, and the
+     <a href="#session">what it touches, in section 09</a> for the notice that proves it fired, and the
      <a href="#checked">verification ledger</a> for what is and is not established.</p>
   <p>
     <strong>Or don’t install it yet.</strong> Clone
@@ -1763,7 +1849,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     hook calls and prints what it would have freed, writing nothing and installing nothing.
     Needs <code>git</code> and Node 18 or later, and it reads the sessions already in <code>~/.claude/projects</code> — with
     none there it has nothing to score and says so.
-    <a href="#cost">Section 05, Cost</a> has the range to expect.
+    <a href="#cost">Section 06, Cost</a> has the range to expect.
   </p>
   <div class="cmd">
     <div class="cmd__head">
@@ -1806,7 +1892,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     same line, plus one per decision, to the session log. The parts sum to what was scored, and
     the time is the whole compaction — collecting the calls, scoring them, deciding, and
     rebuilding the transcript — for the 41 calls in that one, not the 1,762 in
-    <a href="#cost">section 05, Cost</a>. If anything at all goes wrong you get
+    <a href="#cost">section 06, Cost</a>. If anything at all goes wrong you get
     the other notice instead, naming the reason:
     <code>fallback to built-in summary (…)</code>. Silence at a compaction is
     different: it means the hook never ran at all, which is a setup answer rather than a bad
@@ -1821,7 +1907,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       your shell's startup file.</li>
     <li><code>claude&nbsp;plugin&nbsp;list</code> must show <code>kompact</code>. If it does,
       the variable is <code>1</code>, and no notice ever appears, the build is older than function
-      hooks: see the version rule in <a href="#install">section 08, Install</a>.</li>
+      hooks: see the version rule in <a href="#install">section 09, Install</a>.</li>
   </ul>
   </details>
   <details class="more">
@@ -1867,16 +1953,17 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       calls at named moments, rather than a shell command it spawns. Early access, which is
       why <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> exists.</dd>
     <dt id="g-sidecar">Sidecar</dt>
-    <dd>A local <code>laya-serve</code> process scoring calls over HTTP instead of the
-      built-in model. Optional, slower, and the only path here that wants a GPU — which is
-      why the default is not it.</dd>
+    <dd>The local <code>laya-serve</code> process this plugin was first built to score against,
+      over HTTP. It lost to the built-in model on <a href="#result">10 of 10 paired splits</a>
+      and has been removed; <code>eval/</code> still measures it. It is the only thing here that
+      ever wanted a GPU, and nothing here wants one now.</dd>
     <dt id="g-leave-one-session-out">Leave-one-session-out</dt>
     <dd>Fit on every session but one, test on the one held out, repeat for each. It is the
       honest number when sessions differ from each other more than calls within a session
       do, and it is lower than the grouped-split figure for exactly that reason.</dd>
     <dt id="g-minyieldchars"><code>minYieldChars</code></dt>
     <dd>The smallest result worth dropping. Below it, dropping frees less than it risks, so
-      the call is refused outright — the <em>too small</em> outcome in <a href="#demo">section 02, Watch it decide</a>.</dd>
+      the call is refused outright — the <em>too small</em> outcome in <a href="#demo">section 03, Watch it decide</a>.</dd>
     <dt id="g-the-floor">The floor</dt>
     <dd><code>keepThreshold</code>, 0.2 by default. At or above it nothing is dropped, whatever the
       budget still wants. It is the guard the budget cannot argue with.</dd>

@@ -348,17 +348,17 @@ Measured on one machine, RTX 4060 Laptop, one `laya-serve` process
 |---|---|
 | cold start to first answer | **7.6 s** |
 | resident memory | **3.1 GB** at first answer, **4.9 GB** warm |
-| VRAM | **~5.0 GB** |
+| VRAM | **~1.4 GB** for the one checkpoint measured resident on the card |
 | latency, `multilingual`, 8 questions | **573 ms** median |
 | latency, `english` / `typed-decisions`, 8 questions | 1,704 ms / 1,906 ms |
 
 `laya-serve` loads every checkpoint at startup and routes per request, so memory
-and start-up are properties of the router, not of the checkpoint you pick. Only
+and start-up are properties of the router, not of any one checkpoint. Only
 latency is per checkpoint.
 
 Scoring this machine's sessions — 1,762 calls, two questions a request, eight in
 flight — takes **41.0 s on the fastest checkpoint against 190 ms for the built-in
-scorer**, holding ~5 GB of RAM and about 1.4 GB of VRAM the whole time. That is
+scorer**, holding ~4.9 GB of RAM and about 1.4 GB of VRAM the whole time. That is
 216x the time for a lower AUC, which is the arithmetic behind the default.
 Fine-tuning changes the AUC; it does not change this table.
 
@@ -366,7 +366,10 @@ Both of those figures are corrections. The block read 23.1 s and 122x until the
 projection was checked: it divided the request count by the questions in a
 request, and a request carries one call's two questions, so there is one request
 per call and it halved itself. The VRAM said ~5 GB and had been read off a router
-started with `LAYA_DEVICE=cpu`, which puts almost nothing on the card. Checked
+started with `LAYA_DEVICE=cpu`, which puts almost nothing on the card — the same
+report shows 227 MiB of GPU memory in use beside it, and nobody read the two
+lines together. 1.4 GB is the measured delta on the card when one checkpoint is
+loaded with `LAYA_DEVICE=cuda`: 148 MiB before, 1,519 MiB after. Checked
 end to end rather than re-derived: 159 calls through a CUDA sidecar took 3,960 ms
 at concurrency 8, where the corrected arithmetic predicts 3,696 ms. Concurrency
 buys nothing — 928 ms a call at one in flight, 1,002 ms at eight, because the GPU
