@@ -366,6 +366,9 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 }
 .demo__legend span:nth-child(3){ text-align:right; letter-spacing:0; }
 @media (max-width: 640px){
+  /* The bar wraps to three rows at this width and --nav-h is otherwise only set
+     by script, so with scripts blocked every anchor landed behind it. */
+  :root{ --nav-h: 140px; }
   .demo__legend{ display:block; border-bottom:0; padding-bottom:0; }
   .demo__legend span{ display:none; }
   .demo__legend::after{
@@ -486,7 +489,16 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 .copy:hover{ color: var(--accent-ink); border-color: var(--accent); }
 .copy[data-done="1"]{ color: var(--accent-ink); border-color: var(--accent); }
 
-footer{ border-top: 2px solid var(--ink); padding-block: var(--space-xl) var(--space-3xl); }
+footer{ padding-block: var(--space-xl) var(--space-3xl); }
+/* Same treatment as section.wrap::before, and for the same reason: on the box
+   itself the rule spans the wrap's padding too, and ran 64px wider each side
+   than every other rule on a page whose hierarchy is rules. */
+footer > .wrap{ position:relative; padding-top: var(--space-xl); }
+footer > .wrap::before{
+  content:""; position:absolute; top:0;
+  left: clamp(20px, 5vw, 64px); right: clamp(20px, 5vw, 64px);
+  border-top: 2px solid var(--ink);
+}
 footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-2); max-width: 70ch; }
 
 /* ── load orchestration: one staggered reveal, transform+opacity only ─── */
@@ -514,7 +526,13 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 }
 
 @media print{
-  :root{ --paper:#fff; --paper-sunk:#f2f2f2; --ink:#111; }
+  /* Only paper, sunk and ink were reset, so the masthead and every flooded band
+     printed as cream on white — each headline figure invisible on paper. */
+  :root{
+    --paper:#fff; --paper-sunk:#f2f2f2; --ink:#111;
+    --flood:#fff; --on-flood:#111; --on-flood-2:#333; --flood-rule:#999;
+  }
+  .flooded{ border-bottom: 2px solid #111; }
   body{ font-size: 10.5pt; } section{ break-inside: avoid; }
   .copy, .skip{ display:none; } .reveal,.bar,.whisker,.worst{ opacity:1 !important; transform:none !important; animation:none !important; }
 }
@@ -780,8 +798,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
   <p class="caption">
     <b>Freed is not a slice of tool output.</b> Dropping a call takes its input with it, so a
-    few of those characters were never in the column to its left. The <code>Grep</code> below is
-    the clearest case, and it is priced further down.
+    few of those characters were never in the column to its left. The <code>git&nbsp;log</code>
+    row above is the clearest case: 1,547 characters of output, 1,597 freed.
   </p>
   <p class="caption">
     The transcript is constructed — every real session on this machine is someone's work and
@@ -1050,7 +1068,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     against the compacted transcript, and that remains unverified.
   </p>
 
-  <h3>Three more things this does not do</h3>
+  <h3>Four more things this does not do</h3>
   <p>
     <strong>A summary compresses harder.</strong> Freeing a fifth of the tokens is less than
     replacing the conversation with a few thousand tokens of prose. What you buy with the
@@ -1185,7 +1203,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         18-session corpus and 0.051 on all 41 — the 0.044 in section 01 is the same quantity
         averaged over ten grouped splits instead. “Big outputs get reused”
         alone reaches 0.878, so most of the signal really is one feature — three coefficients of the
-        twelve, since size is banded — and the other eight earn
+        twelve, since size is banded — and the other nine earn
         their place on characters freed at a fixed safety level, not on ranking.</p>
     </div>
     <div class="faq__item">
@@ -1305,7 +1323,8 @@ claude plugin install laya-compact@laya-compact</code></pre>
 </section>
 </main>
 
-<footer class="wrap">
+<footer>
+<div class="wrap">
   <p>
     A derivative of <a rel="noopener" href="https://github.com/tamaratran/fast-jev-compaction">tamaratran/fast-jev-compaction</a>
     and <a rel="noopener" href="https://github.com/fatelei/jev-compact">fatelei/jev-compact</a>, both MIT, which do this
@@ -1313,6 +1332,7 @@ claude plugin install laya-compact@laya-compact</code></pre>
     <a rel="noopener" href="https://github.com/AxeForging">AxeForging</a>:
     <a rel="noopener" href="https://github.com/AxeForging/laya-compact">the source</a> and <a href="eval.html">the full evaluation</a>.
   </p>
+</div>
 </footer>
 
 <script src="demo-data.js"></script>

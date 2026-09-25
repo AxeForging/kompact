@@ -68,6 +68,15 @@ const PROBE = String.raw`
     const box = el.getBoundingClientRect();
     edges.add(Math.round(box.left + parseFloat(cs.left)) + ':' + Math.round(box.right - parseFloat(cs.right)));
   }
+  // The footer's rule ran 64px wider each side than every other rule because it
+  // sat on the element carrying the wrap's padding — the same bug section rules
+  // were refactored away from, missed because this probe never looked at it.
+  for (const el of document.querySelectorAll('footer > .wrap')) {
+    const cs = getComputedStyle(el, '::before');
+    if (cs.content === 'none') continue;
+    const box = el.getBoundingClientRect();
+    edges.add(Math.round(box.left + parseFloat(cs.left)) + ':' + Math.round(box.right - parseFloat(cs.right)));
+  }
   for (const el of document.querySelectorAll('.rubric')) {
     const r = el.getBoundingClientRect();
     edges.add(Math.round(r.left) + ':' + Math.round(r.right));
