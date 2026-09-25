@@ -1,0 +1,98 @@
+/**
+ * The page's one image, made of the corpus.
+ *
+ * Every labelled call placed by the score the shipped model gives it, split by
+ * what actually happened to it: reused verbatim later, or not. A ranking is an
+ * abstract claim; this is what one looks like. It shows the model working — the
+ * reused marks lean right — and it shows the overlap, which is the part a chart
+ * of a single AUC number hides.
+ *
+ * Writes `docs/distribution.svg`. Run: bun eval/distribution.ts
+ */
+import { writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { loadCorpus } from './corpus.js';
+import { KEEP_RESULT_WEIGHTS, featureVector, score } from '../src/features.js';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const { rows } = loadCorpus(here);
+
+const W = 1200;
+const H = 420;
+const PAD = { left: 56, right: 24, top: 44, bottom: 52 };
+const plot = { w: W - PAD.left - PAD.right, h: H - PAD.top - PAD.bottom };
+const FLOOR = 0.2;
+
+interface Mark { x: number; y: number; reused: boolean }
+const marks: Mark[] = [];
+/** Deterministic jitter: the same corpus must draw the same picture every time. */
+let seed = 20260925;
+const rand = (): number => {
+  seed = (seed * 1664525 + 1013904223) >>> 0;
+  return seed / 0x1_0000_0000;
+};
+
+for (const row of rows) {
+  const s = score(KEEP_RESULT_WEIGHTS, featureVector(row.state, row.tool, row.is_error));
+  const lane = row.result_needed ? 0 : 1;
+  // Two bands, each jittered within itself, so 2,239 marks stay countable.
+  const top = PAD.top + lane * (plot.h / 2);
+  marks.push({
+    x: PAD.left + s * plot.w,
+    y: top + 10 + rand() * (plot.h / 2 - 26),
+    reused: row.result_needed,
+  });
+}
+
+const reused = marks.filter((m) => m.reused).length;
+const dots = (want: boolean, cls: string): string => marks
+  .filter((m) => m.reused === want)
+  .map((m) => `<circle cx="${m.x.toFixed(1)}" cy="${m.y.toFixed(1)}" r="${want ? 2.6 : 1.5}" class="${cls}"/>`)
+  .join('');
+
+const ticks = [0, 0.2, 0.4, 0.6, 0.8, 1].map((t) => {
+  const x = PAD.left + t * plot.w;
+  return `<line x1="${x}" y1="${H - PAD.bottom}" x2="${x}" y2="${H - PAD.bottom + 6}" class="ax"/>` +
+    `<text x="${x}" y="${H - PAD.bottom + 22}" class="tick" text-anchor="middle">${t.toFixed(1)}</text>`;
+}).join('');
+
+const floorX = PAD.left + FLOOR * plot.w;
+
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img"
+  aria-labelledby="dist-title dist-desc" preserveAspectRatio="xMidYMid meet">
+<title id="dist-title">Every labelled tool call, placed by the score it is given</title>
+<desc id="dist-desc">A strip plot of ${rows.length.toLocaleString('en-GB')} tool calls. The upper band holds the ${reused} whose
+output was reused verbatim later; the lower band the ${(rows.length - reused).toLocaleString('en-GB')} that were not. Position
+is the model's keep-probability, from 0 on the left to 1 on the right. The reused band leans right,
+which is the model working, and the two bands overlap heavily below 0.2, which is why a floor rather
+than a cut decides anything. A vertical rule marks the shipped floor at ${FLOOR}. The marks fall
+into vertical columns because twelve of the model's inputs are yes-or-no, so it has only a few
+dozen distinct scores to give.</desc>
+<style>
+  /* The flooded ground, so the plate is part of the field rather than a hole
+     cut in it. Values match the page's --flood / --on-flood tokens. */
+  .bg{ fill: #7f0c00; }
+  .kept{ fill: #fcf9f7; fill-opacity: .95; }
+  .not{ fill: #e1b1a1; fill-opacity: .38; }
+  .ax, .floor{ stroke: #e1b1a1; stroke-width: 1; stroke-opacity: .6; }
+  .floor{ stroke-dasharray: 3 4; stroke-opacity: 1; }
+  .tick, .lab{ fill: #e1b1a1; font: 500 13px/1 Archivo, ui-sans-serif, sans-serif; }
+  .lab{ font-size: 14px; fill: #fcf9f7; }
+</style>
+<rect width="${W}" height="${H}" class="bg"/>
+<line x1="${floorX}" y1="${PAD.top - 12}" x2="${floorX}" y2="${H - PAD.bottom}" class="floor"/>
+<text x="${floorX + 8}" y="${PAD.top - 18}" class="tick">floor ${FLOOR}</text>
+<text x="${PAD.left}" y="${PAD.top - 18}" class="lab"><tspan class="kept-l"><tspan font-weight="700">${reused}</tspan> reused verbatim later</tspan></text>
+<text x="${PAD.left}" y="${PAD.top + plot.h / 2 - 6}" class="lab">${(rows.length - reused).toLocaleString('en-GB')} never referred to again</text>
+${dots(false, 'not')}
+${dots(true, 'kept')}
+<line x1="${PAD.left}" y1="${H - PAD.bottom}" x2="${W - PAD.right}" y2="${H - PAD.bottom}" class="ax"/>
+${ticks}
+<text x="${PAD.left + plot.w / 2}" y="${H - 8}" class="tick" text-anchor="middle">probability the output is still needed verbatim</text>
+</svg>
+`;
+
+const out = join(here, '..', 'docs', 'distribution.svg');
+writeFileSync(out, svg);
+console.log(`wrote ${out}: ${rows.length} marks, ${reused} reused, ${(svg.length / 1024).toFixed(0)} KB`);

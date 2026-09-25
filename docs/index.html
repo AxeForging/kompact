@@ -7,7 +7,7 @@
 <meta name="description" content="A Claude Code plugin that scores every tool call before compaction and keeps only what is still needed verbatim. Local, no API key, no GPU. AUC 0.905 ± 0.078 over 10 grouped splits of 1063 paired calls; 0.789 leave-one-out over all 41 sessions.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Big+Shoulders+Display:wght@600;700;800&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,700&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap" rel="stylesheet">
 <style>
 :root{
   color-scheme: light;
@@ -23,6 +23,13 @@
      from 0.168: on a wide-gamut display it reads at full strength, and sRGB
      clamps both to nearly the same red, so nothing is lost where it cannot. */
   --accent:     oklch(0.505 0.190 38);
+  /* The flooded ground. The accent stops being 10% of the page and becomes the
+     field the masthead sits in, inverting to paper below — Hermes's move, in
+     AxeForging's hue. Paper on it is 10.2:1. */
+  --flood:      oklch(0.380 0.150 34);
+  --on-flood:   oklch(0.983 0.004 45);
+  --on-flood-2: oklch(0.800 0.060 40);
+  --flood-rule: oklch(0.550 0.100 38);
   --accent-ink: oklch(0.395 0.140 38);
   --accent-wash:oklch(0.945 0.030 38);
 
@@ -35,8 +42,9 @@
   /* An American-gothic condensed, the lettering stencilled on plant machinery —
      AxeForging, and the scale contrast the document was missing. Fallbacks are
      real condensed faces, not a shrug at the system stack. */
-  --display: 'Big Shoulders Display', 'Archivo Narrow', 'Liberation Sans Narrow',
-             'Helvetica Neue Condensed', Impact, sans-serif;
+  /* A Didone: the highest-contrast thing a printed page offers, and the letter
+     shape of an engraved plate — which is what the one image on this page is. */
+  --display: 'Bodoni Moda', 'Bodoni 72', Didot, 'Times New Roman', serif;
 
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
@@ -68,6 +76,14 @@ a:hover{ color: var(--accent); }
 .skip:focus{ left: var(--space-md); top: var(--space-md); z-index:9; background: var(--paper);
   padding: var(--space-xs) var(--space-sm); border:1px solid var(--rule-firm); font-family: var(--sans); }
 
+.visually-hidden{
+  position:absolute; width:1px; height:1px; margin:-1px; padding:0;
+  overflow:hidden; clip-path: inset(50%); white-space:nowrap; border:0;
+}
+/* A scroller is focusable so it can be scrolled from the keyboard; the ring
+   sits inside it rather than around the whole band. */
+.scroller:focus-visible{ outline: 2px solid var(--accent); outline-offset: -2px; }
+
 /* ── document label: the small caps used throughout ───────────────────── */
 .label{
   font-family: var(--sans); font-size: var(--text-xs); font-weight: 600;
@@ -94,35 +110,41 @@ a:hover{ color: var(--accent); }
 .rubric--accent .rubric__n{ color: var(--accent); }
 
 /* ── masthead ─────────────────────────────────────────────────────────── */
-.masthead{ padding-block: clamp(var(--space-xl), 5vw, var(--space-3xl)) var(--space-xl); }
-.masthead__rule{ height:0; border-top: 2px solid var(--ink); margin-bottom: var(--space-md); }
+.flooded{ background: var(--flood); color: var(--on-flood); }
+.masthead{ padding-block: clamp(var(--space-2xl), 6vw, var(--space-4xl)) var(--space-xl); }
+.masthead__rule{ height:0; border-top: 1px solid var(--flood-rule); margin-bottom: var(--space-md); }
+.flooded a{ color: var(--on-flood); }
+.flooded a:hover{ color: var(--on-flood-2); }
+.flooded :focus-visible{ outline-color: var(--on-flood); }
 .wordmark{
-  font-family: var(--display); font-weight: 800; font-size: var(--text-display);
-  line-height: 0.86; letter-spacing: -0.005em; text-transform: uppercase;
-  margin: 0 0 var(--space-md);
+  font-family: var(--display); font-weight: 700; font-size: var(--text-display);
+  line-height: 0.92; letter-spacing: -0.015em; margin: 0 0 var(--space-lg);
 }
-.wordmark em{ font-style: normal; color: var(--accent); }
-.standfirst{ max-width: var(--measure); font-size: var(--text-lg); line-height: 1.45; margin:0 0 var(--space-xl); color: var(--ink-2); }
-.standfirst strong{ color: var(--ink); font-weight: 500; }
+.wordmark em{ font-style: italic; font-weight: 400; }
+.standfirst{ max-width: var(--measure); font-size: var(--text-lg); line-height: 1.45; margin:0 0 var(--space-xl); color: var(--on-flood-2); }
+.standfirst strong{ color: var(--on-flood); font-weight: 500; }
 
 .colophon{
   display:flex; flex-wrap:wrap; gap: var(--space-xs) var(--space-lg);
   font-family: var(--sans); font-size: var(--text-sm); letter-spacing:0.01em;
   color: var(--ink-3);
-  border-top:1px solid var(--rule); padding-top: var(--space-sm);
+  border-top:1px solid var(--flood-rule); padding-top: var(--space-sm);
+  color: var(--on-flood-2);
 }
-.colophon b{ color: var(--ink); font-weight:600; }
+.colophon b{ color: var(--on-flood); font-weight:600; }
 
 .contents{ display:flex; flex-wrap:wrap; gap: var(--space-xs) var(--space-lg); margin-top: var(--space-sm); }
 .contents a{
-  font-family: var(--sans); font-size: var(--text-sm); font-weight:500; color: var(--ink-2);
+  font-family: var(--sans); font-size: var(--text-sm); font-weight:500; color: var(--on-flood-2);
   text-decoration:none; padding-block: 6px; border-bottom: 1px solid transparent;
 }
-.contents a:hover{ color: var(--accent-ink); border-bottom-color: var(--accent); }
-.contents a[aria-current="true"]{ color: var(--ink); border-bottom-color: var(--ink); }
+.contents a:hover{ color: var(--on-flood); border-bottom-color: var(--on-flood); }
+.contents a[aria-current="true"]{ color: var(--on-flood); border-bottom-color: var(--on-flood); }
 
 /* ── sections ─────────────────────────────────────────────────────────── */
 section{ scroll-margin-top: var(--space-lg); padding-block: clamp(var(--space-xl), 4.5vw, var(--space-3xl)); border-top: 1px solid var(--rule); }
+section.flooded{ border-top: none; padding-block: clamp(var(--space-2xl), 5.5vw, var(--space-4xl)); }
+.masthead.flooded{ max-width: none; }
 h2{
   font-family: var(--display); font-weight: 700; font-size: var(--text-xl);
   line-height: 0.98; letter-spacing:0; margin: 0 0 var(--space-md); max-width: 26ch;
@@ -212,6 +234,19 @@ table.data tr.same td.mark{ color: var(--accent-ink); font-weight:700; }
 .caption{ font-family: var(--sans); font-size: var(--text-xs); color: var(--ink-3);
   margin-top: var(--space-xs); max-width: 74ch; line-height:1.5; }
 
+/* ── the plate: the one image, and it is made of the data ─────────────────── */
+.plate{ margin: var(--space-xl) 0 0; }
+.plate img{ display:block; width:100%; height:auto; }
+.plate figcaption{
+  font-family: var(--sans); font-size: var(--text-xs); line-height:1.6;
+  color: var(--on-flood-2); margin-top: var(--space-sm); max-width: 74ch;
+}
+.plate figcaption em{ color: var(--on-flood); font-style: italic; }
+.rubric--flood{ color: var(--on-flood-2); border-bottom-color: var(--flood-rule); }
+.rubric--flood .rubric__n{ color: var(--on-flood); }
+.lede--flood{ color: var(--on-flood-2); }
+.flooded h2{ color: var(--on-flood); }
+
 /* ── the demonstration ────────────────────────────────────────────────────
    Rows are a fixed height and only the bar scales, so nothing here animates a
    layout property. The bar's scaleX is the information: it ends at the fraction
@@ -251,14 +286,15 @@ table.data tr.same td.mark{ color: var(--accent-ink); font-weight:700; }
 .demo__scores{ color: var(--ink-3); font-variant-numeric: tabular-nums; text-align:right; }
 .demo__outcome{ font-weight:600; letter-spacing:0.02em; color: var(--ink-3); }
 .demo__call[data-state="kept"] .demo__outcome{ color: var(--ink); }
+.demo__call[data-state="small"] .demo__outcome{ color: var(--ink-2); font-style: italic; }
 .demo__call[data-state="head"] .demo__outcome{ color: var(--accent-ink); }
 .demo__call[data-state="head"] .demo__fill{ background: var(--accent); }
 .demo__call[data-state="dropped"] .demo__outcome{ color: var(--accent-ink); }
 .demo__call[data-state="dropped"] .demo__who b,
 .demo__call[data-state="dropped"] .demo__who span{ color: var(--ink-3); }
 .demo__call[data-state="deciding"]{ background: var(--accent-wash); }
-.demo__call[data-state="pending"] .demo__outcome{ color: var(--rule-firm); }
-.demo__call[data-state="pending"] .demo__scores{ color: var(--rule-firm); }
+.demo__call[data-state="pending"] .demo__outcome{ color: var(--ink-3); opacity: .75; }
+.demo__call[data-state="pending"] .demo__scores{ color: var(--ink-3); opacity: .75; }
 
 @media (prefers-reduced-motion: no-preference){
   .demo__fill{ transition: transform 520ms cubic-bezier(0.16,1,0.3,1), background-color 220ms ease-out; }
@@ -301,7 +337,7 @@ table.data tr.same td.mark{ color: var(--accent-ink); font-weight:700; }
 .ledger__claim{ font-family: var(--sans); font-weight:600; font-size: var(--text-sm); margin:0; }
 .ledger__how{ margin:0; font-size: var(--text-sm); color: var(--ink-2); max-width: 60ch; }
 .ledger__row--open .ledger__claim{ color: var(--accent-ink); }
-.ledger__row--open .ledger__claim::after{ content:" — not verified"; font-weight:500; }
+.ledger__row--open .ledger__claim .flag{ font-weight:500; }
 
 /* ── install ──────────────────────────────────────────────────────────── */
 .cmd{ margin-top: var(--space-lg); border:1px solid var(--rule-firm); background: var(--paper-sunk); }
@@ -354,7 +390,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 <body>
 <a class="skip" href="#install">Skip to install</a>
 
-<header class="masthead wrap">
+<header class="flooded">
+<div class="masthead wrap">
   <div class="masthead__rule reveal" style="--d:0ms"></div>
   <h1 class="wordmark reveal" style="--d:40ms">laya&#8209;<em>compact</em></h1>
   <p class="standfirst reveal" style="--d:110ms">
@@ -368,8 +405,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <span><b>0</b> network calls by default</span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
   <nav class="contents reveal" style="--d:210ms" aria-label="Contents">
-    <a href="#result">Evidence</a><a href="#demo">Watch it decide</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#next">What's next</a><a href="#faq">FAQ</a><a href="#install">Install</a><a href="eval.html">Full evaluation</a>
+    <a href="#result">Evidence</a><a href="#shape">The shape of it</a><a href="#demo">Watch it decide</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#next">What's next</a><a href="#faq">FAQ</a><a href="#install">Install</a><a href="eval.html">Full evaluation</a>
   </nav>
+</div>
 </header>
 
 <main>
@@ -388,11 +426,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <caption class="label" style="margin-bottom:var(--space-xs)">Area under ROC</caption>
       <colgroup><col style="width:21ch"><col><col style="width:15ch"></colgroup>
       <tbody>
-        <tr aria-hidden="true" class="rows__ticks">
+        <tr class="rows__ticks">
           <td></td>
           <td class="row__plot">
             <div class="chart__ticks">
-              <span class="chart__tick chart__tick--chance">0.50 chance</span>
+              <span class="chart__tick chart__tick--chance">0.50 chance</span><span class="visually-hidden">, the left edge of this scale; each bar below runs from 0.50 to 1.00 and its value is printed beside it.</span>
               <span class="chart__tick" style="left:40%">0.70</span>
               <span class="chart__tick" style="left:80%">0.90</span>
               <span class="chart__tick" style="left:100%">1.00</span>
@@ -480,8 +518,35 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
 </section>
 
+<section class="flooded" id="shape" aria-labelledby="shape-h">
+  <div class="wrap">
+  <p class="rubric rubric--flood"><span class="rubric__n">02</span>The shape of it</p>
+  <h2 id="shape-h">Two thousand two hundred and thirty‑nine decisions.</h2>
+  <p class="lede lede--flood">
+    Every labelled call in the corpus, placed by the probability the shipped model gives it.
+    Above the line, the ones whose output really was reused verbatim later; below, the ones that
+    never were. A single AUC is a summary of this picture.
+  </p>
+  <figure class="plate">
+    <img src="distribution.svg" width="1200" height="420" decoding="async"
+         alt="A strip plot of 2,239 tool calls. The upper band holds the 247 whose output was reused
+              verbatim later; the lower band the 1,992 that were not. Position is the model's
+              keep-probability from 0 at the left to 1 at the right. The reused band leans right,
+              and the two bands overlap heavily below 0.2, where the shipped floor is drawn.">
+    <figcaption>
+      The reused band leans right — that is the model working. The bands also overlap, heavily,
+      and that overlap is why a <em>floor</em> decides what is kept rather than a cut: below 0.2
+      there are far too many genuinely-needed outputs to sweep. The marks fall into columns
+      because twelve of the thirteen inputs are yes-or-no, so the model has only a few dozen
+      distinct scores to give — a ranking this coarse is still enough to beat a 322M-parameter
+      network at the same task.
+    </figcaption>
+  </figure>
+  </div>
+</section>
+
 <section class="wrap" id="demo">
-  <p class="rubric"><span class="rubric__n">02</span>Watch it decide</p>
+  <p class="rubric"><span class="rubric__n">03</span>Watch it decide</p>
   <h2>Nine calls, two probabilities each, one ranking.</h2>
   <p class="lede">
     A session that finds a test failing only on CI, tracks it to a timezone in a fixture, and
@@ -497,6 +562,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p class="demo__stat">Decided<b><span id="d-count">0</span> of 9</b></p>
       <button class="demo__run" type="button" id="d-run">Score the session</button>
     </div>
+    <p class="visually-hidden" id="d-status" role="status" aria-live="polite"></p>
     <ol class="demo__list" id="d-list"></ol>
   </div>
 
@@ -533,13 +599,13 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </section>
 
 <section class="wrap" id="cost">
-  <p class="rubric"><span class="rubric__n">03</span>Cost</p>
+  <p class="rubric"><span class="rubric__n">04</span>Cost</p>
   <h2>164&nbsp;ms to score 1,543 tool calls.</h2>
   <p class="lede">
     Compaction stops being a model call and becomes arithmetic. These are whole session
     logs, so the totals span more than one context window, so the ratio is what transfers.
   </p>
-  <div class="scroller">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table, scrolls sideways">
     <table class="data">
       <thead><tr>
         <th scope="col">Session</th><th scope="col" class="n">Calls</th>
@@ -574,7 +640,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     the keep threshold acting as a floor that nothing is dropped above. Simulated per session on
     the labelled corpus, scored leave-one-session-out:
   </p>
-  <div class="scroller">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table, scrolls sideways">
     <table class="data">
       <thead><tr>
         <th scope="col">Policy</th><th scope="col" class="n">Output freed</th>
@@ -602,7 +668,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     what running it costs. One <code>laya-serve</code> process loads every checkpoint and routes
     per request, so memory and start-up belong to the router, not to the checkpoint you pick.
   </p>
-  <div class="scroller">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table, scrolls sideways">
     <table class="data">
       <thead><tr>
         <th scope="col">Scoring one session, 1,543 calls</th><th scope="col" class="n">Time</th>
@@ -623,14 +689,14 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </section>
 
 <section class="wrap" id="losses">
-  <p class="rubric rubric--accent"><span class="rubric__n">04</span>Where it loses</p>
+  <p class="rubric rubric--accent"><span class="rubric__n">05</span>Where it loses</p>
   <h2>The model we dropped fails quietly, which is worse than failing.</h2>
   <p>
     Laya’s English checkpoint reads 512 tokens and discards the rest with HTTP 200 and no
     warning. Padding one decisive sentence with unrelated filler, the same question was asked
     of a 4,278-character state and a 21,078-character state:
   </p>
-  <div class="scroller">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table, scrolls sideways">
     <table class="data">
       <thead><tr>
         <th scope="col">State</th><th scope="col" class="n">Characters</th>
@@ -655,7 +721,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     it is, priced. Held-out scores, shipped policy, per session: <strong>55 of the 247 reused
     outputs are dropped</strong> — 1.34 a session, and only one of them kept a head.
   </p>
-  <div class="scroller">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table, scrolls sideways">
     <table class="data">
       <thead><tr>
         <th scope="col">How it would be recovered</th><th scope="col" class="n">Outputs</th>
@@ -687,7 +753,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     actually compact — 60% of a session's tool output — decide only the calls present at that
     moment, then count the reuses that come <em>afterwards</em> whose source was dropped.
   </p>
-  <div class="scroller">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table, scrolls sideways">
     <table class="data">
       <thead><tr>
         <th scope="col">Compacting at 60%, across 32 sessions</th><th scope="col" class="n">Count</th>
@@ -734,7 +800,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </section>
 
 <section class="wrap" id="checked">
-  <p class="rubric"><span class="rubric__n">05</span>Verification</p>
+  <p class="rubric"><span class="rubric__n">06</span>Verification</p>
   <h2>Including the one that was not.</h2>
   <div class="ledger">
     <div class="ledger__row">
@@ -762,18 +828,18 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p class="ledger__how">Compaction simulated where the engine would fire it, then the reuses that come afterwards counted: 6 of 68, 0.19 a session, 27 of 32 sessions losing nothing. <code>eval/outcome.ts</code></p>
     </div>
     <div class="ledger__row ledger__row--open">
-      <p class="ledger__claim">An assistant still finishing the job</p>
+      <p class="ledger__claim">An assistant still finishing the job <span class="flag">— not verified</span></p>
       <p class="ledger__how">The measurement above shows how often the information would no longer be there. Whether that changes what the assistant does needs the same session replayed with and without compaction, which needs a live A/B.</p>
     </div>
     <div class="ledger__row ledger__row--open">
-      <p class="ledger__claim">The engine calling <code>session.compact</code> live</p>
+      <p class="ledger__claim">The engine calling <code>session.compact</code> live <span class="flag">— not verified</span></p>
       <p class="ledger__how">The plugin loads and <code>turn.complete</code> fires in a real session, but the engine declines to compact below ~31% full and the model cannot invoke <code>/compact</code> itself. Covered by the real-session test; the engine-side handoff is not.</p>
     </div>
   </div>
 </section>
 
 <section class="wrap" id="next">
-  <p class="rubric"><span class="rubric__n">06</span>What's next</p>
+  <p class="rubric"><span class="rubric__n">07</span>What's next</p>
   <h2>The gaps, in the order they matter.</h2>
   <p class="lede">
     Everything above this line is measured. Everything below it is not yet, and is written in the
@@ -821,7 +887,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </section>
 
 <section class="wrap" id="faq">
-  <p class="rubric"><span class="rubric__n">07</span>FAQ</p>
+  <p class="rubric"><span class="rubric__n">08</span>FAQ</p>
   <h2>The questions a sceptic asks.</h2>
   <div class="faq">
     <div class="faq__item">
@@ -868,7 +934,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </section>
 
 <section class="wrap" id="install">
-  <p class="rubric"><span class="rubric__n">08</span>Install</p>
+  <p class="rubric"><span class="rubric__n">09</span>Install</p>
   <h2>Function hooks are early access, so turn them on first.</h2>
   <p class="lede">Needs Claude Code 2.1.281 or newer, where function hooks exist. On an older
      build the plugin installs and silently never runs, so check <code>claude --version</code> first.</p>
@@ -957,12 +1023,17 @@ if (demo && list) {
   const freedEl = document.getElementById('d-freed');
   const countEl = document.getElementById('d-count');
   const run = document.getElementById('d-run');
+  const status = document.getElementById('d-status');
   const nf = new Intl.NumberFormat('en-GB');
 
   // A result short enough to fit inside the retained head is not shortened at
   // all, so calling it "head only" would overstate what happened to it.
-  const label = (d) => (d.freed === 0 ? 'kept' : d.action === 'drop_call' ? 'dropped' : 'head only');
-  const state = (d) => (d.freed === 0 ? 'kept' : d.action === 'drop_call' ? 'dropped' : 'head');
+  const label = (d) => (d.reason === 'too small' ? 'too small'
+    : d.freed === 0 ? 'kept'
+    : d.action === 'drop_call' ? 'dropped' : 'head only');
+  const state = (d) => (d.reason === 'too small' ? 'small'
+    : d.freed === 0 ? 'kept'
+    : d.action === 'drop_call' ? 'dropped' : 'head');
   // Bar width is the call's share of the largest output; scaleX is what survived.
   const share = (d) => Math.max(3, Math.round((100 * d.chars) / widest));
   // `freed` counts the tool input too, so a tiny result can free more characters
@@ -994,8 +1065,12 @@ if (demo && list) {
     demo.decisions.forEach((_, i) => paint(i, true));
     freedEl.textContent = nf.format(demo.decisions.reduce((sum, d) => sum + d.freed, 0));
     countEl.textContent = String(demo.decisions.length);
-    run.disabled = true;
-    run.textContent = `${Math.round((100 * demo.decisions.reduce((s, d) => s + d.freed, 0)) / total)}% of the output freed`;
+    // Re-enabled here, not only at load: disabling it in `settleAll` meant the
+    // first press killed the control for good and dropped focus to <body>.
+    run.disabled = false;
+    run.textContent = `Replay — ${Math.round((100 * demo.decisions.reduce((s, d) => s + d.freed, 0)) / total)}% freed`;
+    status.textContent = `Finished. ${demo.decisions.filter((d) => d.freed > 0).length} of `
+      + `${demo.decisions.length} calls shortened, ${nf.format(demo.decisions.reduce((s, d) => s + d.freed, 0))} characters freed.`;
   };
 
   const reset = () => {
@@ -1035,6 +1110,8 @@ if (demo && list) {
         freedEl.textContent = nf.format(freed);
         countEl.textContent = String(step + 1);
         step += 1;
+        // One announcement per decision would flood a screen reader; the end
+        // state is announced once, in `settleAll`.
         tick();
       }, 340);
     };

@@ -86,5 +86,11 @@ describe('release mechanics', () => {
     expect(evalPage).toContain('Generated from');
     expect(evalPage).toContain('eval/RESULTS.md');
     expect(read('docs/index.html')).toContain('href="eval.html"');
+
+    // The page's one image is generated from the corpus, not drawn by hand.
+    const svg = read('docs/distribution.svg');
+    expect(svg).toContain('2,239 tool calls');
+    expect(svg, 'the plot must carry a text alternative').toContain('<desc');
+    expect(read('docs/index.html')).toContain('src="distribution.svg"');
   });
 });
