@@ -786,8 +786,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <li class="demo__call" data-state="dropped"><span class="demo__who"><b>Bash</b><span>git log --oneline -20 -- src/auth.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:17.8%"><span class="demo__fill" style="--keep:0"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.081 · <span class="visually-hidden">keep-call </span>0.093<br>1,547 ch</span><span class="demo__outcome">dropped</span></li>
       <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>.github/workflows/ci.yml</span></span><span class="demo__track"><span class="demo__was" style="--w:33.9%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.282 · <span class="visually-hidden">keep-call </span>0.270<br>5,615 ch</span><span class="demo__outcome">kept</span></li>
       <li class="demo__call" data-state="kept"><span class="demo__who"><b>Bash</b><span>gh run view 4821 --log | tail -60</span></span><span class="demo__track"><span class="demo__was" style="--w:100%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.228 · <span class="visually-hidden">keep-call </span>0.305<br>49,001 ch</span><span class="demo__outcome">kept</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Edit</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:2.4%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>1.000 · <span class="visually-hidden">keep-call </span>1.000<br>29 ch</span><span class="demo__outcome">kept</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:22.3%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>1.000 · <span class="visually-hidden">keep-call </span>1.000<br>2,432 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="pinned"><span class="demo__who"><b>Edit</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:2.4%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>1.000 · <span class="visually-hidden">keep-call </span>1.000<br>29 ch</span><span class="demo__outcome">pinned</span></li>
+      <li class="demo__call" data-state="pinned"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:22.3%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>1.000 · <span class="visually-hidden">keep-call </span>1.000<br>2,432 ch</span><span class="demo__outcome">pinned</span></li>
     </ol>
     <!-- /demo:render -->
   </div>
@@ -1157,8 +1157,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p class="next__what"><b>The corpus is still one person's.</b> Widening it from 18 sessions
         to 41 — all the same person — took leave-one-session-out AUC from
         <span class="num val">0.879</span> to <span class="num val">0.789</span>, and calibration
-        error from <span class="num val">0.019</span> to <span class="num val">0.051</span>. Seven
-        points and nearly triple, inside one person's own work. A second operator's corpus would
+        error from <span class="num val">0.035</span> to <span class="num val">0.051</span>. Nine
+        points and half again the error, inside one person's own work. A second operator's corpus would
         say how much of what is left is this person's habits.</p>
     </div>
     <div class="next__item">
@@ -1195,7 +1195,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <h3>Isn't this just a heuristic with extra steps?</h3>
       <p>It is a heuristic with error bars, which is the difference. Twelve coefficients fitted
         on labelled data, evaluated on sessions held out whole, calibrated well enough that the
-        threshold means a probability — expected calibration error 0.019 leave-one-session-out on the
+        threshold means a probability — expected calibration error 0.035 leave-one-session-out on the
         18-session corpus and 0.051 on all 41 — the 0.044 in section 01 is the same quantity
         averaged over ten grouped splits instead. “Big outputs get reused”
         alone reaches 0.878, so most of the signal really is one feature — three coefficients of the
@@ -1261,9 +1261,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <h3>How you know it is running</h3>
   <p>
     It says so, every time it fires. On each compaction the plugin raises a notice reading
-    <code>kept&nbsp;34/212&nbsp;messages,&nbsp;no&nbsp;summary</code> followed by what it did —
-    <code>23% reduction; 34 kept, 1 results truncated, 2 calls dropped; 41 scored via features
-    in 190ms</code> — and writes the same line, plus one per decision, to the session log. If anything at all goes wrong you get
+    <code>kept&nbsp;34/212&nbsp;messages,&nbsp;no&nbsp;summary&nbsp;(23%&nbsp;reduction;
+    34&nbsp;kept,&nbsp;1&nbsp;results&nbsp;truncated,&nbsp;2&nbsp;calls&nbsp;dropped,&nbsp;4&nbsp;pinned;
+    41&nbsp;scored&nbsp;via&nbsp;features&nbsp;in&nbsp;4ms)</code> — and writes the same line, plus
+    one per decision, to the session log. The parts sum to what was scored, and the time is for
+    the 41 calls in that compaction, not the 1,762 in <a href="#cost">section 04</a>. If anything at all goes wrong you get
     the other notice instead, naming the reason:
     <code>fallback to built-in summary (…)</code>. Silence at a compaction means the hook never
     ran, which is the <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> or the version check in

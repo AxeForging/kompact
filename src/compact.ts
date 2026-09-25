@@ -75,11 +75,11 @@ export function resolveOptions(options: CompactOptions = {}): ResolvedCompactOpt
  *
  * Found by reading the demonstration on the landing page: the scorer dropped the
  * `Edit` that fixed the bug the session was about. Its output ("Applied 1 edit
- * to src/auth.ts") is worthless — 1 of 138 mutating calls in the corpus has an
+ * to src/auth.ts") is worthless — 1 of 220 mutating calls in the corpus has an
  * output that was ever needed verbatim — but its *input* is the only record that
  * the change happened, and unlike a read it cannot be recovered by running it
- * again. 116 of those 138 calls are still relevant to the task when compaction
- * fires, and their outputs are 1.2% of the corpus, so keeping every one of them
+ * again. 171 of those 220 calls are still relevant to the task when compaction
+ * fires, and their outputs are 1.0% of the corpus, so keeping every one of them
  * costs almost nothing.
  */
 const MUTATING = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);

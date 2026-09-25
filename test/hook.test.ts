@@ -137,16 +137,19 @@ describe('summarize', () => {
    * notice — so a correctly-working install would have looked broken. The drift
    * guard binds the page to eval/RESULTS.md and nothing bound it to hooks/.
    */
-  it('emits the shape the page tells readers to look for', () => {
-    const line = summarize(stats({ kept: 34, resultsDropped: 1, callsDropped: 2, requests: 41, ms: 190 }), 'features');
+  it('emits the exact line the page tells readers to look for', () => {
+    // Bind the whole line, not fragments: summarize() puts its semicolon after
+    // whichever part comes last, so asserting "calls dropped;" broke the moment
+    // the example gained a `pinned` part it needed to balance.
+    const line = summarize(stats({
+      charsBefore: 1000, charsAfter: 770,
+      kept: 34, resultsDropped: 1, callsDropped: 2, pinned: 4, requests: 41, ms: 4,
+    }), 'features');
     // The page wraps inside the <code>, so compare on collapsed whitespace.
     const page = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'docs', 'index.html'), 'utf8')
       .replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
-    for (const part of ['% reduction;', 'kept,', 'results truncated,', 'calls dropped;', 'scored via features in']) {
-      expect(line, `summarize() no longer produces "${part}"`).toContain(part);
-      expect(page, `docs/index.html quotes a notice without "${part}"`).toContain(part);
-    }
-    // And nothing the notice cannot contain.
+    expect(page, `docs/index.html does not quote the line summarize() emits:\n  ${line}`)
+      .toContain(line);
     for (const invented of ['0.2 floor', '% freed,']) {
       expect(line).not.toContain(invented);
       expect(page, `docs/index.html quotes "${invented}", which no notice emits`).not.toContain(invented);

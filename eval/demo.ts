@@ -72,7 +72,11 @@ const decisions = result.decisions.map((decision) => {
     ).slice(0, 52),
     chars: source.resultChars,
     isError: source.isError,
-    pinned: source.pinned,
+    // The decision's own reason, not the ToolCall flag: `collectToolCalls` is
+    // called here with a different preserveRecentMessages than `compact` uses,
+    // so `source.pinned` read false on the two rows the compactor pinned — the
+    // page then said "pinned" in prose over a table that said "kept".
+    pinned: decision.reason === 'pinned',
     action: decision.action,
     reason: decision.reason,
     // How many characters this decision actually removes, from the same
