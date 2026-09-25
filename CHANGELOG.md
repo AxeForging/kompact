@@ -10,16 +10,16 @@ TypeSafe's hosted Jev model.
 [b]: https://github.com/fatelei/jev-compact
 
 - **Per-call states.** Both upstreams send the whole conversation (up to 25,000
-  tokens) as one state. Laya's English checkpoint reads 512 tokens and discards
-  the rest silently, so the state is now one small prose description per call,
+  tokens) as one state. The neural model's English checkpoint reads 512 tokens
+  and discards the rest silently, so the state is now one small prose description per call,
   sized to the checkpoint's real budget and asserted in the suite.
 - **A logistic scorer as the default**, over facts already computed for the
   state: no sidecar, no GPU, no network. Measured over 10 grouped splits of the
   1063 calls from 18 sessions every checkpoint was scored against, AUC
-  0.905 ± 0.078 against 0.719 ± 0.026 for the best Laya checkpoint and wording,
-  winning 10 of 10 paired splits. With the shipped defaults it frees 23.4% of
-  droppable tool output and 13–32% of a real session's tokens, scoring ~1,500
-  calls in ~160 ms.
+  0.905 ± 0.078 against 0.719 ± 0.026 for the best neural checkpoint and
+  wording, winning 10 of 10 paired splits. With the shipped defaults the shipped
+  code frees 33.7% of tool output and 3.6–32.6% of a real session's tokens,
+  scoring 1,762 calls in 190 ms.
 - **Fitted on 2239 calls from 41 sessions, and that is worse than it sounds.**
   Leave-one-session-out AUC is 0.789 with ECE 0.051, against 0.879 and 0.035 on
   18 of those same sessions. Widening the corpus within one person's own work
@@ -35,14 +35,40 @@ TypeSafe's hosted Jev model.
   later; see `eval/RESULTS.md`.
 - **A call that recorded a change is never dropped.** `Edit`, `Write`,
   `MultiEdit` and `NotebookEdit` keep their call whatever the scores say; only
-  their output can go. Rescues every one of the 220 mutating calls in the corpus
-  from ever being dropped, and costs nothing: exactly one of them had an output
-  that was ever needed verbatim, and retention stands at 77.3%.
-- **Laya stays available** behind the same `Asker` seam for anyone with a
-  checkpoint fine-tuned on their own sessions, and is now measurable rather than
-  only comparable: `eval/sidecar-bench.ts` reports 7.6 s to start, ~4.9 GB resident,
-  ~5.0 GB of VRAM, and 23.1 s to score the sessions the built-in scorer scores in
-  190 ms.
+  their output can go. The rule applies to 220 mutating calls in the corpus and
+  re-running the same decisions without it shows what it saves: 15 of them would
+  otherwise lose their call or their output, against the single output in those
+  220 that was ever needed verbatim. Retention stands at 77.7%.
+- **The neural sidecar is gone from the product**, and stays in the evaluation.
+  There is no option that turns it on; `scorer` and `layaUrl` are read and
+  ignored. What it cost is why: `eval/sidecar-bench.ts` reports 7.6 s to start,
+  ~4.9 GB resident, ~1.4 GB of VRAM and 41.0 s to score the sessions the
+  built-in scorer scores in 190 ms — 216× the time for a lower AUC. Two of those
+  figures are corrections: the table read 23.1 s and ~5.0 GB until the
+  projection was checked against an end-to-end run and the VRAM was found to
+  have been read off a router started in CPU mode.
+
+- **Compaction defers the model summary instead of replacing it once.**
+  `minReductionRatio` is gone. A pass is taken when it reclaims at least
+  `minFreedPercent` (5) percentage points of the context window, and
+  `maxPasses` (6) is the backstop. The old bar asked whether a pass was a large
+  fraction of the transcript and, replayed over the production loop on real
+  sessions (`eval/passes.ts`), took 0 of 14 passes: every compaction went to the
+  model summary while this could still free nine points of window in under
+  20 ms. Sharing a unit with `compactAtPercent` makes the rule its own
+  hysteresis band. **Not verified:** what deferring the summary costs.
+
+- **A cap on kept results**, `maxKeptChars` (24,000). Half of all tool output
+  lives in about 3% of the calls, so shortening the 27 longest of 2,239 frees
+  20.7% of the corpus for 6.2% of the characters later steps quoted back.
+  16,000 frees more and costs more; a cap graded by the scorer's confidence was
+  measured and is worse than a flat one at every setting.
+
+- **Token accounting is a division, not a pass.** The yield rule is denominated
+  in tokens; counting them per message cost 143 ms a pass on a 7,300-message
+  session, twice per compaction. One measured ratio (2.946 characters per token
+  over the twelve largest transcripts here) replaces it, and a test fails if the
+  counting comes back.
 - **Local calibration.** `npm run calibrate` refits on your own transcripts and
   emits `KOMPACT_WEIGHTS`; the shipped coefficients come from one person's
   sessions and should not be assumed to transfer.

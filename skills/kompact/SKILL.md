@@ -1,6 +1,6 @@
 ---
 name: kompact
-description: Use when working with kompact — the local context-compaction plugin that scores tool calls and drops what is no longer needed verbatim. Covers reading its decision log, choosing keepThreshold, calibrating the scorer on your own sessions, switching to a Laya sidecar, and diagnosing a compaction that kept or dropped the wrong thing. Also use when someone asks why compaction removed a tool result, how to make compaction more or less aggressive, or how to re-run the evaluation, or how to see what they keep repeating and turn it into a skill.
+description: Use when working with kompact — the local context-compaction plugin that scores tool calls and drops what is no longer needed verbatim. Covers reading its decision log, choosing keepThreshold, calibrating the scorer on your own sessions, tuning how often it defers the model summary, and diagnosing a compaction that kept or dropped the wrong thing. Also use when someone asks why compaction removed a tool result, how to make compaction more or less aggressive, or how to re-run the evaluation, or how to see what they keep repeating and turn it into a skill.
 ---
 
 # Operating kompact
@@ -90,21 +90,30 @@ It refuses to fit on fewer than 3 sessions or 20 positives — too thin to mean
 anything. Read the reported delta before adopting: if the shipped weights were
 fitted on *these* sessions, their column is in-sample and flatters itself.
 
-## Using a Laya sidecar instead
+## The neural sidecar it replaced
 
-Set `scorer` to `laya`. Expect it to be worse: measured over 10 grouped splits,
-the built-in scorer averaged AUC 0.895 against 0.721 for the best Laya
-checkpoint and wording. Only worth it with a checkpoint fine-tuned on your own
-sessions — the bar is the built-in scorer, not chance. Budget for it too: one
-`laya-serve` holds ~4.9 GB and ~5.0 GB of VRAM, starts in 7.6 s, and takes 23.1 s
-to score the calls the built-in scorer scores in 190 ms.
+There is no option that turns it back on. `scorer` and `layaUrl` are read and
+ignored, and nothing shipped imports a client, so a settings file left over from
+an older version is not an error. It lost on quality — over 10 grouped splits
+the built-in scorer averaged AUC 0.905 against 0.719 for the best checkpoint and
+wording — and on cost: 7.6 s to start, ~4.9 GB resident, ~1.4 GB of VRAM, and
+41.0 s to score the calls the built-in scorer scores in 190 ms.
 
-`phrasing` matters more than the checkpoint. On `typed-decisions`, `direct`
-scores 0.721 where `reproducible` scores 0.419.
+`eval/` still measures all of it against a live sidecar. `phrasing` is the one
+setting that outlived it, because the built-in scorer reads each question's
+instructions too: on `typed-decisions`, `direct` scores 0.719 where
+`reproducible` scores 0.419.
 
-If the toast says `STATES TRUNCATED`, states are overflowing the checkpoint's
-context and those scores were computed on fragments. Lower `maxCallStateTokens`
-below the checkpoint's state budget (768 on multilingual, ~320 on english).
+## Compaction runs more than once before the summary does
+
+The engine asks at `compactAtPercent` (60). A pass is taken when it reclaims at
+least `minFreedPercent` (5) percentage points of the context window; below that
+the engine's model summary runs instead. `maxPasses` (6) hands over regardless.
+
+The toast says which pass it was and what the pass reclaimed. If compaction
+keeps falling back, the pass is freeing less than the floor — lower
+`minFreedPercent`, or accept that the transcript is now prose only a summary can
+compress. If it stops after six, that is the ceiling and the summary is due.
 
 ## Re-running the evaluation
 

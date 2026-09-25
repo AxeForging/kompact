@@ -148,8 +148,12 @@ a:hover{ color: var(--accent); }
 .flooded a:hover{ color: var(--on-flood-2); }
 .flooded :focus-visible{ outline-color: var(--on-flood); }
 .wordmark{ white-space: nowrap;
+  /* `auto` here for the same reason it is off everywhere else: Bodoni's optical
+     axis thins horizontal strokes as size grows, and at 112px the wordmark's
+     own hairlines were measured at well under a pixel on the flood, where they
+     have the least contrast to spend. Pinned to the family's 11-opsz master. */
   font-family: var(--display); font-weight: 700; font-size: var(--text-display);
-  font-optical-sizing: auto;
+  font-optical-sizing: none;
   /* No negative tracking: it was compensating for the sidebearings of an
      11-opsz master rendered at 112px, and the optical axis handles that now. */
   line-height: 1.0; margin: 0 0 var(--space-lg);
@@ -381,7 +385,9 @@ h2{
 }
 h3{ font-family: var(--display); font-weight:600; font-size: var(--text-lg); line-height:1.15;
   text-wrap: balance;
-  font-optical-sizing: auto;
+  /* Same as h2: `auto` at 25px already takes the thin strokes to about a pixel,
+     and an h3 is a label a reader scans rather than reads. */
+  font-optical-sizing: none;
   letter-spacing:0.005em; margin: var(--space-2xl) 0 var(--space-xs); }
 p{ max-width: var(--measure); margin: 0 0 var(--space-md); }
 p, .lede, .caption, .glossary dd{ text-wrap: pretty; }
@@ -2009,7 +2015,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
      <b>2.1.281 or later works; below it is unknown rather than broken</b> — which release first
      shipped them is <em>not established here</em>, and on a build without them the plugin
      installs and silently never runs. Check <code>claude&nbsp;--version</code>, then
-     <a href="#session">what it touches, in section 09</a> for the notice that proves it fired, and the
+     <a href="#session">what it touches</a> below for the notice that proves it fired, and the
      <a href="#checked">verification ledger</a> for what is and is not established.</p>
   <p>
     <strong>Or don’t install it yet.</strong> Clone
