@@ -864,8 +864,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     goes with it. This scores every tool call instead and <strong>keeps what survives
     verbatim</strong>, dropping only what is no longer needed &#8212; so a file you read is
     still the file, not a description of it. On your machine: no API key, no GPU, no network
-    call. <span class="standfirst__note">The optional Laya <a href="#g-sidecar">sidecar</a> is
-    the one path that uses either.</span>
+    call &#8212; <span class="standfirst__note">no exceptions and no optional path that has any,
+    since the neural <a href="#g-sidecar">sidecar</a> this was named after
+    <a href="#losses">lost to thirteen coefficients</a> and was removed.</span>
   </p>
   <div class="upfront reveal" style="--d:150ms">
     <p><b>0.789</b><span>ranking quality, held out one session at a time across all 41 &#8212; the
@@ -874,7 +875,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       322M&#8209;parameter model it was built on &#8212; un&#8209;fine&#8209;tuned, on a call it
       was never trained to make &#8212; 10 of 10 paired splits.</span></p>
     <p><b>3.6<span class="op">&#8211;</span>32.6%</b><span>of tokens freed, per session, on four real ones. Over the whole
-      corpus the shipped code frees 22.2% and keeps 77.7% of the outputs that were reused later.</span></p>
+      corpus the shipped code frees 33.7% and keeps 77.7% of the outputs that were reused later.</span></p>
     <p><b>190&#8239;ms</b><span>to score 1,762 calls, against 122&#215; that for the neural
       sidecar it replaced, on an RTX&#160;4060 Laptop.</span></p>
     <p><b>Never</b><span>drops an <code>Edit</code>, <code>Write</code>, <code>MultiEdit</code> or
@@ -1361,9 +1362,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </div>
   <p class="caption">
     Freeing nearly everything is easy and nearly worthless. Run through the shipped code rather
-    than this simulation, the same defaults give <strong>22.2% freed and 77.7% kept</strong>; the
-    difference is the one rule the sweep has no notion of, which is that a call recording a change
-    is never dropped. Calibrating on your own sessions is an accuracy upgrade rather than a
+    than this simulation, the same defaults give <strong>33.7% freed and 77.7% kept</strong>. The
+    sweep has no notion of two shipped rules: a call recording a change is never dropped, and a
+    kept result is capped at <a href="#g-the-cap">24,000 characters</a>. The cap is most of the
+    gap &#8212; <span class="val">27</span> of the 2,239 calls are longer than it, and shortening
+    those 27 alone frees <span class="val">20.7%</span> of every character in the corpus. Calibrating on your own sessions is an accuracy upgrade rather than a
     prerequisite, because the policy adapts to your distribution on its own.
   </p>
 
@@ -1384,14 +1387,27 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       </tr></thead>
       <tbody>
         <tr class="same"><th scope="row">Built-in scorer</th><td class="n mark">190 ms</td><td class="n">none</td><td class="n">none</td><td class="n">none</td></tr>
-        <tr><th scope="row">Laya, fastest checkpoint</th><td class="n">23.1 s</td><td class="n">5.0 GB</td><td class="n">~5.0 GB</td><td class="n">7.6 s</td></tr>
+        <tr><th scope="row">Laya, fastest checkpoint, on a GPU</th><td class="n">41 s</td><td class="n">5.0 GB</td><td class="n">1.4 GB</td><td class="n">7.6 s</td></tr>
       </tbody>
     </table>
   </div>
   <p class="caption">
-    122× the time, for a lower AUC, on an RTX 4060 Laptop. Per request the fastest checkpoint
-    answers eight questions in 573 ms and the slowest in 1,906 ms. Fine-tuning moves the AUC; it
-    does not move this table.
+    <strong>216&#215; the time, for a lower AUC</strong>, on an RTX 4060 Laptop. Per request the
+    fastest checkpoint answers eight questions in 573 ms and the slowest in 1,906 ms.
+    Fine-tuning moves the AUC; it does not move this table.
+  </p>
+  <p class="caption">
+    This row is a correction. It used to read <span class="val">23.1 s</span> and
+    <span class="val">122×</span>, from a projection in <code>eval/laya-bench.ts</code> that
+    divided the number of requests by the number of questions in a request — but a request
+    carries one call's two questions, so there is one request per call and the projection halved
+    itself. The VRAM said ~5.0 GB and was read off a router started with
+    <code>LAYA_DEVICE=cpu</code>, which puts almost nothing on the GPU at all. Both figures
+    flattered the sidecar. The row now says what was measured end to end against a CUDA
+    sidecar: <span class="val">24.9 ms</span> a call over 159 calls, multiplied out to the same
+    1,762, with the VRAM read while the model was actually resident on the card. Concurrency
+    does not rescue it — 928 ms a call with one request in flight, 1,002 ms with eight, because
+    the GPU serialises.
   </p>
   </details>
 </section>
@@ -1443,7 +1459,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     “77.3% of reused outputs kept” invites you to supply your own answer for the rest, so here
     it is, priced. (77.3 and 22.3 sum to 99.6, not 100: the two figures come from
     <code>eval/policy.ts</code> and <code>eval/recovery.ts</code>, which disagree by one output
-    on where a partial head counts. Neither is rounded to hide it. Both are the simulation; run through the shipped code the same defaults give 22.2% and 77.7%, which is the pair the masthead quotes.) Held-out scores, shipped policy, per session: <strong>55 of the 247 reused
+    on where a partial head counts. Neither is rounded to hide it. Both are the simulation; run through the shipped code the same defaults give 33.7% and 77.7%, which is the pair the masthead quotes.) Held-out scores, shipped policy, per session: <strong>55 of the 247 reused
     outputs are dropped</strong> — 1.34 a session, and only one of them kept a head.
   </p>
   <div class="scroller" tabindex="0" data-label="Table: what a wrong drop costs">

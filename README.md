@@ -357,10 +357,20 @@ and start-up are properties of the router, not of the checkpoint you pick. Only
 latency is per checkpoint.
 
 Scoring this machine's sessions — 1,762 calls, two questions a request, eight in
-flight — takes **23.1 s on the fastest checkpoint against 190 ms for the built-in
-scorer**, holding ~5 GB the whole time. That is 122x the time for a lower AUC,
-which is the arithmetic behind the default. Fine-tuning changes the AUC; it does
-not change this table.
+flight — takes **41.0 s on the fastest checkpoint against 190 ms for the built-in
+scorer**, holding ~5 GB of RAM and about 1.4 GB of VRAM the whole time. That is
+216x the time for a lower AUC, which is the arithmetic behind the default.
+Fine-tuning changes the AUC; it does not change this table.
+
+Both of those figures are corrections. The block read 23.1 s and 122x until the
+projection was checked: it divided the request count by the questions in a
+request, and a request carries one call's two questions, so there is one request
+per call and it halved itself. The VRAM said ~5 GB and had been read off a router
+started with `LAYA_DEVICE=cpu`, which puts almost nothing on the card. Checked
+end to end rather than re-derived: 159 calls through a CUDA sidecar took 3,960 ms
+at concurrency 8, where the corrected arithmetic predicts 3,696 ms. Concurrency
+buys nothing — 928 ms a call at one in flight, 1,002 ms at eight, because the GPU
+serialises.
 
 ## What you repeat, and skills for it
 

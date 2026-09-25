@@ -135,7 +135,21 @@ for (const target of [0.5, 0.6, 0.7, 0.8]) {
     for (const row of calls) {
       const action = actions.get(rowKey(row))!;
       total += row.output_chars;
-      if (action !== 'keep') freed += row.output_chars;
+      /**
+       * What survives this call, as a prefix length, the way `applyDecisions`
+       * actually leaves it.
+       *
+       * Two corrections. A dropped RESULT keeps `truncateHeadChars`, and this
+       * used to count the whole output as freed, overstating the figure. And
+       * `maxKeptChars` caps whatever is left — the shipped default since the
+       * size distribution turned out to put half of all output in about 3% of
+       * calls — which this did not model at all, understating it.
+       */
+      let prefix = action === 'drop_call' ? 0
+        : action === 'drop_result' ? Math.min(DEFAULT_OPTIONS.truncateHeadChars, row.output_chars)
+        : row.output_chars;
+      if (DEFAULT_OPTIONS.maxKeptChars > 0) prefix = Math.min(prefix, DEFAULT_OPTIONS.maxKeptChars);
+      freed += row.output_chars - prefix;
       if (MUTATING.has(row.tool) && action === 'drop_call') mutatingDropped += 1;
       if (MUTATING.has(row.tool) && unguarded.get(rowKey(row)) !== 'keep') mutatingRescued += 1;
       if (!row.result_needed) continue;
