@@ -41,6 +41,17 @@ defaults are **budget 0.5, floor 0.10**.
 ${run('policy.ts')}
 \`\`\`
 
+## What a wrong drop costs — \`eval/recovery.ts\`
+
+The policy above keeps 84.6% of the outputs that were reused later. This prices
+the rest. Read the script's own caveats first: it measures recovery cost, not
+task outcome, and it over-counts, because a reuse that had already happened by
+the time a real compaction fired costs nothing when the output is dropped now.
+
+\`\`\`
+${run('recovery.ts')}
+\`\`\`
+
 ## What it frees in practice — \`eval/sessions.ts\`
 
 Not reproducible off this machine: it reads whatever \`~/.claude/projects\`

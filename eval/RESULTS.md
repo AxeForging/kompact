@@ -67,6 +67,37 @@ chars kept = share of needed CHARACTERS still present afterwards,
              counting the heads that survived a partial drop.
 ```
 
+## What a wrong drop costs — `eval/recovery.ts`
+
+The policy above keeps 84.6% of the outputs that were reused later. This prices
+the rest. Read the script's own caveats first: it measures recovery cost, not
+task outcome, and it over-counts, because a reuse that had already happened by
+the time a real compaction fired costs nothing when the output is dropped now.
+
+```
+local labels: 1063 calls in 18 sessions, 78 reused later
+
+dropped anyway: 10 (12.8% of the reused outputs)
+per session:    0.56 outputs
+of those, kept their first 300 characters: 0, lost entirely: 10
+
+how the assistant would get it back:
+  command, side effects unknown     9      38,046 chars
+  re-read                           1       1,162 chars
+
+which tool produced it:
+  Bash                              9      38,046 chars
+  Read                              1       1,162 chars
+
+why it was needed:
+  reused in a later tool input      9      38,873 chars
+  quoted in later text              1         335 chars
+
+Not recoverable by re-running, and no head left: 9 of 1063 calls (0.8%), 0.50 per session.
+NOT measured here: whether an assistant given the compacted transcript still
+finishes the task. That needs a live A/B and is listed as unverified.
+```
+
 ## What it frees in practice — `eval/sessions.ts`
 
 Not reproducible off this machine: it reads whatever `~/.claude/projects`
@@ -76,10 +107,10 @@ one corpus, and the per-session column as the range that matters.
 ```
 session              calls  tok before  tok after    freed  scoring
 -------------------------------------------------------------------
-25e65eab-4941-41ea     473     273,749    214,329    21.7%     41ms
-20628921-046d-4fc0     360     435,482    294,486    32.4%     32ms
-78d7d176-4c84-4936     263     290,127    256,620    11.5%     17ms
-agent-aca4b44fdb68      58      32,560     23,815    26.9%      3ms
+25e65eab-4941-41ea     473     273,749    214,329    21.7%     44ms
+20628921-046d-4fc0     374     446,421    299,875    32.8%     33ms
+78d7d176-4c84-4936     273     295,671    261,600    11.5%     18ms
+agent-aca4b44fdb68      58      32,560     23,815    26.9%      4ms
 -------------------------------------------------------------------
-total                 1154   1,031,918    789,250    23.5%     94ms
+total                 1178   1,048,401    799,619    23.7%     99ms
 ```

@@ -152,8 +152,6 @@ Calls are therefore dropped lowest-score-first only until `targetReduction` is
 met, with `keepThreshold` as a floor nothing is dropped above. Simulated per
 session on the labelled corpus (`eval/policy.ts`):
 
-| policy | tool output freed | outputs that were reused, kept |
-|---|---|---|
 | policy | tool output freed | reused outputs kept | reused chars kept |
 |---|---|---|---|
 | absolute cut at 0.5 (an earlier default) | 97.6% | **5.1%** | 8.5% |
@@ -164,6 +162,27 @@ session on the labelled corpus (`eval/policy.ts`):
 Freeing nearly everything is easy and nearly worthless. This is why `calibrate`
 is an accuracy upgrade rather than a prerequisite: the policy adapts to your
 distribution without it.
+
+### What the other 15.4% costs
+
+"84.6% of reused outputs kept" invites you to supply your own answer for the
+rest, so `eval/recovery.ts` prices it. Held-out scores, shipped policy, per
+session: **10 of the 78 reused outputs are dropped and actually shortened** —
+0.56 per session. Two more are "dropped" but short enough to fit inside the
+retained head, so nothing is removed at all.
+
+None of the ten kept a head, because both their scores were low enough to drop
+the call outright. **Nine of the ten are `Bash` output reused verbatim in a later
+tool input.** That is the shape this scorer is worst at: `tool=Bash` carries a
+-1.36 coefficient because most command output is never referred to again, and the
+minority that is gets swept with it. One was a `Read` of an unchanged file, which
+re-reading recovers exactly.
+
+**This is recovery cost, not task outcome.** Nothing here shows an assistant
+given the compacted transcript still finishing the job — that needs a live A/B
+and is listed as unverified below. The figure also over-counts: a reuse that had
+already happened by the time a real compaction fired costs nothing when the
+output is dropped now.
 
 Any failure at all — scorer down, malformed response, saving below
 `minReductionRatio` — falls back to Claude Code's built-in compaction. A single
@@ -271,7 +290,12 @@ which is the same API the upstream uses. To close it: open a session with
 context bar is well along, then type `/compact` — the toast reports the reduction
 and every decision lands in the log.
 
-Also unverified: a live Codex CLI, which needs >= 0.155 (this machine has 0.131).
+Also unverified: **task outcome**. Every metric here is tokens, ranking or
+recovery cost; none is whether the assistant still finishes. Closing it needs the
+same session replayed with and without compaction and the tool calls compared,
+which is the next thing worth building.
+
+And a live Codex CLI, which needs >= 0.155 (this machine has 0.131).
 
 ## Development
 
