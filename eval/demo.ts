@@ -82,7 +82,8 @@ const decisions = result.decisions.map((decision) => {
     // How many characters this decision actually removes, from the same
     // function `applyDecisions` uses — so the page adds up rather than
     // reimplementing the head rule and drifting from it.
-    freed: freedBy(source, decision.action, DEFAULT_OPTIONS.truncateHeadChars),
+    freed: freedBy(
+      source, decision.action, DEFAULT_OPTIONS.truncateHeadChars, DEFAULT_OPTIONS.maxKeptChars),
     keepResult: Number(decision.keepResult.toFixed(3)),
     keepCall: Number(decision.keepCall.toFixed(3)),
   };
@@ -94,11 +95,22 @@ const outcome = (d: (typeof decisions)[number]): string =>
   d.pinned ? 'pinned'
     : d.reason === 'too small' ? 'too small'
     : d.freed === 0 ? 'kept'
+    : d.action === 'keep' ? 'capped'
     : d.action === 'drop_call' ? 'dropped' : 'head only';
+/**
+ * `capped` is its own outcome, not a kind of drop.
+ *
+ * Once `freedBy` learned about `maxKeptChars`, two rows the scorer had KEPT
+ * started reporting characters freed, and the old rule read that as evidence
+ * they had been head-truncated. They had not: the ranking wanted them whole and
+ * the cap shortened them anyway, which is a different thing happening for a
+ * different reason and belongs under its own name.
+ */
 const stateName = (d: (typeof decisions)[number]): string =>
   d.pinned ? 'pinned'
     : d.reason === 'too small' ? 'small'
     : d.freed === 0 ? 'kept'
+    : d.action === 'keep' ? 'capped'
     : d.action === 'drop_call' ? 'dropped' : 'head';
 const widest = Math.max(...decisions.map((d) => d.chars));
 /** Bar width is the call's share of the largest output. */

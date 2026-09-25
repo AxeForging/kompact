@@ -189,9 +189,25 @@ describe('published figures match eval/RESULTS.md', () => {
   describe('the demonstration is complete without scripts', () => {
     const page = read('docs/index.html');
     const data = read('docs/demo-data.js');
-    const decisions: Array<{ freed: number; outcome: string; chars: number }> =
-      JSON.parse(data.slice(data.indexOf('{'), data.lastIndexOf('}') + 1)).decisions;
+    const demo: {
+      stats: { charsBefore: number; charsAfter: number };
+      decisions: Array<{ freed: number; outcome: string; chars: number }>;
+    } = JSON.parse(data.slice(data.indexOf('{'), data.lastIndexOf('}') + 1));
+    const decisions = demo.decisions;
     const freed = decisions.reduce((sum, d) => sum + d.freed, 0);
+
+    /**
+     * The headline and the rows have to be the same number.
+     *
+     * They were not: the page said 8,393 freed while its own data file recorded
+     * a 45,581-character delta, because `freedBy` credited a capped result with
+     * freeing nothing. Exact equality, not a tolerance — the truncation note's
+     * length is computable, so an approximation here would only hide the next
+     * version of that bug.
+     */
+    it('accounts for every character the compaction actually removed', () => {
+      expect(freed).toBe(demo.stats.charsBefore - demo.stats.charsAfter);
+    });
 
     it('renders every row into the page', () => {
       const rows = page.match(/<li class="demo__call" data-state="/g) ?? [];

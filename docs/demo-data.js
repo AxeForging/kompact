@@ -19,13 +19,13 @@ window.DEMO = {
    "pinned": false,
    "action": "drop_result",
    "reason": "result_dropped",
-   "freed": 6796,
+   "freed": 6800,
    "keepResult": 0.158,
    "keepCall": 0.973,
    "outcome": "head only",
    "state": "head",
    "share": 38.3,
-   "keep": 0.0543
+   "keep": 0.0537
   },
   {
    "id": "t2",
@@ -36,13 +36,13 @@ window.DEMO = {
    "pinned": false,
    "action": "keep",
    "reason": "kept",
-   "freed": 0,
+   "freed": 12262,
    "keepResult": 0.762,
    "keepCall": 0.946,
-   "outcome": "kept",
-   "state": "kept",
+   "outcome": "capped",
+   "state": "capped",
    "share": 86.1,
-   "keep": 1
+   "keep": 0.6626
   },
   {
    "id": "t3",
@@ -121,13 +121,13 @@ window.DEMO = {
    "pinned": false,
    "action": "keep",
    "reason": "kept",
-   "freed": 0,
+   "freed": 24922,
    "keepResult": 0.228,
    "keepCall": 0.305,
-   "outcome": "kept",
-   "state": "kept",
+   "outcome": "capped",
+   "state": "capped",
    "share": 100,
-   "keep": 1
+   "keep": 0.4914
   },
   {
    "id": "t8",

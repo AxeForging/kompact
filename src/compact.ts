@@ -113,9 +113,34 @@ export function decideCall(
   return { ...base, action: 'drop_call', reason: 'call_dropped' };
 }
 
-/** Characters an action would actually free, mirroring `applyDecisions`. */
-export function freedBy(call: ToolCall, action: CallAction, headChars: number): number {
-  if (action === 'keep') return 0;
+/**
+ * Characters an action would actually free, mirroring `applyDecisions`.
+ *
+ * `maxKeptChars` defaults to 0, meaning "do not model the cap", because
+ * `decideAll` uses this to size the drop budget and the cap is not the budget's
+ * business: a kept call frees nothing the budget can spend. Callers reporting
+ * what a compaction actually removed — the demonstration on the landing page —
+ * pass the resolved cap.
+ *
+ * It stopped mirroring `applyDecisions` the moment the cap shipped, and the
+ * landing page's own demonstration reported 8,393 characters freed where its
+ * data file recorded 45,581. Two rows of 36,341 and 49,001 characters were
+ * marked `kept` and credited with freeing nothing, while the shipped code
+ * shortened both to 24,000.
+ */
+export function freedBy(
+  call: ToolCall,
+  action: CallAction,
+  headChars: number,
+  maxKeptChars = 0,
+): number {
+  // Both branches ask `truncatedLength` rather than estimating, so the sum of
+  // these over a compaction equals the actual character delta. It did not, by
+  // 154 characters over eight calls, while the note's length was guessed at 90.
+  if (action === 'keep') {
+    if (maxKeptChars <= 0) return 0;
+    return call.resultChars - truncatedLength(call.resultChars, call.isError, maxKeptChars);
+  }
   let inputChars = 0;
   try {
     inputChars = JSON.stringify(call.input).length;
@@ -123,9 +148,9 @@ export function freedBy(call: ToolCall, action: CallAction, headChars: number): 
     inputChars = 20;
   }
   if (action === 'drop_call') return call.resultChars + inputChars;
-  // A truncated result keeps its head plus a one-line note, and only shortens
-  // at all once it is longer than that.
-  return call.resultChars <= headChars + 120 ? 0 : call.resultChars - headChars - 90;
+  // A dropped result is truncated to the head, and the cap does not apply on
+  // top: `applyDecisions` caps only results no decision mentions.
+  return call.resultChars - truncatedLength(call.resultChars, call.isError, headChars);
 }
 
 /**
@@ -258,6 +283,25 @@ function truncatedResultText(text: string, isError: boolean, headChars: number):
   return `${head}${TRUNCATION_MARK}${text.length - headChars} chars of this tool result${
     isError ? ' (error)' : ''
   }; re-run the tool if needed]`;
+}
+
+/**
+ * How long a result of `chars` ends up after truncating to `headChars`.
+ *
+ * Exact, not estimated. `freedBy` used to subtract a hard-coded 90 for the note,
+ * which is close for a five-digit count and wrong everywhere else, and the
+ * landing page's demonstration inherited the error twice over once the cap
+ * started truncating kept results too. Anything that needs the length without
+ * the text computes it here, from the same template `truncatedResultText`
+ * writes, so the two cannot drift.
+ */
+export function truncatedLength(chars: number, isError: boolean, headChars: number): number {
+  if (chars <= headChars + 120) return chars;
+  const head = headChars > 0 ? headChars + 1 : 0;
+  const note = `${TRUNCATION_MARK}${chars - headChars} chars of this tool result${
+    isError ? ' (error)' : ''
+  }; re-run the tool if needed]`.length;
+  return head + note;
 }
 
 /**
