@@ -207,6 +207,19 @@ ul.plain li::marker{ color: var(--ink-3); }
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
   background: var(--paper); border-bottom:1px solid var(--rule-firm);
 }
+/* How far through are you. A scroll-driven animation needs no script, so this
+   works in the scripts-blocked case like everything else here, and simply does
+   not draw on an engine without it. */
+@supports (animation-timeline: scroll()){
+  .contents-bar{ position: sticky; }
+  .contents-bar::after{
+    content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px;
+    background: var(--accent); transform: scaleX(0); transform-origin: 0 50%;
+    animation: read-progress linear both; animation-timeline: scroll(root block);
+  }
+  @keyframes read-progress{ to{ transform: scaleX(1); } }
+}
+@media (prefers-reduced-motion: reduce){ .contents-bar::after{ animation: none; } }
 /* margin-block only: margin:0 here killed the wrap's auto centring and the bar
    sat 180px left of every other thing on the page. */
 .contents-bar .contents{ margin-block:0; padding-block: var(--space-xs); gap: var(--space-xs) var(--space-md); }
@@ -238,6 +251,8 @@ ul.plain li::marker{ color: var(--ink-3); }
    reading was a 0.035 lightness change. WCAG 1.4.1, on the one control whose
    whole job is answering "where am I" in a 17,000px document. */
 .contents-bar .contents a[aria-current]{ border-bottom-color: currentColor; font-weight:700; }
+.contents__top{ margin-left: auto; color: var(--ink-3) !important; }
+.contents__top:hover{ color: var(--accent-ink) !important; }
 
 .contents a:hover{ color: var(--on-flood); border-bottom-color: var(--on-flood); }
 .contents a[aria-current="true"]{ color: var(--on-flood); border-bottom-color: var(--on-flood); }
@@ -648,7 +663,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 <a class="skip" href="#result">Skip to the evidence</a>
 <a class="skip" href="#install">Skip to install</a>
 
-<header class="flooded">
+<header class="flooded" id="top">
 <div class="masthead wrap">
   <div class="masthead__rule reveal" style="--d:0ms"></div>
   <h1 class="wordmark reveal" style="--d:40ms">laya&#8209;<em>compact</em></h1>
@@ -679,7 +694,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 <nav class="contents-bar" aria-label="Contents">
   <div class="contents wrap">
-    <a href="#result">Evidence</a><a href="#demo">Watch it decide</a><a href="#shape">The shape of it</a><a href="#signals">What you repeat</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#glossary">Glossary</a><a href="#install">Install</a>
+    <a href="#result">Evidence</a><a href="#demo">Watch it decide</a><a href="#shape">The shape of it</a><a href="#signals">What you repeat</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#glossary">Glossary</a><a href="#install">Install</a><a class="contents__top" href="#top">Top &#8593;</a>
   </div>
 </nav>
 
