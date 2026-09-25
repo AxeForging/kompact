@@ -36,6 +36,8 @@ export type Scorer = 'features' | 'laya';
 export type HookConfig = CompactOptions & {
   scorer: Scorer;
   layaUrl?: string;
+  /** Per-request deadline for the sidecar; see `withDeadline`. */
+  requestTimeoutMs?: number;
   compactAtPercent: number;
   minReductionRatio: number;
 };
@@ -71,21 +73,74 @@ export function resolveHookConfig(options: PluginOptions): HookConfig {
   };
   const layaUrl = optionString(options, 'layaUrl');
   if (layaUrl) config.layaUrl = layaUrl;
+  const timeout = options['requestTimeoutMs'];
+  if (typeof timeout === 'number' && Number.isFinite(timeout) && timeout > 0) {
+    config.requestTimeoutMs = timeout;
+  }
   const goal = optionString(options, 'goal');
   if (goal) config.goal = goal;
   return config;
 }
 
+/** Per-request deadline for the sidecar. A local call is milliseconds. */
+export const LAYA_TIMEOUT_MS = 30_000;
+
+/** Waits `ms`. The engine supplies `$.clock.sleep`; a hook has no raw timers. */
+export type Sleep = (ms: number) => Promise<void>;
+
+/**
+ * Rejects if `work` has not settled within `ms`.
+ *
+ * `$.http.fetch` takes no timeout — `HttpInit` has no field for one — so a hung
+ * sidecar would otherwise never settle, and the "any failure falls back to the
+ * built-in summary" guarantee only fires on a *rejection*. A sidecar that
+ * accepts the connection and then stalls would make `session.compact` never
+ * return, which reads to the user as a frozen session rather than a failed
+ * scorer. Note a hook has no `setTimeout`: the deadline is `$.clock.sleep`,
+ * and without one supplied the call is simply awaited unguarded.
+ */
+export async function withDeadline<T>(
+  work: Promise<T>,
+  ms: number,
+  what: string,
+  sleep?: Sleep,
+): Promise<T> {
+  if (!sleep) return work;
+  // Once the deadline wins the race nothing is left awaiting `work`, and a
+  // sidecar that rejects a moment later would surface as an unhandled rejection.
+  work.catch(() => {});
+  let done = false;
+  const guard = sleep(ms).then(() => {
+    if (!done) throw new Error(`${what} did not respond within ${ms}ms`);
+    return undefined as never;
+  });
+  try {
+    return await Promise.race([work, guard]);
+  } finally {
+    done = true;
+  }
+}
+
 /** A `Asker` over the engine's `$.http.fetch`, for the optional Laya sidecar. */
-export function layaAsker(fetchFn: HookFetch, baseUrl?: string): Asker {
+export function layaAsker(
+  fetchFn: HookFetch,
+  baseUrl?: string,
+  timeoutMs = LAYA_TIMEOUT_MS,
+  sleep?: Sleep,
+): Asker {
   return {
     async ask(state, questions) {
       const request = buildSystemOneRequest({ baseUrl }, state, questions);
-      const response = await fetchFn(request.url, {
-        method: request.method,
-        headers: request.headers,
-        body: request.body,
-      });
+      const response = await withDeadline(
+        fetchFn(request.url, {
+          method: request.method,
+          headers: request.headers,
+          body: request.body,
+        }),
+        timeoutMs,
+        `laya sidecar at ${request.url}`,
+        sleep,
+      );
       return parseSystemOneResponse(response.status, response.ok, response.text);
     },
   };
@@ -97,9 +152,14 @@ export function layaAsker(fetchFn: HookFetch, baseUrl?: string): Asker {
  * zero-shot Laya checkpoint and phrasing reached 0.694 — and it needs no
  * sidecar, no GPU and no network call.
  */
-export function askerFor(config: HookConfig, fetchFn: HookFetch, weights?: Weights): Asker {
+export function askerFor(
+  config: HookConfig,
+  fetchFn: HookFetch,
+  weights?: Weights,
+  sleep?: Sleep,
+): Asker {
   return config.scorer === 'laya'
-    ? layaAsker(fetchFn, config.layaUrl)
+    ? layaAsker(fetchFn, config.layaUrl, config.requestTimeoutMs, sleep)
     : FeatureAsker.fromWeights(weights);
 }
 
@@ -150,19 +210,17 @@ export async function readLocalWeights(
   }
 }
 
+// Both summaries spread the source so engine-owned fields the library does not
+// read (result, agentId, durationMs) are carried through rather than dropped.
 function toolUseSummary(tool: ToolUse): ToolUseSummary {
-  const summary: ToolUseSummary = {
-    tool_use_id: tool.tool_use_id,
-    tool: tool.tool,
-    input: tool.input,
-  };
+  const summary = { ...tool } as ToolUseSummary;
   if (tool.text !== undefined) summary.text = tool.text;
   if (tool.isError) summary.isError = true;
   return summary;
 }
 
 function toolResultSummary(result: ToolResult): ToolResultSummary {
-  return { tool_use_id: result.tool_use_id, text: result.text, isError: result.isError ?? false };
+  return { ...result, isError: result.isError ?? false } as ToolResultSummary;
 }
 
 /**
@@ -208,8 +266,9 @@ export async function compactSession(
   config: HookConfig,
   fetchFn: HookFetch,
   weights?: Weights,
+  sleep?: Sleep,
 ): Promise<SessionCompaction> {
-  const result = await compact(messages, askerFor(config, fetchFn, weights), config);
+  const result = await compact(messages, askerFor(config, fetchFn, weights, sleep), config);
   return { result, messages: toSessionMessages(messages, result.messages) };
 }
 
@@ -275,10 +334,16 @@ export const register: Register = (on: On, options: PluginOptions) => {
   on('session.compact', async ($, event, next) => {
     try {
       const weights = await readLocalWeights($, (text) => $.ui.log(text));
-      const { result, messages } = await compactSession(event.messages, config, async (url, init) => {
-        const response = await $.http.fetch(url, init);
-        return { status: response.status, ok: response.ok, text: response.text };
-      }, weights);
+      const { result, messages } = await compactSession(
+        event.messages,
+        config,
+        async (url, init) => {
+          const response = await $.http.fetch(url, init);
+          return { status: response.status, ok: response.ok, text: response.text };
+        },
+        weights,
+        (ms) => $.clock.sleep(ms),
+      );
       for (const line of decisionLogLines(result)) $.ui.log(line);
       // Too little saved is not worth losing the summary's narrative over.
       if (reductionRatio(result) < config.minReductionRatio) {

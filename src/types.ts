@@ -12,6 +12,15 @@ export interface ToolUse {
   input: Record<string, unknown>;
   text?: string;
   isError?: boolean;
+  /**
+   * Fields the engine owns and this package only carries through. They are not
+   * read by the scorer, but rebuilding a tool block without them loses them
+   * from the transcript permanently — an `Agent` call whose result is truncated
+   * would forget which subagent produced it.
+   */
+  result?: unknown;
+  agentId?: string;
+  durationMs?: number;
 }
 
 /** A tool_result block of a user message. */
@@ -19,6 +28,8 @@ export interface ToolResult {
   tool_use_id: string;
   text: string;
   isError?: boolean;
+  /** Carried through, not read; see `ToolUse.result`. */
+  result?: unknown;
 }
 
 /**

@@ -3,11 +3,33 @@ import type { CallContext, Message, ToolCall, ToolResult } from './types.js';
 const TOKEN_PIECES = /[A-Za-z]+|\d+|[^\sA-Za-z\d]/g;
 
 /**
+ * Cost of one non-ASCII character, by script.
+ *
+ * The estimator must land ABOVE the true count: overshooting the checkpoint's
+ * context length is punished by silent truncation rather than by an error, so
+ * an underestimate is the dangerous direction. A flat 0.9 per character — what
+ * this charged before — underestimates badly outside ASCII, where a real BPE
+ * tokenizer spends one to three tokens on a single CJK ideograph and several on
+ * an emoji. That mattered because the `multilingual` checkpoint is the one this
+ * plugin selects, so non-English sessions were exactly the case most likely to
+ * overflow unnoticed.
+ */
+function wideCost(code: number): number {
+  // Surrogate halves: an astral character (emoji, rare CJK) arrives as two.
+  if (code >= 0xd800 && code <= 0xdfff) return 1.75;
+  // CJK ideographs, kana, Hangul: commonly one to two tokens each.
+  if (code >= 0x3040 && code <= 0x9fff) return 1.75;
+  if (code >= 0xac00 && code <= 0xd7af) return 1.75;
+  if (code >= 0xf900 && code <= 0xfaff) return 1.75;
+  // Cyrillic, Greek, Hebrew, Arabic, accented Latin, punctuation, symbols.
+  if (code > 0x7f) return 1.1;
+  return 0.9;
+}
+
+/**
  * Estimates tokens without a tokenizer: a word costs one token per six letters,
- * a digit half a token, any other symbol nine tenths. Calibrated upstream
- * against reported usage, landing 2-18% above the true count — deliberately
- * conservative, because overshooting the checkpoint's context length is
- * punished by silent truncation rather than by an error.
+ * a digit half a token, ASCII symbols nine tenths, and anything else the
+ * per-script cost above. Calibrated to land above the true count.
  */
 export function estimateTokens(text: string): number {
   let tokens = 0;
@@ -16,7 +38,7 @@ export function estimateTokens(text: string): number {
     if (first >= 48 && first <= 57) tokens += piece.length / 2;
     else if ((first >= 65 && first <= 90) || (first >= 97 && first <= 122)) {
       tokens += 1 + Math.floor((piece.length - 1) / 6);
-    } else tokens += 0.9;
+    } else tokens += wideCost(first);
   }
   return Math.ceil(tokens);
 }

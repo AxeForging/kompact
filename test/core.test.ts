@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
-  buildCallState, callContexts, collectToolCalls, describeAge, describeSize, targetOf,
+  buildCallState, callContexts, collectToolCalls, describeAge, describeSize, estimateTokens,
+  targetOf,
 } from '../src/state.js';
-import { applyDecisions, compact, decideCall, pool, resolveOptions, rowTokens } from '../src/compact.js';
+import {
+  applyDecisions, compact, decideAll, decideCall, pool, resolveOptions, rowTokens,
+} from '../src/compact.js';
 import { CONTEXT_LENGTH, STATE_BUDGET, buildSystemOneRequest } from '../src/request.js';
 import { questionsFor } from '../src/questions.js';
 import { FeatureAsker, toolFromState } from '../src/features.js';
@@ -279,5 +282,109 @@ describe('FeatureAsker', () => {
       expect(noul).toBeGreaterThan(0);
       expect(noul).toBeLessThan(1);
     }
+  });
+});
+
+describe('decideAll ranks before it drops', () => {
+  /** A droppable call of `chars` output, scored `keep`. */
+  const call = (id: string, chars: number): ToolCall => ({
+    id, tool_use_id: id, tool: 'Read', input: { file_path: `${id}.ts` },
+    callIndex: 0, resultIndex: 1, resultText: 'x'.repeat(chars), resultChars: chars,
+    isError: false, pinned: false,
+  });
+  const options = { keepThreshold: 0.1, targetReduction: 0.5, truncateHeadChars: 300 };
+
+  // Every other test scores uniformly, so the ordering this function exists to
+  // produce was never exercised: with one score for all, any order looks right.
+  it('spends the budget on the lowest scores first', () => {
+    const calls = [call('a', 4000), call('b', 4000), call('c', 4000), call('d', 4000)];
+    const answers = new Map([
+      ['a', { keepCall: 0.9, keepResult: 0.08 }],
+      ['b', { keepCall: 0.9, keepResult: 0.01 }],
+      ['c', { keepCall: 0.9, keepResult: 0.05 }],
+      ['d', { keepCall: 0.9, keepResult: 0.02 }],
+    ]);
+    const byId = new Map(decideAll(calls, answers, options).map((d) => [d.id, d]));
+    // Half the freeable characters, four equal calls: the two lowest go.
+    expect(byId.get('b')!.action).toBe('drop_result');
+    expect(byId.get('d')!.action).toBe('drop_result');
+    expect(byId.get('c')!.action).toBe('keep');
+    expect(byId.get('a')!.action).toBe('keep');
+    // Spared for budget, not because the call looked needed — the log says which.
+    expect(byId.get('a')!.reason).toBe('budget');
+  });
+
+  it('weighs a large low-scoring output against several small ones', () => {
+    const calls = [call('big', 12_000), call('s1', 500), call('s2', 500)];
+    const answers = new Map([
+      ['big', { keepCall: 0.9, keepResult: 0.02 }],
+      ['s1', { keepCall: 0.9, keepResult: 0.01 }],
+      ['s2', { keepCall: 0.9, keepResult: 0.03 }],
+    ]);
+    const byId = new Map(decideAll(calls, answers, options).map((d) => [d.id, d]));
+    // `s1` scores lowest and goes first, but it frees 200 of ~11,900 freeable
+    // characters, so the budget is still open and `big` goes too.
+    expect(byId.get('s1')!.action).toBe('drop_result');
+    expect(byId.get('big')!.action).toBe('drop_result');
+    expect(byId.get('s2')!.action).toBe('keep');
+  });
+
+  it('never drops a call at or above the floor, whatever the budget', () => {
+    const calls = [call('a', 4000), call('b', 4000)];
+    const answers = new Map([
+      ['a', { keepCall: 0.9, keepResult: 0.5 }],
+      ['b', { keepCall: 0.9, keepResult: 0.9 }],
+    ]);
+    expect(decideAll(calls, answers, options).every((d) => d.action === 'keep')).toBe(true);
+  });
+});
+
+describe('estimateTokens outside ASCII', () => {
+  // The state budget is enforced with this estimate, so underestimating means
+  // the server silently truncates and scores a partial state at HTTP 200. The
+  // floors below are what a real BPE tokenizer charges at minimum, so they fail
+  // for any estimator that treats a CJK character like an ASCII symbol.
+  it('never charges a script less than a tokenizer would', () => {
+    expect(estimateTokens('漢'.repeat(200))).toBeGreaterThanOrEqual(200);
+    expect(estimateTokens('한'.repeat(200))).toBeGreaterThanOrEqual(200);
+    expect(estimateTokens('こんにちは'.repeat(40))).toBeGreaterThanOrEqual(200);
+    // An emoji arrives as two surrogate halves and costs at least two tokens.
+    expect(estimateTokens('🎉'.repeat(50))).toBeGreaterThanOrEqual(100);
+    // Cyrillic is cheaper per character than CJK but dearer than Latin.
+    expect(estimateTokens('привет'.repeat(30))).toBeGreaterThan(estimateTokens('privet'.repeat(30)));
+  });
+
+});
+
+describe('fields the engine owns survive a rebuild', () => {
+  // `applyDecisions` rebuilds a touched message from scratch. Anything it does
+  // not copy is gone from the transcript for good — an Agent call that forgets
+  // its `agentId` can no longer be attributed to the subagent that ran it.
+  it('carries result, agentId and durationMs through a truncation', () => {
+    const messages: Message[] = [
+      {
+        role: 'assistant', text: '', toolUses: [{
+          tool_use_id: 'c1', tool: 'Agent', input: { prompt: 'search' },
+          text: 'y'.repeat(5000), result: { structured: true },
+          agentId: 'agent-7', durationMs: 1234,
+        }],
+      },
+      {
+        role: 'user', text: '', toolUses: [],
+        toolResults: [{ tool_use_id: 'c1', text: 'y'.repeat(5000), result: { structured: true } }],
+      },
+    ];
+    const calls = collectToolCalls(messages, 0);
+    const decisions = [{
+      id: calls[0].id, tool: 'Agent', action: 'drop_result' as const,
+      reason: 'result_dropped' as const, keepCall: 0.9, keepResult: 0.01,
+    }];
+    const out = applyDecisions(messages, decisions, calls, 300);
+    const tool = out[0].toolUses[0];
+    expect(tool.text!.length).toBeLessThan(5000);
+    expect(tool.agentId).toBe('agent-7');
+    expect(tool.durationMs).toBe(1234);
+    expect(tool.result).toEqual({ structured: true });
+    expect(out[1].toolResults![0].result).toEqual({ structured: true });
   });
 });

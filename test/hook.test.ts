@@ -134,13 +134,16 @@ describe('decisionLogLines', () => {
 });
 
 /** A stand-in for the engine, enough to drive `register` end to end. */
-function fakeEngine(percent = 10) {
+function fakeEngine(percent = 10, fetch = async (): Promise<never> => {
+  throw new Error('sidecar unreachable');
+}) {
   const logs: string[] = [];
   const toasts: string[] = [];
   let compactRequested = 0;
   const $ = {
     ui: { log: (t: string) => logs.push(t), toast: (t: string) => toasts.push(t) },
-    http: { fetch: async () => { throw new Error('sidecar unreachable'); } },
+    http: { fetch },
+    clock: { sleep: (ms: number) => new Promise<void>((r) => setTimeout(r, ms)) },
     session: {
       usage: async () => ({ context: { percent } }),
       compact: async () => { compactRequested += 1; },
@@ -189,6 +192,20 @@ describe('register', () => {
       engine.$, { messages: asSession(transcript()) }, () => 'FELL_BACK');
     expect(result).toBe('FELL_BACK');
     expect(engine.toasts.join(' ')).toContain('sidecar unreachable');
+  });
+
+  // A sidecar that accepts the connection and then stalls is the failure the
+  // rejecting-fetch test above cannot reach: without a deadline the hook never
+  // returns at all, and the session appears frozen rather than degraded.
+  it('falls back when the laya sidecar accepts the request and then hangs', async () => {
+    const handlers = registered({
+      scorer: 'laya', preserveRecentMessages: 2, requestTimeoutMs: 20,
+    });
+    const engine = fakeEngine(10, () => new Promise<never>(() => {}));
+    const result = await handlers.get('session.compact')!(
+      engine.$, { messages: asSession(transcript()) }, () => 'FELL_BACK');
+    expect(result).toBe('FELL_BACK');
+    expect(engine.toasts.join(' ')).toContain('did not respond within 20ms');
   });
 
   it('requests compaction only once the context passes the threshold', async () => {

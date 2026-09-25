@@ -220,12 +220,9 @@ export function applyDecisions(
         if (actions.get(tool.tool_use_id) !== 'drop_result') return tool;
         const text = truncatedResultText(tool.text ?? '', tool.isError ?? false, headChars);
         if ((tool.text ?? '') === text) return tool;
-        const copy: ToolUse = {
-          tool_use_id: tool.tool_use_id,
-          tool: tool.tool,
-          input: tool.input,
-          text,
-        };
+        // Spread first so engine-owned fields (result, agentId, durationMs)
+        // survive the rebuild; only `text` is deliberately replaced.
+        const copy: ToolUse = { ...tool, text };
         if (tool.isError) copy.isError = true;
         return copy;
       });
@@ -234,9 +231,7 @@ export function applyDecisions(
       .map((result) => {
         if (actions.get(result.tool_use_id) !== 'drop_result') return result;
         const text = truncatedResultText(result.text, result.isError ?? false, headChars);
-        return text === result.text
-          ? result
-          : { tool_use_id: result.tool_use_id, text, isError: result.isError };
+        return text === result.text ? result : { ...result, text };
       });
     if (
       !message.toolUses.some((tool) => actions.get(tool.tool_use_id) === 'drop_call') &&
