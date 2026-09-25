@@ -289,6 +289,23 @@ describe('published figures match eval/RESULTS.md', () => {
     expect(page).toContain(`And the ${checked} claims that are verified`);
   });
 
+  /**
+   * Section 02 counts its own cases.
+   *
+   * The heading said "Four shapes of session" over five of them, which is the
+   * same class of error as the ledger's, in the one section written to be
+   * skimmed. Both are now bound to what is actually on the page.
+   */
+  it('says how many shapes of session it lists', () => {
+    const page = read('docs/index.html');
+    const list = page.slice(page.indexOf('<dl class="cases">'), page.indexOf('</dl>', page.indexOf('<dl class="cases">')));
+    const terms = (list.match(/<dt[\s>]/g) ?? []).length;
+    const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
+    expect(terms, 'no cases found, so this proves nothing').toBeGreaterThan(0);
+    expect(page, `section 02 lists ${terms} shapes`)
+      .toContain(`>${words[terms]![0]!.toUpperCase()}${words[terms]!.slice(1)} shapes of session,`);
+  });
+
   // A figure that was corrected once tends to survive somewhere.
   const published = [
     'README.md', 'CONTRIBUTING.md', 'CHANGELOG.md', 'DESIGN-BRIEF.md', '.impeccable.md',

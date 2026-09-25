@@ -632,12 +632,33 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 /* ── who it is for ────────────────────────────────────────────────────────── */
 /* A definition list, not cards: each shape is a term and what it gets is the
    definition, which is what this actually is. */
+/* Term beside definition once there is room for both.
+   Stacked in one 55ch column inside a 950px section, five short entries made
+   this the second-tallest thing on the page and left half the section empty. A
+   definition list is not prose: each entry is read on its own, so the measure
+   has to hold per entry rather than down the page. Source order is dt, dd, dt,
+   dd, so grid auto-placement does the pairing and the rule between entries is
+   drawn by each half separately, because it has to span both columns. */
 .cases{ margin: var(--space-xl) 0 0; max-width: var(--measure); }
 .cases dt{
   font-family: var(--sans); font-size: var(--text-base); font-weight:600; color: var(--ink);
   margin-top: var(--space-lg); padding-top: var(--space-sm); border-top: 1px solid var(--rule);
 }
 .cases dd{ margin: var(--space-xs) 0 0; }
+@media (min-width: 62rem){
+  .cases{
+    max-width: none; display:grid; column-gap: var(--space-2xl);
+    grid-template-columns: minmax(14ch, 20ch) minmax(0, 1fr);
+  }
+  /* The rule has to cross the gutter, or an entry is separated by two short
+     rules with a gap in the middle rather than by one line. */
+  .cases dt{
+    margin-top: 0; padding-top: var(--space-md);
+    margin-right: calc(-1 * var(--space-2xl)); padding-right: var(--space-2xl);
+  }
+  .cases dd{ margin: 0; padding-top: var(--space-md); border-top: 1px solid var(--rule); }
+  .cases dt.cases__against + dd{ border-top-color: var(--accent); }
+}
 /* The one that argues against installing. Marked, because a reader skimming the
    terms alone should see that one of them is a warning. */
 .cases dt.cases__against{ color: var(--accent-ink); border-top-color: var(--accent); }
@@ -967,7 +988,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </p>
   </div>
   <div class="colophon reveal" style="--d:170ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>215</b> tests</span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>216</b> tests</span>
     <span><b>0</b> network calls</span><span><b>5</b> claims <a href="#checked">not verified</a></span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
 </div>
@@ -1118,7 +1139,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 <section class="wrap" id="for" aria-labelledby="for-h">
   <p class="rubric"><span class="rubric__n">02</span>Who it is for</p>
-  <h2 id="for-h">Four shapes of session, and what each one gets.</h2>
+  <h2 id="for-h">Five shapes of session, and what each one gets.</h2>
   <p class="lede">
     The saving is a property of how a session is shaped, not one number. Every figure here is
     measured elsewhere on this page; what is added is which one applies. Each carries its cost,
