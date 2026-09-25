@@ -50,6 +50,15 @@ result_needed: LOSO AUC 0.789  ECE 0.051  positives 247/2239
 call_needed  : LOSO AUC 0.909  ECE 0.047  positives 544/2239
 ```
 
+The same measurement on the eighteen paired sessions, for the comparison the
+page makes — `bun eval/fit.ts --fixture --paired`:
+
+```
+corpus (fixture, 1063 of 2239 rows scored by every config): 1063 calls, 18 sessions
+result_needed: LOSO AUC 0.879  ECE 0.035  positives 75/1063
+call_needed  : LOSO AUC 0.982  ECE 0.040  positives 297/1063
+```
+
 ## Decision policy — `eval/policy.ts`
 
 The scorer produces a ranking; this turns it into a decision. The shipped

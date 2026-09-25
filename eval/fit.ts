@@ -17,8 +17,13 @@ import type { LabelRow } from './extract-labels.js';
 
 // `--fixture` forces the committed corpus, so a clone and this machine can be
 // shown to agree rather than assumed to.
-const { rows, from } = loadCorpus(import.meta.dirname,
-  process.argv.includes('--fixture') ? { fixtureOnly: true } : {});
+// `--paired` restricts to the rows every Laya config was scored against — the
+// corpus the 0.905 chart is built on — so the page can compare the two
+// leave-one-session-out figures instead of carrying one of them as prose.
+const { rows, from } = loadCorpus(import.meta.dirname, {
+  fixtureOnly: process.argv.includes('--fixture'),
+  paired: process.argv.includes('--paired'),
+});
 console.log(`corpus (${from}): ${rows.length} calls, ${new Set(rows.map((r) => r.session)).size} sessions\n`);
 
 

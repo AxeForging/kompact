@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img"
+  aria-labelledby="dist-title dist-desc" preserveAspectRatio="xMidYMid meet">
+<title id="dist-title">Every labelled tool call, placed by the score it is given</title>
+<desc id="dist-desc">A strip plot of 2,239 tool calls. The upper band holds the 247 whose
+output was reused verbatim later; the lower band the 1,992 that were not. Position
+is the model's keep-probability, from 0 on the left to 1 on the right. The reused band leans right,
+which is the model working, and the two bands overlap heavily below 0.2, which is why a floor rather
+than a cut decides anything. A vertical rule marks the shipped floor at 0.2. The marks fall
+into vertical columns because twelve of the model's inputs are yes-or-no, so it has only a few
+dozen distinct scores to give.</desc>
+<style>
+  /* The flooded ground, so the plate is part of the field rather than a hole
+     cut in it. Values match the page's --flood / --on-flood tokens. */
+  .bg{ fill: #7f0c00; }
+  .kept{ fill: #fcf9f7; fill-opacity: .95; }
+  /* .38 composited to 1.87:1 on the flood — the half of the argument that
+     proves the overlap was, in practice, invisible. .62 clears 3:1. */
+  .not{ fill: #e1b1a1; fill-opacity: .62; }
+  .ax, .floor{ stroke: #e1b1a1; stroke-width: 1; stroke-opacity: 1; }
+  .floor{ stroke-dasharray: 3 4; stroke-opacity: 1; }
+  .tick, .lab{ fill: #e1b1a1; font: 500 13px/1 Archivo, ui-sans-serif, sans-serif; }
+  .lab{ font-size: 14px; fill: #fcf9f7; }
+</style>
+<rect width="1200" height="420" class="bg"/>
+<line x1="280" y1="32" x2="280" y2="368" class="floor"/>
+<text x="288" y="26" class="tick">floor 0.2</text>
+<text x="56" y="26" class="lab"><tspan class="kept-l"><tspan font-weight="700">247</tspan> reused verbatim later</tspan></text>
+<text x="56" y="200" class="lab">1,992 never referred to again</text>
+
+
+<line x1="56" y1="368" x2="1176" y2="368" class="ax"/>
+<line x1="56" y1="368" x2="56" y2="374" class="ax"/><text x="56" y="390" class="tick" text-anchor="middle">0.0</text><line x1="280" y1="368" x2="280" y2="374" class="ax"/><text x="280" y="390" class="tick" text-anchor="middle">0.2</text><line x1="504" y1="368" x2="504" y2="374" class="ax"/><text x="504" y="390" class="tick" text-anchor="middle">0.4</text><line x1="728" y1="368" x2="728" y2="374" class="ax"/><text x="728" y="390" class="tick" text-anchor="middle">0.6</text><line x1="952" y1="368" x2="952" y2="374" class="ax"/><text x="952" y="390" class="tick" text-anchor="middle">0.8</text><line x1="1176" y1="368" x2="1176" y2="374" class="ax"/><text x="1176" y="390" class="tick" text-anchor="middle">1.0</text>
+<text x="616" y="412" class="tick" text-anchor="middle">probability the output is still needed verbatim</text>
+</svg>

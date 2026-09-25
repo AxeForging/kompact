@@ -54,7 +54,12 @@ const transcript: Message[] = [
   { role: 'user', text: 'good. now do the same for the refresh path.', toolUses: [] },
 ];
 
-const result = await compact(transcript, new FeatureAsker(), { preserveRecentMessages: 2 });
+// The shipped defaults, with nothing overridden — the caption on the page says
+// so, and it was not true: this used to pass preserveRecentMessages: 2 while the
+// default is 6, so two calls that the shipped plugin pins were shown as ordinary
+// decisions. Using the real default is also the better demonstration, because
+// the pinning is one of the guarantees section 09 makes.
+const result = await compact(transcript, new FeatureAsker(), {});
 const calls = collectToolCalls(transcript, 2);
 const byId = new Map(calls.map((c) => [c.id, c]));
 const decisions = result.decisions.map((decision) => {
@@ -82,11 +87,13 @@ const decisions = result.decisions.map((decision) => {
 /** What the row says it did. A result short enough to fit inside the retained
  * head is not shortened at all, so calling it "head only" would overstate it. */
 const outcome = (d: (typeof decisions)[number]): string =>
-  d.reason === 'too small' ? 'too small'
+  d.pinned ? 'pinned'
+    : d.reason === 'too small' ? 'too small'
     : d.freed === 0 ? 'kept'
     : d.action === 'drop_call' ? 'dropped' : 'head only';
 const stateName = (d: (typeof decisions)[number]): string =>
-  d.reason === 'too small' ? 'small'
+  d.pinned ? 'pinned'
+    : d.reason === 'too small' ? 'small'
     : d.freed === 0 ? 'kept'
     : d.action === 'drop_call' ? 'dropped' : 'head';
 const widest = Math.max(...decisions.map((d) => d.chars));

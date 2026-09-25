@@ -147,6 +147,21 @@ a:hover{ color: var(--accent); }
 
 .plate__scroll{ overflow-x:auto; overscroll-behavior-x: contain; }
 .plate__scroll img{ display:block; width:100%; height:auto; }
+/* The static plate stays in the DOM whatever happens — it carries the alt text
+   and it is what a reader gets with scripts blocked or motion turned down. When
+   the canvas takes over it fades to nothing rather than being removed, so the
+   description stays in the accessibility tree. */
+.plate__stack{ position:relative; }
+.plate__stack[data-animating] > img{ opacity:0; }
+.plate__anim{ position:absolute; inset:0; }
+.plate__anim img, .plate__anim canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+.plate__replay{
+  margin-top: var(--space-sm); font-family: var(--sans); font-size: var(--text-xs);
+  letter-spacing:0.06em; text-transform:uppercase; font-weight:600;
+  color: var(--on-flood); background:none; border:1px solid var(--flood-rule);
+  padding: 6px var(--space-sm); cursor:pointer;
+}
+.plate__replay:hover{ border-color: var(--on-flood); }
 @media (max-width: 760px){
   .plate__scroll img{ width: 760px; max-width:none; }
   .plate__scroll::before{
@@ -387,6 +402,7 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 .demo__call[data-state="dropped"] .demo__who b,
 .demo__call[data-state="dropped"] .demo__who span{ color: var(--ink-3); }
 .demo__call[data-state="deciding"]{ background: var(--accent-wash); }
+.demo__call[data-state="pinned"] .demo__outcome{ color: var(--ink-2); font-weight:600; }
 .demo__call[data-state="pending"] .demo__outcome{ color: var(--ink-3); font-style: italic; }
 .demo__call[data-state="pending"] .demo__scores{ color: var(--ink-3); }
 
@@ -649,8 +665,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     sessions every Laya config was scored against, so the comparison is possible at all. The
     coefficients that ship are fitted on all <span class="num val">41</span>, and
     leave-one-session-out across those 41 gives <span class="num val">0.789</span> with
-    calibration error <span class="num val">0.051</span>: seven points and nearly three times the
-    error, against the 0.862 and 0.019 the same measurement gives on 18 of them. That is the honest figure for a session
+    calibration error <span class="num val">0.051</span>. The same measurement on the 18 paired
+    sessions gives <span class="num val">0.879</span> and <span class="num val">0.035</span>, so
+    widening the corpus inside one person's own work costs <span class="num val">nine</span>
+    points of AUC and half again the calibration error. That is the honest figure for a session
     like this operator's, and <a href="#next">section 07</a> has why.
   </p>
   <p class="caption">
@@ -678,13 +696,24 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
          render at ~4px. Rather than ship a second asset, it keeps its size and
          drags, the same way the six tables on this page do. -->
     <div class="plate__scroll" tabindex="0" data-label="Plot: the score distribution">
+    <div class="plate__stack" id="plate-stack">
     <img src="distribution.svg" width="1200" height="420" decoding="async"
          alt="A strip plot of 2,239 tool calls. The upper band holds the 247 whose output was reused
               verbatim later; the lower band the 1,992 that were not. Position is the model's
               keep-probability from 0 at the left to 1 at the right. The reused band leans right,
               and the two bands overlap heavily below 0.2, where the shipped floor is drawn.">
+      <div class="plate__anim" hidden id="plate-anim">
+        <img src="distribution-frame.svg" alt="" aria-hidden="true" decoding="async">
+        <canvas id="plate-canvas" width="1200" height="420" aria-hidden="true"></canvas>
+      </div>
+    </div>
     </div>
     <figcaption>
+      <span id="plate-note" hidden>The marks arrive scattered and settle into the order the
+      scorer puts them in. That opening scatter is <em>not</em> data — it is these same 2,239
+      marks with their scores taken away, drawn from a published seed — so what you are watching
+      is the ordering being applied and nothing else. With scripting off or motion turned down,
+      the plate below is simply the finished picture.</span>
       The reused band leans right — that is the model working. The bands also overlap, heavily,
       and that overlap is why a <em>floor</em> decides what is kept rather than a cut: below 0.2
       there are far too many genuinely-needed outputs to sweep. The marks fall into columns
@@ -702,8 +731,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p class="lede">
     A session that finds a test failing only on CI, tracks it to a timezone in a fixture, and
     fixes it. Below is what the shipped scorer did to it, every row written into this page when
-    the demonstration was generated. Two calls are refused outright as <em>too small</em> —
-    dropping them would free less than it risks. If scripting is on, <em>Replay</em> re-runs the
+    the demonstration was generated, with nothing overridden. One call is refused outright as
+    <em>too small</em> — dropping it would free less than it risks — and the last two are
+    <em>pinned</em>, because they fall inside the six most recent messages the plugin never
+    touches. If scripting is on, <em>Replay</em> re-runs the
     decisions in the order the ranking spends in, lowest first.
   </p>
 
@@ -728,8 +759,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <li class="demo__call" data-state="dropped"><span class="demo__who"><b>Bash</b><span>git log --oneline -20 -- src/auth.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:3%;--keep:0"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.081 · <span class="visually-hidden">keep-call </span>0.093<br>1,547 ch</span><span class="demo__outcome">dropped</span></li>
       <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>.github/workflows/ci.yml</span></span><span class="demo__track"><span class="demo__fill" style="--w:11%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.282 · <span class="visually-hidden">keep-call </span>0.270<br>5,615 ch</span><span class="demo__outcome">kept</span></li>
       <li class="demo__call" data-state="kept"><span class="demo__who"><b>Bash</b><span>gh run view 4821 --log | tail -60</span></span><span class="demo__track"><span class="demo__fill" style="--w:100%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.228 · <span class="visually-hidden">keep-call </span>0.305<br>49,001 ch</span><span class="demo__outcome">kept</span></li>
-      <li class="demo__call" data-state="small"><span class="demo__who"><b>Edit</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:3%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.003 · <span class="visually-hidden">keep-call </span>0.059<br>29 ch</span><span class="demo__outcome">too small</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:5%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.297 · <span class="visually-hidden">keep-call </span>0.277<br>2,432 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Edit</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:3%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>1.000 · <span class="visually-hidden">keep-call </span>1.000<br>29 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:5%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>1.000 · <span class="visually-hidden">keep-call </span>1.000<br>2,432 ch</span><span class="demo__outcome">kept</span></li>
     </ol>
     <!-- /demo:render -->
   </div>
@@ -757,9 +788,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p>
     So a mutating call is no longer the scorer’s decision. <code>Edit</code>, <code>Write</code>,
     <code>MultiEdit</code> and <code>NotebookEdit</code> keep their call whatever the
-    probabilities say; only their output can go. Across the corpus that rescues
-    <span class="num val">220</span> such calls from ever being dropped, and it costs nothing:
-    exactly one of them had an output that was needed verbatim.
+    probabilities say; only their output can go. The rule covers
+    <span class="num val">220</span> calls in the corpus, and re-running the same decisions with
+    the guard removed shows what it actually saves: <span class="num val">15</span> of them
+    would otherwise lose their call or their output. It costs nothing — exactly one of the 220
+    had an output that was ever needed verbatim.
   </p>
   <p>
     A second rule came from the same place. The <code>Grep</code> in the list above scored 0.020
@@ -1077,7 +1110,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p class="next__when">Open</p>
       <p class="next__what"><b>The corpus is still one person's.</b> Widening it from 18 sessions
         to 41 — all the same person — took leave-one-session-out AUC from
-        <span class="num val">0.862</span> to <span class="num val">0.789</span>, and calibration
+        <span class="num val">0.879</span> to <span class="num val">0.789</span>, and calibration
         error from <span class="num val">0.019</span> to <span class="num val">0.051</span>. Seven
         points and nearly triple, inside one person's own work. A second operator's corpus would
         say how much of what is left is this person's habits.</p>
@@ -1178,9 +1211,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
   <h3>How you know it is running</h3>
   <p>
-    It says so, every time it fires. On each compaction the plugin raises a notice —
-    <code>kept 34/212 messages, no summary (23% freed, 0.2 floor)</code> — and writes the same
-    line, plus one line per decision, to the session log. If anything at all goes wrong you get
+    It says so, every time it fires. On each compaction the plugin raises a notice reading
+    <code>kept&nbsp;34/212&nbsp;messages,&nbsp;no&nbsp;summary</code> followed by what it did —
+    <code>23% reduction; 34 kept, 1 results truncated, 2 calls dropped; 41 scored via features
+    in 190ms</code> — and writes the same line, plus one per decision, to the session log. If anything at all goes wrong you get
     the other notice instead, naming the reason:
     <code>fallback to built-in summary (…)</code>. Silence at a compaction means the hook never
     ran, which is the <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> or the version check in
@@ -1250,6 +1284,7 @@ claude plugin install laya-compact@laya-compact</code></pre>
 </footer>
 
 <script src="demo-data.js"></script>
+<script src="distribution-data.js"></script>
 <script>
 const command = document.getElementById('cmd-text');
 const copyStatus = document.getElementById('copy-status');
@@ -1333,6 +1368,93 @@ if ('IntersectionObserver' in window && sections.length) {
    is already complete and correct with scripts blocked — which it was not when
    this built the list itself and shipped an empty <ol> and a hard-coded 0.
    All this does is un-hide the button and replay what is already on screen. */
+/* ── the plate, settling ──────────────────────────────────────────────────
+   The static SVG is what a reader gets with scripts blocked or motion turned
+   down, and it stays in the DOM carrying the alt text either way. Where motion
+   is allowed, the same 2,239 marks are drawn onto a canvas and moved from a
+   scramble to the positions the scorer gives them — which is the one thing this
+   page asserts and cannot otherwise show. eval/distribution.ts emits both the
+   coordinates and the markless frame, from the same pass that writes the SVG,
+   so what settles is exactly what ships. */
+const plot = window.PLOT;
+const stack = document.getElementById('plate-stack');
+const plateCanvas = document.getElementById('plate-canvas');
+const plateAnim = document.getElementById('plate-anim');
+const slowly = matchMedia('(prefers-reduced-motion: reduce)');
+
+if (plot && stack && plateCanvas && plateAnim && plateCanvas.getContext && !slowly.matches) {
+  const ctx = plateCanvas.getContext('2d');
+  const n = plot.x.length;
+  const left = plot.pad.left;
+  const span = plot.w - plot.pad.left - plot.pad.right;
+
+  // Where each mark starts is not data — it is the same marks with their scores
+  // taken away — so the seed is published and the caption says so outright.
+  let seed = plot.scatterSeed >>> 0;
+  const rand = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 0x100000000; };
+  const from = new Float32Array(n);
+  for (let i = 0; i < n; i += 1) from[i] = left + rand() * span;
+
+  const paint = (t) => {
+    const e = 1 - Math.pow(1 - t, 4);   // ease-out-quart: settles, never bounces
+    ctx.clearRect(0, 0, plot.w, plot.h);
+    for (let i = 0; i < n; i += 1) {
+      const reused = plot.reused[i] === 1;
+      ctx.beginPath();
+      ctx.arc(from[i] + (plot.x[i] - from[i]) * e, plot.y[i], reused ? 2.6 : 1.5, 0, 6.2832);
+      ctx.fillStyle = reused ? 'rgba(252,249,247,0.95)' : 'rgba(225,177,161,0.62)';
+      ctx.fill();
+    }
+  };
+
+  const RUN_MS = 1600;
+  let playing = false;
+  const settle = () => { playing = false; paint(1); };
+  const play = () => {
+    if (playing) return;
+    playing = true;
+    const started = performance.now();
+    paint(0);
+    const step = (now) => {
+      if (!playing) return;
+      const t = Math.min(1, (now - started) / RUN_MS);
+      paint(t);
+      if (t < 1) requestAnimationFrame(step); else settle();
+    };
+    requestAnimationFrame(step);
+    // requestAnimationFrame is starved in a background tab, under headless
+    // capture, and whenever the compositor is busy — and a plate left frozen
+    // part-way through is a picture of nothing. This guarantees it lands on the
+    // data whatever happens to the frames.
+    setTimeout(() => { if (playing) settle(); }, RUN_MS + 250);
+  };
+
+  plateAnim.hidden = false;
+  stack.dataset.animating = '1';
+  // The caption explaining the scramble only applies where the scramble happens.
+  const note = document.getElementById('plate-note');
+  if (note) note.hidden = false;
+  // Settled, not scrambled. If the observer never fires, or rAF is throttled, or
+  // the tab is captured before it scrolls into view, what stays on screen has to
+  // be the data — a plate resting on a scramble would be a picture of nothing.
+  paint(1);
+
+  const replay = document.createElement('button');
+  replay.type = 'button';
+  replay.className = 'plate__replay';
+  replay.textContent = 'Replay the ordering';
+  replay.addEventListener('click', play);
+  stack.closest('.plate__scroll').after(replay);
+
+  // Play when it is on screen, not while it is still below the fold.
+  if ('IntersectionObserver' in window) {
+    const watch = new IntersectionObserver((entries) => {
+      for (const entry of entries) if (entry.isIntersecting) { play(); watch.disconnect(); }
+    }, { threshold: 0.35 });
+    watch.observe(stack);
+  } else play();
+}
+
 const demo = window.DEMO;
 const list = document.getElementById('d-list');
 if (demo && list && list.children.length === demo.decisions.length) {

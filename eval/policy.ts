@@ -110,6 +110,7 @@ for (const target of [0.5, 0.6, 0.7, 0.8]) {
   let needed = 0;
   let kept = 0;
   let mutatingDropped = 0;
+  let mutatingRescued = 0;
   for (const session of sessions) {
     const calls = rows.filter((row) => row.session === session);
     const asToolCalls: ToolCall[] = calls.map((row) => ({
@@ -122,11 +123,21 @@ for (const target of [0.5, 0.6, 0.7, 0.8]) {
       { keepResult: score.get(rowKey(row))!, keepCall: callScore.get(rowKey(row))! },
     ]));
     const actions = new Map(decideAll(asToolCalls, answers, DEFAULT_OPTIONS).map((d) => [d.id, d.action]));
+    // The same calls with the mutating tool names swapped out, so decideCall's
+    // never-drop guard does not fire. Scores come from the cache and are keyed
+    // by row, not recomputed from the name, so this isolates the guard and
+    // nothing else. The page used to say the rule "rescues 220 calls", which is
+    // how many it applies to, not how many it saves.
+    const unguarded = new Map(decideAll(
+      asToolCalls.map((c) => (MUTATING.has(c.tool) ? { ...c, tool: 'Bash' } : c)),
+      answers, DEFAULT_OPTIONS,
+    ).map((d) => [d.id, d.action]));
     for (const row of calls) {
       const action = actions.get(rowKey(row))!;
       total += row.output_chars;
       if (action !== 'keep') freed += row.output_chars;
       if (MUTATING.has(row.tool) && action === 'drop_call') mutatingDropped += 1;
+      if (MUTATING.has(row.tool) && unguarded.get(rowKey(row)) !== 'keep') mutatingRescued += 1;
       if (!row.result_needed) continue;
       needed += 1;
       if (action === 'keep') kept += 1;
@@ -136,6 +147,8 @@ for (const target of [0.5, 0.6, 0.7, 0.8]) {
   console.log(`  ${((100 * freed) / total).toFixed(1)}% freed, ` +
     `${((100 * kept) / needed).toFixed(1)}% of reused outputs kept, ` +
     `${mutatingDropped} of ${rows.filter((r) => MUTATING.has(r.tool)).length} mutating calls dropped`);
+  console.log(`  without that guard ${mutatingRescued} of them would lose their call or output, ` +
+    `so the rule saves ${mutatingRescued}, not ${rows.filter((r) => MUTATING.has(r.tool)).length}`);
 }
 
 console.log('\nwrong  = needed outputs that were dropped anyway');

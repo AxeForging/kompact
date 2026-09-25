@@ -88,8 +88,9 @@ That table is the **paired** corpus: 1,063 calls from the 18 sessions every
 checkpoint and wording was scored against. The shipped coefficients are fitted on
 all 2,239 labelled calls from 41 sessions, and that is where the uncomfortable
 number lives. **Leave-one-session-out over 41 sessions gives AUC 0.789 with ECE
-0.051** — against 0.862 and 0.019 on 18 of those same sessions. Widening the
-corpus *within one person's own work* cost seven points of AUC and nearly tripled
+0.051** — against 0.879 and 0.035 on the 18 paired sessions, which
+`bun eval/fit.ts --fixture --paired` reproduces. Widening the
+corpus *within one person's own work* cost nine points of AUC and half again
 the calibration error. That is the most direct evidence available that these
 coefficients do not transfer as far as one number suggests, and the reason
 `npm run calibrate` is not politeness. The clearest single case:

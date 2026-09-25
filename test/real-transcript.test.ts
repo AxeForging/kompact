@@ -103,13 +103,23 @@ function checkSession(label: string, load: () => Message[] | undefined, minCalls
       expect(pairingIsIntact(messages!).orphanResults).toEqual([]);
     });
 
-    it('compacts offline and leaves no orphaned tool call or result', async () => {
+    /**
+     * The invariant is relative, not absolute: a live transcript is appended to
+     * while this reads it, so the last tool call can legitimately have no result
+     * yet — and a replayed call can appear twice, once paired and once not. This
+     * caught exactly that and reported it as a defect in the compactor. What the
+     * compactor actually guarantees is that it does not *introduce* unpairing,
+     * which is what breaks a session; it cannot repair a transcript that arrives
+     * already unpaired, and should not pretend to.
+     */
+    it('introduces no orphaned tool call or result that was not already there', async () => {
+      const before = pairingIsIntact(messages!);
       const result = await handlers({ minReductionRatio: 0 }).get('session.compact')!(
         engine().$, { messages: messages! }, () => 'FELL_BACK');
       expect(result).not.toBe('FELL_BACK');
-      const { orphanUses, orphanResults } = pairingIsIntact(result.messages);
-      expect(orphanResults).toEqual([]);
-      expect(orphanUses).toEqual([]);
+      const after = pairingIsIntact(result.messages);
+      expect(after.orphanResults.filter((id) => !before.orphanResults.includes(id))).toEqual([]);
+      expect(after.orphanUses.filter((id) => !before.orphanUses.includes(id))).toEqual([]);
     });
 
     it('never touches user or assistant prose', async () => {

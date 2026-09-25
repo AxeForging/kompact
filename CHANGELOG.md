@@ -21,9 +21,9 @@ TypeSafe's hosted Jev model.
   droppable tool output and 13–32% of a real session's tokens, scoring ~1,500
   calls in ~160 ms.
 - **Fitted on 2239 calls from 41 sessions, and that is worse than it sounds.**
-  Leave-one-session-out AUC is 0.789 with ECE 0.051, against 0.862 and 0.019 on
+  Leave-one-session-out AUC is 0.789 with ECE 0.051, against 0.879 and 0.035 on
   18 of those same sessions. Widening the corpus within one person's own work
-  cost seven points of AUC. Run `npm run calibrate`.
+  cost nine points of AUC. Run `npm run calibrate`.
 - **What a compaction costs the work**, measured rather than assumed
   (`eval/outcome.ts`): compacting where the engine would fire it, 6 of the 68
   outputs reused afterwards are dropped — 0.19 a session, with 27 of 32 sessions

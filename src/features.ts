@@ -3,7 +3,7 @@
  * building a call's state. No model call, no sidecar, no network, no GPU.
  *
  * This exists because it was measured to be better, repeatedly. Over 1063
- * labelled calls from 18 real sessions: leave-one-session-out AUC 0.862, and
+ * labelled calls from 18 real sessions: leave-one-session-out AUC 0.879, and
  * across 10 grouped splits holding out 30% of sessions each time it averages
  * 0.905 (sd 0.078, worst split 0.684) against 0.719 for the best Laya
  * checkpoint and phrasing. It won 10 of 10 splits, by as little as +0.018 on the
@@ -112,9 +112,9 @@ export function score(weights: readonly number[], features: readonly number[]): 
  * Fitted on 2239 labelled calls from 41 real sessions (`eval/fit.ts`).
  * Leave-one-session-out: AUC 0.789, ECE 0.051.
  *
- * Both are worse than the 0.862 and 0.019 an earlier fit reported on 18 of those
+ * Both are worse than the 0.879 and 0.035 the same fit reports on the 18 paired
  * same sessions, and the corpus is still one person's. Widening it within one
- * person's own work cost seven points of AUC and nearly tripled the calibration
+ * person's own work cost nine points of AUC and half again the calibration
  * error, which is the most direct evidence available that these coefficients do
  * not transfer as far as a single number suggests. `npm run calibrate` exists
  * for that, and `targetReadAgain` is the clearest case: it was +0.03 on the
