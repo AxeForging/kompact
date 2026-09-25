@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>laya-compact — context compaction you can check</title>
-<meta name="description" content="A Claude Code plugin that scores every tool call before compaction and keeps only what is still needed verbatim. Local, no API key, no GPU. AUC 0.895 ± 0.073 over 10 grouped splits of 1063 labelled calls.">
+<meta name="description" content="A Claude Code plugin that scores every tool call before compaction and keeps only what is still needed verbatim. Local, no API key, no GPU. AUC 0.895 ± 0.072 over 10 grouped splits of 1063 labelled calls.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap" rel="stylesheet">
@@ -258,11 +258,12 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p class="standfirst reveal" style="--d:110ms">
     Claude Code compacts by asking a model to summarise your session. This scores every
     tool call instead and deletes only what is no longer needed <strong>verbatim</strong>,
-    on your machine, with no API key, no GPU and no network call.
+    on your machine, with no API key, no GPU and no network call. The optional Laya sidecar is
+    the one path that uses either.
   </p>
   <div class="colophon reveal" style="--d:170ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>66</b> tests</span>
-    <span><b>0</b> network calls</span><span>Claude&nbsp;Code <b>+</b> Codex&nbsp;CLI</span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>72</b> tests</span>
+    <span><b>0</b> network calls by default</span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
   <nav class="contents reveal" style="--d:210ms" aria-label="Contents">
     <a href="#result">Result</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#install">Install</a>
@@ -302,11 +303,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
           <td class="row__plot">
             <div class="track">
               <div class="bar bar--best" style="--w:79%;--d:260ms"></div>
-              <div class="whisker" style="--lo:64.4%;--hi:93.6%;--d:260ms"></div>
-              <div class="worst" style="--x:37.4%;--d:260ms"></div>
+              <div class="whisker" style="--lo:64.6%;--hi:93.4%;--d:260ms"></div>
+              <div class="worst" style="--x:38.0%;--d:260ms"></div>
             </div>
           </td>
-          <td class="row__value">0.895 <span style="font-weight:400">± 0.073</span><b>worst split 0.687</b></td>
+          <td class="row__value">0.895 <span style="font-weight:400">± 0.072</span><b>worst split 0.690</b></td>
         </tr>
         <tr class="reveal" style="--d:290ms">
           <th scope="row" class="row__name">Output size alone<span>1 coefficient</span></th>
@@ -367,7 +368,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
   <div class="finding reveal" style="--d:640ms">
     <p>The built-in scorer won <span class="val">10 of 10</span> paired splits, by
-       <span class="val">+0.174</span> on average and by <span class="val">+0.002</span> on the closest.</p>
+       <span class="val">+0.174</span> on average and by <span class="val">+0.005</span> on the closest.</p>
   </div>
   <p class="caption">
     Every scorer judged on the same held-out sessions each split, so the comparison is paired.
@@ -392,17 +393,18 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         <th scope="col" class="n">Freed</th><th scope="col" class="n">Scoring</th>
       </tr></thead>
       <tbody>
-        <tr><th scope="row">25e65eab</th><td class="n">473</td><td class="n">273,606</td><td class="n">214,195</td><td class="n val">21.7%</td><td class="n">43 ms</td></tr>
-        <tr><th scope="row">20628921</th><td class="n">227</td><td class="n">293,977</td><td class="n">195,322</td><td class="n val">33.6%</td><td class="n">18 ms</td></tr>
-        <tr><th scope="row">agent-aca4b</th><td class="n">58</td><td class="n">32,538</td><td class="n">23,793</td><td class="n val">26.9%</td><td class="n">3 ms</td></tr>
-        <tr><th scope="row">78d7d176</th><td class="n">233</td><td class="n">213,365</td><td class="n">194,161</td><td class="n val">9.0%</td><td class="n">16 ms</td></tr>
-        <tr><th scope="row">Total</th><td class="n">991</td><td class="n">813,486</td><td class="n">627,471</td><td class="n val">22.9%</td><td class="n">81 ms</td></tr>
+        <tr><th scope="row">25e65eab</th><td class="n">473</td><td class="n">273,749</td><td class="n">214,329</td><td class="n val">21.7%</td><td class="n">50 ms</td></tr>
+        <tr><th scope="row">20628921</th><td class="n">292</td><td class="n">376,317</td><td class="n">260,955</td><td class="n val">30.7%</td><td class="n">35 ms</td></tr>
+        <tr><th scope="row">agent-aca4b</th><td class="n">58</td><td class="n">32,560</td><td class="n">23,815</td><td class="n val">26.9%</td><td class="n">4 ms</td></tr>
+        <tr><th scope="row">78d7d176</th><td class="n">248</td><td class="n">237,577</td><td class="n">215,664</td><td class="n val">9.2%</td><td class="n">18 ms</td></tr>
+        <tr><th scope="row">Total</th><td class="n">1,071</td><td class="n">920,203</td><td class="n">714,763</td><td class="n val">22.3%</td><td class="n">108 ms</td></tr>
       </tbody>
     </table>
   </div>
   <p class="caption">
     Modest on purpose. An earlier default freed 65.9% of these same sessions, and did it by
-    deleting almost everything that mattered.
+    deleting almost everything that mattered. Measured 25 September 2026 on one machine’s own
+    transcripts, which grow as work continues — the per-session column is the figure that carries.
   </p>
 
   <h3>Why it frees a fifth and not four fifths</h3>
@@ -470,9 +472,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
   <h3>Three more things this does not do</h3>
   <p>
-    <strong>A summary compresses harder.</strong> Freeing 66% of tokens is less than replacing the
-    conversation with a few thousand tokens of prose. What you buy with the difference is not
-    re-running tools to recover what a summary threw away.
+    <strong>A summary compresses harder.</strong> Freeing a fifth of the tokens is less than
+    replacing the conversation with a few thousand tokens of prose. What you buy with the
+    difference is not re-running tools to recover what a summary threw away.
   </p>
   <p>
     <strong>One feature does most of the work.</strong> Output size alone scores 0.876 with a
@@ -507,8 +509,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p class="ledger__how">Falls back to the built-in summary; a single failed request keeps its call.</p>
     </div>
     <div class="ledger__row">
-      <p class="ledger__claim">Works for Codex CLI</p>
-      <p class="ledger__how">jev-compact’s own parser, scorer and HTTP client driven over its recorded rollout fixture against our server.</p>
+      <p class="ledger__claim">Works for Codex CLI, against a fixture</p>
+      <p class="ledger__how">jev-compact’s own parser, scorer and HTTP client driven over its recorded rollout fixture against our server. Not run against a live Codex: that plugin needs Codex ≥ 0.155 and this machine has 0.131.</p>
     </div>
     <div class="ledger__row ledger__row--open">
       <p class="ledger__claim">The engine calling <code>session.compact</code> live</p>
@@ -520,7 +522,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 <section class="wrap" id="install">
   <p class="label">Install</p>
   <h2>Function hooks are early access, so turn them on first.</h2>
-  <p class="lede">Needs Claude Code 2.1.274 or newer, where function hooks exist. On an older
+  <p class="lede">Needs Claude Code 2.1.281 or newer, where function hooks exist. On an older
      build the plugin installs and silently never runs, so check <code>claude --version</code> first.</p>
   <div class="cmd">
     <div class="cmd__head">

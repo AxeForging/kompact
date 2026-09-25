@@ -70,9 +70,10 @@ animating a measured number cheapens it.
 
 ## 7. Content requirements
 
-Every figure carries its spread, worst case or n. Specifically: `0.895 ± 0.073`
-never appears without `worst split 0.687`; `10/10 splits` never without
-`+0.002 on the closest`. Copy is plain and declarative — no "blazing", no "10x",
+Every figure carries its spread, worst case or n. Specifically: `0.895 ± 0.072`
+never appears without `worst split 0.690`; `10/10 splits` never without
+`+0.005 on the closest`. Figures come from `eval/RESULTS.md`, which is generated
+— never retyped from a remembered run. Copy is plain and declarative — no "blazing", no "10x",
 no exclamation marks. The truncation finding is quoted as data: two rows whose
 probabilities are *identical* so the eye sees the point before reading it.
 

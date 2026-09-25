@@ -4,7 +4,7 @@ import type { CompactOptions, CompactResult, Message } from './types.js';
 
 export type CompactMessagesOptions = CompactOptions & LayaClientOptions;
 
-/** `compact` with a `LayaClient` built from the options (key from `TYPESAFE_API_KEY` by default). */
+/** `compact` with a `LayaClient` built from the options (key from `LAYA_API_KEY` by default). */
 export function compactMessages(
   messages: readonly Message[],
   options: CompactMessagesOptions = {},

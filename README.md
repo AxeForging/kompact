@@ -62,11 +62,12 @@ happening: on an earlier 721-call corpus the built-in scorer looked like 0.918
 and Laya's best like 0.694, and both moved once the corpus grew. The numbers
 below are the mean over **10 grouped splits**, each holding out 30% of sessions,
 with every scorer judged on the same split so the comparison is paired
-(`eval/repeat.ts`):
+(`eval/repeat.ts`). Every figure below is transcribed from `eval/RESULTS.md`,
+which `npm run eval:results` regenerates:
 
 | scorer | AUC (mean ± sd) | worst split | chars freed at 90% safety |
 |---|---|---|---|
-| **built-in logistic, 13 features** | **0.895 ± 0.073** | 0.687 | **38.9%** |
+| **built-in logistic, 13 features** | **0.895 ± 0.072** | 0.690 | **38.9%** |
 | output size alone | 0.876 ± 0.011 | 0.855 | 11.4% |
 | laya typed-decisions, "direct" | 0.721 ± 0.021 | 0.686 | 12.1% |
 | laya multilingual, "direct" | 0.667 ± 0.022 | 0.644 | 4.5% |
@@ -75,7 +76,7 @@ with every scorer judged on the same split so the comparison is paired
 | keep everything | 0.500 | — | 0.0% |
 
 AUC 0.5 is a coin flip. The logistic beat the best Laya config on **10 of 10
-splits**, by +0.174 on average — but by as little as **+0.002** on the closest
+splits**, by +0.174 on average — but by as little as **+0.005** on the closest
 one, so the margin is not uniform. Leave-one-session-out over all 18 sessions
 puts it at AUC 0.862 with ECE 0.019, an order of magnitude better calibrated
 than Laya's 0.42-0.71, which is what makes `keepThreshold` mean anything.
@@ -88,12 +89,12 @@ features earn their place on the product metric (39% of characters freed against
 This is not a criticism of Laya. Its own README says the base checkpoints score
 near chance on typed-decision workflows and that it should be treated as a fast
 base to specialise, not a zero-shot decision engine. That is exactly what was
-measured. **A fine-tuned checkpoint now has to beat 0.918, not 0.5** — so
+measured. **A fine-tuned checkpoint now has to beat 0.895, not 0.5** — so
 fine-tuning was not done, and `eval/` is set up to re-run the comparison for
 anyone who tries.
 
 So the default scorer is the logistic model, and Laya stays a drop-in behind the
-same `JevAsker` seam.
+same `Asker` seam.
 
 ## Install (Claude Code)
 
@@ -114,13 +115,14 @@ CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude --plugin-dir .
 
 The plugin ships one skill, `laya-compact`, covering how to read its decision
 log, choose a threshold, calibrate, and diagnose a compaction that kept or
-dropped the wrong thing. It costs ~178 tokens a session.
+dropped the wrong thing. What it costs every session is its 80-word
+description; the 3 KB body loads only when the skill is invoked.
 
 Claude Code's `session.compact` hook returns a replacement message list, so the
 plugin *replaces* compaction rather than repairing it: user and assistant text is
 never touched, only tool calls and tool results are dropped or truncated.
 
-The type declarations in `types/` were written by Claude Code 2.1.274.
+The type declarations in `types/` were written by Claude Code 2.1.281.
 **Regenerate them with `/plugin-types` after upgrading**, then run
 `npm run typecheck`.
 
@@ -128,7 +130,7 @@ The type declarations in `types/` were written by Claude Code 2.1.274.
 
 | Option | Default | Meaning |
 |---|---:|---|
-| `scorer` | `features` | `features` (offline, AUC 0.918) or `laya` (a sidecar) |
+| `scorer` | `features` | `features` (offline, AUC 0.895) or `laya` (a sidecar) |
 | `layaUrl` | `http://127.0.0.1:8000/v1/systemone` | only read when `scorer` is `laya` |
 | `keepThreshold` | `0.1` | a **floor**: at or above this, never dropped |
 | `targetReduction` | `0.5` | fraction of droppable tool output to free |
@@ -249,7 +251,7 @@ Being precise about this, because "it compiles" is not evidence.
 
 | Claim | How |
 |---|---|
-| Scoring beats the model it replaces | 1063 labelled calls, 18 sessions, 10 grouped splits: AUC 0.895 ± 0.073 vs 0.721, winning 10/10 paired splits (`eval/repeat.ts`) |
+| Scoring beats the model it replaces | 1063 labelled calls, 18 sessions, 10 grouped splits: AUC 0.895 ± 0.072 vs 0.721 ± 0.021, winning 10/10 paired splits (`eval/repeat.ts`, transcribed into `eval/RESULTS.md`) |
 | States never overflow the checkpoint | asserted for outputs from 0 to 2,000,000 chars |
 | No orphaned `tool_use`/`tool_result` survives | the hook run over a **real** session from disk; an orphan is rejected by the API and would break the session compaction was meant to save |
 | User and assistant prose is never touched | same real-session test |
@@ -276,7 +278,7 @@ Also unverified: a live Codex CLI, which needs >= 0.155 (this machine has 0.131)
 ```sh
 bun install
 npm run typecheck   # src + test + eval + hooks
-npm run test        # 66 tests
+npm run test        # 72 tests
 npm run validate    # plugin manifest
 ```
 

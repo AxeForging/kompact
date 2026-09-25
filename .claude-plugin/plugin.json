@@ -12,7 +12,7 @@
     "scorer": {
       "type": "string",
       "title": "Scorer",
-      "description": "features = built-in logistic model, no network (measured AUC 0.918). laya = a local laya-serve sidecar (measured AUC 0.694 zero-shot; use only with a checkpoint fine-tuned on your own sessions).",
+      "description": "features = built-in logistic model, no network (measured AUC 0.895 \u00b1 0.072 over ten grouped splits). laya = a local laya-serve sidecar (measured AUC 0.721 \u00b1 0.021 zero-shot on the same splits; use only with a checkpoint fine-tuned on your own sessions).",
       "default": "features"
     },
     "layaUrl": {
@@ -24,7 +24,7 @@
     "keepThreshold": {
       "type": "number",
       "title": "Keep floor",
-      "description": "Probability at or above which a call is never dropped, whatever the reduction target. Raise it to keep more. Measured default: 0.1 retains 82% of outputs that were genuinely reused later; 0.5 retains only 5%, because a calibrated scorer rarely exceeds 0.5 when barely 7% of outputs are ever reused.",
+      "description": "Probability at or above which a call is never dropped, whatever the reduction target. Raise it to keep more. Measured default: 0.1 retains 84.6% of outputs that were genuinely reused later; 0.5 retains only 5%, because a calibrated scorer rarely exceeds 0.5 when barely 7% of outputs are ever reused.",
       "default": 0.1
     },
     "targetReduction": {

@@ -25,7 +25,8 @@
     "eval": "bun eval/extract-labels.ts && bun eval/baseline.ts",
     "validate": "claude plugin validate .claude-plugin/plugin.json",
     "serve": "bun bin/laya-compact-serve.ts",
-    "calibrate": "bun eval/extract-labels.ts && bun eval/calibrate.ts"
+    "calibrate": "bun eval/extract-labels.ts && bun eval/calibrate.ts",
+    "eval:results": "bun eval/results.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

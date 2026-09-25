@@ -128,7 +128,10 @@ export interface FittedState {
 export interface CompactOptions {
   /** Ongoing task description; defaults to the last few user prompts. */
   goal?: string;
-  /** Minimum keep probability for a call or result to stay. Default 0.5. */
+  /**
+   * Score at or above which a call is never dropped, whatever the reduction
+   * target asks for. A floor, not a cut — see `targetReduction`. Default 0.1.
+   */
   keepThreshold?: number;
   /** Newest messages never touched (the first message is always kept). Default 6. */
   preserveRecentMessages?: number;

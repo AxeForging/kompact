@@ -148,8 +148,9 @@ export function layaAsker(
 
 /**
  * `features` by default, and deliberately: measured on 721 labelled calls from
- * real sessions, the built-in logistic model reaches AUC 0.918 where the best
- * zero-shot Laya checkpoint and phrasing reached 0.694 — and it needs no
+ * real sessions, the built-in logistic model reaches AUC 0.895 ± 0.072 where
+ * the best zero-shot Laya checkpoint and phrasing reached 0.721 ± 0.021 over the
+ * same ten grouped splits (`eval/RESULTS.md`) — and it needs no
  * sidecar, no GPU and no network call.
  */
 export function askerFor(
@@ -177,22 +178,27 @@ export function askerFor(
  */
 export async function readLocalWeights(
   $: {
-    env?: { get: (name: string) => Promise<string | undefined> };
-    settings?: { read: () => Promise<Readonly<Record<string, unknown>>> };
+    env: { get: (name: string) => Promise<string | undefined> };
+    settings: { read: () => Promise<Readonly<Record<string, unknown>>> };
   },
   log: (text: string) => void,
 ): Promise<Weights | undefined> {
-  // Either channel may be absent on a given host; neither is worth failing a
-  // compaction over, so every lookup degrades to the shipped weights.
+  // Either channel may be absent on a given host — an engine without `$.env`
+  // throws here rather than returning undefined — and neither is worth failing
+  // a compaction over, so every lookup degrades to the shipped weights. Written
+  // as `$.env.get`, not `$.env?.get`: the plugin validator reads an optional
+  // chain as using `$.env` as a value, and the catch already covers the case.
   let raw: string | undefined;
   try {
-    raw = await $.env?.get(WEIGHTS_ENV);
+    // The literal name, not `WEIGHTS_ENV`: the validator lists the variables a
+    // module reads, and cannot do that through an identifier.
+    raw = await $.env.get('LAYA_COMPACT_WEIGHTS');
   } catch {
     raw = undefined;
   }
   if (!raw) {
     try {
-      const env = (await $.settings?.read())?.['env'];
+      const env = (await $.settings.read())['env'];
       const value = env && typeof env === 'object' ? (env as Record<string, unknown>)[WEIGHTS_ENV] : undefined;
       if (typeof value === 'string') raw = value;
     } catch {

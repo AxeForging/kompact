@@ -28,7 +28,7 @@ export const FEATURE_NAMES = [
   'tool=Edit|Write',
   'tool=Grep|Glob',
   'isError',
-  'targetChangedAfter',
+  'targetTouchedAfter',
   'targetReadAgain',
   'size=very short',
   'size=short',

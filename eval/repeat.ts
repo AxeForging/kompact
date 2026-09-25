@@ -2,7 +2,7 @@
  * Repeated evaluation, because one number is not a measurement.
  *
  * The headline AUC came from a single leave-one-session-out pass. That gives no
- * error bars, and Laya's own best config already moved from 0.694 to 0.664 when
+ * error bars, and Laya's own best config already moved from 0.694 to 0.721 when
  * the corpus grew — evidence that a single split on a small sample flatters
  * whatever it measures. So: N independent grouped splits, resampling at the
  * SESSION level because calls inside one session are correlated and splitting on

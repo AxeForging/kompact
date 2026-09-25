@@ -275,7 +275,8 @@ describe('locally calibrated weights', () => {
   });
 
   it('survives a host that offers neither channel', async () => {
-    expect(await readLocalWeights({}, () => {})).toBeUndefined();
+    // An engine that offers neither channel: both lookups throw, neither is fatal.
+    expect(await readLocalWeights({} as never, () => {})).toBeUndefined();
   });
 
   it('actually changes the scores it returns', async () => {

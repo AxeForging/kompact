@@ -36,7 +36,7 @@ import { buildCallState, callContexts, collectToolCalls } from 'laya-compact';
 The scorer sees only: the tool, what it acted on, output size as words, how far
 back it sits, whether it errored, whether a later call changed or re-read the
 same target. If a decision looks wrong, one of those is usually wrong first —
-check `targetChangedAfter` and the size bucket before blaming the model.
+check `targetTouchedAfter` and the size bucket before blaming the model.
 
 ## Making it more or less aggressive
 
