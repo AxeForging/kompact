@@ -403,7 +403,10 @@ export async function compact(
       charsBefore,
       charsAfter: kept.reduce((sum, message) => sum + messageChars(message), 0),
       calls: calls.length,
-      kept: count(decisions, 'kept') + count(decisions, 'budget'),
+      // `too small` is a keep — the call is refused as not worth dropping — and it
+      // was counted in no bucket at all, so kept + dropped + pinned could come to
+      // less than calls and the notice quietly under-reported what it had kept.
+      kept: count(decisions, 'kept') + count(decisions, 'budget') + count(decisions, 'too small'),
       resultsDropped: count(decisions, 'result_dropped'),
       callsDropped: count(decisions, 'call_dropped'),
       pinned: count(decisions, 'pinned'),

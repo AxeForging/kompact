@@ -245,7 +245,6 @@ let lastSequence = '';
 /** The last three tool steps, across batches. See the note at the 3-gram below. */
 const recent: Array<{ tool: string; command?: string }> = [];
 const awaitingFix = new Set<string>();
-let unflushed = false;
 
 /**
  * Mirrors the store to a file the CLI can open.
@@ -262,7 +261,6 @@ async function flush($: SignalsEngine, rows: Aggregate, at: number): Promise<voi
   const home = await $.env.get('HOME');
   if (!home) return;
   await $.fs.write(`${home}/${SIGNALS_FILE}`, JSON.stringify({ version: 1, writtenAt: at, rows }));
-  unflushed = false;
 }
 
 /** Registers the two recording hooks. Nothing it returns may be kept, so it returns nothing. */
@@ -276,7 +274,6 @@ export function registerSignals(on: On, options: PluginOptions): void {
   lastSequence = '';
   recent.length = 0;
   awaitingFix.clear();
-  unflushed = false;
   if (!recording) return;
 
   on('classic.PostToolBatch', async ($, event, next) => {
@@ -321,7 +318,6 @@ export function registerSignals(on: On, options: PluginOptions): void {
       lastSequence = sequence;
 
       await $.store.set(STORE_KEY, prune(rows));
-      unflushed = true;
     } catch {
       // Recording is a side-effect of the session, never a risk to it.
     }
@@ -348,10 +344,10 @@ export function registerSignals(on: On, options: PluginOptions): void {
       }
       const pruned = prune(rows);
       await $.store.set(STORE_KEY, pruned);
-      unflushed = true;
       await flush($, pruned, at);
     } catch {
-      // A failed flush leaves `unflushed` set, so the next prompt retries.
+      // The next prompt flushes again from the store, which is durable, so a failed
+    // write costs nothing but the file being one turn stale.
     }
     return next(event);
   });

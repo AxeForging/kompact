@@ -11,7 +11,7 @@
  *
  * Run: bun eval/baseline.ts
  */
-import { dot, fitLogistic as fit, sigmoid } from './logistic.js';
+import { fitLogistic as fit, sigmoid } from './logistic.js';
 import { loadCorpus, loadScores, rowKey } from './corpus.js';
 import { auc, droppableAt } from './metrics.js';
 import type { LabelRow } from './extract-labels.js';

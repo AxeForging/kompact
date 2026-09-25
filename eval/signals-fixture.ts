@@ -99,6 +99,9 @@ function sessionFiles(root: string, limit: number): string[] {
  * with its result and reports the message it was made in, so grouping on that is
  * the same partition the engine would have produced.
  */
+/** Which shape each command landed on, in the order the calls arrived. */
+const arrivals: string[] = [];
+
 function replay(rows: Aggregate, path: string, session: string): number {
   const messages = readTranscript(path);
   // 0, not the shipped 6: this replays what was recorded while the session ran,
@@ -135,6 +138,7 @@ function replay(rows: Aggregate, path: string, session: string): number {
       const step = steps[position];
       if (!step || !('command' in step) || !step.command) return;
       const sig = commandSignature(step.command);
+      arrivals.push(`command::${sig}`);
       bump(rows, 'command', sig, step.command, session, 1, call.resultChars, at);
       if (call.isError) awaitingFix.add(sig);
       else if (awaitingFix.delete(sig)) bump(rows, 'error-fix', sig, step.command, session, 2, 0, at);
@@ -190,8 +194,17 @@ const meta = {
   calls,
   shapes: allShapes,
   repeated: Object.values(rows).filter(isRepeated).length,
+  /** Commands seen, and how many of them landed on a shape nothing else shares. */
+  commands: arrivals.length,
 };
-const text = JSON.stringify({ version: 1, writtenAt: 0, meta, rows }, null, 0);
+
+// The arrival order, as indices into the published rows — numbers only, no text,
+// so the page can replay what the recorder saw without republishing any of it.
+// -1 is a shape that did not repeat enough to be published, which is most of them
+// and is the finding.
+const keys = Object.keys(rows);
+const order = arrivals.map((key) => keys.indexOf(key));
+const text = JSON.stringify({ version: 1, writtenAt: 0, meta, rows, order }, null, 0);
 
 // Scrub, then assert the scrub, rather than trusting the regex that did it.
 const PUBLISHED_TOO: ReadonlyArray<readonly [string, RegExp]> = [

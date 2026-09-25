@@ -7,12 +7,12 @@
  *
  * Run: bun eval/fit.ts
  */
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { dot, fitLogistic as fit, sigmoid } from './logistic.js';
-import { auc, ece } from './metrics.js';
-import { loadCorpus } from './corpus.js';
-import { FEATURE_NAMES, featureVector } from '../src/features.js';
+import {} from 'node:fs';
+import {} from 'node:path';
+import {dot, fitLogistic as fit, sigmoid} from './logistic.js';
+import {auc, ece} from './metrics.js';
+import {loadCorpus} from './corpus.js';
+import {FEATURE_NAMES, featureVector} from '../src/features.js';
 import type { LabelRow } from './extract-labels.js';
 
 // `--fixture` forces the committed corpus, so a clone and this machine can be

@@ -13,11 +13,11 @@
  *
  * Run: bun eval/repeat.ts [--iterations 10] [--test-frac 0.3]
  */
-import { join } from 'node:path';
-import { dot, fitLogistic as fit, sigmoid } from './logistic.js';
-import { auc, droppableAt, ece } from './metrics.js';
-import { FEATURE_NAMES, featureVector } from '../src/features.js';
-import { loadCorpus, loadScores, rowKey } from './corpus.js';
+import {} from 'node:path';
+import {dot, fitLogistic as fit, sigmoid} from './logistic.js';
+import {auc, droppableAt, ece} from './metrics.js';
+import {FEATURE_NAMES, featureVector} from '../src/features.js';
+import {loadCorpus, loadScores, rowKey} from './corpus.js';
 
 const dir = import.meta.dirname;
 const args = process.argv.slice(2);
