@@ -368,8 +368,8 @@ table.rows caption{ text-align:left; }
    The page had eleven sections and ran 20,782px. Every figure earns its place,
    but a reader deciding in sixty seconds should not have to scroll past the
    working to reach the conclusion. <details> is native: it opens with scripts
-   blocked, it is a real disclosure widget for a screen reader, and @media print
-   below forces every one of them open so paper loses nothing. */
+   blocked, it is a real disclosure widget for a screen reader, and both a print
+   stylesheet and a beforeprint listener open them for paper. */
 details.more{ border-top: 1px solid var(--rule); margin-top: var(--space-md); }
 details.more > summary{
   cursor: pointer; list-style: none; padding-block: var(--space-sm);
@@ -386,7 +386,16 @@ details.more > summary:hover{ color: var(--accent-ink); }
 details.more > summary:focus-visible{ outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 details.more[open] > summary{ border-bottom: 1px solid var(--rule); }
 details.more > *:not(summary):last-child{ margin-bottom: var(--space-md); }
-@media print{ details.more{ display:block; } details.more > *{ display:revert; } }
+/* Printing a folded block. `display: revert` was wrong and did nothing: it reverts
+   to the UA rule, which is the rule doing the hiding. Chrome hides the content
+   through ::details-content, so unhiding that works there; the script below adds
+   `open` on beforeprint, which is the path that works everywhere. Scripts blocked
+   *and* printing on an older engine is the one case that still loses the folded
+   content, and the summary lines say what is in it. */
+@media print{
+  details.more::details-content{ content-visibility: visible !important; }
+  details.more > *:not(summary){ content-visibility: visible !important; }
+}
 table.data{ width:100%; min-width: 30rem; border-collapse: collapse; font-family: var(--sans); font-size: var(--text-sm); }
 table.data th, table.data td{ text-align:left; padding: var(--space-xs) var(--space-md) var(--space-xs) 0;
   border-bottom: 1px solid var(--rule); font-variant-numeric: tabular-nums; }
@@ -1698,6 +1707,21 @@ const retune = () => {
 };
 retune();
 addEventListener('resize', retune, { passive: true });
+
+// Paper has no disclosure widgets. Every folded block opens for the print and
+// goes back to how the reader left it afterwards.
+for (const event of ['beforeprint', 'afterprint']) {
+  addEventListener(event, () => {
+    for (const block of document.querySelectorAll('details.more')) {
+      if (event === 'beforeprint') {
+        if (!block.open) { block.dataset.wasShut = '1'; block.open = true; }
+      } else if (block.dataset.wasShut) {
+        block.open = false;
+        delete block.dataset.wasShut;
+      }
+    }
+  });
+}
 
 // Report which section is being read, in the contents row.
 const quick = matchMedia('(prefers-reduced-motion: reduce)');
