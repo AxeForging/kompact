@@ -210,17 +210,20 @@ ul.plain li::marker{ color: var(--ink-3); }
 /* margin-block only: margin:0 here killed the wrap's auto centring and the bar
    sat 180px left of every other thing on the page. */
 .contents-bar .contents{ margin-block:0; padding-block: var(--space-xs); gap: var(--space-xs) var(--space-md); }
-/* Wrapped, this bar measured 140px of an 844px phone screen and held it for the
+/* One row that scrolls, at every width, and not only on a phone.
+   Wrapped, this bar measured 140px of an 844px phone screen and held it for the
    whole 23,000px scroll — a sixth of every screen, for a bar that then could not
-   say where you were. One row that scrolls costs about 48px. */
-@media (max-width: 640px){
-  .contents-bar .contents{
-    flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain;
-    scroll-snap-type: x proximity; scrollbar-width: none;
-  }
-  .contents-bar .contents::-webkit-scrollbar{ display:none; }
-  .contents-bar .contents a{ flex: 0 0 auto; scroll-snap-align: start; }
+   even say where you were. Adding two sections then wrapped it to 96px on a
+   1400px laptop too, which is the same bug arriving from the other direction: any
+   rule that depends on the labels fitting breaks the next time a section is
+   added. One scrolling row is about 48px whatever the width and however many
+   sections there are. */
+.contents-bar .contents{
+  flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity; scrollbar-width: none;
 }
+.contents-bar .contents::-webkit-scrollbar{ display:none; }
+.contents-bar .contents a{ flex: 0 0 auto; scroll-snap-align: start; }
 /* --on-flood-2 is 5.63:1 on the flood and about 2:1 on paper. */
 .contents-bar .contents a{ color: var(--ink-2); }
 .contents-bar .contents a:hover, .contents-bar .contents a[aria-current]{ color: var(--accent-ink); }
@@ -360,6 +363,10 @@ table.data th, table.data td{ text-align:left; padding: var(--space-xs) var(--sp
 table.data thead th{ font-size: var(--text-xs); letter-spacing:0.01em;
   color: var(--ink-3); font-weight:600; border-bottom: 1px solid var(--rule-firm); }
 table.data td.n, table.data th.n{ text-align:right; }
+/* A row that repeated and is still not worth a skill. Greyed rather than hidden:
+   it is every one of the nine repeated command shapes, which is the finding. */
+table.data tr.dim td{ color: var(--ink-3); }
+table.data tr.dim code{ color: var(--ink-3); }
 table.data tbody tr:last-child > *{ border-bottom: 1px solid var(--rule-firm); }
 table.data tr.same td, table.data tr.same th{ background: var(--accent-wash); }
 table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink); font-weight:700; }
@@ -602,11 +609,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <p class="upfront__do">
       <a href="#install">Install it</a> &#8212; or run <code>npm&#160;run&#160;dry&#8209;run</code>
       first and see what it frees on your own sessions, installing nothing
-      (<a href="#cost">section 04, Cost</a>).
+      (<a href="#cost">section 05, Cost</a>).
     </p>
   </div>
   <div class="colophon reveal" style="--d:170ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>170</b> tests</span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>197</b> tests</span>
     <span><b>0</b> network calls by default</span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
 </div>
@@ -614,7 +621,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 <nav class="contents-bar" aria-label="Contents">
   <div class="contents wrap">
-    <a href="#result">Evidence</a><a href="#shape">The shape of it</a><a href="#demo">Watch it decide</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#next">What's next</a><a href="#faq">FAQ</a><a href="#session">Your session</a><a href="#glossary">Glossary</a><a href="#install">Install</a>
+    <a href="#result">Evidence</a><a href="#shape">The shape of it</a><a href="#demo">Watch it decide</a><a href="#signals">What you repeat</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#next">What's next</a><a href="#faq">FAQ</a><a href="#session">Your session</a><a href="#glossary">Glossary</a><a href="#install">Install</a>
   </div>
 </nav>
 
@@ -741,7 +748,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     Laya config’s <span class="num val">0.380–0.642</span>. The coefficients that ship are fitted
     on all <span class="num val">41</span> sessions, where the same measurement gives
     <span class="num val">0.789</span> and <span class="num val">0.051</span> —
-    <a href="#next">section 07, What’s next</a> says why that is the pair to plan around.
+    <a href="#next">section 08, What’s next</a> says why that is the pair to plan around.
   </p>
 </section>
 
@@ -894,8 +901,90 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
 </section>
 
+<section class="wrap" id="signals" aria-labelledby="signals-h">
+  <p class="rubric"><span class="rubric__n">04</span>What you repeat</p>
+  <h2 id="signals-h">The same reading of every call answers a second question.</h2>
+  <p class="lede">
+    Deciding what to keep means looking at every tool call in a session. That same
+    observation says what this person does over and over — and a thing done over and over is a
+    skill nobody writes, because noticing it is the hard part. So the plugin counts the
+    <em>shapes</em> it sees, on your machine, and <code>npm&nbsp;run&nbsp;propose</code> ranks them
+    and drafts a <code>SKILL.md</code> for any row you pick. <b>This capability is new and whether
+    its proposals are any good is not established</b> — it has its own row in
+    <a href="#checked">the ledger</a>. Below is what it found, including the part that does not
+    flatter it.
+  </p>
+
+  <!-- signals:render -->
+  <p class="label">25 shapes that repeated, of 2,000 recorded over 40 sessions and 2,166 tool calls</p>
+      <div class="scroller" data-label="Table: what repeated">
+  <table class="data">
+    <thead><tr><th>Kind</th><th>Signature</th><th class="n">times</th><th class="n">sessions</th><th class="n">calls</th><th class="n">chars</th><th class="n">est.</th></tr></thead>
+    <tbody>
+      <tr class="dim"><td>the same command</td><td><code>sed -n</code></td><td class="n">85</td><td class="n">2</td><td class="n">85</td><td class="n">157,338</td><td class="n">242.3</td></tr>
+      <tr class="dim"><td>the same command</td><td><code>grep -n | head -&lt;n&gt;</code></td><td class="n">21</td><td class="n">2</td><td class="n">21</td><td class="n">29,787</td><td class="n">50.8</td></tr>
+      <tr class="dim"><td>the same command</td><td><code>python3 -c</code></td><td class="n">32</td><td class="n">2</td><td class="n">32</td><td class="n">16,227</td><td class="n">48.2</td></tr>
+      <tr><td>the same run of tools</td><td><code>Read → Edit → Edit</code></td><td class="n">16</td><td class="n">2</td><td class="n">48</td><td class="n">&#8212;</td><td class="n">48.0</td></tr>
+      <tr><td>the same run of tools</td><td><code>Read → Read → Edit</code></td><td class="n">14</td><td class="n">2</td><td class="n">42</td><td class="n">&#8212;</td><td class="n">42.0</td></tr>
+      <tr class="dim"><td>the same command</td><td><code>cat &lt;path&gt;</code></td><td class="n">10</td><td class="n">2</td><td class="n">10</td><td class="n">29,901</td><td class="n">39.9</td></tr>
+      <tr><td>the same run of tools</td><td><code>Read → Write → Write</code></td><td class="n">7</td><td class="n">2</td><td class="n">21</td><td class="n">&#8212;</td><td class="n">21.0</td></tr>
+      <tr><td>the same run of tools</td><td><code>Read → Read → Write</code></td><td class="n">6</td><td class="n">2</td><td class="n">18</td><td class="n">&#8212;</td><td class="n">18.0</td></tr>
+      <tr class="dim"><td>the same command</td><td><code>cat | tail -&lt;n&gt;</code></td><td class="n">10</td><td class="n">2</td><td class="n">10</td><td class="n">2,916</td><td class="n">12.9</td></tr>
+      <tr class="dim"><td>the same command</td><td><code>grep -n</code></td><td class="n">9</td><td class="n">2</td><td class="n">9</td><td class="n">3,074</td><td class="n">12.1</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="caption">est. = total tool calls + total output characters / 1000, the ranking
+    chosen for this. A model of effort, not a measurement of time; every input to it is on the row,
+    so any row can be recomputed by hand. Greyed rows are generic shell verbs.</p>
+
+  <div class="finding finding--loss reveal">
+    <p>Of <span class="val">2,000</span> shapes recorded,
+      <span class="val">25</span> repeated enough to propose — and
+      <span class="val">9</span> of the 9 repeated command shapes are generic
+      shell verbs. The highest-ranked thing this found is
+      <code>sed -n</code>.</p>
+  </div>
+  <p>
+    Every one of them is a verb like
+    <code>sed</code>, <code>grep</code> or <code>cat</code>. No skill helps with those. The best row that reads like an actual workflow &#8212;
+      <code>Read → Bash(grep -n) → Bash(sed -n)</code> &#8212; is ranked 11th, because the ranking
+      rewards total work and a generic verb runs more often than a workflow does.
+  </p>
+  <!-- /signals:render -->
+
+  <p>
+    That is not the finding this was built to get. The classifier itself works: the counts are real,
+    the signatures group work that belongs together, and three separate design ideas turned out to be
+    wrong only because the data said so — 94% of command shapes were seen exactly once until a
+    pipeline stopped keeping every stage's arguments, sequences never formed at all until the window
+    slid across batches instead of inside one, and the 2,000-row cap cut the rarest kinds to nothing
+    until each kind was pruned against itself.
+  </p>
+  <p>
+    What is <em>not</em> established is the premise underneath it. These sessions are an assistant's
+    tool use, and what an assistant repeats is reading files, editing them, and reaching for the
+    shell.
+  </p>
+  <p class="caption">
+    Two things this table is not. It is not from a live install: the recorder only sees sessions
+    from the moment it is switched on, so these counts come from replaying existing transcripts
+    through the recorder's own functions (<code>eval/signals-fixture.ts</code>) rather than from the
+    hook having run. And it carries no examples — the signatures are shapes and safe to publish, but
+    the samples kept beside them are raw text, and the first fixture built without stripping them
+    passed all eight credential checks while carrying another project's brief and a path with a
+    session id in it. On your own machine the samples are the point, because they are how a wrong
+    grouping becomes visible. In anything published they have no place.
+  </p>
+  <p class="caption">
+    Nothing recorded leaves the machine, and nothing is written into a skills directory: drafts land
+    in <code>.laya/proposals/</code>, which Claude Code does not read. Set
+    <code>recordSignals</code> to false to record nothing at all.
+  </p>
+</section>
+
 <section class="wrap" id="cost" aria-labelledby="cost-h">
-  <p class="rubric"><span class="rubric__n">04</span>Cost</p>
+  <p class="rubric"><span class="rubric__n">05</span>Cost</p>
   <h2 id="cost-h">190&nbsp;ms to score 1,762 tool calls.</h2>
   <p class="lede">
     Compaction stops being a model call and becomes arithmetic. These are whole session
@@ -1005,7 +1094,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </section>
 
 <section class="wrap" id="losses" aria-labelledby="losses-h">
-  <p class="rubric rubric--accent"><span class="rubric__n">05</span>Where it loses</p>
+  <p class="rubric rubric--accent"><span class="rubric__n">06</span>Where it loses</p>
   <h2 id="losses-h">The model we dropped fails quietly, which is worse than failing.</h2>
   <p>
     Laya’s English checkpoint reads 512 tokens and discards the rest with HTTP 200 and no
@@ -1134,7 +1223,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </section>
 
 <section class="wrap" id="checked" aria-labelledby="checked-h">
-  <p class="rubric"><span class="rubric__n">06</span>Verification</p>
+  <p class="rubric"><span class="rubric__n">07</span>Verification</p>
   <h2 id="checked-h">Including the one that was not.</h2>
   <div class="ledger">
     <div class="ledger__row">
@@ -1174,6 +1263,13 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p class="ledger__how">The measurement above shows how often the information would no longer be there. Whether that changes what the assistant does needs the same session replayed with and without compaction, which needs a live A/B.</p>
     </div>
     <div class="ledger__row ledger__row--open">
+      <p class="ledger__claim">That a proposed skill is worth having <span class="flag">— not verified</span></p>
+      <p class="ledger__how">The repetition in <a href="#signals">section 04</a> is measured, and
+        the drafts validate as skills. Whether writing one saves anyone anything is not measured at
+        all: it needs the same work done twice, once with the skill and once without. Every one of the nine
+        repeated command shapes is a generic shell verb, which is evidence against rather than for.</p>
+    </div>
+    <div class="ledger__row ledger__row--open">
       <p class="ledger__claim">The engine calling <code>session.compact</code> live <span class="flag">— not verified</span></p>
       <p class="ledger__how">The plugin loads and <code>turn.complete</code> fires in a real session, but the engine declines to compact below ~31% full and the model cannot invoke <code>/compact</code> itself. Covered by the real-session test; the engine-side handoff is not.</p>
     </div>
@@ -1181,7 +1277,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </section>
 
 <section class="wrap" id="next" aria-labelledby="next-h">
-  <p class="rubric"><span class="rubric__n">07</span>What's next</p>
+  <p class="rubric"><span class="rubric__n">08</span>What's next</p>
   <h2 id="next-h">The gaps, in the order they matter.</h2>
   <p class="lede">
     Everything above this line is measured. Everything below it is not yet, and is written in the
@@ -1190,7 +1286,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <div class="next">
     <div class="next__item">
       <p class="next__when">Blocks a 1.0</p>
-      <p class="next__what"><b>A live A/B.</b> Task outcome is measured in <a href="#checked">section 06, Verification</a> as far as a
+      <p class="next__what"><b>A live A/B.</b> Task outcome is measured in <a href="#checked">section 07, Verification</a> as far as a
         transcript allows — how often the information would no longer be there. Whether that
         changes what an assistant does needs the same session replayed both ways, against a real
         model, and it has not been.</p>
@@ -1219,7 +1315,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p class="next__when">Wanted</p>
       <p class="next__what"><b>A fine-tuned Laya checkpoint that wins.</b> The bar is 0.905, not
         chance. <code>eval/</code> re-runs the whole comparison for anyone who tries, and the
-        <a href="#cost">section 04, Cost</a> is the other half of that decision.</p>
+        <a href="#cost">section 05, Cost</a> is the other half of that decision.</p>
     </div>
     <div class="next__item">
       <p class="next__when">Structural</p>
@@ -1231,7 +1327,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </section>
 
 <section class="wrap" id="faq" aria-labelledby="faq-h">
-  <p class="rubric"><span class="rubric__n">08</span>FAQ</p>
+  <p class="rubric"><span class="rubric__n">09</span>FAQ</p>
   <h2 id="faq-h">The questions a sceptic asks.</h2>
   <div class="faq">
     <div class="faq__item">
@@ -1263,7 +1359,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p>Sometimes — <span class="num val">0.19</span> outputs a session where it would actually
         cost you something, and 27 of 32 sessions lose nothing at all. Counting every reuse
         anywhere later, including ones that had already happened before a real compaction could
-        fire, the upper bound is 1.34 a session. Both are in <a href="#losses">section 05, Where it loses</a>, and 47 of the 55 are
+        fire, the upper bound is 1.34 a session. Both are in <a href="#losses">section 06, Where it loses</a>, and 47 of the 55 are
         command output. A dropped result keeps its first 300 characters when the call survives, and a call
         that recorded a change is never dropped at all. Every failure mode falls back to Claude
         Code's own summary rather than to a half-compacted transcript, and a single failed request
@@ -1291,7 +1387,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </section>
 
 <section class="wrap" id="session" aria-labelledby="session-h">
-  <p class="rubric"><span class="rubric__n">09</span>Your session</p>
+  <p class="rubric"><span class="rubric__n">10</span>Your session</p>
   <h2 id="session-h">What it touches, what it never touches, and how you know.</h2>
   <p class="lede">
     <strong>Nothing on disk changes.</strong> Compaction rewrites what is sent to the model for
@@ -1308,7 +1404,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     34&nbsp;kept,&nbsp;1&nbsp;results&nbsp;truncated,&nbsp;2&nbsp;calls&nbsp;dropped,&nbsp;4&nbsp;pinned;
     41&nbsp;scored&nbsp;via&nbsp;features&nbsp;in&nbsp;4ms)</code> — and writes the same line, plus
     one per decision, to the session log. The parts sum to what was scored, and the time is for
-    the 41 calls in that compaction, not the 1,762 in <a href="#cost">section 04, Cost</a>. If anything at all goes wrong you get
+    the 41 calls in that compaction, not the 1,762 in <a href="#cost">section 05, Cost</a>. If anything at all goes wrong you get
     the other notice instead, naming the reason:
     <code>fallback to built-in summary (…)</code>, naming the reason. Silence at a compaction is
     different: it means the hook never ran at all, which is a setup answer rather than a bad
@@ -1323,7 +1419,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       your shell's startup file.</li>
     <li><code>claude&nbsp;plugin&nbsp;list</code> must show <code>laya-compact</code>. If it does,
       the variable is <code>1</code>, and no notice ever appears, the build is older than function
-      hooks: see the version rule in <a href="#install">section 10, Install</a>.</li>
+      hooks: see the version rule in <a href="#install">section 11, Install</a>.</li>
   </ul>
 
   <h3>What it does to a session, in full</h3>
@@ -1378,13 +1474,13 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </section>
 
 <section class="wrap" id="install" aria-labelledby="install-h">
-  <p class="rubric"><span class="rubric__n">10</span>Install</p>
+  <p class="rubric"><span class="rubric__n">11</span>Install</p>
   <h2 id="install-h">Function hooks are early access, so turn them on first.</h2>
   <p class="lede">Tested on Claude Code 2.1.281, which has function hooks. So the rule is
      <b>2.1.281 or later works; below it is unknown rather than broken</b> — which release first
      shipped them is <em>not established here</em>, and on a build without them the plugin
      installs and silently never runs. Check <code>claude&nbsp;--version</code>, then
-     <a href="#session">section 09, Your session</a> for the notice that proves it fired, and the
+     <a href="#session">section 10, Your session</a> for the notice that proves it fired, and the
      <a href="#checked">verification ledger</a> for what is and is not established.</p>
   <p>
     <strong>Or don’t install it yet.</strong> Clone
@@ -1393,7 +1489,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     hook calls and prints what it would have freed, writing nothing and installing nothing.
     Node 18 or later, and it reads the sessions already in <code>~/.claude/projects</code> — with
     none there it has nothing to score and says so.
-    <a href="#cost">Section 04, Cost</a> has the range to expect.
+    <a href="#cost">Section 05, Cost</a> has the range to expect.
   </p>
   <div class="cmd">
     <div class="cmd__head">

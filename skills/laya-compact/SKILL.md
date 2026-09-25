@@ -1,6 +1,6 @@
 ---
 name: laya-compact
-description: Use when working with laya-compact — the local context-compaction plugin that scores tool calls and drops what is no longer needed verbatim. Covers reading its decision log, choosing keepThreshold, calibrating the scorer on your own sessions, switching to a Laya sidecar, and diagnosing a compaction that kept or dropped the wrong thing. Also use when someone asks why compaction removed a tool result, how to make compaction more or less aggressive, or how to re-run the evaluation.
+description: Use when working with laya-compact — the local context-compaction plugin that scores tool calls and drops what is no longer needed verbatim. Covers reading its decision log, choosing keepThreshold, calibrating the scorer on your own sessions, switching to a Laya sidecar, and diagnosing a compaction that kept or dropped the wrong thing. Also use when someone asks why compaction removed a tool result, how to make compaction more or less aggressive, or how to re-run the evaluation, or how to see what they keep repeating and turn it into a skill.
 ---
 
 # Operating laya-compact
@@ -124,3 +124,24 @@ page, the manifest or a source comment disagrees with it.
 
 `eval/repeat.ts` is the number to trust. A single split flatters whatever it
 measures — that mistake is recorded in the README, having been made here.
+
+## "What do I keep repeating?"
+
+`npm run propose` ranks the shapes the plugin has been counting and writes
+nothing. `npm run propose -- --write 2,5` drafts those rows as `SKILL.md` files
+into `.laya/proposals/`, which Claude Code does not read — moving one into
+`~/.claude/skills/` is deliberate and manual.
+
+Recording starts when the plugin is installed and never looks at transcripts from
+before that. Turn it off with `recordSignals: false`.
+
+| Symptom | What it means |
+|---|---|
+| "No signals recorded yet" | The hook has not run. Check `recordSignals`, and that the plugin is installed. |
+| Nothing has repeated enough | The bar is 3 times in 2 sessions. `--min 2 --min-sessions 1` shows what is close. |
+| A row groups unrelated work | The signature is too loose. The samples printed under it are how you can tell. |
+| The top rows are generic verbs | Expected, and unresolved — see the ledger row on the page. |
+
+To see what it would find before installing anything,
+`bun eval/signals-fixture.ts` replays transcripts you already have through the
+same code the hook calls, and writes nothing unless given `--out`.

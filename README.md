@@ -285,6 +285,34 @@ scorer**, holding ~5 GB the whole time. That is 122x the time for a lower AUC,
 which is the arithmetic behind the default. Fine-tuning changes the AUC; it does
 not change this table.
 
+## What you repeat, and skills for it
+
+The same reading of every tool call answers a second question: what does this
+person do over and over? A thing done over and over is a skill nobody writes,
+because noticing it is the hard part.
+
+So the plugin counts the *shapes* it sees — a command with its arguments
+collapsed, a run of three tools, a request in your own words — and ranks them.
+
+```sh
+npm run propose                 # the report; writes nothing
+npm run propose -- --write 2    # drafts row 2 into .laya/proposals/
+```
+
+Recording is local, on by default, and off with `recordSignals: false`. It keeps
+signatures plus up to three redacted examples in the plugin's own store, mirrored
+to `~/.claude/laya-signals.json` so the CLI can read it. No raw output is stored,
+nothing is sent anywhere, and drafts land in `.laya/proposals/`, which Claude Code
+does not read — promoting one is a `mv` you do yourself.
+
+**This part is new and its usefulness is not established.** Replaying 2,166 tool
+calls from 40 real sessions through the recorder's own functions, 25 of 2,000
+recorded shapes repeated at all — and all nine of the repeated *command* shapes
+were generic shell verbs (`sed -n`, `grep -n | head`, `cat`). The classifier
+works; whether what it proposes is worth writing is measured by nobody yet, and
+has its own row in the verification ledger. `bun eval/signals-fixture.ts` runs
+that replay on your own transcripts.
+
 ## Calibrate it on your own sessions
 
 **The shipped coefficients were fitted on one person's 41 sessions.** Someone
@@ -406,7 +434,7 @@ And a live Codex CLI, which needs >= 0.155 (this machine has 0.131).
 ```sh
 bun install
 npm run typecheck   # src + test + eval + hooks
-npm run test        # 170 tests
+npm run test        # 197 tests
 npm run validate    # plugin manifest
 ```
 

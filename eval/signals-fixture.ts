@@ -45,6 +45,21 @@ const flag = (name: string): string | undefined => {
 const ROOT = flag('--dir') ?? join(homedir(), '.claude', 'projects');
 const OUT = flag('--out');
 const LIMIT = Number(flag('--sessions') ?? 40);
+/**
+ * Produce something that can be committed and published.
+ *
+ * Keeps only the shapes that repeated, and **drops every sample**. The signatures
+ * are shapes and safe; the samples are not, and finding that out is worth
+ * recording. The eight patterns below look for credentials, and the first fixture
+ * built without this flag passed all of them while carrying another project's task
+ * brief with the client's domain in it, and an absolute path with a session UUID.
+ * Neither is a secret. Both are content that is not mine to publish.
+ *
+ * So: on a developer's own machine, samples are the point — they are how a wrong
+ * grouping becomes visible. In anything that leaves the machine they have no place,
+ * and no regex was ever going to be the thing that decided that.
+ */
+const PUBLISH = args.includes('--publish');
 
 /** Credential shapes that must not survive into a file anyone might commit. */
 const FORBIDDEN: ReadonlyArray<readonly [string, RegExp]> = [
@@ -157,10 +172,36 @@ for (const [index, path] of files.entries()) {
 }
 rows = prune(rows);
 
-const text = JSON.stringify({ version: 1, writtenAt: 0, rows }, null, 0);
+const allShapes = Object.keys(rows).length;
+const isRepeated = (row: { n: number; sessions: string[] }): boolean =>
+  row.n >= 3 && row.sessions.length >= 2;
+if (PUBLISH) {
+  rows = Object.fromEntries(
+    Object.entries(rows)
+      .filter(([, row]) => isRepeated(row))
+      .map(([key, row]) => [key, { ...row, samples: [], sessions: row.sessions.map((_, i) => `s${i + 1}`) }]),
+  );
+}
+
+// The counts describe the whole corpus even when the rows are filtered, because
+// "25 of 2,000 shapes repeated" is the finding and the fixture has to carry it.
+const meta = {
+  sessions: files.length,
+  calls,
+  shapes: allShapes,
+  repeated: Object.values(rows).filter(isRepeated).length,
+};
+const text = JSON.stringify({ version: 1, writtenAt: 0, meta, rows }, null, 0);
 
 // Scrub, then assert the scrub, rather than trusting the regex that did it.
-const leaks = FORBIDDEN.filter(([, pattern]) => pattern.test(text)).map(([name]) => name);
+const PUBLISHED_TOO: ReadonlyArray<readonly [string, RegExp]> = [
+  ['a url', /https?:\/\//],
+  ['an absolute temp path', /\/(?:tmp|home|Users)\//],
+  ['a uuid', /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/],
+  ['an email address', /[\w.+-]+@[\w-]+\.[\w.]+/],
+];
+const checks = PUBLISH ? [...FORBIDDEN, ...PUBLISHED_TOO] : FORBIDDEN;
+const leaks = checks.filter(([, pattern]) => pattern.test(text)).map(([name]) => name);
 if (leaks.length > 0) {
   console.error(`REFUSING TO WRITE: ${leaks.join(', ')} survived into the signatures.`);
   process.exit(1);
@@ -178,7 +219,7 @@ for (const [kind, total] of [...counts].sort((a, b) => b[1] - a[1])) {
   const repeats = repeated.filter((row) => row.kind === kind).length;
   console.log(`  ${kind.padEnd(12)}${String(total).padStart(8)}${String(repeats).padStart(10)}`);
 }
-console.log(`\n  scrub: clean against ${FORBIDDEN.length} credential shapes ` +
+console.log(`\n  scrub: clean against ${checks.length} ${PUBLISH ? 'credential and content' : 'credential'} shapes ` +
   `(${(text.length / 1024).toFixed(0)} KiB of signatures scanned)`);
 
 if (OUT) {

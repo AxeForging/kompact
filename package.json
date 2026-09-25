@@ -33,7 +33,7 @@
     "prepack": "npm run build",
     "docs:demo": "bun eval/demo.ts",
     "docs:eval": "bun eval/make-eval-page.ts",
-    "docs": "bun eval/demo.ts && bun eval/distribution.ts && bun eval/timeline.ts && bun eval/make-eval-page.ts",
+    "docs": "bun eval/demo.ts && bun eval/distribution.ts && bun eval/timeline.ts && bun eval/signals-page.ts && bun eval/make-eval-page.ts",
     "docs:timeline": "bun eval/timeline.ts",
     "eval:fit": "bun eval/fit.ts",
     "eval:score": "bun eval/score.ts",
@@ -42,7 +42,8 @@
     "docs:check": "bun eval/render-check.ts",
     "smoke": "bun test/live-smoke.ts",
     "ckpt": "bun test/ckpt-compare.ts",
-    "propose": "bun eval/propose.ts"
+    "propose": "bun eval/propose.ts",
+    "docs:signals": "bun eval/signals-page.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
