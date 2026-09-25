@@ -357,6 +357,30 @@ table.rows caption{ text-align:left; }
   .glossary{ grid-template-columns: 1fr; }
   .glossary dt{ border-bottom:0; padding-bottom:0; }
 }
+
+/* ── progressive disclosure ────────────────────────────────────────────────
+   The page had eleven sections and ran 20,782px. Every figure earns its place,
+   but a reader deciding in sixty seconds should not have to scroll past the
+   working to reach the conclusion. <details> is native: it opens with scripts
+   blocked, it is a real disclosure widget for a screen reader, and @media print
+   below forces every one of them open so paper loses nothing. */
+details.more{ border-top: 1px solid var(--rule); margin-top: var(--space-md); }
+details.more > summary{
+  cursor: pointer; list-style: none; padding-block: var(--space-sm);
+  font-family: var(--sans); font-size: var(--text-sm); font-weight:600;
+  color: var(--ink-2); display:flex; gap: var(--space-sm); align-items: baseline;
+}
+details.more > summary::-webkit-details-marker{ display:none; }
+details.more > summary::before{
+  content: "+"; font-variant-numeric: tabular-nums; color: var(--accent-ink);
+  font-weight:700; width: 1ch; flex: 0 0 auto;
+}
+details.more[open] > summary::before{ content: "\2212"; }
+details.more > summary:hover{ color: var(--accent-ink); }
+details.more > summary:focus-visible{ outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+details.more[open] > summary{ border-bottom: 1px solid var(--rule); }
+details.more > *:not(summary):last-child{ margin-bottom: var(--space-md); }
+@media print{ details.more{ display:block; } details.more > *{ display:revert; } }
 table.data{ width:100%; min-width: 30rem; border-collapse: collapse; font-family: var(--sans); font-size: var(--text-sm); }
 table.data th, table.data td{ text-align:left; padding: var(--space-xs) var(--space-md) var(--space-xs) 0;
   border-bottom: 1px solid var(--rule); font-variant-numeric: tabular-nums; }
@@ -625,7 +649,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 <nav class="contents-bar" aria-label="Contents">
   <div class="contents wrap">
-    <a href="#result">Evidence</a><a href="#shape">The shape of it</a><a href="#demo">Watch it decide</a><a href="#signals">What you repeat</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#next">What's next</a><a href="#faq">FAQ</a><a href="#session">Your session</a><a href="#glossary">Glossary</a><a href="#install">Install</a>
+    <a href="#result">Evidence</a><a href="#shape">The shape of it</a><a href="#demo">Watch it decide</a><a href="#signals">What you repeat</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#glossary">Glossary</a><a href="#install">Install</a>
   </div>
 </nav>
 
@@ -752,7 +776,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     Laya config’s <span class="num val">0.380–0.642</span>. The coefficients that ship are fitted
     on all <span class="num val">41</span> sessions, where the same measurement gives
     <span class="num val">0.789</span> and <span class="num val">0.051</span> —
-    <a href="#next">section 08, What’s next</a> says why that is the pair to plan around.
+    <a href="#next">the gaps in section 07</a> says why that is the pair to plan around.
   </p>
 </section>
 
@@ -957,6 +981,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
   <!-- /signals:render -->
 
+  <details class="more">
+    <summary>Why this is not established yet, and what it cost to find out</summary>
   <p>
     That is not the finding this was built to get. The classifier itself works: the counts are real,
     the signatures group work that belongs together, and three separate design ideas turned out to be
@@ -985,6 +1011,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     in <code>.laya/proposals/</code>, which Claude Code does not read. Set
     <code>recordSignals</code> to false to record nothing at all.
   </p>
+  </details>
 </section>
 
 <section class="wrap" id="cost" aria-labelledby="cost-h">
@@ -1018,6 +1045,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     transcripts, which grow as work continues — the per-session column is the figure that carries.
   </p>
 
+  <details class="more">
+    <summary>Get this table for your own machine first</summary>
   <h3>Get this table for your own machine first</h3>
   <p>
     Clone the repository and run <code>npm&nbsp;run&nbsp;dry-run</code>. It reads
@@ -1034,6 +1063,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     short has almost nothing to free. The dry run tells you which of those you are.
   </p>
 
+  </details>
   <h3>Why it frees a fifth and not four fifths</h3>
   <p>
     The scorer produces a <em>ranking</em>, and the ranking holds up on sessions it has never
@@ -1070,6 +1100,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     prerequisite, because the policy adapts to your distribution on its own.
   </p>
 
+  <details class="more">
+    <summary>What the neural sidecar would have cost to run</summary>
   <h3>What the sidecar would have cost instead</h3>
   <p>
     Laya stays available for anyone with a checkpoint fine-tuned on their own sessions, so here is
@@ -1095,6 +1127,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     answers eight questions in 573 ms and the slowest in 1,906 ms. Fine-tuning moves the AUC; it
     does not move this table.
   </p>
+  </details>
 </section>
 
 <section class="wrap" id="losses" aria-labelledby="losses-h">
@@ -1138,6 +1171,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     ones it replaced are retracted: they showed the cut but not what the cut costs.
   </p>
 
+  <details class="more">
+    <summary>What the other 22.3% costs</summary>
   <h3>What the other 22.3% costs</h3>
   <p>
     “77.3% of reused outputs kept” invites you to supply your own answer for the rest, so here
@@ -1171,6 +1206,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     at risk.
   </p>
 
+  </details>
+  <details class="more">
+    <summary>What a real compaction costs the work</summary>
   <h3>What a real compaction actually costs the work</h3>
   <p>
     Every figure above asks whether an output was reused <em>somewhere</em> later, which counts
@@ -1200,6 +1238,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     against the compacted transcript, and that remains unverified.
   </p>
 
+  </details>
+  <details class="more">
+    <summary>Four more things it does not do</summary>
   <h3>Four more things this does not do</h3>
   <p>
     <strong>A summary compresses harder.</strong> Freeing a fifth of the tokens is less than
@@ -1224,11 +1265,35 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     scores differently and nothing detects that for you, so <code>npm&nbsp;run&nbsp;calibrate</code>
     refits on your own transcripts and reports whether it helped.
   </p>
+  </details>
 </section>
 
 <section class="wrap" id="checked" aria-labelledby="checked-h">
   <p class="rubric"><span class="rubric__n">07</span>Verification</p>
   <h2 id="checked-h">Including the one that was not.</h2>
+  <div class="ledger">
+    <div class="ledger__row ledger__row--open">
+      <p class="ledger__claim">The minimum Claude Code version <span class="flag">— not verified</span></p>
+      <p class="ledger__how">Everything here was run on 2.1.281, which has function hooks. Which release first shipped them has not been established, so “2.1.281 or newer” would be a claim from a sample of one. On a build without them the plugin installs and never runs.</p>
+    </div>
+    <div class="ledger__row ledger__row--open">
+      <p class="ledger__claim">An assistant still finishing the job <span class="flag">— not verified</span></p>
+      <p class="ledger__how">The measurement above shows how often the information would no longer be there. Whether that changes what the assistant does needs the same session replayed with and without compaction, which needs a live A/B.</p>
+    </div>
+    <div class="ledger__row ledger__row--open">
+      <p class="ledger__claim">That a proposed skill is worth having <span class="flag">— not verified</span></p>
+      <p class="ledger__how">The repetition in <a href="#signals">section 04, What you repeat</a> is measured, and
+        the drafts validate as skills. Whether writing one saves anyone anything is not measured at
+        all: it needs the same work done twice, once with the skill and once without. Every one of the nine
+        repeated command shapes is a generic shell verb, which is evidence against rather than for.</p>
+    </div>
+    <div class="ledger__row ledger__row--open">
+      <p class="ledger__claim">The engine calling <code>session.compact</code> live <span class="flag">— not verified</span></p>
+      <p class="ledger__how">The plugin loads and <code>turn.complete</code> fires in a real session, but the engine declines to compact below ~31% full and the model cannot invoke <code>/compact</code> itself. Covered by the real-session test; the engine-side handoff is not.</p>
+    </div>
+  </div>
+  <details class="more">
+    <summary>And the 7 claims that are verified</summary>
   <div class="ledger">
     <div class="ledger__row">
       <p class="ledger__claim">Beats the model it replaces</p>
@@ -1258,31 +1323,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p class="ledger__claim">The sidecar truncates silently</p>
       <p class="ledger__how">One question asked of four states that all state the fact verbatim: two differing by 32,220 characters answer bit-identically, and moving the sentence past the 512-token cut takes the answer from 0.9152 to 0.2191. <code>eval/truncation.ts</code></p>
     </div>
-    <div class="ledger__row ledger__row--open">
-      <p class="ledger__claim">The minimum Claude Code version <span class="flag">— not verified</span></p>
-      <p class="ledger__how">Everything here was run on 2.1.281, which has function hooks. Which release first shipped them has not been established, so “2.1.281 or newer” would be a claim from a sample of one. On a build without them the plugin installs and never runs.</p>
-    </div>
-    <div class="ledger__row ledger__row--open">
-      <p class="ledger__claim">An assistant still finishing the job <span class="flag">— not verified</span></p>
-      <p class="ledger__how">The measurement above shows how often the information would no longer be there. Whether that changes what the assistant does needs the same session replayed with and without compaction, which needs a live A/B.</p>
-    </div>
-    <div class="ledger__row ledger__row--open">
-      <p class="ledger__claim">That a proposed skill is worth having <span class="flag">— not verified</span></p>
-      <p class="ledger__how">The repetition in <a href="#signals">section 04</a> is measured, and
-        the drafts validate as skills. Whether writing one saves anyone anything is not measured at
-        all: it needs the same work done twice, once with the skill and once without. Every one of the nine
-        repeated command shapes is a generic shell verb, which is evidence against rather than for.</p>
-    </div>
-    <div class="ledger__row ledger__row--open">
-      <p class="ledger__claim">The engine calling <code>session.compact</code> live <span class="flag">— not verified</span></p>
-      <p class="ledger__how">The plugin loads and <code>turn.complete</code> fires in a real session, but the engine declines to compact below ~31% full and the model cannot invoke <code>/compact</code> itself. Covered by the real-session test; the engine-side handoff is not.</p>
-    </div>
   </div>
-</section>
+  </details>
+  <details class="more" id="next">
+    <summary>The gaps, in the order they matter</summary>
 
-<section class="wrap" id="next" aria-labelledby="next-h">
-  <p class="rubric"><span class="rubric__n">08</span>What's next</p>
-  <h2 id="next-h">The gaps, in the order they matter.</h2>
   <p class="lede">
     Everything above this line is measured. Everything below it is not yet, and is written in the
     future tense on purpose.
@@ -1328,14 +1373,15 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         compared against it rather than replacing it.</p>
     </div>
   </div>
-</section>
+  </details>
 
-<section class="wrap" id="faq" aria-labelledby="faq-h">
-  <p class="rubric"><span class="rubric__n">09</span>FAQ</p>
-  <h2 id="faq-h">The questions a sceptic asks.</h2>
+  <details class="more" id="faq">
+    <summary>The questions a sceptic asks</summary>
+
   <div class="faq">
     <div class="faq__item">
-      <h3>Isn't this just a heuristic with extra steps?</h3>
+  <details class="more">
+    <summary>Isn't this just a heuristic with extra steps?</summary>
       <p>It is a heuristic with error bars, which is the difference. Twelve coefficients fitted
         on labelled data, evaluated on sessions held out whole, calibrated well enough that the
         threshold means a probability — expected calibration error 0.035 leave-one-session-out on the
@@ -1346,7 +1392,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         their place on characters freed at a fixed safety level, not on ranking.</p>
     </div>
     <div class="faq__item">
-      <h3>Why did the neural model lose?</h3>
+  <details class="more">
+    <summary>Why did the neural model lose?</summary>
       <p>It was asked to read facts as prose that the features encode directly, and it was never
         trained on this task. Laya's own documentation says the base checkpoints sit near chance on
         typed-decision workflows and should be treated as a fast base to specialise. That is what
@@ -1359,7 +1406,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         embarrassment: the checkpoint is better at a decision than at an entailment.</p>
     </div>
     <div class="faq__item">
-      <h3>Will it delete something I need?</h3>
+  <details class="more">
+    <summary>Will it delete something I need?</summary>
       <p>Sometimes — <span class="num val">0.19</span> outputs a session where it would actually
         cost you something, and 27 of 32 sessions lose nothing at all. Counting every reuse
         anywhere later, including ones that had already happened before a real compaction could
@@ -1370,7 +1418,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         keeps its call: a wrong keep costs context, a wrong drop costs work.</p>
     </div>
     <div class="faq__item">
-      <h3>Do I have to calibrate?</h3>
+  <details class="more">
+    <summary>Do I have to calibrate?</summary>
       <p>No. An earlier version effectively did, because an absolute probability cut cannot survive
         a distribution it was not tuned on. Dropping lowest-score-first until a character budget is
         met adapts on its own, so <code>npm run calibrate</code> is an accuracy upgrade. It is still
@@ -1380,7 +1429,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         before the accuracy of it.</p>
     </div>
     <div class="faq__item">
-      <h3>How is this different from the built-in <code>/compact</code>?</h3>
+  <details class="more">
+    <summary>How is this different from the built-in <code>/compact</code>?</summary>
       <p>The built-in asks a model to summarise the session and replaces it with prose, which
         compresses far harder than a fifth. This keeps what survives <em>verbatim</em>, so a file
         you read is still the file, not a description of it. It is not a better compressor; it is a
@@ -1388,103 +1438,29 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         do its job.</p>
     </div>
   </div>
+  </details>
+  </details>
+  </details>
+  </details>
+  </details>
+  </details>
+
 </section>
 
-<section class="wrap" id="session" aria-labelledby="session-h">
-  <p class="rubric"><span class="rubric__n">10</span>Your session</p>
-  <h2 id="session-h">What it touches, what it never touches, and how you know.</h2>
-  <p class="lede">
-    <strong>Nothing on disk changes.</strong> Compaction rewrites what is sent to the model for
-    the rest of the session; the transcript in <code>~/.claude/projects</code> is untouched, and
-    uninstalling puts the next compaction back to Claude Code’s own summary. Everything below is
-    the shipped behaviour, not a policy: each line is a default in <code>src/compact.ts</code> or
-    a guard the scorer does not get a vote on.
-  </p>
 
-  <h3>How you know it is running</h3>
-  <p>
-    It says so, every time it fires. On each compaction the plugin raises a notice reading
-    <code>kept 34/212 messages, no summary (23% reduction;
-    34&nbsp;kept,&nbsp;1&nbsp;results&nbsp;truncated,&nbsp;2&nbsp;calls&nbsp;dropped,&nbsp;4&nbsp;pinned;
-    41&nbsp;scored&nbsp;via&nbsp;features&nbsp;in&nbsp;4ms)</code> — and writes the same line, plus
-    one per decision, to the session log. The parts sum to what was scored, and the time is for
-    the 41 calls in that compaction, not the 1,762 in <a href="#cost">section 05, Cost</a>. If anything at all goes wrong you get
-    the other notice instead, naming the reason:
-    <code>fallback to built-in summary (…)</code>, naming the reason. Silence at a compaction is
-    different: it means the hook never ran at all, which is a setup answer rather than a bad
-    decision. <code>claude&nbsp;plugin&nbsp;list</code> confirms it is installed; only the notice
-    confirms it is running. Two checks, in this order:
-  </p>
-  <ul class="plain">
-    <li><code>echo $CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> must print <code>1</code>.
-      Empty is the usual answer and the usual cause. It has to be exported <em>before</em> Claude
-      Code starts, so typing <code>export</code> into a session that is already running changes
-      nothing for that session — and nothing for the next terminal either, unless the line is in
-      your shell's startup file.</li>
-    <li><code>claude&nbsp;plugin&nbsp;list</code> must show <code>laya-compact</code>. If it does,
-      the variable is <code>1</code>, and no notice ever appears, the build is older than function
-      hooks: see the version rule in <a href="#install">section 11, Install</a>.</li>
-  </ul>
 
-  <h3>What it does to a session, in full</h3>
-  <ul class="plain">
-    <li>The <b>last six messages</b> are never touched, whatever they contain.</li>
-    <li>Your prose and the assistant’s is never touched. Only tool results and tool calls.</li>
-    <li>A shortened result <b>keeps its first 300 characters</b>, so the call is still legible
-      and the tool can be run again.</li>
-    <li>A call that recorded a change — <code>Edit</code>, <code>Write</code>,
-      <code>MultiEdit</code>, <code>NotebookEdit</code> — is <b>never dropped</b>, whatever it scores.</li>
-    <li>Nothing on disk changes. Compaction rewrites what is sent to the model for the rest of
-      the session; the transcript in <code>~/.claude/projects</code> is untouched.</li>
-    <li>Remove it with <code>claude plugin uninstall laya-compact</code>, or unset
-      <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> to turn every function hook off. Either way
-      the next compaction is Claude Code’s own summary again.</li>
-  </ul>
 
-  <h3 id="glossary">What the words mean</h3>
-  <p>
-    Every term this page uses for its own machinery, in one place, because most readers arrive in
-    the middle of it rather than at the top.
-  </p>
-  <dl class="glossary">
-    <dt>AUC</dt>
-    <dd>How often the scorer ranks a call that turned out to be needed above one that did not, over
-      every possible pair. 0.5 is a coin flip; 1.0 never gets a pair the wrong way round.</dd>
-    <dt>Calibration error</dt>
-    <dd>The average gap between a score and what actually happens at it. At 0.035, calls scored
-      near 0.30 are genuinely needed about 30% of the time — which is what makes a threshold mean
-      something rather than just order things.</dd>
-    <dt>keep&#8209;result, keep&#8209;call</dt>
-    <dd>The two probabilities scored for every call: whether its <em>output</em> is still needed
-      word for word, and whether the <em>call itself</em> should stay. They differ often, which is
-      why both exist.</dd>
-    <dt>The floor</dt>
-    <dd><code>keepThreshold</code>, 0.2 by default. At or above it nothing is dropped, whatever the
-      budget still wants. It is the guard the budget cannot argue with.</dd>
-    <dt>The budget</dt>
-    <dd><code>targetReduction</code>, 0.5 by default. The fraction of droppable characters to free.
-      Calls are dropped lowest-score-first until it is met, and then dropping stops — so a session
-      with little to gain loses little.</dd>
-    <dt>Head only</dt>
-    <dd>The call survives and its result is cut to its first 300 characters. Enough to see what it
-      was and to run it again.</dd>
-    <dt>Pinned</dt>
-    <dd>Inside the six newest messages, which are never touched. A pinned call is not scored for
-      dropping at all, so its 1.000 is a statement about the rule, not about the call.</dd>
-    <dt>Dry run</dt>
-    <dd><code>npm run dry-run</code>: scores the transcripts already on your machine and prints what
-      it would have freed. It writes nothing, installs nothing, and needs no plugin.</dd>
-  </dl>
-</section>
+
+
 
 <section class="wrap" id="install" aria-labelledby="install-h">
-  <p class="rubric"><span class="rubric__n">11</span>Install</p>
+  <p class="rubric"><span class="rubric__n">08</span>Install</p>
   <h2 id="install-h">Function hooks are early access, so turn them on first.</h2>
   <p class="lede">Tested on Claude Code 2.1.281, which has function hooks. So the rule is
      <b>2.1.281 or later works; below it is unknown rather than broken</b> — which release first
      shipped them is <em>not established here</em>, and on a build without them the plugin
      installs and silently never runs. Check <code>claude&nbsp;--version</code>, then
-     <a href="#session">section 10, Your session</a> for the notice that proves it fired, and the
+     <a href="#session">what it touches, in section 08</a> for the notice that proves it fired, and the
      <a href="#checked">verification ledger</a> for what is and is not established.</p>
   <p>
     <strong>Or don’t install it yet.</strong> Clone
@@ -1523,6 +1499,101 @@ claude plugin install laya-compact@laya-compact</code></pre>
     response, or a saving below the minimum) falls back to the built-in summary.
   </p>
 
+
+  <details class="more" id="session">
+    <summary>What it touches, and what it never touches</summary>
+
+  <p class="lede">
+    <strong>Nothing on disk changes.</strong> Compaction rewrites what is sent to the model for
+    the rest of the session; the transcript in <code>~/.claude/projects</code> is untouched, and
+    uninstalling puts the next compaction back to Claude Code’s own summary. Everything below is
+    the shipped behaviour, not a policy: each line is a default in <code>src/compact.ts</code> or
+    a guard the scorer does not get a vote on.
+  </p>
+
+  <details class="more">
+    <summary>How you know it is running</summary>
+  <p>
+    It says so, every time it fires. On each compaction the plugin raises a notice reading
+    <code>kept 34/212 messages, no summary (23% reduction;
+    34&nbsp;kept,&nbsp;1&nbsp;results&nbsp;truncated,&nbsp;2&nbsp;calls&nbsp;dropped,&nbsp;4&nbsp;pinned;
+    41&nbsp;scored&nbsp;via&nbsp;features&nbsp;in&nbsp;4ms)</code> — and writes the same line, plus
+    one per decision, to the session log. The parts sum to what was scored, and the time is for
+    the 41 calls in that compaction, not the 1,762 in <a href="#cost">section 05, Cost</a>. If anything at all goes wrong you get
+    the other notice instead, naming the reason:
+    <code>fallback to built-in summary (…)</code>, naming the reason. Silence at a compaction is
+    different: it means the hook never ran at all, which is a setup answer rather than a bad
+    decision. <code>claude&nbsp;plugin&nbsp;list</code> confirms it is installed; only the notice
+    confirms it is running. Two checks, in this order:
+  </p>
+  <ul class="plain">
+    <li><code>echo $CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> must print <code>1</code>.
+      Empty is the usual answer and the usual cause. It has to be exported <em>before</em> Claude
+      Code starts, so typing <code>export</code> into a session that is already running changes
+      nothing for that session — and nothing for the next terminal either, unless the line is in
+      your shell's startup file.</li>
+    <li><code>claude&nbsp;plugin&nbsp;list</code> must show <code>laya-compact</code>. If it does,
+      the variable is <code>1</code>, and no notice ever appears, the build is older than function
+      hooks: see the version rule in <a href="#install">section 08, Install</a>.</li>
+  </ul>
+
+  </details>
+  <details class="more">
+    <summary>Everything it touches, in full</summary>
+  <h3>What it does to a session, in full</h3>
+  <ul class="plain">
+    <li>The <b>last six messages</b> are never touched, whatever they contain.</li>
+    <li>Your prose and the assistant’s is never touched. Only tool results and tool calls.</li>
+    <li>A shortened result <b>keeps its first 300 characters</b>, so the call is still legible
+      and the tool can be run again.</li>
+    <li>A call that recorded a change — <code>Edit</code>, <code>Write</code>,
+      <code>MultiEdit</code>, <code>NotebookEdit</code> — is <b>never dropped</b>, whatever it scores.</li>
+    <li>Nothing on disk changes. Compaction rewrites what is sent to the model for the rest of
+      the session; the transcript in <code>~/.claude/projects</code> is untouched.</li>
+    <li>Remove it with <code>claude plugin uninstall laya-compact</code>, or unset
+      <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> to turn every function hook off. Either way
+      the next compaction is Claude Code’s own summary again.</li>
+  </ul>
+
+  </details>
+  <details class="more">
+    <summary>What the words mean</summary>
+  <h3 id="glossary">What the words mean</h3>
+  <p>
+    Every term this page uses for its own machinery, in one place, because most readers arrive in
+    the middle of it rather than at the top.
+  </p>
+  <dl class="glossary">
+    <dt>AUC</dt>
+    <dd>How often the scorer ranks a call that turned out to be needed above one that did not, over
+      every possible pair. 0.5 is a coin flip; 1.0 never gets a pair the wrong way round.</dd>
+    <dt>Calibration error</dt>
+    <dd>The average gap between a score and what actually happens at it. At 0.035, calls scored
+      near 0.30 are genuinely needed about 30% of the time — which is what makes a threshold mean
+      something rather than just order things.</dd>
+    <dt>keep&#8209;result, keep&#8209;call</dt>
+    <dd>The two probabilities scored for every call: whether its <em>output</em> is still needed
+      word for word, and whether the <em>call itself</em> should stay. They differ often, which is
+      why both exist.</dd>
+    <dt>The floor</dt>
+    <dd><code>keepThreshold</code>, 0.2 by default. At or above it nothing is dropped, whatever the
+      budget still wants. It is the guard the budget cannot argue with.</dd>
+    <dt>The budget</dt>
+    <dd><code>targetReduction</code>, 0.5 by default. The fraction of droppable characters to free.
+      Calls are dropped lowest-score-first until it is met, and then dropping stops — so a session
+      with little to gain loses little.</dd>
+    <dt>Head only</dt>
+    <dd>The call survives and its result is cut to its first 300 characters. Enough to see what it
+      was and to run it again.</dd>
+    <dt>Pinned</dt>
+    <dd>Inside the six newest messages, which are never touched. A pinned call is not scored for
+      dropping at all, so its 1.000 is a statement about the rule, not about the call.</dd>
+    <dt>Dry run</dt>
+    <dd><code>npm run dry-run</code>: scores the transcripts already on your machine and prints what
+      it would have freed. It writes nothing, installs nothing, and needs no plugin.</dd>
+  </dl>
+  </details>
+  </details>
 
 </section>
 </main>

@@ -87,6 +87,12 @@ const PROBE = String.raw`
   say(document.documentElement.scrollWidth <= innerWidth + 1, 'no horizontal page scroll @' + w,
       document.documentElement.scrollWidth + ' vs ' + innerWidth);
 
+  // Not a pass/fail, but the number that decides whether this reads as a product
+  // page or as a study. It was 20,782px at 1400 and about 26,000 at 390.
+  say(true, 'page height @' + w,
+      document.documentElement.scrollHeight + 'px, ' +
+      document.querySelectorAll('details.more').length + ' blocks folded away');
+
   // Every in-page anchor has to land clear of the sticky contents bar. They
   // used to land 29px behind it on a laptop and 116px behind it on a phone,
   // where the heading and the first fact were simply not on screen.
