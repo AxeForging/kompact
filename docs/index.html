@@ -45,9 +45,14 @@
      shape of an engraved plate — which is what the one image on this page is. */
   --display: 'Bodoni Moda', 'Bodoni 72', Didot, 'Times New Roman', serif;
 
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1.0625rem;
+  /* Raised after a reader said the page was hard to read. 12px was carrying 15
+     roles including two figure captions and every table cell; 13px and 15px cost
+     a little height and buy back the small type, which is most of this page. The
+     body moves 17 to 18: Literata's x-height is modest and it was set a step
+     below where this measure wants it. */
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-base: 1.125rem;
   --text-lg: clamp(1.25rem, 1.02rem + 1.1vw, 1.6rem);
   --text-xl: clamp(2.3rem, 1.4rem + 4.1vw, 4.1rem);
   /* The 3.4rem floor stopped the wordmark shrinking below ~356px viewport while
@@ -518,6 +523,17 @@ details.more > *:not(summary):last-child{ margin-bottom: var(--space-md); }
 .stream__track{ height: 10px; background: var(--paper-sunk); position:relative; }
 .stream__fill{ position:absolute; inset:0 auto 0 0; width:0; background: var(--accent-ink); }
 .stream__n{ text-align:right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+/* The end of the story: the row at the top becomes a file. This is the real
+   output of `npm run propose -- --write 1`, rendered by the same function the
+   CLI calls, so the page shows the product rather than a picture of it. */
+.stream__draft{ margin-top: var(--space-md); border-top: 1px solid var(--rule-firm); padding-top: var(--space-sm); }
+.stream__draft pre{
+  margin:0; padding: var(--space-md); background: var(--paper-sunk);
+  border:1px solid var(--rule); overflow-x:auto;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: var(--text-xs); line-height:1.65; white-space: pre-wrap; overflow-wrap:anywhere;
+}
+.stream__draft[data-pending="1"]{ opacity: 0.25; }
 @media (max-width: 560px){
   .stream__row{ grid-template-columns: minmax(0,1fr) 5ch; }
   .stream__track{ grid-column: 1 / -1; }
@@ -1159,6 +1175,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <button class="demo__run" type="button" id="stream-run">Watch it count</button>
     </div>
     <ol class="stream__list" id="stream-list"></ol>
+    <div class="stream__draft" id="stream-draft">
+      <p class="label">and what <code>npm run propose -- --write 1</code> then writes</p>
+      <pre><code id="stream-draft-text"></code></pre>
+    </div>
     <p class="caption" id="stream-caption"></p>
   </div>
 
@@ -1644,7 +1664,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     Every term this page uses for its own machinery, in one place, because most readers arrive in
     the middle of it rather than at the top.
   </p>
-  <dl class="glossary">
+    <details class="more">
+    <summary><h3>The twelve terms this page uses for its own machinery</h3></summary>
+<dl class="glossary">
     <dt id="g-auc">AUC</dt>
     <dd>How often the scorer ranks a call that turned out to be needed above one that did not, over
       every possible pair. 0.5 is a coin flip; 1.0 never gets a pair the wrong way round.</dd>
@@ -1688,6 +1710,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <dd><code>npm run dry-run</code>: scores the transcripts already on your machine and prints what
       it would have freed. It writes nothing, installs nothing, and needs no plugin.</dd>
   </dl>
+  </details>
 </section>
 
 <section class="wrap" id="install" aria-labelledby="install-h">
@@ -1972,11 +1995,17 @@ if (streamBox && streamData && streamData.stream.length) {
 
   const RUN_MS = 3200;
   let playing = false;
-  const settle = () => { playing = false; paint(streamData.stream.length); label(); };
+  const settle = () => {
+    playing = false;
+    paint(streamData.stream.length);
+    if (draftBox) draftBox.removeAttribute('data-pending');
+    label();
+  };
   const label = () => { runEl.textContent = playing ? 'Stop' : 'Watch it count'; };
   const play = () => {
     if (playing) return;
     playing = true;
+    if (draftBox) draftBox.setAttribute('data-pending', '1');
     label();
     const started = performance.now();
     const step = (now) => {
@@ -1991,10 +2020,17 @@ if (streamBox && streamData && streamData.stream.length) {
     setTimeout(() => { if (playing) settle(); }, RUN_MS + 250);
   };
 
+  const draftBox = document.getElementById('stream-draft');
+  const draftText = document.getElementById('stream-draft-text');
+  if (draftText) draftText.textContent = streamData.draft;
+
   // Settled first, so with the script starved the numbers on screen are the true
   // ones rather than a half-run.
   paint(streamData.stream.length);
   streamBox.hidden = false;
+  // The element ships hidden, so a `#stream` link is resolved by the browser
+  // before this runs and lands on whitespace. Put the reader where they asked.
+  if (location.hash === '#stream') streamBox.scrollIntoView();
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
     runEl.hidden = true;
   } else {

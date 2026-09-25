@@ -15,6 +15,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { estimateSaved } from '../src/signals.js';
+import { type Proposal, draft } from './propose.js';
 
 type Row = {
   kind: string;
@@ -133,6 +134,14 @@ writeFileSync(join(dir, '..', 'docs', 'signals-data.js'),
     rows: shown.map((row) => ({ sig: row.sig, n: row.n })),
     stream,
     commands: fixture.meta.commands,
+    // The actual draft `npm run propose -- --write 1` produces for the top row,
+    // rendered by the same function the CLI calls. The page shows the product's
+    // own output rather than a mock-up of it.
+    draft: draft({
+      ...(fixture.rows[`command::${ranked[0]?.sig}`] as Row),
+      sig: ranked[0]?.sig ?? '',
+      saved: ranked[0]?.saved ?? 0,
+    } as Proposal),
     shapes: fixture.meta.shapes,
     repeated: fixture.meta.repeated,
   })};\n`);

@@ -52,6 +52,9 @@ const PROBE = String.raw`
   // Nothing may clip its own text.
   let clipped = 0;
   for (const el of document.querySelectorAll('.demo__who span, .row__name, .ledger__claim, .next__what')) {
+    // An element that asks for an ellipsis has declared that it may truncate;
+    // this check is for the ones that clip without saying so.
+    if (getComputedStyle(el).textOverflow === 'ellipsis') continue;
     if (el.scrollWidth > el.clientWidth + 1) {
       clipped += 1;
       say(false, 'text is not clipped @' + w,
@@ -205,6 +208,18 @@ const PROBE = String.raw`
     const total = row.querySelectorAll('a').length;
     say(visible >= 3, 'the contents bar shows more than a couple of sections @' + w,
         visible + ' of ' + total + ' links, row ' + Math.round(box.width) + 'px');
+  }
+
+  // An animation nobody can see is not an explanation. Assert it occupies space
+  // and is actually painted, not merely present in the DOM with the right text.
+  const box = document.getElementById('stream');
+  if (box) {
+    const at = box.getBoundingClientRect();
+    const cs = getComputedStyle(box);
+    say(at.height > 40 && cs.visibility !== 'hidden' && Number(cs.opacity) > 0.9,
+        'the stream is visible, not just present @' + w,
+        Math.round(at.width) + 'x' + Math.round(at.height) +
+        ' opacity=' + cs.opacity + ' display=' + cs.display + ' hidden=' + box.hidden);
   }
 
   // Every in-page link, not just the nav: the glossary's twelve term anchors are
