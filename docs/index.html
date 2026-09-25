@@ -386,6 +386,9 @@ table.rows caption{ text-align:left; }
 .glossary dt{ font-family: var(--sans); font-size: var(--text-sm); font-weight:600; color: var(--ink); }
 .glossary dt, .glossary dd{ margin:0; padding-block: var(--space-xs); border-bottom: 1px solid var(--rule); }
 .glossary dt code, .glossary dd code{ font-size: 0.95em; }
+/* Arriving at a definition should show which of the twelve answered you. */
+.glossary dt:target{ color: var(--accent-ink); }
+.glossary dt:target + dd{ border-bottom-color: var(--accent-ink); }
 @media (max-width: 560px){
   .glossary{ grid-template-columns: 1fr; }
   .glossary dt{ border-bottom:0; padding-bottom:0; }
@@ -676,7 +679,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     goes with it. This scores every tool call instead and <strong>keeps what survives
     verbatim</strong>, dropping only what is no longer needed &#8212; so a file you read is
     still the file, not a description of it. On your machine: no API key, no GPU, no network
-    call. <span class="standfirst__note">The optional Laya <a href="#glossary">sidecar</a> is
+    call. <span class="standfirst__note">The optional Laya <a href="#g-sidecar">sidecar</a> is
     the one path that uses either.</span>
   </p>
   <div class="upfront reveal" style="--d:150ms">
@@ -829,7 +832,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     ones every Laya config was scored against, so the comparison is possible at all — and every
     scorer is judged on the same held-out sessions each split, which is what makes it paired.
     Splitting by session rather than by row, because calls inside one session are correlated.
-    Across those splits the <a href="#glossary">calibration error</a> is <span class="num val">0.044</span> against every
+    Across those splits the <a href="#g-calibration-error">calibration error</a> is <span class="num val">0.044</span> against every
     Laya config’s <span class="num val">0.380–0.642</span>. The coefficients that ship are fitted
     on all <span class="num val">41</span> sessions, where the same measurement gives
     <span class="num val">0.789</span> and <span class="num val">0.051</span> —
@@ -895,10 +898,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
 
   <section class="sweep" id="sweep" hidden aria-labelledby="sweep-h">
-    <h3 id="sweep-h">What stops it: <a href="#glossary">the floor</a>, not the budget</h3>
+    <h3 id="sweep-h">What stops it: <a href="#g-the-floor">the floor</a>, not the budget</h3>
     <p>
       A real session out of the committed corpus, at the moment compaction fires. Its calls are
-      lined up in the order <a href="#glossary">the budget</a> spends them — lowest score first — and the sweep takes
+      lined up in the order <a href="#g-the-budget">the budget</a> spends them — lowest score first — and the sweep takes
       them one at a time until it is done. Watch where it stops.
     </p>
     <div class="sweep__plot">
@@ -935,7 +938,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     and 0.037 — about as low as this scorer goes — and dropping it would have freed
     <span class="num val">126 characters</span> — more than the 89 its result holds, because
     dropping the call takes its input with it. Roughly thirty tokens, against a real chance of
-    losing something the session still needed. Below <a href="#glossary"><code>minYieldChars</code></a> the ranking is
+    losing something the session still needed. Below <a href="#g-minyieldchars"><code>minYieldChars</code></a> the ranking is
     not worth acting on however confident it is, so that call reads <em>too small</em> rather
     than <em>dropped</em>.
   </p>
@@ -1130,7 +1133,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p>
     Calls are therefore dropped lowest-score-first only until the reduction target is met, with
     the keep threshold acting as a floor that nothing is dropped above. Simulated per session on
-    the labelled corpus, scored <a href="#glossary">leave-one-session-out</a>:
+    the labelled corpus, scored <a href="#g-leave-one-session-out">leave-one-session-out</a>:
   </p>
   <div class="scroller" tabindex="0" data-label="Table: the policy sweep">
     <table class="data">
@@ -1325,7 +1328,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <div class="ledger">
     <div class="ledger__row ledger__row--open">
       <p class="ledger__claim">The minimum Claude Code version <span class="flag">— not verified</span></p>
-      <p class="ledger__how">Everything here was run on 2.1.281, which has <a href="#glossary">function hooks</a>. Which release first shipped them has not been established, so “2.1.281 or newer” would be a claim from a sample of one. On a build without them the plugin installs and never runs.</p>
+      <p class="ledger__how">Everything here was run on 2.1.281, which has <a href="#g-function-hooks">function hooks</a>. Which release first shipped them has not been established, so “2.1.281 or newer” would be a claim from a sample of one. On a build without them the plugin installs and never runs.</p>
     </div>
     <div class="ledger__row ledger__row--open">
       <p class="ledger__claim">An assistant still finishing the job <span class="flag">— not verified</span></p>
@@ -1428,9 +1431,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
     <h3>The questions a sceptic asks</h3>
   <div class="faq">
-    <div class="faq__item">
-  <details class="more">
-    <summary><h3>Isn't this just a heuristic with extra steps?</h3></summary>
+  <div class="faq__item">
+    <details class="more">
+      <summary><h3>Isn't this just a heuristic with extra steps?</h3></summary>
       <p>It is a heuristic with error bars, which is the difference. Thirteen coefficients &#8212; twelve features and an intercept &#8212; fitted
         on labelled data, evaluated on sessions held out whole, calibrated well enough that the
         threshold means a probability — expected calibration error 0.035 leave-one-session-out on the
@@ -1439,11 +1442,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         alone reaches 0.878, so most of the signal really is one feature — three coefficients of the
         twelve, since size is banded — and the other nine earn
         their place on characters freed at a fixed safety level, not on ranking.</p>
-    </div>
-    <div class="faq__item">
-  </details>
-  <details class="more">
-    <summary><h3>Why did the neural model lose?</h3></summary>
+    </details>
+  </div>
+  <div class="faq__item">
+    <details class="more">
+      <summary><h3>Why did the neural model lose?</h3></summary>
       <p>It was asked to read facts as prose that the features encode directly, and it was never
         trained on this task. Laya's own documentation says the base checkpoints sit near chance on
         typed-decision workflows and should be treated as a fast base to specialise. That is what
@@ -1454,11 +1457,20 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         than not scoring at all. That is the reverse of
         what Laya's own documentation suggests, which is the finding rather than an
         embarrassment: the checkpoint is better at a decision than at an entailment.</p>
-    </div>
-    <div class="faq__item">
-  </details>
-  <details class="more">
-    <summary><h3>Will it delete something I need?</h3></summary>
+      <p>The checkpoint named for English is also not the best at English. On that same
+        wording it scores <span class="num val">0.480</span> &#8212; below the coin flip &#8212;
+        where the multilingual one scores <span class="num val">0.667</span>, and the two ranges
+        do not overlap: English tops out at 0.502, multilingual bottoms out at 0.638. English wins
+        only on entailment, by 0.021, which is inside one standard deviation, and its best config
+        still loses to multilingual's best. It also reads half the context, 512 tokens against
+        1024, and runs about three times slower. None of that is why the sidecar loses &#8212;
+        <code>typed&#8209;decisions</code> reads 1024 too and reaches 0.719 &#8212; but it does mean
+        there is no configuration in which the English checkpoint is the one to pick.</p>
+    </details>
+  </div>
+  <div class="faq__item">
+    <details class="more">
+      <summary><h3>Will it delete something I need?</h3></summary>
       <p>Sometimes — <span class="num val">0.19</span> outputs a session where it would actually
         cost you something, and 27 of 32 sessions lose nothing at all. Counting every reuse
         anywhere later, including ones that had already happened before a real compaction could
@@ -1467,11 +1479,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         that recorded a change is never dropped at all. Every failure mode falls back to Claude
         Code's own summary rather than to a half-compacted transcript, and a single failed request
         keeps its call: a wrong keep costs context, a wrong drop costs work.</p>
-    </div>
-    <div class="faq__item">
-  </details>
-  <details class="more">
-    <summary><h3>Do I have to calibrate?</h3></summary>
+    </details>
+  </div>
+  <div class="faq__item">
+    <details class="more">
+      <summary><h3>Do I have to calibrate?</h3></summary>
       <p>No. An earlier version effectively did, because an absolute probability cut cannot survive
         a distribution it was not tuned on. Dropping lowest-score-first until a character budget is
         met adapts on its own, so <code>npm run calibrate</code> is an accuracy upgrade. It is still
@@ -1479,20 +1491,19 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         leave-one-session-out across them gives 0.789, not the 0.905 the narrow corpus shows.
         <code>npm run dry-run</code> needs nothing installed if you want the size of the prize
         before the accuracy of it.</p>
-    </div>
-    <div class="faq__item">
-  </details>
-  <details class="more">
-    <summary><h3>How is this different from the built-in <code>/compact</code>?</h3></summary>
+    </details>
+  </div>
+  <div class="faq__item">
+    <details class="more">
+      <summary><h3>How is this different from the built-in <code>/compact</code>?</h3></summary>
       <p>The built-in asks a model to summarise the session and replaces it with prose, which
         compresses far harder than a fifth. This keeps what survives <em>verbatim</em>, so a file
         you read is still the file, not a description of it. It is not a better compressor; it is a
         different trade — and it hands the session back to the built-in summary whenever it cannot
         do its job.</p>
-    </div>
+    </details>
   </div>
-  </details>
-
+</div>
 </section>
 
 
@@ -1510,46 +1521,46 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     the middle of it rather than at the top.
   </p>
   <dl class="glossary">
-    <dt>AUC</dt>
+    <dt id="g-auc">AUC</dt>
     <dd>How often the scorer ranks a call that turned out to be needed above one that did not, over
       every possible pair. 0.5 is a coin flip; 1.0 never gets a pair the wrong way round.</dd>
-    <dt>Calibration error</dt>
+    <dt id="g-calibration-error">Calibration error</dt>
     <dd>The average gap between a score and what actually happens at it. At 0.035, calls scored
       near 0.30 are genuinely needed about 30% of the time — which is what makes a threshold mean
       something rather than just order things.</dd>
-    <dt>keep&#8209;result, keep&#8209;call</dt>
+    <dt id="g-keep-8209-result-keep-8209-call">keep&#8209;result, keep&#8209;call</dt>
     <dd>The two probabilities scored for every call: whether its <em>output</em> is still needed
       word for word, and whether the <em>call itself</em> should stay. They differ often, which is
       why both exist.</dd>
-    <dt>Function hooks</dt>
+    <dt id="g-function-hooks">Function hooks</dt>
     <dd>The Claude Code extension point this plugin runs on: a module that the engine
       calls at named moments, rather than a shell command it spawns. Early access, which is
       why <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> exists.</dd>
-    <dt>Sidecar</dt>
+    <dt id="g-sidecar">Sidecar</dt>
     <dd>A local <code>laya-serve</code> process scoring calls over HTTP instead of the
       built-in model. Optional, slower, and the only path here that wants a GPU — which is
       why the default is not it.</dd>
-    <dt>Leave-one-session-out</dt>
+    <dt id="g-leave-one-session-out">Leave-one-session-out</dt>
     <dd>Fit on every session but one, test on the one held out, repeat for each. It is the
       honest number when sessions differ from each other more than calls within a session
       do, and it is lower than the grouped-split figure for exactly that reason.</dd>
-    <dt><code>minYieldChars</code></dt>
+    <dt id="g-minyieldchars"><code>minYieldChars</code></dt>
     <dd>The smallest result worth dropping. Below it, dropping frees less than it risks, so
       the call is refused outright — the <em>too small</em> outcome in <a href="#demo">section 02, Watch it decide</a>.</dd>
-    <dt>The floor</dt>
+    <dt id="g-the-floor">The floor</dt>
     <dd><code>keepThreshold</code>, 0.2 by default. At or above it nothing is dropped, whatever the
       budget still wants. It is the guard the budget cannot argue with.</dd>
-    <dt>The budget</dt>
+    <dt id="g-the-budget">The budget</dt>
     <dd><code>targetReduction</code>, 0.5 by default. The fraction of droppable characters to free.
       Calls are dropped lowest-score-first until it is met, and then dropping stops — so a session
       with little to gain loses little.</dd>
-    <dt>Head only</dt>
+    <dt id="g-head-only">Head only</dt>
     <dd>The call survives and its result is cut to its first 300 characters. Enough to see what it
       was and to run it again.</dd>
-    <dt>Pinned</dt>
+    <dt id="g-pinned">Pinned</dt>
     <dd>Inside the six newest messages, which are never touched. A pinned call is not scored for
       dropping at all, so its 1.000 is a statement about the rule, not about the call.</dd>
-    <dt>Dry run</dt>
+    <dt id="g-dry-run">Dry run</dt>
     <dd><code>npm run dry-run</code>: scores the transcripts already on your machine and prints what
       it would have freed. It writes nothing, installs nothing, and needs no plugin.</dd>
   </dl>
@@ -1602,7 +1613,7 @@ claude plugin install laya-compact@laya-compact</code></pre>
   </p>
 
 
-    <h3>What it touches, and what it never touches</h3>
+    <h3 id="session">What it touches, and what it never touches</h3>
   <p class="lede">
     <strong>Nothing on disk changes.</strong> Compaction rewrites what is sent to the model for
     the rest of the session; the transcript in <code>~/.claude/projects</code> is untouched, and

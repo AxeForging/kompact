@@ -251,6 +251,22 @@ describe('published figures match eval/RESULTS.md', () => {
       expect(open, `<${tag}> opened ${open} times and closed ${close}`).toBe(close);
     }
     expect(page, 'a slice cut through a tag').not.toMatch(/<\/?[a-z]+\b[^>]*\n\s*<\/?[a-z]+[^>]*>\s*>/);
+
+    // Counting is not enough, which is how five mis-nested FAQ items passed this
+    // test: every `</div>` closed its item while the `<details>` inside was still
+    // open, so the counts balanced and the nesting interleaved. Chromium's error
+    // recovery hid it, at the cost of 49px of dead space inside each question.
+    const nested = ['section', 'details', 'summary', 'div', 'dl', 'ul', 'ol', 'table'];
+    const stack: string[] = [];
+    for (const [, close, name] of page.matchAll(/<(\/?)([a-z][a-z0-9]*)\b[^>]*>/g)) {
+      if (!nested.includes(name as string)) continue;
+      if (!close) stack.push(name as string);
+      else {
+        const top = stack.pop();
+        expect(top, `</${name}> closes ${top ?? 'nothing'}: tags interleave`).toBe(name);
+      }
+    }
+    expect(stack, `left open: ${stack.join(', ')}`).toHaveLength(0);
   });
 
   // The page claims it is complete with scripts blocked, and nothing checked it.
@@ -269,7 +285,9 @@ describe('published figures match eval/RESULTS.md', () => {
     const rows = (pattern: RegExp): number => (noscript.match(pattern) ?? []).length;
     expect(rows(/demo__call/g), 'the demo table is rendered by script').toBeGreaterThanOrEqual(9);
     expect(rows(/ledger__row/g), 'the ledger is rendered by script').toBeGreaterThanOrEqual(10);
-    expect(rows(/<dt>/g), 'the glossary is rendered by script').toBeGreaterThanOrEqual(12);
+    // `<dt[ >]`, not `<dt>`: each term carries an id now, so the link from where
+    // the word is used lands on the definition rather than on the section.
+    expect(rows(/<dt[ >]/g), 'the glossary is rendered by script').toBeGreaterThanOrEqual(12);
     expect(rows(/<details class="more"/g), 'the folded blocks need script').toBeGreaterThanOrEqual(15);
 
     // Nesting is the defect worth guarding, not the count. The script that

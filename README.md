@@ -52,6 +52,34 @@ into words first (`describeSize`, `describeAge`) because Laya cannot read
 digits — its own docs record that no checkpoint could tell which of two
 altitudes was lower.
 
+### 1b. The checkpoint named for English is not the best at English
+
+The obvious move once the 512-token limit bites is to reach for the multilingual
+checkpoint, which reads 1024. Measured on the same 1,063 calls and the same ten
+grouped splits, it is the better checkpoint for English work anyway — and the
+English one has no configuration in which it is the right choice:
+
+| checkpoint | direct | entailment | reproducible | context |
+|---|---|---|---|---|
+| multilingual | **0.667 ± 0.023** | 0.604 ± 0.015 | 0.610 ± 0.016 | 1024 |
+| english | **0.480 ± 0.012** | 0.625 ± 0.016 | 0.539 ± 0.016 | 512 |
+
+On the strongest wording the gap is **0.187 AUC and the ranges do not overlap** —
+english tops out at 0.502, multilingual bottoms out at 0.638 — and 0.480 is below
+a coin flip. English wins only on `entailment`, by 0.021, which is inside one
+standard deviation. Its best config, 0.625, still loses to multilingual's best,
+0.667. It is also about **3× slower**: 381 ms against 123 ms for one question,
+1,704 ms against 573 ms for eight (`eval/RESULTS.md`).
+
+Half the context, worse on the wording that works, and three times the latency.
+None of which rescues the sidecar: `typed-decisions` reads 1024 too and scores
+**0.719**, and the built-in logistic scores 0.905 with no GPU at all.
+
+**This does not affect the shipped default**, because the states are not large
+enough for any of it to bind: across all 2,239 calls in the corpus they run 35 to
+**97 tokens**, against a 768-token budget. The 512-token cliff is a property of
+sending the whole conversation, which is the upstream design this one replaced.
+
 ### 2. The decision model loses to a logistic regression
 
 With that fixed, 1063 tool calls from 18 real sessions were labelled — no
