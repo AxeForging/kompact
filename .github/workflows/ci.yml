@@ -60,14 +60,14 @@ jobs:
         run: npm install -g @anthropic-ai/claude-code
       - run: bun run validate
 
-      # `bin` pointed at a path `tsc` never built, so `npx laya-compact-serve`
+      # `bin` pointed at a path `tsc` never built, so `npx kompact-serve`
       # would have failed for every installer. Pack it and run it.
       - name: the packed tarball must work
         run: |
           npm pack
           npm --prefix /tmp/packtest init -y
-          npm --prefix /tmp/packtest install "$PWD"/laya-compact-*.tgz
-          /tmp/packtest/node_modules/.bin/laya-compact-serve --help | grep -q "System One wire protocol"
+          npm --prefix /tmp/packtest install "$PWD"/kompact-*.tgz
+          /tmp/packtest/node_modules/.bin/kompact-serve --help | grep -q "System One wire protocol"
 
       # The published AUC and retention, recomputed from the committed corpus.
       - run: bun run eval:ci

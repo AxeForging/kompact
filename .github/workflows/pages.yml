@@ -1,6 +1,6 @@
 name: pages
 
-# The README links https://axeforging.github.io/laya-compact/. Without this, that
+# The README links https://axeforging.github.io/kompact/. Without this, that
 # URL resolves only if someone remembers to flip the Pages source by hand in the
 # repository settings, which is not a thing to leave to memory.
 on:
