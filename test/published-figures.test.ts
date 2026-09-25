@@ -224,6 +224,22 @@ describe('published figures match eval/RESULTS.md', () => {
     }
   });
 
+  // Three separate tag breakages in one editing pass — a summary with a closing
+  // heading and no opening one, two headings never closed, and a stray bracket
+  // left where a slice cut through a tag. None of them failed a test and the
+  // browser rendered all three without complaint.
+  it('has balanced markup for the elements that carry its structure', () => {
+    const page = read('docs/index.html')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/g, '')
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/g, '');
+    for (const tag of ['section', 'details', 'summary', 'h2', 'h3', 'dl', 'table']) {
+      const open = (page.match(new RegExp(`<${tag}\\b`, 'g')) ?? []).length;
+      const close = (page.match(new RegExp(`</${tag}\\s*>`, 'g')) ?? []).length;
+      expect(open, `<${tag}> opened ${open} times and closed ${close}`).toBe(close);
+    }
+    expect(page, 'a slice cut through a tag').not.toMatch(/<\/?[a-z]+\b[^>]*\n\s*<\/?[a-z]+[^>]*>\s*>/);
+  });
+
   // The page claims it is complete with scripts blocked, and nothing checked it.
   // The check needs no browser: strip every script from the markup and assert the
   // content is still there and every control that cannot act without one ships
