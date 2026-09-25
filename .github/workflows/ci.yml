@@ -32,3 +32,16 @@ jobs:
       # clone above stopped working rather than quietly losing the coverage.
       - name: the interop test must have run
         run: bun x vitest run test/codex-interop.test.ts --reporter=verbose 2>&1 | grep -q "codex plugin interop"
+
+      # Same treatment for the transcript invariant: it used to need
+      # ~/.claude/projects and skipped on a runner, so the one property that
+      # breaks a session when it regresses had no pre-merge enforcement at all.
+      - name: the transcript invariant must have run
+        run: |
+          bun x vitest run test/real-transcript.test.ts --reporter=verbose 2>&1 \
+            | grep -q "committed session fixture > compacts offline and leaves no orphaned"
+
+      - run: bun run validate
+
+      # The published AUC and retention, recomputed from the committed corpus.
+      - run: bun run eval:ci

@@ -14,6 +14,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { dot, fitLogistic as fit, sigmoid } from './logistic.js';
+import { rowKey } from './corpus.js';
 import { auc, droppableAt } from './metrics.js';
 import type { LabelRow } from './extract-labels.js';
 
@@ -58,7 +59,7 @@ for (const heldOut of sessions) {
   if (train.length === 0 || test.length === 0) continue;
   const w = fit(train.map(features), train.map((r) => (r.result_needed ? 1 : 0)));
   for (const row of test) {
-    oof.set(row.tool_use_id, sigmoid(features(row).reduce((s, v, j) => s + v * w[j]!, 0)));
+    oof.set(rowKey(row), sigmoid(features(row).reduce((s, v, j) => s + v * w[j]!, 0)));
   }
 }
 
@@ -90,7 +91,7 @@ report('output size (bigger = keep)', rows.map((r) => Math.min(1, r.output_chars
 report('output size (smaller = keep)', rows.map((r) => 1 - Math.min(1, r.output_chars / 50_000)));
 report('hand rule: Edit/Write+stale drop', rows.map((r) =>
   r.tool === 'Edit' || r.tool === 'Write' ? 0.1 : r.state.includes('changed afterwards') ? 0.3 : 0.9));
-report('logistic on cheap features (LOSO)', rows.map((r) => oof.get(r.tool_use_id) ?? 0.5));
+report('logistic on cheap features (LOSO)', rows.map((r) => oof.get(rowKey(r)) ?? 0.5));
 
 const scoresPath = join(dir, 'scores.json');
 if (existsSync(scoresPath)) {
@@ -104,7 +105,7 @@ if (existsSync(scoresPath)) {
 }
 
 // A model only earns its place if it beats what the features already give away.
-const logistic = auc(rows.map((r) => oof.get(r.tool_use_id) ?? 0.5), y);
+const logistic = auc(rows.map((r) => oof.get(rowKey(r)) ?? 0.5), y);
 console.log(`\nlogistic AUC ${logistic.toFixed(3)} — any Laya config must beat this to justify the sidecar.`);
 
 // Methodology check on my own label rule. `result_needed` is a COUNT rule (>=2
@@ -117,7 +118,7 @@ console.log(`rate-label positives ${rateLabels.filter(Boolean).length} of ${rows
 console.log(`${'model'.padEnd(34)}${'AUC'.padStart(6)}${SAFETIES.map((s) => `drop@${(100 * s).toFixed(0)}%`.padStart(8)).join('')}`);
 console.log('-'.repeat(72));
 report('output size (bigger = keep)', rows.map((r) => Math.min(1, r.output_chars / 50_000)), rateLabels);
-report('logistic (LOSO, count-trained)', rows.map((r) => oof.get(r.tool_use_id) ?? 0.5), rateLabels);
+report('logistic (LOSO, count-trained)', rows.map((r) => oof.get(rowKey(r)) ?? 0.5), rateLabels);
 if (existsSync(scoresPath)) {
   const cache = JSON.parse(readFileSync(scoresPath, 'utf8')) as Record<string, Record<string, { result: number }>>;
   const key = 'multilingual/direct';

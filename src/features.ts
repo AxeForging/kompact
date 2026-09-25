@@ -5,13 +5,13 @@
  * This exists because it was measured to be better, repeatedly. Over 1063
  * labelled calls from 18 real sessions: leave-one-session-out AUC 0.862, and
  * across 10 grouped splits holding out 30% of sessions each time it averages
- * 0.895 (sd 0.073, worst split 0.687) against 0.721 for the best Laya
+ * 0.895 (sd 0.073, worst split 0.688) against 0.721 for the best Laya
  * checkpoint and phrasing. It won 10 of 10 splits — though by as little as
- * 0.002 on the closest one. At a 90% safety setting it frees 39% of tool-output
+ * +0.002 on the closest one. At a 90% safety setting it frees 39% of tool-output
  * characters against Laya's 12%. The features carry the signal, and an encoder
  * asked to read the same facts as prose does worse.
  *
- * Earlier drafts of this comment claimed 0.917 from a single split on 721 calls.
+ * Earlier drafts of this comment claimed 0.918 from a single split on 721 calls.
  * Repeated evaluation on a wider corpus put it at 0.895 and Laya's best rose
  * from 0.694 to 0.721: one split flatters whatever it measures.
  *
@@ -69,6 +69,17 @@ export function normaliseCallText(state: string, instructions = ''): string {
  * comparison fair and keeps one source of truth for what a call looks like.
  */
 export function featureVector(state: string, tool: string, isError: boolean): number[] {
+  // Read the phrases only from the facts paragraph, never from the tool input
+  // echoed above it or the output excerpted below. One call in the labelled
+  // corpus was a heredoc writing `eval/fit.ts`, whose source text contains
+  // "very short", "very long" and "just now" — so the scorer read three size and
+  // age features off a file it was writing. Every phrase below lives at or after
+  // the age sentence and before the blank line that ends the paragraph; a state
+  // with no age sentence degrades to searching the whole text.
+  const anchor = state.indexOf('. That happened ');
+  const paragraph = anchor < 0 ? state : state.slice(anchor);
+  const end = anchor < 0 ? -1 : paragraph.indexOf('\n\n');
+  const facts = end < 0 ? paragraph : paragraph.slice(0, end);
   return [
     1,
     tool === 'Read' ? 1 : 0,
@@ -76,13 +87,13 @@ export function featureVector(state: string, tool: string, isError: boolean): nu
     tool === 'Edit' || tool === 'Write' || tool === 'MultiEdit' ? 1 : 0,
     tool === 'Grep' || tool === 'Glob' ? 1 : 0,
     isError ? 1 : 0,
-    state.includes('changed afterwards') ? 1 : 0,
-    state.includes('again later') ? 1 : 0,
-    state.includes('very short') ? 1 : 0,
-    state.includes('The output was short.') ? 1 : 0,
-    state.includes('very long') ? 1 : 0,
-    state.includes('long ago in the session') ? 1 : 0,
-    state.includes('just now') ? 1 : 0,
+    facts.includes('changed afterwards') ? 1 : 0,
+    facts.includes('again later') ? 1 : 0,
+    facts.includes('very short') ? 1 : 0,
+    facts.includes('The output was short.') ? 1 : 0,
+    facts.includes('very long') ? 1 : 0,
+    facts.includes('long ago in the session') ? 1 : 0,
+    facts.includes('just now') ? 1 : 0,
   ];
 }
 
@@ -100,14 +111,14 @@ export function score(weights: readonly number[], features: readonly number[]): 
  * `size=long` and `age=a while back` are the reference levels, hence absent.
  */
 export const KEEP_RESULT_WEIGHTS: readonly number[] = [
-  -0.515007, -0.479497, -1.354382, -2.356925, 0.0, -0.854025, 2.120442, 0.033473,
-  -3.085024, -1.400197, -1.648371, 0.037077, -0.356110,
+  -0.515317, -0.479700, -1.355646, -2.357281, 0.0, -0.853392, 2.120621, 0.034102,
+  -3.084978, -1.401635, -1.648688, 0.038320, -0.354798,
 ];
 
-/** Same fit, for whether the call itself still matters. LOSO AUC 0.971, ECE 0.026. */
+/** Same fit, for whether the call itself still matters. LOSO AUC 0.971, ECE 0.027. */
 export const KEEP_CALL_WEIGHTS: readonly number[] = [
-  -0.562089, -0.749362, -1.413913, 0.469736, 0.0, -0.242158, 3.793540, 5.486919,
-  -2.518247, -0.957991, -0.588688, 0.054670, 0.046405,
+  -0.562709, -0.749810, -1.415168, 0.469063, 0.0, -0.241080, 3.793986, 5.488180,
+  -2.517782, -0.959560, -0.587864, 0.056336, 0.048620,
 ];
 
 /**

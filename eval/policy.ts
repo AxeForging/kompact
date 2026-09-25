@@ -10,23 +10,20 @@
  *
  * Run: bun eval/policy.ts
  */
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { loadCorpus, rowKey } from './corpus.js';
 import { outOfFold } from './logistic.js';
 import { featureVector } from '../src/features.js';
-import type { LabelRow } from './extract-labels.js';
 
-const rows: LabelRow[] = readFileSync(join(import.meta.dirname, 'labels.jsonl'), 'utf8')
-  .split('\n').filter((l) => l.trim() !== '').map((l) => JSON.parse(l) as LabelRow);
+const { rows, from } = loadCorpus(import.meta.dirname);
 
 const xs = rows.map((r) => featureVector(r.state, r.tool, r.is_error));
 const score = new Map<string, number>();
 outOfFold(rows, xs, rows.map((r) => (r.result_needed ? 1 : 0)))
-  .forEach((p, i) => score.set(rows[i]!.tool_use_id, p));
+  .forEach((p, i) => score.set(rowKey(rows[i]!), p));
 /** The second model decides whether a drop keeps a head or removes the call. */
 const callScore = new Map<string, number>();
 outOfFold(rows, xs, rows.map((r) => (r.call_needed ? 1 : 0)))
-  .forEach((p, i) => callScore.set(rows[i]!.tool_use_id, p));
+  .forEach((p, i) => callScore.set(rowKey(rows[i]!), p));
 /** What `truncateHeadChars` preserves when only the result is dropped. */
 const HEAD = 300;
 
@@ -50,11 +47,11 @@ function simulate(policy: 'threshold' | 'budget', floor: number, target: number)
     out.calls += calls.length;
     out.needed += calls.filter((r) => r.result_needed).length;
 
-    const below = calls.filter((r) => (score.get(r.tool_use_id) ?? 0) < floor);
+    const below = calls.filter((r) => (score.get(rowKey(r)) ?? 0) < floor);
     let toDrop = below;
     if (policy === 'budget') {
       const budget = target * below.reduce((s, r) => s + r.output_chars, 0);
-      const order = [...below].sort((a, b) => (score.get(a.tool_use_id)! - score.get(b.tool_use_id)!));
+      const order = [...below].sort((a, b) => (score.get(rowKey(a))! - score.get(rowKey(b))!));
       toDrop = [];
       let freed = 0;
       for (const r of order) {
@@ -63,14 +60,14 @@ function simulate(policy: 'threshold' | 'budget', floor: number, target: number)
         freed += r.output_chars;
       }
     }
-    const droppedIds = new Set(toDrop.map((r) => r.tool_use_id));
+    const droppedIds = new Set(toDrop.map(rowKey));
     for (const r of calls) {
       if (!r.result_needed) continue;
       out.neededCharsTotal += r.output_chars;
-      if (!droppedIds.has(r.tool_use_id)) { out.neededCharsKept += r.output_chars; continue; }
+      if (!droppedIds.has(rowKey(r))) { out.neededCharsKept += r.output_chars; continue; }
       // Dropped although it was needed. A head survives unless the call itself
       // also scored below the floor and was removed outright.
-      const keepsHead = (callScore.get(r.tool_use_id) ?? 0) >= floor;
+      const keepsHead = (callScore.get(rowKey(r)) ?? 0) >= floor;
       if (keepsHead) { out.wrongWithHead += 1; out.neededCharsKept += Math.min(HEAD, r.output_chars); }
     }
     for (const r of toDrop) {
@@ -92,7 +89,7 @@ const show = (name: string, o: Outcome): void => {
   );
 };
 
-console.log(`${rows.length} calls, ${rows.filter((r) => r.result_needed).length} genuinely needed, ${sessions.length} sessions\n`);
+console.log(`${from}: ${rows.length} calls, ${rows.filter((r) => r.result_needed).length} genuinely needed, ${sessions.length} sessions\n`);
 console.log(`${'policy'.padEnd(28)}${'freed'.padStart(8)}${'wrong'.padStart(8)}${'+head'.padStart(7)}${'kept'.padStart(9)}${'chars kept'.padStart(11)}`);
 console.log('-'.repeat(71));
 show('threshold only, 0.5 (old)', simulate('threshold', 0.5, 0));

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>laya-compact — context compaction you can check</title>
-<meta name="description" content="A Claude Code plugin that scores every tool call before compaction and keeps only what is still needed verbatim. Local, no API key, no GPU. AUC 0.895 ± 0.072 over 10 grouped splits of 1063 labelled calls.">
+<meta name="description" content="A Claude Code plugin that scores every tool call before compaction and keeps only what is still needed verbatim. Local, no API key, no GPU. AUC 0.895 ± 0.073 over 10 grouped splits of 1063 labelled calls.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap" rel="stylesheet">
@@ -303,11 +303,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
           <td class="row__plot">
             <div class="track">
               <div class="bar bar--best" style="--w:79%;--d:260ms"></div>
-              <div class="whisker" style="--lo:64.6%;--hi:93.4%;--d:260ms"></div>
-              <div class="worst" style="--x:38.0%;--d:260ms"></div>
+              <div class="whisker" style="--lo:64.4%;--hi:93.6%;--d:260ms"></div>
+              <div class="worst" style="--x:37.6%;--d:260ms"></div>
             </div>
           </td>
-          <td class="row__value">0.895 <span style="font-weight:400">± 0.072</span><b>worst split 0.690</b></td>
+          <td class="row__value">0.895 <span style="font-weight:400">± 0.073</span><b>worst split 0.688</b></td>
         </tr>
         <tr class="reveal" style="--d:290ms">
           <th scope="row" class="row__name">Output size alone<span>1 coefficient</span></th>
@@ -368,7 +368,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
   <div class="finding reveal" style="--d:640ms">
     <p>The built-in scorer won <span class="val">10 of 10</span> paired splits, by
-       <span class="val">+0.174</span> on average and by <span class="val">+0.005</span> on the closest.</p>
+       <span class="val">+0.174</span> on average and by <span class="val">+0.002</span> on the closest.</p>
   </div>
   <p class="caption">
     Every scorer judged on the same held-out sessions each split, so the comparison is paired.
@@ -428,7 +428,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       </tr></thead>
       <tbody>
         <tr><th scope="row">Absolute cut at 0.5</th><td class="n">97.6%</td><td class="n">5.1%</td><td class="n">8.5%</td></tr>
-        <tr class="same"><th scope="row">Budget 0.5, floor 0.1 (shipped)</th><td class="n">42.5%</td><td class="n mark">84.6%</td><td class="n mark">87.5%</td></tr>
+        <tr class="same"><th scope="row">Budget 0.5, floor 0.1 (shipped)</th><td class="n">42.4%</td><td class="n mark">84.6%</td><td class="n mark">87.5%</td></tr>
         <tr><th scope="row">Budget 0.7, floor 0.1</th><td class="n">52.9%</td><td class="n">82.1%</td><td class="n">79.2%</td></tr>
         <tr><th scope="row">Budget 0.7, floor 0.05</th><td class="n">8.6%</td><td class="n">92.3%</td><td class="n">98.9%</td></tr>
       </tbody>

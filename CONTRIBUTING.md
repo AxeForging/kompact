@@ -14,10 +14,20 @@ bun eval/fit.ts              # refit; paste the coefficients into src/features.t
 
 Quote `eval/repeat.ts` (mean, sd, worst split), never a single split. A single
 split flatters whatever it measures: an earlier draft of this project reported
-AUC 0.918 that way and it was 0.895 ± 0.072 once repeated. Regenerate
+AUC 0.918 that way and it was 0.895 ± 0.073 once repeated. Regenerate
 `eval/RESULTS.md` with `npm run eval:results` rather than transcribing a figure
-into prose; every number the README, the manifest and the page quote comes from
-there.
+into prose; `test/published-figures.test.ts` then fails if the README, the page,
+the manifest or a source comment disagrees with it.
+
+Two corpora, one of which is committed. `eval/labels.jsonl` is derived from your
+own sessions and is gitignored — it holds verbatim tool output and, in at least
+one row, an email address. `npm run eval:fixtures` derives the committed
+`eval/fixtures/labels.jsonl` from it, replacing the task line, the target and the
+output excerpt; `eval/make-fixture.ts` asserts the two produce a bit-identical
+feature matrix, so `npm run eval:ci` on a runner reports the same AUC this
+machine does. The same command derives `test/fixtures/session.jsonl` and
+`subagent.jsonl`, which is what makes `test/real-transcript.test.ts` run in CI
+instead of skipping.
 
 If you add a feature, it has to earn its place against `output size alone`,
 which already scores AUC 0.876 on its own.

@@ -11,12 +11,12 @@ the first run of this scorer reported 0.918, which is inside the range below but
 nowhere near its centre.
 
 ```
-corpus: 1063 calls, 78 positives, 18 sessions
+corpus (local labels): 1063 calls, 78 positives, 18 sessions
 10 grouped splits, 30% of sessions held out each time
 
 scorer                             AUC mean     sd    min    max  drop@90%
 --------------------------------------------------------------------------
-logistic (features)                   0.895  0.072  0.690  0.927     38.9%
+logistic (features)                   0.895  0.073  0.688  0.929     38.8%
 output size only                      0.876  0.011  0.855  0.890     11.4%
 laya typed-decisions/direct           0.721  0.021  0.686  0.754     12.1%
 laya multilingual/direct              0.667  0.022  0.644  0.713      4.5%
@@ -29,7 +29,7 @@ laya typed-decisions/entailment       0.420  0.028  0.391  0.495      5.2%
 laya typed-decisions/reproducible     0.419  0.024  0.393  0.469      8.2%
 
 paired vs best laya (typed-decisions/direct):
-  logistic - laya AUC: mean +0.174 (sd 0.062, range 0.005 to 0.216)
+  logistic - laya AUC: mean +0.174 (sd 0.062, range 0.002 to 0.216)
   logistic won 10/10 splits
   -> the free scorer wins on every split; the sidecar is not justified for this task.
 
@@ -42,7 +42,7 @@ The scorer produces a ranking; this turns it into a decision. The shipped
 defaults are **budget 0.5, floor 0.10**.
 
 ```
-1063 calls, 78 genuinely needed, 18 sessions
+local labels: 1063 calls, 78 genuinely needed, 18 sessions
 
 policy                         freed   wrong  +head     kept chars kept
 -----------------------------------------------------------------------
@@ -53,9 +53,9 @@ budget 0.7, floor 0.30         65.5%      35      9     55.1%      70.2%
 budget 0.7, floor 0.20         62.6%      34     10     56.4%      71.3%
 budget 0.7, floor 0.15         60.3%      23      3     70.5%      74.2%
 budget 0.7, floor 0.10         52.9%      14      2     82.1%      79.2%
-budget 0.7, floor 0.05          8.6%       6      3     92.3%      98.9%
+budget 0.7, floor 0.05          8.6%       7      3     91.0%      98.5%
 
-budget 0.5, floor 0.10         42.5%      12      2     84.6%      87.5%
+budget 0.5, floor 0.10         42.4%      12      2     84.6%      87.5%
 budget 0.6, floor 0.10         44.4%      13      2     83.3%      82.9%
 budget 0.7, floor 0.10         52.9%      14      2     82.1%      79.2%
 budget 0.8, floor 0.10         60.7%      21      4     73.1%      74.3%
@@ -76,10 +76,10 @@ one corpus, and the per-session column as the range that matters.
 ```
 session              calls  tok before  tok after    freed  scoring
 -------------------------------------------------------------------
-25e65eab-4941-41ea     473     273,749    214,329    21.7%     44ms
-20628921-046d-4fc0     293     377,457    261,706    30.7%     29ms
-78d7d176-4c84-4936     248     237,577    215,664     9.2%     15ms
+25e65eab-4941-41ea     473     273,749    214,329    21.7%     41ms
+20628921-046d-4fc0     360     435,482    294,486    32.4%     32ms
+78d7d176-4c84-4936     263     290,127    256,620    11.5%     17ms
 agent-aca4b44fdb68      58      32,560     23,815    26.9%      3ms
 -------------------------------------------------------------------
-total                 1072     921,343    715,514    22.3%     91ms
+total                 1154   1,031,918    789,250    23.5%     94ms
 ```

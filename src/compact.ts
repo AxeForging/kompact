@@ -24,7 +24,7 @@ export const DEFAULT_OPTIONS: ResolvedCompactOptions = {
    * ever reused verbatim, so a calibrated scorer rarely exceeds 0.5 even for
    * the ones that matter — a 0.5 floor protects almost nothing. Simulated per
    * session on 1063 labelled calls (`eval/policy.ts`), a 0.5 floor retained 5%
-   * of genuinely-needed outputs; 0.1 retains 84.6% and still frees 42.5%.
+   * of genuinely-needed outputs; 0.1 retains 84.6% and still frees 42.4%.
    */
   keepThreshold: 0.1,
   preserveRecentMessages: 6,

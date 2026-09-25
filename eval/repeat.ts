@@ -18,7 +18,7 @@ import { join } from 'node:path';
 import { dot, fitLogistic as fit, sigmoid } from './logistic.js';
 import { auc, droppableAt } from './metrics.js';
 import { FEATURE_NAMES, featureVector } from '../src/features.js';
-import type { LabelRow } from './extract-labels.js';
+import { loadCorpus, rowKey } from './corpus.js';
 
 const dir = import.meta.dirname;
 const args = process.argv.slice(2);
@@ -31,11 +31,10 @@ const TEST_FRAC = num('--test-frac', 0.3);
 /** A split with too few positives cannot produce a meaningful AUC. */
 const MIN_TEST_POSITIVES = 5;
 
-const rows: LabelRow[] = readFileSync(join(dir, 'labels.jsonl'), 'utf8')
-  .split('\n').filter((l) => l.trim() !== '').map((l) => JSON.parse(l) as LabelRow);
+const { rows, from } = loadCorpus(dir);
 
 const sessions = [...new Set(rows.map((r) => r.session))];
-const x = new Map(rows.map((r) => [r.tool_use_id, featureVector(r.state, r.tool, r.is_error)]));
+const x = new Map(rows.map((r) => [rowKey(r), featureVector(r.state, r.tool, r.is_error)]));
 
 /** Deterministic PRNG, so a reported run can be re-run exactly. */
 function rng(seed: number): () => number {
@@ -84,8 +83,8 @@ while (iteration < ITERATIONS && attempts < ITERATIONS * 50) {
     return { auc: auc(scores, y), drop90: (100 * at90.droppedChars) / Math.max(1, at90.totalChars) };
   };
 
-  const w = fit(train.map((r) => x.get(r.tool_use_id)!), train.map((r) => (r.result_needed ? 1 : 0)));
-  record('logistic (features)', scoreRun(test.map((r) => sigmoid(dot(x.get(r.tool_use_id)!, w)))));
+  const w = fit(train.map((r) => x.get(rowKey(r))!), train.map((r) => (r.result_needed ? 1 : 0)));
+  record('logistic (features)', scoreRun(test.map((r) => sigmoid(dot(x.get(rowKey(r))!, w)))));
   record('output size only', scoreRun(test.map((r) => Math.min(1, r.output_chars / 50_000))));
   for (const key of layaConfigs) {
     record(`laya ${key}`, scoreRun(test.map((r) => cache[key]![r.tool_use_id]?.result ?? 0.5)));
@@ -99,7 +98,7 @@ function stats(values: number[]): { mean: number; sd: number; lo: number; hi: nu
   return { mean, sd, lo: sorted[0]!, hi: sorted[sorted.length - 1]! };
 }
 
-console.log(`corpus: ${rows.length} calls, ${rows.filter((r) => r.result_needed).length} positives, ${sessions.length} sessions`);
+console.log(`corpus (${from}): ${rows.length} calls, ${rows.filter((r) => r.result_needed).length} positives, ${sessions.length} sessions`);
 console.log(`${iteration} grouped splits, ${Math.round(100 * TEST_FRAC)}% of sessions held out each time\n`);
 
 const header = `${'scorer'.padEnd(34)}${'AUC mean'.padStart(9)}${'sd'.padStart(7)}${'min'.padStart(7)}${'max'.padStart(7)}${'drop@90%'.padStart(10)}`;

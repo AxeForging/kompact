@@ -67,7 +67,7 @@ which `npm run eval:results` regenerates:
 
 | scorer | AUC (mean ± sd) | worst split | chars freed at 90% safety |
 |---|---|---|---|
-| **built-in logistic, 13 features** | **0.895 ± 0.072** | 0.690 | **38.9%** |
+| **built-in logistic, 13 features** | **0.895 ± 0.073** | 0.688 | **38.8%** |
 | output size alone | 0.876 ± 0.011 | 0.855 | 11.4% |
 | laya typed-decisions, "direct" | 0.721 ± 0.021 | 0.686 | 12.1% |
 | laya multilingual, "direct" | 0.667 ± 0.022 | 0.644 | 4.5% |
@@ -76,7 +76,7 @@ which `npm run eval:results` regenerates:
 | keep everything | 0.500 | — | 0.0% |
 
 AUC 0.5 is a coin flip. The logistic beat the best Laya config on **10 of 10
-splits**, by +0.174 on average — but by as little as **+0.005** on the closest
+splits**, by +0.174 on average — but by as little as **+0.002** on the closest
 one, so the margin is not uniform. Leave-one-session-out over all 18 sessions
 puts it at AUC 0.862 with ECE 0.019, an order of magnitude better calibrated
 than Laya's 0.42-0.71, which is what makes `keepThreshold` mean anything.
@@ -157,7 +157,7 @@ session on the labelled corpus (`eval/policy.ts`):
 | policy | tool output freed | reused outputs kept | reused chars kept |
 |---|---|---|---|
 | absolute cut at 0.5 (an earlier default) | 97.6% | **5.1%** | 8.5% |
-| **budget 0.5, floor 0.1 (shipped)** | 42.5% | **84.6%** | **87.5%** |
+| **budget 0.5, floor 0.1 (shipped)** | 42.4% | **84.6%** | **87.5%** |
 | budget 0.7, floor 0.1 | 52.9% | 82.1% | 79.2% |
 | budget 0.7, floor 0.05 | 8.6% | 92.3% | 98.9% |
 
@@ -251,7 +251,7 @@ Being precise about this, because "it compiles" is not evidence.
 
 | Claim | How |
 |---|---|
-| Scoring beats the model it replaces | 1063 labelled calls, 18 sessions, 10 grouped splits: AUC 0.895 ± 0.072 vs 0.721 ± 0.021, winning 10/10 paired splits (`eval/repeat.ts`, transcribed into `eval/RESULTS.md`) |
+| Scoring beats the model it replaces | 1063 labelled calls, 18 sessions, 10 grouped splits: AUC 0.895 ± 0.073 vs 0.721 ± 0.021, winning 10/10 paired splits (`eval/repeat.ts`, transcribed into `eval/RESULTS.md`) |
 | States never overflow the checkpoint | asserted for outputs from 0 to 2,000,000 chars |
 | No orphaned `tool_use`/`tool_result` survives | the hook run over a **real** session from disk; an orphan is rejected by the API and would break the session compaction was meant to save |
 | User and assistant prose is never touched | same real-session test |
