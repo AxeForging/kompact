@@ -462,7 +462,7 @@ And a live Codex CLI, which needs >= 0.155 (this machine has 0.131).
 ```sh
 bun install
 npm run typecheck   # src + test + eval + hooks
-npm run test        # 201 tests
+npm run test        # 203 tests
 npm run validate    # plugin manifest
 ```
 

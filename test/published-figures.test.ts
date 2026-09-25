@@ -224,6 +224,49 @@ describe('published figures match eval/RESULTS.md', () => {
     }
   });
 
+  // Four claims were promoted into the masthead and the FAQ in one editing pass
+  // and none of them was bound to anything. They are all in the generated report;
+  // being right once is not the same as staying right.
+  it('binds the claims a later copy pass put in the masthead', () => {
+    const page = read('docs/index.html');
+
+    // `  ratio:              122x the time`
+    const ratio = /ratio:\s+(\d+)x the time/.exec(results)?.[1];
+    expect(ratio, 'eval/RESULTS.md no longer reports a latency ratio').toBeDefined();
+    expect(page, `the report says ${ratio}x`).toContain(`${ratio}&#215;`);
+
+    // `  logistic won 10/10 splits`
+    const won = /logistic won (\d+)\/(\d+) splits/.exec(results);
+    expect(won, 'eval/RESULTS.md no longer reports a paired win count').not.toBeNull();
+    expect(page, `the report says ${won?.[1]} of ${won?.[2]}`)
+      .toContain(`${won?.[1]} of ${won?.[2]} paired splits`);
+
+    // `features: 13 (tool=Read, ...)` — the page said twelve in one place and
+    // thirteen in another until this was checked against the source.
+    const features = /^features: (\d+)/m.exec(results)?.[1];
+    expect(features, 'eval/RESULTS.md no longer reports a feature count').toBeDefined();
+    expect(page, `the scorer has ${features} coefficients`).toContain(`${features} coefficients`);
+  });
+
+  // The checkpoint comparison is the whole of README section 1b and a paragraph
+  // of the FAQ. Every figure in it comes from one table.
+  it('binds the checkpoint comparison to the results table', () => {
+    const readme = read('README.md');
+    const page = read('docs/index.html');
+    for (const [config, where] of [
+      ['laya english/direct', 'english on the wording that works'],
+      ['laya multilingual/direct', 'multilingual on the same wording'],
+      ['laya english/entailment', "english's best config"],
+    ] as const) {
+      const { mean } = scorerRow(config);
+      expect(readme, `README no longer matches ${config} (${where}: ${mean})`).toContain(mean);
+    }
+    // The page quotes only the two that carry the argument.
+    expect(page, 'the page no longer matches english/direct').toContain(scorerRow('laya english/direct').mean);
+    expect(page, 'the page no longer matches multilingual/direct')
+      .toContain(scorerRow('laya multilingual/direct').mean);
+  });
+
   // The masthead claims a number of unverified claims. That is the page's most
   // unusual asset stated as a fact, so it has to stay true as the ledger changes —
   // and a hand-typed count beside a hand-maintained list is the oldest way for a
