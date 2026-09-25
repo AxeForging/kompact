@@ -298,16 +298,31 @@ describe('register', () => {
       .toBe('FELL_BACK');
   });
 
-  // Handing over means the engine rewrote the transcript, so the next kompact
-  // pass is pass 1 again. Leaving the count behind would make it pass 5.
-  it('clears the count when it hands over', async () => {
+  /**
+   * Handing over means the engine rewrote the transcript, so the next kompact
+   * pass is pass 1 again — leaving the count behind would make it pass 5. The
+   * turn has to stay, though: without it `turn.complete` loses its cooldown at
+   * exactly the moment the engine has just spent a model call, and asks for a
+   * second summary of an already-summarised transcript.
+   */
+  it('clears the count when it hands over, and keeps the turn', async () => {
     const handlers = registered({ preserveRecentMessages: 2, keepThreshold: 0.9, maxPasses: 1 });
     const engine = fakeEngine();
     const event = { messages: asSession(transcript()) };
     await handlers.get('session.compact')!(engine.$, event, () => 'FELL_BACK');
     await handlers.get('session.compact')!(engine.$, event, () => 'FELL_BACK');
-    const stored = engine.store.get('passes') as Record<string, unknown>;
-    expect(stored['fixture-session|main']).toBeUndefined();
+    const stored = engine.store.get('passes') as Record<string, { passes: number; lastTurn: number }>;
+    expect(stored['fixture-session|main']?.passes).toBe(0);
+    expect(stored['fixture-session|main']?.lastTurn).toBe(20);
+  });
+
+  it('does not ask again on the turn straight after handing over', async () => {
+    const handlers = registered({ preserveRecentMessages: 2, minFreedPercent: 99 });
+    const engine = fakeEngine(80);
+    await handlers.get('session.compact')!(
+      engine.$, { messages: asSession(transcript()) }, () => 'FELL_BACK');
+    await handlers.get('turn.complete')!(engine.$, {}, () => 'NEXT');
+    expect(engine.compactRequested, 'a second summary of a summarised transcript').toBe(0);
   });
 
   /**

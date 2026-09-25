@@ -487,10 +487,18 @@ export const register: Register = (on: On, options: PluginOptions) => {
         config,
       });
       if (!verdict.take) {
-        // Handing over resets the count: once the engine rewrites the
-        // transcript, the next kompact pass is pass 1 again.
-        if (!speculative && store[key]) {
-          delete store[key];
+        /**
+         * Handing over resets the count but keeps the turn.
+         *
+         * The count, because once the engine rewrites the transcript the next
+         * kompact pass is pass 1 again. The turn, because `turn.complete` reads
+         * a `usage()` that is stale for a turn or two either way: deleting the
+         * record outright removed the cooldown exactly when the engine had just
+         * spent a model call, so the next turn asked for another compaction and
+         * got a second summary of an already-summarised transcript.
+         */
+        if (!speculative) {
+          store[key] = { passes: 0, lastTurn: await turnsOr($, 0), lastAt: await $.clock.now() };
           await writePasses($, store);
         }
         notify($, `fallback to built-in summary (${verdict.why}: ${summarize(result)})`);

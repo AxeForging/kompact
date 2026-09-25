@@ -194,9 +194,11 @@ function checkSession(label: string, load: () => Message[] | undefined, minCalls
       // The fourth is refused by the ceiling, whatever it would have freed.
       expect(notices[3], 'the ceiling did not stop the loop')
         .toContain('fallback to built-in summary');
-      // And the record is cleared, so the engine's summary starts a new ladder.
-      expect((eng.store.get('passes') as Record<string, unknown>)['real-transcript|main'])
-        .toBeUndefined();
+      // And the count is cleared, so the engine's summary starts a new ladder —
+      // while the turn stays, which is what keeps `turn.complete` from asking
+      // for a second summary on the turn straight after the first.
+      const stored = eng.store.get('passes') as Record<string, { passes: number }>;
+      expect(stored['real-transcript|main']?.passes).toBe(0);
     });
   });
 }
