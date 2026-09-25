@@ -65,6 +65,12 @@ const logistic = scorerRow('logistic (features)');
 const laya = scorerRow('laya typed-decisions/direct');
 const sizeOnly = scorerRow('output size only');
 const shipped = policyRow('budget 0.5, floor 0.20');
+// The page prints four policy rows and only the shipped one was bound here, so
+// the rejected policy sat at 97.6%/5.1%/8.5% against a measured 95.3%/8.9%/16.9%
+// through a full regeneration that corrected ten other figures — every error in
+// the direction that flattered the default it is there to be compared against.
+const rejected = policyRow('threshold only, 0.5 (old)');
+const alsoSwept = ['budget 0.6, floor 0.20', 'budget 0.7, floor 0.20'].map(policyRow);
 const closest = /range ([\d.]+) to [\d.]+/.exec(results)?.[1];
 
 describe('published figures match eval/RESULTS.md', () => {
@@ -74,7 +80,12 @@ describe('published figures match eval/RESULTS.md', () => {
       `${laya.mean} ± ${laya.sd}`, `${sizeOnly.mean} ± ${sizeOnly.sd}`, `**+${closest}**`,
     ]],
     ['docs/index.html', [`± ${logistic.sd}`, `worst split ${logistic.min}`, `+${closest}`,
-      `${sizeOnly.mean} with a`]],
+      `${sizeOnly.mean} with an`,
+      // Every row of the policy table, not only the one the product ships.
+      // `>x<` rather than a bare match, so it has to be a cell and not prose.
+      ...[rejected, shipped, ...alsoSwept].flatMap(
+        (row) => [row.freed, row.kept, row.charsKept].map((cell) => `>${cell}<`)),
+    ]],
     ['.claude-plugin/plugin.json', [`${logistic.mean} \\u00b1 ${logistic.sd}`, `${laya.mean} \\u00b1 ${laya.sd}`]],
     ['src/features.ts', [`sd ${logistic.sd}`, `worst split ${logistic.min}`]],
     ['src/compact.ts', [shipped.freed, shipped.kept]],

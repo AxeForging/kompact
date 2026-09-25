@@ -20,14 +20,14 @@ export const DEFAULT_OPTIONS: ResolvedCompactOptions = {
   /**
    * A FLOOR, not a cut: nothing at or above it is dropped to meet the budget.
    *
-   * 0.1, not 0.5, and measured rather than picked. Only ~7% of tool outputs are
-   * ever reused verbatim, so a calibrated scorer rarely exceeds 0.5 even for
-   * the ones that matter — a 0.5 floor protects almost nothing. Simulated per
-   * session on 1063 labelled calls (`eval/policy.ts`), a 0.5 floor retained 5%
-   * of genuinely-needed outputs. Re-swept against the coefficients fitted on 41
-   * sessions and scored out of fold, 0.2 frees 23.4% and keeps 77.3% of the
-   * outputs that were reused later; past 0.25 it falls off a cliff. 0.2 is the
-   * last floor that protects most of what mattered.
+   * 0.2, not 0.5, and measured rather than picked. Only 11% of tool outputs are
+   * ever reused verbatim (247 of 2,239), so a calibrated scorer rarely exceeds
+   * 0.5 even for the ones that matter — a 0.5 floor protects almost nothing.
+   * Simulated per session on all 2,239 labelled calls (`eval/policy.ts`), an
+   * absolute 0.5 cut frees 95.3% and retains 8.9% of genuinely-needed outputs.
+   * Against the same coefficients scored out of fold, 0.2 frees 23.4% and keeps
+   * 77.3% of the outputs that were reused later; past 0.25 it falls off a
+   * cliff. 0.2 is the last floor that protects most of what mattered.
    */
   keepThreshold: 0.2,
   preserveRecentMessages: 6,

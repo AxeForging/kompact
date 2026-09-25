@@ -172,11 +172,32 @@ ul.plain li::marker{ color: var(--ink-3); }
   font-family: var(--sans); font-size: var(--text-sm); font-weight:500; color: var(--on-flood-2);
   text-decoration:none; padding-block: 6px; border-bottom: 1px solid transparent;
 }
+.contents-bar{
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: var(--paper); border-bottom:1px solid var(--rule-firm);
+}
+/* margin-block only: margin:0 here killed the wrap's auto centring and the bar
+   sat 180px left of every other thing on the page. */
+.contents-bar .contents{ margin-block:0; padding-block: var(--space-xs); gap: var(--space-xs) var(--space-md); }
+/* --on-flood-2 is 5.63:1 on the flood and about 2:1 on paper. */
+.contents-bar .contents a{ color: var(--ink-2); }
+.contents-bar .contents a:hover, .contents-bar .contents a[aria-current]{ color: var(--accent-ink); }
+
 .contents a:hover{ color: var(--on-flood); border-bottom-color: var(--on-flood); }
 .contents a[aria-current="true"]{ color: var(--on-flood); border-bottom-color: var(--on-flood); }
 
 /* ── sections ─────────────────────────────────────────────────────────── */
-section{ scroll-margin-top: var(--space-lg); padding-block: clamp(var(--space-xl), 4.5vw, var(--space-3xl)); border-top: 1px solid var(--rule); }
+/* The rule sits on an inner pseudo-element rather than on the section box: on
+   the box it spanned the padding too, so every section divider ran 64px wider
+   each side than the rubric underline directly beneath it. */
+section{ scroll-margin-top: var(--space-lg); padding-block: clamp(var(--space-xl), 4.5vw, var(--space-3xl)); position:relative; }
+section.wrap::before{
+  content:""; position:absolute; top:0; left: var(--space-xl); right: var(--space-xl);
+  border-top: 1px solid var(--rule);
+}
+@media (min-width: 1208px){
+  section.wrap::before{ left: clamp(20px, 5vw, 64px); right: clamp(20px, 5vw, 64px); }
+}
 section.flooded{ border-top: none; padding-block: clamp(var(--space-2xl), 5.5vw, var(--space-4xl)); }
 .masthead.flooded{ max-width: none; }
 h2{
@@ -262,7 +283,7 @@ table.rows caption{ text-align:left; }
 }
 /* The shadow says "there is more"; this says which way, for anyone who reads the
    caption before dragging a table. Only where a table cannot fit. */
-@media (max-width: 760px){
+@media (max-width: 560px){
   .scroller::before{
     content: "drag the table sideways for the rest of it";
     display:block; font-family: var(--sans); font-size: var(--text-xs);
@@ -284,7 +305,6 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 
 /* ── the plate: the one image, and it is made of the data ─────────────────── */
 .plate{ margin: var(--space-xl) 0 0; }
-.plate img{ display:block; width:100%; height:auto; }
 .plate figcaption{
   font-family: var(--sans); font-size: var(--text-xs); line-height:1.6;
   color: var(--on-flood-2); margin-top: var(--space-sm); max-width: 74ch;
@@ -304,14 +324,21 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
    with no header anywhere, which a screen reader reads as "0.158 dot 0.973".
    Same four columns as the rows, same widths, so it reads as their header. */
 .demo__legend{
-  display:grid; grid-template-columns: 13ch minmax(0,1fr) 11ch 12ch;
+  display:grid; grid-template-columns: 18ch minmax(0,1fr) 11ch 12ch;
   gap: var(--space-md); margin: var(--space-lg) 0 0; align-items:end;
   max-width:none; font-family: var(--sans); font-size: var(--text-xs);
   letter-spacing:0.02em; text-transform:uppercase; color: var(--ink-3); line-height:1.25;
   border-bottom:1px solid var(--rule-firm); padding-bottom: var(--space-xs);
 }
 .demo__legend span:nth-child(3){ text-align:right; letter-spacing:0; }
-@media (max-width: 640px){ .demo__legend{ display:none; } }
+@media (max-width: 640px){
+  .demo__legend{ display:block; border-bottom:0; padding-bottom:0; }
+  .demo__legend span{ display:none; }
+  .demo__legend::after{
+    content: "Each row: keep-result · keep-call, then the output size.";
+    text-transform:none; letter-spacing:0.01em;
+  }
+}
 
 .demo__bar{
   display:flex; flex-wrap:wrap; align-items:center; gap: var(--space-sm) var(--space-lg);
@@ -331,7 +358,7 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 
 .demo__list{ list-style:none; margin:0; padding:0; }
 .demo__call{
-  display:grid; grid-template-columns: 13ch minmax(0,1fr) 11ch 12ch;
+  display:grid; grid-template-columns: 18ch minmax(0,1fr) 11ch 12ch;
   gap: var(--space-md); align-items:center; padding: var(--space-xs) 0;
   border-bottom:1px solid var(--rule); font-family: var(--sans); font-size: var(--text-xs);
 }
@@ -482,14 +509,17 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </p>
   </div>
   <div class="colophon reveal" style="--d:170ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>126</b> tests</span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>138</b> tests</span>
     <span><b>0</b> network calls by default</span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
-  <nav class="contents reveal" style="--d:210ms" aria-label="Contents">
-    <a href="#result">Evidence</a><a href="#shape">The shape of it</a><a href="#demo">Watch it decide</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#next">What's next</a><a href="#faq">FAQ</a><a href="#install">Install</a><a href="eval.html">Full evaluation</a>
-  </nav>
 </div>
 </header>
+
+<nav class="contents-bar" aria-label="Contents">
+  <div class="contents wrap">
+    <a href="#result">Evidence</a><a href="#shape">The shape of it</a><a href="#demo">Watch it decide</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#next">What's next</a><a href="#faq">FAQ</a><a href="#session">Your session</a><a href="#install">Install</a>
+  </div>
+</nav>
 
 <main>
 <section class="wrap" id="result" aria-labelledby="result-h">
@@ -624,7 +654,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <!-- Below ~760px the 1200-unit plate scales to a third and its 13px labels
          render at ~4px. Rather than ship a second asset, it keeps its size and
          drags, the same way the six tables on this page do. -->
-    <div class="plate__scroll" tabindex="0" role="region" aria-label="Plot: the score distribution — scrolls sideways">
+    <div class="plate__scroll" tabindex="0" role="region" aria-label="Plot: the score distribution">
     <img src="distribution.svg" width="1200" height="420" decoding="async"
          alt="A strip plot of 2,239 tool calls. The upper band holds the 247 whose output was reused
               verbatim later; the lower band the 1,992 that were not. Position is the model's
@@ -721,7 +751,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     Compaction stops being a model call and becomes arithmetic. These are whole session
     logs, so the totals span more than one context window, so the ratio is what transfers.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: per-session results on this machine — scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: per-session results on this machine">
     <table class="data">
       <caption class="visually-hidden">per-session results on this machine</caption>
       <thead><tr>
@@ -739,8 +769,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </table>
   </div>
   <p class="caption">
-    Modest on purpose. An earlier default freed 65.9% of these same sessions, and did it by
-    deleting almost everything that mattered. Measured on one machine’s own
+    Modest on purpose. The absolute cut this replaced frees 95.3% of the labelled corpus and
+    keeps 8.9% of the outputs that were reused later — the first row of the table above, and
+    the reason a fifth is the honest number. Measured on one machine’s own
     transcripts, which grow as work continues — the per-session column is the figure that carries.
   </p>
 
@@ -773,7 +804,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     the keep threshold acting as a floor that nothing is dropped above. Simulated per session on
     the labelled corpus, scored leave-one-session-out:
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: the policy sweep — scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: the policy sweep">
     <table class="data">
       <caption class="visually-hidden">the policy sweep</caption>
       <thead><tr>
@@ -781,7 +812,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         <th scope="col" class="n">Reused outputs kept</th><th scope="col" class="n">Reused characters kept</th>
       </tr></thead>
       <tbody>
-        <tr><th scope="row">Absolute cut at 0.5</th><td class="n">97.6%</td><td class="n">5.1%</td><td class="n">8.5%</td></tr>
+        <tr><th scope="row">Absolute cut at 0.5</th><td class="n">95.3%</td><td class="n">8.9%</td><td class="n">16.9%</td></tr>
         <tr class="same"><th scope="row">Budget 0.5, floor 0.2 (shipped)</th><td class="n">23.4%</td><td class="n mark">77.3%</td><td class="n mark">92.2%</td></tr>
         <tr><th scope="row">Budget 0.6, floor 0.2</th><td class="n">28.3%</td><td class="n">72.1%</td><td class="n">91.4%</td></tr>
         <tr><th scope="row">Budget 0.7, floor 0.2</th><td class="n">33.9%</td><td class="n">68.8%</td><td class="n">90.2%</td></tr>
@@ -802,7 +833,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     what running it costs. One <code>laya-serve</code> process loads every checkpoint and routes
     per request, so memory and start-up belong to the router, not to the checkpoint you pick.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: what the sidecar costs to run — scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: what the sidecar costs to run">
     <table class="data">
       <caption class="visually-hidden">what the sidecar costs to run</caption>
       <thead><tr>
@@ -832,7 +863,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     deployment was rolled back</em> — of four states. Every one of them states the fact
     verbatim. Only the position of the sentence changes.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: the truncation test — scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: the truncation test">
     <table class="data">
       <caption class="visually-hidden">the truncation test</caption>
       <thead><tr>
@@ -870,7 +901,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     it is, priced. Held-out scores, shipped policy, per session: <strong>55 of the 247 reused
     outputs are dropped</strong> — 1.34 a session, and only one of them kept a head.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: what a wrong drop costs — scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: what a wrong drop costs">
     <table class="data">
       <caption class="visually-hidden">what a wrong drop costs</caption>
       <thead><tr>
@@ -903,7 +934,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     actually compact — 60% of a session's tool output — decide only the calls present at that
     moment, then count the reuses that come <em>afterwards</em> whose source was dropped.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: what the work loses — scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: what the work loses">
     <table class="data">
       <caption class="visually-hidden">what the work loses</caption>
       <thead><tr>
@@ -931,8 +962,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     difference is not re-running tools to recover what a summary threw away.
   </p>
   <p>
-    <strong>One feature does most of the work.</strong> Output size alone scores 0.878 with a
-    quarter of the variance. The other coefficients earn their place on characters freed at a
+    <strong>One feature does most of the work.</strong> Output size alone scores 0.878 with an
+    eighth of the spread — sd 0.010 against 0.078 — and a sixtieth of the variance. The other coefficients earn their place on characters freed at a
     given safety level, not on ranking.
   </p>
   <p>
@@ -977,6 +1008,14 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <div class="ledger__row">
       <p class="ledger__claim">What a compaction costs the work</p>
       <p class="ledger__how">Compaction simulated where the engine would fire it, then the reuses that come afterwards counted: 6 of 68, 0.19 a session, 27 of 32 sessions losing nothing. <code>eval/outcome.ts</code></p>
+    </div>
+    <div class="ledger__row">
+      <p class="ledger__claim">The sidecar truncates silently</p>
+      <p class="ledger__how">One question asked of four states that all state the fact verbatim: two differing by 32,220 characters answer bit-identically, and moving the sentence past the 512-token cut takes the answer from 0.9152 to 0.2191. <code>eval/truncation.ts</code></p>
+    </div>
+    <div class="ledger__row ledger__row--open">
+      <p class="ledger__claim">The minimum Claude Code version <span class="flag">— not verified</span></p>
+      <p class="ledger__how">Everything here was run on 2.1.281, which has function hooks. Which release first shipped them has not been established, so “2.1.281 or newer” would be a claim from a sample of one. On a build without them the plugin installs and never runs.</p>
     </div>
     <div class="ledger__row ledger__row--open">
       <p class="ledger__claim">An assistant still finishing the job <span class="flag">— not verified</span></p>
@@ -1070,7 +1109,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p>Sometimes — <span class="num val">0.19</span> outputs a session where it would actually
         cost you something, and 27 of 32 sessions lose nothing at all. Counting every reuse
         anywhere later, including ones that had already happened before a real compaction could
-        fire, the upper bound is 1.34 a session. Both are in <a href="#checked">section 05</a>, and 47 of the 55 are
+        fire, the upper bound is 1.34 a session. Both are in <a href="#losses">section 05</a>, and 47 of the 55 are
         command output. A dropped result keeps its first 300 characters when the call survives, and a call
         that recorded a change is never dropped at all. Every failure mode falls back to Claude
         Code's own summary rather than to a half-compacted transcript, and a single failed request
@@ -1100,8 +1139,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 <section class="wrap" id="install" aria-labelledby="install-h">
   <p class="rubric"><span class="rubric__n">09</span>Install</p>
   <h2 id="install-h">Function hooks are early access, so turn them on first.</h2>
-  <p class="lede">Needs Claude Code 2.1.281 or newer, where function hooks exist. On an older
-     build the plugin installs and silently never runs, so check <code>claude --version</code> first.</p>
+  <p class="lede">Tested on Claude Code 2.1.281, which has function hooks. Which release first
+     shipped them is <em>not established here</em> — on a build without them the plugin installs
+     and silently never runs, so check <code>claude&nbsp;--version</code> first and see the
+     <a href="#checked">verification ledger</a>.</p>
   <p>
     <strong>Or don’t install it yet.</strong> Clone the repository and run
     <code>npm&nbsp;run&nbsp;dry-run</code>: it scores your own transcripts with the same code the
@@ -1114,7 +1155,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <button class="copy" type="button" data-copy hidden>Copy</button>
       <p class="visually-hidden" id="copy-status" role="status" aria-live="polite"></p>
     </div>
-    <pre tabindex="0" role="region" aria-label="Shell commands — scrolls sideways"><code id="cmd-text">export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
+    <pre tabindex="0" role="region" aria-label="Shell commands"><code id="cmd-text">export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
 
 claude plugin marketplace add AxeForging/laya-compact
 claude plugin install laya-compact@laya-compact</code></pre>
@@ -1125,7 +1166,7 @@ claude plugin install laya-compact@laya-compact</code></pre>
     response, or a saving below the minimum) falls back to the built-in summary.
   </p>
 
-  <h3>What it does to a session, in full</h3>
+  <h3 id="session">What it does to a session, in full</h3>
   <ul class="plain">
     <li>The <b>last six messages</b> are never touched, whatever they contain.</li>
     <li>Your prose and the assistant’s is never touched. Only tool results and tool calls.</li>
