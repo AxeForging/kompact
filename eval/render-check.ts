@@ -93,6 +93,16 @@ const PROBE = String.raw`
       document.documentElement.scrollHeight + 'px, ' +
       document.querySelectorAll('details.more').length + ' blocks folded away');
 
+  // Eighteen of these were wrapped around existing markup by a script, and a
+  // details whose first child is not its summary is a block with no handle: the
+  // content shows and the label does not.
+  for (const block of document.querySelectorAll('details.more')) {
+    const kids = [...block.children];
+    const summaries = kids.filter((el) => el.tagName === 'SUMMARY');
+    say(summaries.length === 1 && kids[0] === summaries[0], 'a folded block has its handle @' + w,
+        (block.querySelector('summary')?.textContent || block.id || '?').slice(0, 44).trim());
+  }
+
   // Every in-page anchor has to land clear of the sticky contents bar. They
   // used to land 29px behind it on a laptop and 116px behind it on a phone,
   // where the heading and the first fact were simply not on screen.
