@@ -255,7 +255,13 @@ ul.plain li::marker{ color: var(--ink-3); }
    reading was a 0.035 lightness change. WCAG 1.4.1, on the one control whose
    whole job is answering "where am I" in a 17,000px document. */
 .contents-bar .contents a[aria-current]{ border-bottom-color: currentColor; font-weight:700; }
-.contents__top{ margin-left: auto; color: var(--ink-3) !important; }
+.contents__all{
+  margin-left: auto; flex: 0 0 auto; font: inherit; font-weight:500; color: var(--ink-3);
+  background:none; border:0; border-bottom:1px solid transparent; padding-block:6px; cursor:pointer;
+}
+.contents__all:hover{ color: var(--accent-ink); }
+.contents__all[aria-pressed="true"]{ color: var(--accent-ink); border-bottom-color: currentColor; }
+.contents__top{ color: var(--ink-3) !important; margin-left: var(--space-md); }
 .contents__top:hover{ color: var(--accent-ink) !important; }
 
 .contents a:hover{ color: var(--on-flood); border-bottom-color: var(--on-flood); }
@@ -334,8 +340,17 @@ table.rows caption{ text-align:left; }
 }
 .whisker::before{ left:0; } .whisker::after{ right:0; }
 .whisker{ background: linear-gradient(var(--ink-2), var(--ink-2)) center center / 100% 1.5px no-repeat; }
-.worst{ position:absolute; top: 22px; left: var(--x); width:2px; height: 13px; transform: translateX(-50%);
+.worst{ position:absolute; top: 19px; left: var(--x); width:2px; height: 19px; transform: translateX(-50%);
   background: var(--accent-ink); }
+/* A second channel, because the tick and the whisker's end-caps were the same
+   1.5-2px vertical separated only by lightness — on the mark whose whole job is
+   showing the worst case. The tick now stands taller than the whisker at both
+   ends and carries a cap, so it reads as different in greyscale. */
+.worst::before{
+  content:""; position:absolute; left:50%; top:-3px; width:6px; height:3px;
+  transform: translateX(-50%); background: var(--accent-ink);
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+}
 
 .chart__key{
   display:flex; flex-wrap:wrap; gap: var(--space-sm) var(--space-lg); margin-top: var(--space-md);
@@ -387,6 +402,11 @@ table.rows caption{ text-align:left; }
 .glossary dt, .glossary dd{ margin:0; padding-block: var(--space-xs); border-bottom: 1px solid var(--rule); }
 .glossary dt code, .glossary dd code{ font-size: 0.95em; }
 /* Arriving at a definition should show which of the twelve answered you. */
+.gloss-back{ margin: var(--space-sm) 0 0; }
+.gloss-back button{
+  font-family: var(--sans); font-size: var(--text-sm); font-weight:600; color: var(--accent-ink);
+  background:none; border:0; border-bottom:1px solid currentColor; padding:0 0 2px; cursor:pointer;
+}
 .glossary dt:target{ color: var(--accent-ink); }
 .glossary dt:target + dd{ border-bottom-color: var(--accent-ink); }
 @media (max-width: 560px){
@@ -707,7 +727,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 <nav class="contents-bar" aria-label="Contents">
   <div class="contents wrap">
-    <a href="#result">Evidence</a><a href="#demo">Watch it decide</a><a href="#shape">The shape of it</a><a href="#signals">What you repeat</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#glossary">Glossary</a><a href="#install">Install</a><a class="contents__top" href="#top">Top &#8593;</a>
+    <a href="#result">Evidence</a><a href="#demo">Watch it decide</a><a href="#shape">The shape of it</a><a href="#signals">What you repeat</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#glossary">Glossary</a><a href="#install">Install</a><button class="contents__all" type="button" id="open-all" hidden>Open all</button><a class="contents__top" href="#top">Top &#8593;</a>
   </div>
 </nav>
 
@@ -1515,6 +1535,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 <section class="wrap" id="glossary" aria-labelledby="glossary-h">
   <p class="rubric"><span class="rubric__n">08</span>Glossary</p>
   <h2 id="glossary-h">What the words mean.</h2>
+  <p class="gloss-back" hidden><button type="button" id="gloss-back">&#8592; Back to where you were</button></p>
 
     <p>
     Every term this page uses for its own machinery, in one place, because most readers arrive in
@@ -1743,6 +1764,37 @@ const retune = () => {
 };
 retune();
 addEventListener('resize', retune, { passive: true });
+
+// Arriving at a definition costs the reader their place. Back does exist, but a
+// reader who has just jumped eight sections is not always sure it will do the
+// right thing, so this says so. Shown only when a term was actually jumped to.
+const backRow = document.querySelector('.gloss-back');
+const backButton = document.getElementById('gloss-back');
+if (backRow && backButton) {
+  const showBack = () => {
+    const term = location.hash.startsWith('#g-') && document.querySelector(location.hash);
+    backRow.hidden = !(term && term.tagName === 'DT');
+  };
+  backButton.addEventListener('click', () => history.back());
+  addEventListener('hashchange', showBack);
+  showBack();
+}
+
+// Sixteen folds, and no way to read the whole argument without sixteen clicks.
+// Hidden in the markup for the usual reason: with scripts blocked it would be a
+// control that cannot act, and the folds already open one at a time on their own.
+const openAll = document.getElementById('open-all');
+const folds = [...document.querySelectorAll('details.more')];
+if (openAll && folds.length) {
+  openAll.hidden = false;
+  openAll.setAttribute('aria-pressed', 'false');
+  openAll.addEventListener('click', () => {
+    const opening = openAll.getAttribute('aria-pressed') !== 'true';
+    for (const fold of folds) fold.open = opening;
+    openAll.setAttribute('aria-pressed', String(opening));
+    openAll.textContent = opening ? 'Close all' : 'Open all';
+  });
+}
 
 // A link into a folded block should open it. Chromium does this on its own for
 // fragment navigation; nothing else is obliged to, and the glossary link relied

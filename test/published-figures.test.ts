@@ -308,6 +308,8 @@ describe('published figures match eval/RESULTS.md', () => {
       'class="copy" type="button" data-copy hidden',
       'id="d-run" hidden',
       'id="sweep" hidden',
+      'id="open-all" hidden',
+      'class="gloss-back" hidden',
     ]) {
       expect(noscript, `a control that cannot act is visible: ${control}`).toContain(control);
     }
