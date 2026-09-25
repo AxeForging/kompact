@@ -192,11 +192,9 @@ ul.plain li::marker{ color: var(--ink-3); }
    each side than the rubric underline directly beneath it. */
 section{ scroll-margin-top: var(--space-lg); padding-block: clamp(var(--space-xl), 4.5vw, var(--space-3xl)); position:relative; }
 section.wrap::before{
-  content:""; position:absolute; top:0; left: var(--space-xl); right: var(--space-xl);
+  content:""; position:absolute; top:0;
+  left: clamp(20px, 5vw, 64px); right: clamp(20px, 5vw, 64px);
   border-top: 1px solid var(--rule);
-}
-@media (min-width: 1208px){
-  section.wrap::before{ left: clamp(20px, 5vw, 64px); right: clamp(20px, 5vw, 64px); }
 }
 section.flooded{ border-top: none; padding-block: clamp(var(--space-2xl), 5.5vw, var(--space-4xl)); }
 .masthead.flooded{ max-width: none; }
@@ -324,7 +322,7 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
    with no header anywhere, which a screen reader reads as "0.158 dot 0.973".
    Same four columns as the rows, same widths, so it reads as their header. */
 .demo__legend{
-  display:grid; grid-template-columns: 18ch minmax(0,1fr) 11ch 12ch;
+  display:grid; grid-template-columns: 25ch minmax(0,1fr) 11ch 12ch;
   gap: var(--space-md); margin: var(--space-lg) 0 0; align-items:end;
   max-width:none; font-family: var(--sans); font-size: var(--text-xs);
   letter-spacing:0.02em; text-transform:uppercase; color: var(--ink-3); line-height:1.25;
@@ -358,7 +356,7 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 
 .demo__list{ list-style:none; margin:0; padding:0; }
 .demo__call{
-  display:grid; grid-template-columns: 18ch minmax(0,1fr) 11ch 12ch;
+  display:grid; grid-template-columns: 25ch minmax(0,1fr) 11ch 12ch;
   gap: var(--space-md); align-items:center; padding: var(--space-xs) 0;
   border-bottom:1px solid var(--rule); font-family: var(--sans); font-size: var(--text-xs);
 }

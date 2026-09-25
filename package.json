@@ -38,6 +38,7 @@
     "eval:score": "bun eval/score.ts",
     "eval:truncation": "bun eval/truncation.ts",
     "docs:plot": "bun eval/distribution.ts",
+    "docs:check": "bun eval/render-check.ts",
     "smoke": "bun test/live-smoke.ts",
     "ckpt": "bun test/ckpt-compare.ts"
   },

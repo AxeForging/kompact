@@ -83,3 +83,11 @@ jobs:
         run: |
           bun run docs
           git diff --exit-code -- docs/
+
+      # Four defects reached the published page that no source review could
+      # catch, because each was a rendered fact: a hint saying a table drags
+      # where it cannot, an image whose narrow-screen rule was overridden at
+      # equal specificity 139 lines later, columns clipping their own text, and
+      # section rules 64px wider than every other rule. This measures the page.
+      - name: the rendered page must hold up at 1400px and 390px
+        run: bun run docs:check
