@@ -23,9 +23,15 @@
     },
     "keepThreshold": {
       "type": "number",
-      "title": "Keep threshold",
-      "description": "Minimum probability that a tool call or its result is still needed; below it the item is dropped. Lower keeps more.",
-      "default": 0.5
+      "title": "Keep floor",
+      "description": "Probability at or above which a call is never dropped, whatever the reduction target. Raise it to keep more. Measured default: 0.1 retains 82% of outputs that were genuinely reused later; 0.5 retains only 5%, because a calibrated scorer rarely exceeds 0.5 when barely 7% of outputs are ever reused.",
+      "default": 0.1
+    },
+    "targetReduction": {
+      "type": "number",
+      "title": "Reduction target",
+      "description": "Fraction of droppable tool-output characters to free, 0-1. Calls are dropped lowest-score-first until this is met, then dropping stops. The keep floor outranks it, so a session where everything matters frees little.",
+      "default": 0.7
     },
     "preserveRecentMessages": {
       "type": "number",

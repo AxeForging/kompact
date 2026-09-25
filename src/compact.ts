@@ -2,6 +2,7 @@ import { CONTEXT_LENGTH, DEFAULT_MODEL, inputTokens, noulAnswer, routedModel } f
 import { DEFAULT_PHRASING, questionsFor } from './questions.js';
 import { buildCallState, callContexts, collectToolCalls, goalFromMessages } from './state.js';
 import type {
+  CallAction,
   CallAnswer,
   CallDecision,
   CompactOptions,
@@ -16,11 +17,21 @@ import type {
 
 export const DEFAULT_OPTIONS: ResolvedCompactOptions = {
   goal: '',
-  keepThreshold: 0.5,
+  /**
+   * A FLOOR, not a cut: nothing at or above it is dropped to meet the budget.
+   *
+   * 0.1, not 0.5, and measured rather than picked. Only ~7% of tool outputs are
+   * ever reused verbatim, so a calibrated scorer rarely exceeds 0.5 even for
+   * the ones that matter — a 0.5 floor protects almost nothing. Simulated per
+   * session on 1063 labelled calls (`eval/policy.ts`), a 0.5 floor retained 5%
+   * of genuinely-needed outputs; 0.1 retains 82% and still frees 53%.
+   */
+  keepThreshold: 0.1,
   preserveRecentMessages: 6,
   // 700 sits under the multilingual checkpoint's 768-token state budget.
   maxCallStateTokens: 700,
   concurrency: 8,
+  targetReduction: 0.7,
   phrasing: DEFAULT_PHRASING,
   truncateHeadChars: 300,
 };
@@ -42,6 +53,7 @@ export function resolveOptions(options: CompactOptions = {}): ResolvedCompactOpt
       Math.floor(finite(options.maxCallStateTokens, DEFAULT_OPTIONS.maxCallStateTokens)),
     ),
     concurrency: Math.max(1, Math.floor(finite(options.concurrency, DEFAULT_OPTIONS.concurrency))),
+    targetReduction: Math.min(1, Math.max(0, finite(options.targetReduction, DEFAULT_OPTIONS.targetReduction))),
     phrasing: options.phrasing ?? DEFAULT_OPTIONS.phrasing,
     truncateHeadChars: Math.max(
       0,
@@ -64,6 +76,65 @@ export function decideCall(
     return { ...base, action: 'drop_result', reason: 'result_dropped' };
   }
   return { ...base, action: 'drop_call', reason: 'call_dropped' };
+}
+
+/** Characters an action would actually free, mirroring `applyDecisions`. */
+export function freedBy(call: ToolCall, action: CallAction, headChars: number): number {
+  if (action === 'keep') return 0;
+  let inputChars = 0;
+  try {
+    inputChars = JSON.stringify(call.input).length;
+  } catch {
+    inputChars = 20;
+  }
+  if (action === 'drop_call') return call.resultChars + inputChars;
+  // A truncated result keeps its head plus a one-line note, and only shortens
+  // at all once it is longer than that.
+  return call.resultChars <= headChars + 120 ? 0 : call.resultChars - headChars - 90;
+}
+
+/**
+ * Turns scores into decisions for the whole set at once.
+ *
+ * Ranking generalises across sessions; an absolute probability cut does not,
+ * because each session has its own mix of tools and so its own distribution.
+ * So `keepThreshold` is used only as a floor — nothing at or above it is ever
+ * dropped — and below the floor calls are dropped from the lowest score upward
+ * only until `targetReduction` of the droppable characters is freed. A session
+ * where nothing was reused frees what it needs and keeps the rest; a session
+ * where everything matters frees little, because the floor outranks the budget.
+ */
+export function decideAll(
+  calls: readonly ToolCall[],
+  answers: ReadonlyMap<string, CallAnswer>,
+  options: Pick<ResolvedCompactOptions, 'keepThreshold' | 'targetReduction' | 'truncateHeadChars'>,
+): CallDecision[] {
+  const unanswered: CallAnswer = { keepCall: 1, keepResult: 1 };
+  const provisional = calls.map((call) => ({
+    call,
+    decision: decideCall(call, answers.get(call.id) ?? unanswered, options),
+  }));
+
+  const droppable = provisional.filter((p) => p.decision.action !== 'keep');
+  const budget =
+    options.targetReduction *
+    droppable.reduce((sum, p) => sum + freedBy(p.call, p.decision.action, options.truncateHeadChars), 0);
+
+  // Lowest score first: least likely to be needed goes first.
+  const order = [...droppable].sort((a, b) => a.decision.keepResult - b.decision.keepResult);
+  const spared = new Set<string>();
+  let freed = 0;
+  for (const entry of order) {
+    if (freed >= budget) {
+      spared.add(entry.call.id);
+      continue;
+    }
+    freed += freedBy(entry.call, entry.decision.action, options.truncateHeadChars);
+  }
+
+  return provisional.map(({ decision }) =>
+    spared.has(decision.id) ? { ...decision, action: 'keep' as const, reason: 'budget' as const } : decision,
+  );
 }
 
 /** Runs `worker` over `items` with at most `limit` in flight, preserving order. */
@@ -285,9 +356,7 @@ export async function compact(
 
   // An unanswered call keeps both halves: a wrong keep costs context, a wrong
   // drop destroys work that cannot be recovered.
-  const decisions = calls.map((call) =>
-    decideCall(call, answers.get(call.id) ?? { keepCall: 1, keepResult: 1 }, resolved),
-  );
+  const decisions = decideAll(calls, answers, resolved);
   const kept = applyDecisions(messages, decisions, calls, resolved.truncateHeadChars);
   return {
     messages: kept,
@@ -298,7 +367,7 @@ export async function compact(
       charsBefore,
       charsAfter: kept.reduce((sum, message) => sum + messageChars(message), 0),
       calls: calls.length,
-      kept: count(decisions, 'kept'),
+      kept: count(decisions, 'kept') + count(decisions, 'budget'),
       resultsDropped: count(decisions, 'result_dropped'),
       callsDropped: count(decisions, 'call_dropped'),
       pinned: count(decisions, 'pinned'),

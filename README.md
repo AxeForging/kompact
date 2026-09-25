@@ -130,7 +130,8 @@ The type declarations in `types/` were written by Claude Code 2.1.274.
 |---|---:|---|
 | `scorer` | `features` | `features` (offline, AUC 0.918) or `laya` (a sidecar) |
 | `layaUrl` | `http://127.0.0.1:8000/v1/systemone` | only read when `scorer` is `laya` |
-| `keepThreshold` | `0.5` | below this probability an item is dropped |
+| `keepThreshold` | `0.1` | a **floor**: at or above this, never dropped |
+| `targetReduction` | `0.7` | fraction of droppable tool output to free |
 | `preserveRecentMessages` | `6` | newest messages pinned; the first is always kept |
 | `compactAtPercent` | `60` | context percentage that triggers compaction |
 | `minReductionRatio` | `0.25` | below this saving, delegate to the built-in summary |
@@ -139,7 +140,25 @@ The type declarations in `types/` were written by Claude Code 2.1.274.
 
 A dropped result is **not deleted**: its first `truncateHeadChars` characters
 survive with a note, and the assistant can re-run the tool. That is why 90%
-safety is a defensible setting — a miss costs a re-run, not the work.
+safety is a defensible setting: a miss costs a re-run, not the work.
+
+**Why a floor and a budget, not a threshold.** The scorer produces a ranking,
+and that ranking generalises across sessions. An absolute probability cut does
+not, because each session has its own mix of tools and so its own distribution:
+a Bash-heavy session scores low throughout and a fixed cut sweeps all of it.
+Calls are therefore dropped lowest-score-first only until `targetReduction` is
+met, with `keepThreshold` as a floor nothing is dropped above. Simulated per
+session on the labelled corpus (`eval/policy.ts`):
+
+| policy | tool output freed | outputs that were reused, kept |
+|---|---|---|
+| threshold 0.5 (an earlier default) | 97.6% | **5.1%** |
+| budget 0.7, floor 0.1 (shipped) | 52.9% | **82.1%** |
+| budget 0.7, floor 0.05 | 8.6% | 92.3% |
+
+Freeing nearly everything is easy and nearly worthless. This is why `calibrate`
+is an accuracy upgrade rather than a prerequisite: the policy adapts to your
+distribution without it.
 
 Any failure at all — scorer down, malformed response, saving below
 `minReductionRatio` — falls back to Claude Code's built-in compaction. A single

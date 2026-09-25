@@ -79,7 +79,8 @@ export interface CallDecision extends CallAnswer {
   id: string;
   tool: string;
   action: CallAction;
-  reason: 'pinned' | 'kept' | 'result_dropped' | 'call_dropped';
+  /** `budget` means it scored low but the reduction target was already met. */
+  reason: 'pinned' | 'kept' | 'budget' | 'result_dropped' | 'call_dropped';
 }
 
 export interface HistoryToolCall {
@@ -128,6 +129,20 @@ export interface CompactOptions {
   maxCallStateTokens?: number;
   /** Requests in flight at once. Default 8. */
   concurrency?: number;
+  /**
+   * Fraction of droppable tool-output characters to free, 0-1. Default 0.7.
+   *
+   * The scorer produces a ranking; a fixed probability cut turns that ranking
+   * into a decision badly, because each session has its own distribution. A
+   * Bash-heavy session scores low across the board and an absolute cut sweeps
+   * all of it; a session of file reads scores high and the same cut frees
+   * nothing. Dropping from the lowest score upward until this much is freed
+   * adapts to either without anyone tuning a threshold.
+   *
+   * `keepThreshold` still wins: nothing at or above it is dropped to meet this
+   * budget, so on a session where everything matters, little is freed.
+   */
+  targetReduction?: number;
   /** Question wording variant. Default `reproducible`. */
   phrasing?: Phrasing;
   /** Characters of a dropped tool result to retain. Default 300. */
@@ -140,6 +155,7 @@ export interface ResolvedCompactOptions {
   preserveRecentMessages: number;
   maxCallStateTokens: number;
   concurrency: number;
+  targetReduction: number;
   phrasing: Phrasing;
   truncateHeadChars: number;
 }
