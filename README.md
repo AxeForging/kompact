@@ -371,20 +371,28 @@ This is the necessary condition for the work to suffer, not proof that it did.
 Nothing here replays an assistant against the compacted transcript, and that
 remains unverified below.
 
-## Using Laya instead
+## The neural sidecar this replaced
+
+**There is no option that turns it back on.** `scorer` and `layaUrl` are read
+and ignored, nothing shipped imports a client, and a settings file left over
+from an older version is not an error. What is kept is the measurement, under
+`eval/`, where it stays reproducible against a live sidecar:
 
 ```sh
 uv tool install "laya[serve]"
 LAYA_HOST=127.0.0.1 LAYA_DEVICE=cuda LAYA_PRELOAD=1 LAYA_MODELS=multilingual laya-serve
+bun eval/score.ts        # the comparison
+bun eval/sidecar-bench.ts  # the table below
 ```
 
-`LAYA_HOST` defaults to `0.0.0.0`; set it explicitly. Then set `scorer` to
-`laya`. Expect it to be worse until you fine-tune on your own sessions — and
-watch for `STATES TRUNCATED` in the compaction toast, which means states are
-overflowing the checkpoint and the scores are being computed on fragments.
+`LAYA_HOST` defaults to `0.0.0.0`; set it explicitly. `LAYA_DEVICE=cuda`
+matters: on `cpu` the router puts almost nothing on the card and every figure
+below flatters it, which is how this section got two of them wrong once already.
 
-`phrasing` is worth setting if you do: on `typed-decisions`, `direct` scores AUC
-0.719 and `reproducible` 0.419, so the wording matters more than the checkpoint.
+`phrasing` is the one setting that outlived the sidecar, because the built-in
+scorer reads each question's instructions too: on `typed-decisions`, `direct`
+scores AUC 0.719 and `reproducible` 0.419, so the wording mattered more than the
+checkpoint did.
 
 ### What it costs to run
 
@@ -548,6 +556,7 @@ Being precise about this, because "it compiles" is not evidence.
 | The Codex plugin works against the server | `jev-compact`'s own parser, pairing, scorer and HTTP client, driven over its recorded Codex rollout fixture, produce discriminating scores |
 | The plugin loads in a real engine | `claude --plugin-dir .` with function hooks on |
 | `turn.complete` fires and requests compaction | verified live: the hook was invoked in a real session, `$.session.usage()` returned a real percentage, and `$.session.compact()` was called |
+| The loop takes several passes before handing over | the production loop replayed on real transcripts — compacted prefix plus real continuation, not a pass fed its own output: 11 passes taken across 5 sessions, the largest stopping at 6 on the floor rather than the ceiling (`eval/passes.ts`) |
 
 **Not verified:** the engine invoking `session.compact` *in a live session* and
 accepting the replacement message list. Forcing it needs genuine context
@@ -558,6 +567,14 @@ which is the same API the upstream uses. To close it: open a session with
 `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude --plugin-dir .`, work until the
 context bar is well along, then type `/compact` — the toast reports the reduction
 and every decision lands in the log.
+
+Also unverified: **what deferring the model summary costs**. Six passes run
+before the engine's summary does, and how much room each one buys is measured
+(`eval/passes.ts`). What an assistant loses by not getting a narrative summary
+for six compactions is not: `applyDecisions` never touches prose, so what
+survives is verbatim tool calls and the session's own words, which is a
+different thing from a story about them. `maxPasses` exists so the summary
+happens eventually, and its value is a judgement rather than a result.
 
 Also unverified: **an assistant still finishing the job**. The measurement above
 shows how often the information would no longer be there; whether that changes
