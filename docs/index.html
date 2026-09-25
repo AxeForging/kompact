@@ -7,7 +7,7 @@
 <meta name="description" content="A Claude Code plugin that scores every tool call before compaction and keeps only what is still needed verbatim. Local, no API key, no GPU. AUC 0.895 ± 0.073 over 10 grouped splits of 1063 labelled calls.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Big+Shoulders+Display:wght@600;700;800&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap" rel="stylesheet">
 <style>
 :root{
   color-scheme: light;
@@ -19,8 +19,10 @@
   --ink:        oklch(0.245 0.012 45);
   --ink-2:      oklch(0.430 0.011 45);
   --ink-3:      oklch(0.470 0.010 45);
-  /* The one accent. Measured values and honesty markers only. */
-  --accent:     oklch(0.505 0.168 38);
+  /* The one accent. Measured values and honesty markers only. Chroma raised
+     from 0.168: on a wide-gamut display it reads at full strength, and sRGB
+     clamps both to nearly the same red, so nothing is lost where it cannot. */
+  --accent:     oklch(0.505 0.190 38);
   --accent-ink: oklch(0.395 0.140 38);
   --accent-wash:oklch(0.945 0.030 38);
 
@@ -30,13 +32,18 @@
 
   --sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
   --serif: 'Literata', Georgia, 'Times New Roman', serif;
+  /* An American-gothic condensed, the lettering stencilled on plant machinery —
+     AxeForging, and the scale contrast the document was missing. Fallbacks are
+     real condensed faces, not a shrug at the system stack. */
+  --display: 'Big Shoulders Display', 'Archivo Narrow', 'Liberation Sans Narrow',
+             'Helvetica Neue Condensed', Impact, sans-serif;
 
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1.0625rem;
   --text-lg: clamp(1.25rem, 1.02rem + 1.1vw, 1.6rem);
-  --text-xl: clamp(1.85rem, 1.25rem + 2.7vw, 3rem);
-  --text-display: clamp(2.6rem, 1.5rem + 5.2vw, 4.75rem);
+  --text-xl: clamp(2.3rem, 1.4rem + 4.1vw, 4.1rem);
+  --text-display: clamp(3.4rem, 1.7rem + 7.6vw, 7rem);
 
   --measure: 68ch;
 }
@@ -69,12 +76,30 @@ a:hover{ color: var(--accent); }
 }
 .label--accent{ color: var(--accent-ink); }
 
+/* A numbered running head, as a standards paper sets one — not the tracked-caps
+   chip that sits above every AI hero. The number does the signalling, so the
+   words stay in sentence case. */
+.rubric{
+  display:flex; align-items:baseline; gap: var(--space-sm);
+  font-family: var(--sans); font-size: var(--text-sm); font-weight:600;
+  letter-spacing:0.01em; color: var(--ink-2);
+  margin: 0 0 var(--space-sm); padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--rule); max-width: none;
+}
+.rubric__n{
+  font-variant-numeric: tabular-nums; font-weight:700; color: var(--ink-3);
+  font-size: var(--text-xs); letter-spacing:0.08em;
+}
+.rubric--accent{ color: var(--accent-ink); }
+.rubric--accent .rubric__n{ color: var(--accent); }
+
 /* ── masthead ─────────────────────────────────────────────────────────── */
 .masthead{ padding-block: clamp(var(--space-xl), 5vw, var(--space-3xl)) var(--space-xl); }
 .masthead__rule{ height:0; border-top: 2px solid var(--ink); margin-bottom: var(--space-md); }
 .wordmark{
-  font-family: var(--sans); font-weight: 700; font-size: var(--text-display);
-  line-height: 0.92; letter-spacing: -0.035em; margin: 0 0 var(--space-md);
+  font-family: var(--display); font-weight: 800; font-size: var(--text-display);
+  line-height: 0.86; letter-spacing: -0.005em; text-transform: uppercase;
+  margin: 0 0 var(--space-md);
 }
 .wordmark em{ font-style: normal; color: var(--accent); }
 .standfirst{ max-width: var(--measure); font-size: var(--text-lg); line-height: 1.45; margin:0 0 var(--space-xl); color: var(--ink-2); }
@@ -82,8 +107,8 @@ a:hover{ color: var(--accent); }
 
 .colophon{
   display:flex; flex-wrap:wrap; gap: var(--space-xs) var(--space-lg);
-  font-family: var(--sans); font-size: var(--text-xs); letter-spacing:0.08em;
-  text-transform: uppercase; color: var(--ink-3);
+  font-family: var(--sans); font-size: var(--text-sm); letter-spacing:0.01em;
+  color: var(--ink-3);
   border-top:1px solid var(--rule); padding-top: var(--space-sm);
 }
 .colophon b{ color: var(--ink); font-weight:600; }
@@ -99,11 +124,11 @@ a:hover{ color: var(--accent); }
 /* ── sections ─────────────────────────────────────────────────────────── */
 section{ scroll-margin-top: var(--space-lg); padding-block: clamp(var(--space-xl), 4.5vw, var(--space-3xl)); border-top: 1px solid var(--rule); }
 h2{
-  font-family: var(--sans); font-weight: 700; font-size: var(--text-xl);
-  line-height: 1.1; letter-spacing:-0.025em; margin: 0 0 var(--space-md); max-width: 22ch;
+  font-family: var(--display); font-weight: 700; font-size: var(--text-xl);
+  line-height: 0.98; letter-spacing:0; margin: 0 0 var(--space-md); max-width: 26ch;
 }
-h3{ font-family: var(--sans); font-weight:600; font-size: var(--text-lg); line-height:1.3;
-  letter-spacing:-0.015em; margin: var(--space-2xl) 0 var(--space-xs); }
+h3{ font-family: var(--display); font-weight:600; font-size: var(--text-lg); line-height:1.15;
+  letter-spacing:0.005em; margin: var(--space-2xl) 0 var(--space-xs); }
 p{ max-width: var(--measure); margin: 0 0 var(--space-md); }
 .lede{ font-size: 1.15rem; color: var(--ink-2); max-width: var(--measure); }
 
@@ -178,7 +203,7 @@ table.rows caption{ text-align:left; }
 table.data{ width:100%; min-width: 30rem; border-collapse: collapse; font-family: var(--sans); font-size: var(--text-sm); }
 table.data th, table.data td{ text-align:left; padding: var(--space-xs) var(--space-md) var(--space-xs) 0;
   border-bottom: 1px solid var(--rule); font-variant-numeric: tabular-nums; }
-table.data thead th{ font-size: var(--text-xs); letter-spacing:0.1em; text-transform:uppercase;
+table.data thead th{ font-size: var(--text-xs); letter-spacing:0.01em;
   color: var(--ink-3); font-weight:600; border-bottom: 1px solid var(--rule-firm); }
 table.data td.n, table.data th.n{ text-align:right; }
 table.data tbody tr:last-child td{ border-bottom: 1px solid var(--rule-firm); }
@@ -186,6 +211,83 @@ table.data tr.same td{ background: var(--accent-wash); }
 table.data tr.same td.mark{ color: var(--accent-ink); font-weight:700; }
 .caption{ font-family: var(--sans); font-size: var(--text-xs); color: var(--ink-3);
   margin-top: var(--space-xs); max-width: 74ch; line-height:1.5; }
+
+/* ── the demonstration ────────────────────────────────────────────────────
+   Rows are a fixed height and only the bar scales, so nothing here animates a
+   layout property. The bar's scaleX is the information: it ends at the fraction
+   of the output that survived. */
+.demo{ margin-top: var(--space-lg); border-top: 2px solid var(--ink); }
+.demo__bar{
+  display:flex; flex-wrap:wrap; align-items:center; gap: var(--space-sm) var(--space-lg);
+  padding: var(--space-sm) 0; border-bottom:1px solid var(--rule-firm);
+}
+.demo__stat{ font-family: var(--sans); font-size: var(--text-xs); letter-spacing:0.08em;
+  text-transform:uppercase; color: var(--ink-3); }
+.demo__stat b{ display:block; font-size: 1.35rem; letter-spacing:0; text-transform:none;
+  font-weight:700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.demo__stat--freed b{ color: var(--accent-ink); }
+.demo__run{
+  margin-left:auto; font-family: var(--sans); font-size: var(--text-sm); font-weight:600;
+  letter-spacing:0.01em; color: var(--paper);
+  background: var(--ink); border:1px solid var(--ink); padding: 10px var(--space-md); cursor:pointer;
+}
+.demo__run:hover{ background: var(--accent-ink); border-color: var(--accent-ink); }
+.demo__run[disabled]{ background:none; color: var(--ink-3); border-color: var(--rule-firm); cursor:default; }
+
+.demo__list{ list-style:none; margin:0; padding:0; }
+.demo__call{
+  display:grid; grid-template-columns: 13ch minmax(0,1fr) 11ch 12ch;
+  gap: var(--space-md); align-items:center; padding: var(--space-xs) 0;
+  border-bottom:1px solid var(--rule); font-family: var(--sans); font-size: var(--text-xs);
+}
+.demo__who{ min-width:0; }
+.demo__who b{ display:block; font-size: var(--text-sm); font-weight:600; color: var(--ink); }
+.demo__who span{ display:block; color: var(--ink-3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.demo__track{ position:relative; height: 16px; background: var(--paper-sunk); min-width:0; }
+.demo__fill{
+  position:absolute; inset-block:0; left:0; width: var(--w); background: var(--ink-2);
+  transform-origin: left center; transform: scaleX(var(--keep, 1));
+}
+.demo__scores{ color: var(--ink-3); font-variant-numeric: tabular-nums; text-align:right; }
+.demo__outcome{ font-weight:600; letter-spacing:0.02em; color: var(--ink-3); }
+.demo__call[data-state="kept"] .demo__outcome{ color: var(--ink); }
+.demo__call[data-state="head"] .demo__outcome{ color: var(--accent-ink); }
+.demo__call[data-state="head"] .demo__fill{ background: var(--accent); }
+.demo__call[data-state="dropped"] .demo__outcome{ color: var(--accent-ink); }
+.demo__call[data-state="dropped"] .demo__who b,
+.demo__call[data-state="dropped"] .demo__who span{ color: var(--ink-3); }
+.demo__call[data-state="deciding"]{ background: var(--accent-wash); }
+.demo__call[data-state="pending"] .demo__outcome{ color: var(--rule-firm); }
+.demo__call[data-state="pending"] .demo__scores{ color: var(--rule-firm); }
+
+@media (prefers-reduced-motion: no-preference){
+  .demo__fill{ transition: transform 520ms cubic-bezier(0.16,1,0.3,1), background-color 220ms ease-out; }
+  .demo__call{ transition: background-color 260ms ease-out; }
+}
+
+@media (max-width: 640px){
+  .demo__call{ grid-template-columns: minmax(0,1fr) 11ch; grid-template-areas: "who scores" "track track" "out out"; }
+  .demo__who{ grid-area: who; } .demo__scores{ grid-area: scores; }
+  .demo__track{ grid-area: track; } .demo__outcome{ grid-area: out; }
+  .demo__run{ margin-left:0; width:100%; }
+}
+
+/* ── FAQ ──────────────────────────────────────────────────────────────── */
+.faq{ margin-top: var(--space-lg); border-top:1px solid var(--rule-firm); }
+.faq__item{ border-bottom:1px solid var(--rule); padding: var(--space-md) 0; }
+.faq__item h3{ margin: 0 0 var(--space-2xs); font-size: 1.15rem; letter-spacing:0.01em; }
+.faq__item p{ margin:0 0 var(--space-xs); font-size: var(--text-sm); color: var(--ink-2); max-width: 66ch; }
+.faq__item p:last-child{ margin-bottom:0; }
+
+/* ── what's next: the one place allowed the future tense ──────────────── */
+.next{ margin-top: var(--space-lg); border-top:1px solid var(--rule-firm); }
+.next__item{ display:grid; grid-template-columns: 15ch minmax(0,1fr); gap: var(--space-md);
+  padding: var(--space-md) 0; border-bottom:1px solid var(--rule); align-items:start; }
+.next__when{ font-family: var(--sans); font-size: var(--text-xs); font-weight:600;
+  letter-spacing:0.02em; color: var(--ink-3); margin:0; }
+.next__what{ margin:0; font-size: var(--text-sm); color: var(--ink-2); max-width: 62ch; }
+.next__what b{ color: var(--ink); font-weight:600; }
+@media (max-width: 640px){ .next__item{ grid-template-columns:1fr; gap: var(--space-2xs); } }
 
 /* ── quote / finding ──────────────────────────────────────────────────── */
 .finding{ margin: var(--space-xl) 0 0; padding: var(--space-lg) 0; border-top: 2px solid var(--ink); border-bottom:1px solid var(--rule); }
@@ -262,17 +364,17 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     the one path that uses either.
   </p>
   <div class="colophon reveal" style="--d:170ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>72</b> tests</span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>114</b> tests</span>
     <span><b>0</b> network calls by default</span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
   <nav class="contents reveal" style="--d:210ms" aria-label="Contents">
-    <a href="#result">Result</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#install">Install</a>
+    <a href="#result">Evidence</a><a href="#demo">Watch it decide</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#next">What's next</a><a href="#faq">FAQ</a><a href="#install">Install</a><a href="eval.html">Full evaluation</a>
   </nav>
 </header>
 
 <main>
 <section class="wrap" id="result">
-  <p class="label">Result</p>
+  <p class="rubric"><span class="rubric__n">01</span>Evidence</p>
   <h2>It replaces a neural model that it beat.</h2>
   <p class="lede">
     The plugin started as a port onto <a rel="noopener" href="https://github.com/NandhaKishorM/laya">Laya</a>,
@@ -378,9 +480,53 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
 </section>
 
+<section class="wrap" id="demo">
+  <p class="rubric"><span class="rubric__n">02</span>Watch it decide</p>
+  <h2>Nine calls, two probabilities each, one ranking.</h2>
+  <p class="lede">
+    A session that finds a test failing only on CI, tracks it to a timezone in a fixture, and
+    fixes it. Press the button and the calls are decided in the order the scorer ranks them,
+    lowest first, until half the droppable output is freed.
+  </p>
+
+  <div class="demo">
+    <div class="demo__bar">
+      <p class="demo__stat">Tool output<b><span id="d-before">116,266</span> chars</b></p>
+      <p class="demo__stat demo__stat--freed">Freed<b><span id="d-freed">0</span> chars</b></p>
+      <p class="demo__stat">Decided<b><span id="d-count">0</span> of 9</b></p>
+      <button class="demo__run" type="button" id="d-run">Score the session</button>
+    </div>
+    <ol class="demo__list" id="d-list"></ol>
+  </div>
+
+  <p class="caption">
+    The transcript is constructed — every real session on this machine is someone's work and
+    this page is public. The decisions are not: the list is produced by running the shipped
+    scorer with the shipped defaults, and nothing in it was chosen by hand. Regenerate it with
+    <code>npm run docs:demo</code>.
+  </p>
+
+  <h3>The Edit it wanted to delete</h3>
+  <p>
+    The first time this ran, <strong>the scorer dropped the <code>Edit</code> that fixed the
+    bug</strong>. Both its scores were low and honestly so — “Applied 1 edit to src/auth.ts”
+    is worth nothing, and exactly 1 of the 138 mutating calls in the corpus had an output
+    that was ever needed verbatim. But the <em>input</em> is the only record that the change
+    happened, and unlike a read it cannot be recovered by running it again.
+  </p>
+  <p>
+    So a mutating call is no longer the scorer’s decision. <code>Edit</code>, <code>Write</code>,
+    <code>MultiEdit</code> and <code>NotebookEdit</code> keep their call whatever the
+    probabilities say; only their output can go. Across the corpus that rescues
+    <span class="num val">21 of 138</span> such calls, leaves reused-output retention unchanged
+    at <span class="num val">84.6%</span>, and moves freed from 42.9% to
+    <span class="num val">43.0%</span>, because the budget then continues down the ranking.
+  </p>
+</section>
+
 <section class="wrap" id="cost">
-  <p class="label">Cost</p>
-  <h2>81&nbsp;ms to score 991 tool calls.</h2>
+  <p class="rubric"><span class="rubric__n">03</span>Cost</p>
+  <h2>108&nbsp;ms to score 1,071 tool calls.</h2>
   <p class="lede">
     Compaction stops being a model call and becomes arithmetic. These are whole session
     logs, so the totals span more than one context window, so the ratio is what transfers.
@@ -435,16 +581,41 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </table>
   </div>
   <p class="caption">
-    Freeing nearly everything is easy and nearly worthless. A dropped result usually keeps its
-    first 300 characters, but not always: when a result scores below the floor the call often
-    does too, and then it goes entirely. Of 14 wrongly dropped outputs, 2 kept a head. This is
-    also why calibrating on your own sessions is an accuracy upgrade rather than a prerequisite,
-    since the policy adapts to your distribution on its own.
+    Freeing nearly everything is easy and nearly worthless. Run through the shipped code rather
+    than this simulation, the same defaults give <strong>43.0% freed and 84.6% kept</strong>; the
+    difference is the one rule the sweep has no notion of, which is that a call recording a change
+    is never dropped. Calibrating on your own sessions is an accuracy upgrade rather than a
+    prerequisite, because the policy adapts to your distribution on its own.
+  </p>
+
+  <h3>What the sidecar would have cost instead</h3>
+  <p>
+    Laya stays available for anyone with a checkpoint fine-tuned on their own sessions, so here is
+    what running it costs. One <code>laya-serve</code> process loads every checkpoint and routes
+    per request, so memory and start-up belong to the router, not to the checkpoint you pick.
+  </p>
+  <div class="scroller">
+    <table class="data">
+      <thead><tr>
+        <th scope="col">Scoring one session, 1,071 calls</th><th scope="col" class="n">Time</th>
+        <th scope="col" class="n">Memory held</th><th scope="col" class="n">VRAM</th>
+        <th scope="col" class="n">Cold start</th>
+      </tr></thead>
+      <tbody>
+        <tr class="same"><th scope="row">Built-in scorer</th><td class="n mark">108 ms</td><td class="n">none</td><td class="n">none</td><td class="n">none</td></tr>
+        <tr><th scope="row">Laya, fastest checkpoint</th><td class="n">14.5 s</td><td class="n">4.9 GB</td><td class="n">~5.0 GB</td><td class="n">7.6 s</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="caption">
+    134× the time, for a lower AUC, on an RTX 4060 Laptop. Per request the fastest checkpoint
+    answers eight questions in 735 ms and the slowest in 1,943 ms. Fine-tuning moves the AUC; it
+    does not move this table.
   </p>
 </section>
 
 <section class="wrap" id="losses">
-  <p class="label label--accent">Where it loses</p>
+  <p class="rubric rubric--accent"><span class="rubric__n">04</span>Where it loses</p>
   <h2>The model we dropped fails quietly, which is worse than failing.</h2>
   <p>
     Laya’s English checkpoint reads 512 tokens and discards the rest with HTTP 200 and no
@@ -470,6 +641,33 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     send the whole conversation, up to 25,000 tokens, as one state.
   </p>
 
+  <h3>What the other 15.4% costs</h3>
+  <p>
+    “84.6% of reused outputs kept” invites you to supply your own answer for the rest, so here
+    it is, priced. Held-out scores, shipped policy, per session: <strong>10 of the 78 reused
+    outputs are dropped and actually shortened</strong> — 0.56 a session. Two more are dropped
+    but short enough to sit inside the retained head, so nothing is removed at all.
+  </p>
+  <div class="scroller">
+    <table class="data">
+      <thead><tr>
+        <th scope="col">How it would be recovered</th><th scope="col" class="n">Outputs</th>
+        <th scope="col" class="n">Characters</th><th scope="col">Produced by</th>
+      </tr></thead>
+      <tbody>
+        <tr class="same"><th scope="row">Re-run the command, side effects unknown</th><td class="n mark">9</td><td class="n">38,046</td><td>Bash</td></tr>
+        <tr><th scope="row">Read the file again</th><td class="n">1</td><td class="n">1,162</td><td>Read</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="caption">
+    None of the ten kept a head, because both scores were low enough to drop the call outright.
+    Nine of the ten are command output that a later tool input quoted verbatim — the shape this
+    scorer is worst at, since <code>tool=Bash</code> carries a −1.36 coefficient because most
+    command output is never referred to again, and the minority that is gets swept along.
+    <strong>This is recovery cost, not task outcome</strong>; see the ledger below.
+  </p>
+
   <h3>Three more things this does not do</h3>
   <p>
     <strong>A summary compresses harder.</strong> Freeing a fifth of the tokens is less than
@@ -489,7 +687,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </section>
 
 <section class="wrap" id="checked">
-  <p class="label">Verification</p>
+  <p class="rubric"><span class="rubric__n">05</span>Verification</p>
   <h2>Including the one that was not.</h2>
   <div class="ledger">
     <div class="ledger__row">
@@ -513,14 +711,106 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p class="ledger__how">jev-compact’s own parser, scorer and HTTP client driven over its recorded rollout fixture against our server. Not run against a live Codex: that plugin needs Codex ≥ 0.155 and this machine has 0.131.</p>
     </div>
     <div class="ledger__row ledger__row--open">
+      <p class="ledger__claim">Task outcome</p>
+      <p class="ledger__how">Every figure on this page is tokens, ranking or recovery cost. Whether the assistant still finishes the job after a compaction has not been measured; that needs the same session replayed both ways and the following tool calls compared.</p>
+    </div>
+    <div class="ledger__row ledger__row--open">
       <p class="ledger__claim">The engine calling <code>session.compact</code> live</p>
       <p class="ledger__how">The plugin loads and <code>turn.complete</code> fires in a real session, but the engine declines to compact below ~31% full and the model cannot invoke <code>/compact</code> itself. Covered by the real-session test; the engine-side handoff is not.</p>
     </div>
   </div>
 </section>
 
+<section class="wrap" id="next">
+  <p class="rubric"><span class="rubric__n">06</span>What's next</p>
+  <h2>The gaps, in the order they matter.</h2>
+  <p class="lede">
+    Everything above this line is measured. Everything below it is not yet, and is written in the
+    future tense on purpose.
+  </p>
+  <div class="next">
+    <div class="next__item">
+      <p class="next__when">Blocks a 1.0</p>
+      <p class="next__what"><b>Task outcome.</b> Every figure on this page is tokens, ranking or
+        recovery cost. None of them is whether the assistant still finishes the job. Closing it
+        means replaying the same session with and without compaction and comparing the tool calls
+        that follow.</p>
+    </div>
+    <div class="next__item">
+      <p class="next__when">Blocks a 1.0</p>
+      <p class="next__what"><b>The live handoff.</b> The engine calling
+        <code>session.compact</code> and accepting the replacement message list has not been seen
+        in a real session — forcing it needs genuine context pressure.</p>
+    </div>
+    <div class="next__item">
+      <p class="next__when">Needs a machine</p>
+      <p class="next__what"><b>A live Codex CLI.</b> Verified against a recorded rollout fixture;
+        that plugin needs Codex ≥ 0.155 and this machine has 0.131.</p>
+    </div>
+    <div class="next__item">
+      <p class="next__when">Wanted</p>
+      <p class="next__what"><b>A fine-tuned Laya checkpoint that wins.</b> The bar is 0.895, not
+        chance. <code>eval/</code> re-runs the whole comparison for anyone who tries, and the
+        cost table above is the other half of that decision.</p>
+    </div>
+    <div class="next__item">
+      <p class="next__when">Structural</p>
+      <p class="next__what"><b>More than one person's sessions.</b> The corpus is 18 sessions from
+        one machine. A committed scrubbed copy ships with the repository so a second corpus can be
+        compared against it rather than replacing it.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="faq">
+  <p class="rubric"><span class="rubric__n">07</span>FAQ</p>
+  <h2>The questions a sceptic asks.</h2>
+  <div class="faq">
+    <div class="faq__item">
+      <h3>Isn't this just a heuristic with extra steps?</h3>
+      <p>It is a heuristic with error bars, which is the difference. Thirteen coefficients fitted
+        on labelled data, evaluated on sessions held out whole, calibrated well enough that the
+        threshold means a probability — expected calibration error 0.019. “Big outputs get reused”
+        alone reaches 0.876, so most of the signal really is one feature; the other twelve earn
+        their place on characters freed at a fixed safety level, not on ranking.</p>
+    </div>
+    <div class="faq__item">
+      <h3>Why did the neural model lose?</h3>
+      <p>It was asked to read facts as prose that the features encode directly, and it was never
+        trained on this task. Laya's own documentation says the base checkpoints sit near chance on
+        typed-decision workflows and should be treated as a fast base to specialise. That is what
+        was measured, and the wording mattered more than the checkpoint: on
+        <code>typed-decisions</code>, asking what is <em>true</em> of the text scores 0.721 where
+        asking what to <em>do</em> scores 0.419.</p>
+    </div>
+    <div class="faq__item">
+      <h3>Will it delete something I need?</h3>
+      <p>Sometimes — 0.56 outputs a session, measured above, and nine of ten of those are command
+        output. A dropped result keeps its first 300 characters when the call survives, and a call
+        that recorded a change is never dropped at all. Every failure mode falls back to Claude
+        Code's own summary rather than to a half-compacted transcript, and a single failed request
+        keeps its call: a wrong keep costs context, a wrong drop costs work.</p>
+    </div>
+    <div class="faq__item">
+      <h3>Do I have to calibrate?</h3>
+      <p>No. An earlier version effectively did, because an absolute probability cut cannot survive
+        a distribution it was not tuned on. Dropping lowest-score-first until a character budget is
+        met adapts on its own, so <code>npm run calibrate</code> is an accuracy upgrade. It is still
+        worth running: the shipped coefficients come from one person's 18 sessions.</p>
+    </div>
+    <div class="faq__item">
+      <h3>How is this different from the built-in <code>/compact</code>?</h3>
+      <p>The built-in asks a model to summarise the session and replaces it with prose, which
+        compresses far harder than a fifth. This keeps what survives <em>verbatim</em>, so a file
+        you read is still the file, not a description of it. It is not a better compressor; it is a
+        different trade — and it hands the session back to the built-in summary whenever it cannot
+        do its job.</p>
+    </div>
+  </div>
+</section>
+
 <section class="wrap" id="install">
-  <p class="label">Install</p>
+  <p class="rubric"><span class="rubric__n">08</span>Install</p>
   <h2>Function hooks are early access, so turn them on first.</h2>
   <p class="lede">Needs Claude Code 2.1.281 or newer, where function hooks exist. On an older
      build the plugin installs and silently never runs, so check <code>claude --version</code> first.</p>
@@ -548,10 +838,11 @@ claude plugin install laya-compact@laya-compact</code></pre>
     and <a rel="noopener" href="https://github.com/fatelei/jev-compact">fatelei/jev-compact</a>, both MIT, which do this
     with TypeSafe’s hosted Jev model. Laya is Apache-2.0. This is MIT, by
     <a rel="noopener" href="https://github.com/AxeForging">AxeForging</a>:
-    <a rel="noopener" href="https://github.com/AxeForging/laya-compact">source and the full evaluation</a>.
+    <a rel="noopener" href="https://github.com/AxeForging/laya-compact">the source</a> and <a href="eval.html">the full evaluation</a>.
   </p>
 </footer>
 
+<script src="demo-data.js"></script>
 <script>
 const command = document.getElementById('cmd-text');
 
@@ -593,6 +884,104 @@ if ('IntersectionObserver' in window && sections.length) {
     });
   }, { threshold: [0, 0.15, 0.4, 0.75, 1] });
   sections.forEach((section) => observer.observe(section));
+}
+
+/* ── the demonstration ──────────────────────────────────────────────────────
+   Decisions come from eval/demo.ts, which runs the shipped compactor; nothing
+   here decides anything. It renders the end state first, so the section is
+   complete and truthful before anyone presses the button, then replays how the
+   ranking got there. Without this script the section still shows its numbers. */
+const demo = window.DEMO;
+const list = document.getElementById('d-list');
+if (demo && list) {
+  const total = demo.stats.outputChars;
+  const widest = Math.max(...demo.decisions.map((d) => d.chars));
+  const freedEl = document.getElementById('d-freed');
+  const countEl = document.getElementById('d-count');
+  const run = document.getElementById('d-run');
+  const nf = new Intl.NumberFormat('en-GB');
+
+  // A result short enough to fit inside the retained head is not shortened at
+  // all, so calling it "head only" would overstate what happened to it.
+  const label = (d) => (d.freed === 0 ? 'kept' : d.action === 'drop_call' ? 'dropped' : 'head only');
+  const state = (d) => (d.freed === 0 ? 'kept' : d.action === 'drop_call' ? 'dropped' : 'head');
+  // Bar width is the call's share of the largest output; scaleX is what survived.
+  const share = (d) => Math.max(3, Math.round((100 * d.chars) / widest));
+  // `freed` counts the tool input too, so a tiny result can free more characters
+  // than the result itself holds; the bar shows the result, hence the clamp.
+  const survives = (d) => (d.chars === 0 ? 1 : Math.max(0, Math.min(1, (d.chars - d.freed) / d.chars)));
+
+  const rows = demo.decisions.map((d) => {
+    const row = document.createElement('li');
+    row.className = 'demo__call';
+    row.innerHTML =
+      `<span class="demo__who"><b>${d.tool}</b><span>${d.target || '—'}</span></span>` +
+      `<span class="demo__track"><span class="demo__fill" style="--w:${share(d)}%"></span></span>` +
+      `<span class="demo__scores">${d.keepResult.toFixed(3)} · ${d.keepCall.toFixed(3)}` +
+      `<br>${nf.format(d.chars)} ch</span>` +
+      `<span class="demo__outcome"></span>`;
+    list.append(row);
+    return row;
+  });
+
+  const paint = (index, settled) => {
+    const d = demo.decisions[index];
+    const row = rows[index];
+    row.dataset.state = settled ? state(d) : 'deciding';
+    row.querySelector('.demo__fill').style.setProperty('--keep', settled ? survives(d) : 1);
+    row.querySelector('.demo__outcome').textContent = settled ? label(d) : 'scoring…';
+  };
+
+  const settleAll = () => {
+    demo.decisions.forEach((_, i) => paint(i, true));
+    freedEl.textContent = nf.format(demo.decisions.reduce((sum, d) => sum + d.freed, 0));
+    countEl.textContent = String(demo.decisions.length);
+    run.disabled = true;
+    run.textContent = `${Math.round((100 * demo.decisions.reduce((s, d) => s + d.freed, 0)) / total)}% of the output freed`;
+  };
+
+  const reset = () => {
+    rows.forEach((row, i) => {
+      row.dataset.state = 'pending';
+      row.querySelector('.demo__fill').style.setProperty('--keep', 1);
+      row.querySelector('.demo__outcome').textContent = 'to score';
+    });
+    freedEl.textContent = '0';
+    countEl.textContent = '0';
+  };
+
+  // Lowest keepResult first: the order the budget actually spends in.
+  const order = demo.decisions
+    .map((d, i) => i)
+    .sort((a, b) => demo.decisions[a].keepResult - demo.decisions[b].keepResult);
+
+  const still = matchMedia('(prefers-reduced-motion: reduce)');
+  settleAll();
+  run.disabled = false;
+  run.textContent = 'Replay';
+
+  run.addEventListener('click', () => {
+    if (still.matches) { settleAll(); return; }
+    run.disabled = true;
+    run.textContent = 'Scoring…';
+    reset();
+    let freed = 0;
+    let step = 0;
+    const tick = () => {
+      if (step >= order.length) { settleAll(); return; }
+      const index = order[step];
+      paint(index, false);
+      setTimeout(() => {
+        paint(index, true);
+        freed += demo.decisions[index].freed;
+        freedEl.textContent = nf.format(freed);
+        countEl.textContent = String(step + 1);
+        step += 1;
+        tick();
+      }, 340);
+    };
+    tick();
+  });
 }
 </script>
 </body>

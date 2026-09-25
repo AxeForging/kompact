@@ -63,7 +63,8 @@ and Laya's best like 0.694, and both moved once the corpus grew. The numbers
 below are the mean over **10 grouped splits**, each holding out 30% of sessions,
 with every scorer judged on the same split so the comparison is paired
 (`eval/repeat.ts`). Every figure below is transcribed from `eval/RESULTS.md`,
-which `npm run eval:results` regenerates:
+which `npm run eval:results` regenerates and
+[the evaluation page](https://axeforging.github.io/laya-compact/eval.html) publishes:
 
 | scorer | AUC (mean ± sd) | worst split | chars freed at 90% safety |
 |---|---|---|---|

@@ -3,12 +3,13 @@ window.DEMO = {
  "generated": "2026-09-25",
  "stats": {
   "calls": 9,
+  "outputChars": 116266,
   "charsBefore": 116984,
   "charsAfter": 67810,
   "kept": 6,
   "resultsDropped": 1,
   "callsDropped": 2,
-  "ms": 3
+  "ms": 4
  },
  "decisions": [
   {
@@ -20,6 +21,7 @@ window.DEMO = {
    "pinned": false,
    "action": "keep",
    "reason": "budget",
+   "freed": 0,
    "keepResult": 0.066,
    "keepCall": 0.965
   },
@@ -32,6 +34,7 @@ window.DEMO = {
    "pinned": false,
    "action": "keep",
    "reason": "kept",
+   "freed": 0,
    "keepResult": 0.381,
    "keepCall": 0.875
   },
@@ -44,6 +47,7 @@ window.DEMO = {
    "pinned": false,
    "action": "drop_call",
    "reason": "call_dropped",
+   "freed": 126,
    "keepResult": 0.027,
    "keepCall": 0.044
   },
@@ -56,6 +60,7 @@ window.DEMO = {
    "pinned": false,
    "action": "keep",
    "reason": "kept",
+   "freed": 0,
    "keepResult": 0.27,
    "keepCall": 0.212
   },
@@ -68,6 +73,7 @@ window.DEMO = {
    "pinned": false,
    "action": "keep",
    "reason": "budget",
+   "freed": 0,
    "keepResult": 0.037,
    "keepCall": 0.05
   },
@@ -80,6 +86,7 @@ window.DEMO = {
    "pinned": false,
    "action": "keep",
    "reason": "kept",
+   "freed": 0,
    "keepResult": 0.27,
    "keepCall": 0.212
   },
@@ -92,6 +99,7 @@ window.DEMO = {
    "pinned": false,
    "action": "drop_call",
    "reason": "call_dropped",
+   "freed": 49048,
    "keepResult": 0.029,
    "keepCall": 0.071
   },
@@ -104,6 +112,7 @@ window.DEMO = {
    "pinned": false,
    "action": "drop_result",
    "reason": "result_dropped",
+   "freed": 0,
    "keepResult": 0.002,
    "keepCall": 0.072
   },
@@ -116,6 +125,7 @@ window.DEMO = {
    "pinned": false,
    "action": "keep",
    "reason": "budget",
+   "freed": 0,
    "keepResult": 0.097,
    "keepCall": 0.127
   }

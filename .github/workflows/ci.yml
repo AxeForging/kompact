@@ -54,3 +54,10 @@ jobs:
 
       # The published AUC and retention, recomputed from the committed corpus.
       - run: bun run eval:ci
+
+      # The two published pages are generated; regenerate and fail on a diff, so
+      # a stale demonstration or evaluation cannot reach the site.
+      - name: the published pages must be up to date
+        run: |
+          bun run docs
+          git diff --exit-code -- docs/

@@ -12,7 +12,7 @@
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { compact } from '../src/compact.js';
+import { DEFAULT_OPTIONS, compact, freedBy } from '../src/compact.js';
 import { FeatureAsker } from '../src/features.js';
 import { collectToolCalls } from '../src/state.js';
 import type { Message } from '../src/index.js';
@@ -63,6 +63,10 @@ const decisions = result.decisions.map((decision) => {
     pinned: source.pinned,
     action: decision.action,
     reason: decision.reason,
+    // How many characters this decision actually removes, from the same
+    // function `applyDecisions` uses — so the page adds up rather than
+    // reimplementing the head rule and drifting from it.
+    freed: freedBy(source, decision.action, DEFAULT_OPTIONS.truncateHeadChars),
     keepResult: Number(decision.keepResult.toFixed(3)),
     keepCall: Number(decision.keepCall.toFixed(3)),
   };
@@ -72,6 +76,7 @@ const data = {
   generated: new Date().toISOString().slice(0, 10),
   stats: {
     calls: result.stats.calls,
+    outputChars: calls.reduce((sum, c) => sum + c.resultChars, 0),
     charsBefore: result.stats.charsBefore,
     charsAfter: result.stats.charsAfter,
     kept: result.stats.kept,

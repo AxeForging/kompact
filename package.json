@@ -30,7 +30,9 @@
     "eval:ci": "bun eval/repeat.ts --fixture && bun eval/policy.ts --fixture && bun eval/recovery.ts --fixture",
     "eval:fixtures": "bun eval/make-fixture.ts && bun eval/make-session-fixture.ts",
     "prepack": "npm run build",
-    "docs:demo": "bun eval/demo.ts"
+    "docs:demo": "bun eval/demo.ts",
+    "docs:eval": "bun eval/make-eval-page.ts",
+    "docs": "bun eval/demo.ts && bun eval/make-eval-page.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
