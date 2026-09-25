@@ -39,9 +39,6 @@
 
   --sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
   --serif: 'Literata', Georgia, 'Times New Roman', serif;
-  /* An American-gothic condensed, the lettering stencilled on plant machinery —
-     AxeForging, and the scale contrast the document was missing. Fallbacks are
-     real condensed faces, not a shrug at the system stack. */
   /* A Didone: the highest-contrast thing a printed page offers, and the letter
      shape of an engraved plate — which is what the one image on this page is. */
   --display: 'Bodoni Moda', 'Bodoni 72', Didot, 'Times New Roman', serif;
@@ -119,7 +116,7 @@ a:hover{ color: var(--accent); }
 .wordmark{
   font-family: var(--display); font-weight: 700; font-size: var(--text-display);
   font-optical-sizing: none;
-  line-height: 0.92; letter-spacing: -0.015em; margin: 0 0 var(--space-lg);
+  line-height: 1.0; letter-spacing: -0.015em; margin: 0 0 var(--space-lg);
 }
 .wordmark em{ font-style: italic; font-weight: 400; }
 .standfirst{ max-width: var(--measure); font-size: var(--text-lg); line-height: 1.45; margin:0 0 var(--space-xl); color: var(--on-flood-2); }
@@ -149,7 +146,7 @@ section.flooded{ border-top: none; padding-block: clamp(var(--space-2xl), 5.5vw,
 h2{
   font-family: var(--display); font-weight: 700; font-size: var(--text-xl);
   font-optical-sizing: none;
-  line-height: 0.98; letter-spacing:0; margin: 0 0 var(--space-md); max-width: 26ch;
+  line-height: 1.06; letter-spacing:0; margin: 0 0 var(--space-md); max-width: 26ch;
 }
 h3{ font-family: var(--display); font-weight:600; font-size: var(--text-lg); line-height:1.15;
   font-optical-sizing: none;
@@ -404,7 +401,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     the one path that uses either.
   </p>
   <div class="colophon reveal" style="--d:170ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>122</b> tests</span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>126</b> tests</span>
     <span><b>0</b> network calls by default</span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
   <nav class="contents reveal" style="--d:210ms" aria-label="Contents">
@@ -414,9 +411,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </header>
 
 <main>
-<section class="wrap" id="result">
+<section class="wrap" id="result" aria-labelledby="result-h">
   <p class="rubric"><span class="rubric__n">01</span>Evidence</p>
-  <h2>It replaces a neural model that it beat.</h2>
+  <h2 id="result-h">It replaces a neural model that it beat.</h2>
   <p class="lede">
     The plugin started as a port onto <a rel="noopener" href="https://github.com/NandhaKishorM/laya">Laya</a>,
     a 322M-parameter decision model that runs locally. Measured against 1,063 tool calls
@@ -514,6 +511,15 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
        <span class="val">+0.186</span> on average and by <span class="val">+0.018</span> on the closest.</p>
   </div>
   <p class="caption">
+    <b>Read that bar as the narrow corpus.</b> Those splits hold out 30% of 18 sessions — the
+    sessions every Laya config was scored against, so the comparison is possible at all. The
+    coefficients that ship are fitted on all <span class="num val">41</span>, and
+    leave-one-session-out across those 41 gives <span class="num val">0.789</span> with
+    calibration error <span class="num val">0.051</span>: seven points and nearly three times the
+    error, against the same measurement on 18 of them. That is the honest figure for a session
+    like this operator's, and section 07 has why.
+  </p>
+  <p class="caption">
     Every scorer judged on the same held-out sessions each split, so the comparison is paired.
     Splitting by session, not by row: calls inside one session are correlated and splitting on
     rows would leak. Calibration error 0.019 against Laya’s 0.42–0.71, which is what makes the
@@ -548,25 +554,38 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </div>
 </section>
 
-<section class="wrap" id="demo">
+<section class="wrap" id="demo" aria-labelledby="demo-h">
   <p class="rubric"><span class="rubric__n">03</span>Watch it decide</p>
-  <h2>Nine calls, two probabilities each, one ranking.</h2>
+  <h2 id="demo-h">Nine calls, two probabilities each, one ranking.</h2>
   <p class="lede">
     A session that finds a test failing only on CI, tracks it to a timezone in a fixture, and
-    fixes it. Press the button and the calls are decided in the order the scorer ranks them,
-    lowest first. Watch what survives: two calls are refused outright as <em>too small</em> —
-    dropping them would free less than it risks.
+    fixes it. Below is what the shipped scorer did to it, every row written into this page when
+    the demonstration was generated. Two calls are refused outright as <em>too small</em> —
+    dropping them would free less than it risks. If scripting is on, <em>Replay</em> re-runs the
+    decisions in the order the ranking spends in, lowest first.
   </p>
 
   <div class="demo">
+    <!-- demo:render -->
     <div class="demo__bar">
-      <p class="demo__stat">Tool output<b><span id="d-before">116,266</span> chars</b></p>
-      <p class="demo__stat demo__stat--freed">Freed<b><span id="d-freed">0</span> chars</b></p>
-      <p class="demo__stat">Decided<b><span id="d-count">0</span> of 9</b></p>
-      <button class="demo__run" type="button" id="d-run">Score the session</button>
+      <p class="demo__stat">Tool output<b>116,266 chars</b></p>
+      <p class="demo__stat demo__stat--freed">Freed<b><span id="d-freed">8,393</span> chars</b></p>
+      <p class="demo__stat">Decided<b><span id="d-count">9</span> of 9</b></p>
+      <button class="demo__run" type="button" id="d-run" hidden>Replay — 7% freed</button>
     </div>
     <p class="visually-hidden" id="d-status" role="status" aria-live="polite"></p>
-    <ol class="demo__list" id="d-list"></ol>
+    <ol class="demo__list" id="d-list">
+      <li class="demo__call" data-state="head"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:15%;--keep:0.0543"></span></span><span class="demo__scores">0.158 · 0.973<br>7,186 ch</span><span class="demo__outcome">head only</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:74%;--keep:1"></span></span><span class="demo__scores">0.762 · 0.946<br>36,341 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="small"><span class="demo__who"><b>Grep</b><span>JWT_SECRET</span></span><span class="demo__track"><span class="demo__fill" style="--w:3%;--keep:1"></span></span><span class="demo__scores">0.020 · 0.037<br>89 ch</span><span class="demo__outcome">too small</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>src/config.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:29%;--keep:1"></span></span><span class="demo__scores">0.282 · 0.270<br>14,026 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="dropped"><span class="demo__who"><b>Bash</b><span>git log --oneline -20 -- src/auth.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:3%;--keep:0"></span></span><span class="demo__scores">0.081 · 0.093<br>1,547 ch</span><span class="demo__outcome">dropped</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>.github/workflows/ci.yml</span></span><span class="demo__track"><span class="demo__fill" style="--w:11%;--keep:1"></span></span><span class="demo__scores">0.282 · 0.270<br>5,615 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Bash</b><span>gh run view 4821 --log | tail -60</span></span><span class="demo__track"><span class="demo__fill" style="--w:100%;--keep:1"></span></span><span class="demo__scores">0.228 · 0.305<br>49,001 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="small"><span class="demo__who"><b>Edit</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:3%;--keep:1"></span></span><span class="demo__scores">0.003 · 0.059<br>29 ch</span><span class="demo__outcome">too small</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:5%;--keep:1"></span></span><span class="demo__scores">0.297 · 0.277<br>2,432 ch</span><span class="demo__outcome">kept</span></li>
+    </ol>
+    <!-- /demo:render -->
   </div>
 
   <p class="caption">
@@ -580,7 +599,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p>
     The first time this ran, <strong>the scorer dropped the <code>Edit</code> that fixed the
     bug</strong>. Both its scores were low and honestly so — “Applied 1 edit to src/auth.ts”
-    is worth nothing, and exactly 1 of the 138 mutating calls in the corpus had an output
+    is worth nothing, and exactly 1 of the 220 mutating calls in the corpus had an output
     that was ever needed verbatim. But the <em>input</em> is the only record that the change
     happened, and unlike a read it cannot be recovered by running it again.
   </p>
@@ -594,21 +613,22 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p>
     A second rule came from the same place. The <code>Grep</code> in the list above scored 0.020
     and 0.037 — about as low as this scorer goes — and dropping it would have freed
-    <span class="num val">126 characters</span>. Roughly thirty tokens, against a real chance of
+    <span class="num val">126 characters</span> — more than the 89 its result holds, because
+    dropping the call takes its input with it. Roughly thirty tokens, against a real chance of
     losing something the session still needed. Below <code>minYieldChars</code> the ranking is
     not worth acting on however confident it is, so that call reads <em>too small</em> rather
     than <em>dropped</em>.
   </p>
 </section>
 
-<section class="wrap" id="cost">
+<section class="wrap" id="cost" aria-labelledby="cost-h">
   <p class="rubric"><span class="rubric__n">04</span>Cost</p>
-  <h2>164&nbsp;ms to score 1,543 tool calls.</h2>
+  <h2 id="cost-h">164&nbsp;ms to score 1,543 tool calls.</h2>
   <p class="lede">
     Compaction stops being a model call and becomes arithmetic. These are whole session
     logs, so the totals span more than one context window, so the ratio is what transfers.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table, scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: the policy sweep — scrolls sideways">
     <table class="data">
       <thead><tr>
         <th scope="col">Session</th><th scope="col" class="n">Calls</th>
@@ -630,6 +650,22 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     transcripts, which grow as work continues — the per-session column is the figure that carries.
   </p>
 
+  <h3>Get this table for your own machine first</h3>
+  <p>
+    Clone the repository and run <code>npm&nbsp;run&nbsp;dry-run</code>. It reads
+    <code>~/.claude/projects</code>, scores every tool call in every transcript it finds, and
+    prints the table above for your sessions instead of these. It writes nothing, installs no
+    plugin, and needs no key — it is the same <code>compact</code> the hook calls, run against
+    your own history. If the number it prints is not worth having, you have lost a minute.
+  </p>
+  <p>
+    Expect somewhere in <span class="num val">12.8%</span> to <span class="num val">32.4%</span>,
+    and expect the spread to be your tool mix rather than noise. The 12.8% session is mostly
+    large reads that get read again; the 32.4% one is mostly commands whose output is never
+    quoted afterwards. A session with no long outputs at all has nothing to free, and the dry
+    run will say so rather than pretend otherwise.
+  </p>
+
   <h3>Why it frees a fifth and not four fifths</h3>
   <p>
     The scorer produces a <em>ranking</em>, and the ranking holds up on sessions it has never
@@ -643,7 +679,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     the keep threshold acting as a floor that nothing is dropped above. Simulated per session on
     the labelled corpus, scored leave-one-session-out:
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table, scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: what a wrong drop costs — scrolls sideways">
     <table class="data">
       <thead><tr>
         <th scope="col">Policy</th><th scope="col" class="n">Output freed</th>
@@ -671,7 +707,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     what running it costs. One <code>laya-serve</code> process loads every checkpoint and routes
     per request, so memory and start-up belong to the router, not to the checkpoint you pick.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table, scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: how it would be recovered — scrolls sideways">
     <table class="data">
       <thead><tr>
         <th scope="col">Scoring one session, 1,543 calls</th><th scope="col" class="n">Time</th>
@@ -691,15 +727,15 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
 </section>
 
-<section class="wrap" id="losses">
+<section class="wrap" id="losses" aria-labelledby="losses-h">
   <p class="rubric rubric--accent"><span class="rubric__n">05</span>Where it loses</p>
-  <h2>The model we dropped fails quietly, which is worse than failing.</h2>
+  <h2 id="losses-h">The model we dropped fails quietly, which is worse than failing.</h2>
   <p>
     Laya’s English checkpoint reads 512 tokens and discards the rest with HTTP 200 and no
     warning. Padding one decisive sentence with unrelated filler, the same question was asked
     of a 4,278-character state and a 21,078-character state:
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table, scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: which tool produced it — scrolls sideways">
     <table class="data">
       <thead><tr>
         <th scope="col">State</th><th scope="col" class="n">Characters</th>
@@ -724,7 +760,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     it is, priced. Held-out scores, shipped policy, per session: <strong>55 of the 247 reused
     outputs are dropped</strong> — 1.34 a session, and only one of them kept a head.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table, scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: why the output was needed — scrolls sideways">
     <table class="data">
       <thead><tr>
         <th scope="col">How it would be recovered</th><th scope="col" class="n">Outputs</th>
@@ -756,7 +792,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     actually compact — 60% of a session's tool output — decide only the calls present at that
     moment, then count the reuses that come <em>afterwards</em> whose source was dropped.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table, scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: per-session results — scrolls sideways">
     <table class="data">
       <thead><tr>
         <th scope="col">Compacting at 60%, across 32 sessions</th><th scope="col" class="n">Count</th>
@@ -802,9 +838,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
 </section>
 
-<section class="wrap" id="checked">
+<section class="wrap" id="checked" aria-labelledby="checked-h">
   <p class="rubric"><span class="rubric__n">06</span>Verification</p>
-  <h2>Including the one that was not.</h2>
+  <h2 id="checked-h">Including the one that was not.</h2>
   <div class="ledger">
     <div class="ledger__row">
       <p class="ledger__claim">Beats the model it replaces</p>
@@ -841,9 +877,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </div>
 </section>
 
-<section class="wrap" id="next">
+<section class="wrap" id="next" aria-labelledby="next-h">
   <p class="rubric"><span class="rubric__n">07</span>What's next</p>
-  <h2>The gaps, in the order they matter.</h2>
+  <h2 id="next-h">The gaps, in the order they matter.</h2>
   <p class="lede">
     Everything above this line is measured. Everything below it is not yet, and is written in the
     future tense on purpose.
@@ -859,9 +895,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <div class="next__item">
       <p class="next__when">Open</p>
       <p class="next__what"><b>The corpus is still one person's.</b> Widening it from 18 sessions
-        to 41 — all the same person — cost seven points of AUC and nearly tripled the calibration
-        error. A second operator's corpus would say how much of what is left is this person's
-        habits.</p>
+        to 41 — all the same person — took leave-one-session-out AUC from
+        <span class="num val">0.862</span> to <span class="num val">0.789</span>, and calibration
+        error from <span class="num val">0.019</span> to <span class="num val">0.051</span>. Seven
+        points and nearly triple, inside one person's own work. A second operator's corpus would
+        say how much of what is left is this person's habits.</p>
     </div>
     <div class="next__item">
       <p class="next__when">Blocks a 1.0</p>
@@ -882,23 +920,23 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </div>
     <div class="next__item">
       <p class="next__when">Structural</p>
-      <p class="next__what"><b>More than one person's sessions.</b> The corpus is 18 sessions from
+      <p class="next__what"><b>More than one person's sessions.</b> The corpus is 41 sessions from
         one machine. A committed scrubbed copy ships with the repository so a second corpus can be
         compared against it rather than replacing it.</p>
     </div>
   </div>
 </section>
 
-<section class="wrap" id="faq">
+<section class="wrap" id="faq" aria-labelledby="faq-h">
   <p class="rubric"><span class="rubric__n">08</span>FAQ</p>
-  <h2>The questions a sceptic asks.</h2>
+  <h2 id="faq-h">The questions a sceptic asks.</h2>
   <div class="faq">
     <div class="faq__item">
       <h3>Isn't this just a heuristic with extra steps?</h3>
-      <p>It is a heuristic with error bars, which is the difference. Thirteen coefficients fitted
+      <p>It is a heuristic with error bars, which is the difference. Twelve coefficients fitted
         on labelled data, evaluated on sessions held out whole, calibrated well enough that the
         threshold means a probability — expected calibration error 0.019. “Big outputs get reused”
-        alone reaches 0.876, so most of the signal really is one feature; the other twelve earn
+        alone reaches 0.878, so most of the signal really is one feature; the other eleven earn
         their place on characters freed at a fixed safety level, not on ranking.</p>
     </div>
     <div class="faq__item">
@@ -923,7 +961,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p>No. An earlier version effectively did, because an absolute probability cut cannot survive
         a distribution it was not tuned on. Dropping lowest-score-first until a character budget is
         met adapts on its own, so <code>npm run calibrate</code> is an accuracy upgrade. It is still
-        worth running: the shipped coefficients come from one person's 18 sessions.</p>
+        worth running: the shipped coefficients come from one person's 41 sessions, and
+        leave-one-session-out across them gives 0.789, not the 0.905 the narrow corpus shows.
+        <code>npm run dry-run</code> needs nothing installed if you want the size of the prize
+        before the accuracy of it.</p>
     </div>
     <div class="faq__item">
       <h3>How is this different from the built-in <code>/compact</code>?</h3>
@@ -936,14 +977,14 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </div>
 </section>
 
-<section class="wrap" id="install">
+<section class="wrap" id="install" aria-labelledby="install-h">
   <p class="rubric"><span class="rubric__n">09</span>Install</p>
-  <h2>Function hooks are early access, so turn them on first.</h2>
+  <h2 id="install-h">Function hooks are early access, so turn them on first.</h2>
   <p class="lede">Needs Claude Code 2.1.281 or newer, where function hooks exist. On an older
      build the plugin installs and silently never runs, so check <code>claude --version</code> first.</p>
   <div class="cmd">
     <div class="cmd__head">
-      <p class="label">shell — copy all four lines</p>
+      <p class="label">shell — three commands</p>
       <button class="copy" type="button" data-copy aria-live="polite">Copy</button>
     </div>
     <pre><code id="cmd-text">export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
@@ -1015,69 +1056,54 @@ if ('IntersectionObserver' in window && sections.length) {
 
 /* ── the demonstration ──────────────────────────────────────────────────────
    Decisions come from eval/demo.ts, which runs the shipped compactor; nothing
-   here decides anything. It renders the end state first, so the section is
-   complete and truthful before anyone presses the button, then replays how the
-   ranking got there. Without this script the section still shows its numbers. */
+   here decides anything, and nothing here renders anything either. The rows and
+   the totals are written into the markup by `npm run docs:demo`, so the section
+   is already complete and correct with scripts blocked — which it was not when
+   this built the list itself and shipped an empty <ol> and a hard-coded 0.
+   All this does is un-hide the button and replay what is already on screen. */
 const demo = window.DEMO;
 const list = document.getElementById('d-list');
-if (demo && list) {
+if (demo && list && list.children.length === demo.decisions.length) {
   const total = demo.stats.outputChars;
-  const widest = Math.max(...demo.decisions.map((d) => d.chars));
   const freedEl = document.getElementById('d-freed');
   const countEl = document.getElementById('d-count');
   const run = document.getElementById('d-run');
   const status = document.getElementById('d-status');
   const nf = new Intl.NumberFormat('en-GB');
+  const rows = [...list.children];
+  const freedTotal = demo.decisions.reduce((sum, d) => sum + d.freed, 0);
+  const shortened = demo.decisions.filter((d) => d.freed > 0).length;
 
-  // A result short enough to fit inside the retained head is not shortened at
-  // all, so calling it "head only" would overstate what happened to it.
-  const label = (d) => (d.reason === 'too small' ? 'too small'
-    : d.freed === 0 ? 'kept'
-    : d.action === 'drop_call' ? 'dropped' : 'head only');
-  const state = (d) => (d.reason === 'too small' ? 'small'
-    : d.freed === 0 ? 'kept'
-    : d.action === 'drop_call' ? 'dropped' : 'head');
-  // Bar width is the call's share of the largest output; scaleX is what survived.
-  const share = (d) => Math.max(3, Math.round((100 * d.chars) / widest));
-  // `freed` counts the tool input too, so a tiny result can free more characters
-  // than the result itself holds; the bar shows the result, hence the clamp.
-  const survives = (d) => (d.chars === 0 ? 1 : Math.max(0, Math.min(1, (d.chars - d.freed) / d.chars)));
-
-  const rows = demo.decisions.map((d) => {
-    const row = document.createElement('li');
-    row.className = 'demo__call';
-    row.innerHTML =
-      `<span class="demo__who"><b>${d.tool}</b><span>${d.target || '—'}</span></span>` +
-      `<span class="demo__track"><span class="demo__fill" style="--w:${share(d)}%"></span></span>` +
-      `<span class="demo__scores">${d.keepResult.toFixed(3)} · ${d.keepCall.toFixed(3)}` +
-      `<br>${nf.format(d.chars)} ch</span>` +
-      `<span class="demo__outcome"></span>`;
-    list.append(row);
-    return row;
-  });
-
+  // Every label, state name and bar geometry below is computed once, in
+  // eval/demo.ts, and shipped in demo-data.js — so a replayed row and a
+  // server-rendered row cannot disagree about what the decision was.
   const paint = (index, settled) => {
     const d = demo.decisions[index];
     const row = rows[index];
-    row.dataset.state = settled ? state(d) : 'deciding';
-    row.querySelector('.demo__fill').style.setProperty('--keep', settled ? survives(d) : 1);
-    row.querySelector('.demo__outcome').textContent = settled ? label(d) : 'scoring…';
+    row.dataset.state = settled ? d.state : 'deciding';
+    row.querySelector('.demo__fill').style.setProperty('--keep', settled ? d.keep : 1);
+    row.querySelector('.demo__outcome').textContent = settled ? d.outcome : 'scoring…';
   };
 
+  // `runs` makes the announcement differ between presses. It used to repaint
+  // byte-identical text, which aria-live discards — so under reduced motion,
+  // where nothing else changes either, a press announced nothing at all.
+  let runs = 0;
   const settleAll = () => {
     demo.decisions.forEach((_, i) => paint(i, true));
-    freedEl.textContent = nf.format(demo.decisions.reduce((sum, d) => sum + d.freed, 0));
+    freedEl.textContent = nf.format(freedTotal);
     countEl.textContent = String(demo.decisions.length);
     // Re-enabled here, not only at load: disabling it in `settleAll` meant the
     // first press killed the control for good and dropped focus to <body>.
     run.disabled = false;
-    run.textContent = `Replay — ${Math.round((100 * demo.decisions.reduce((s, d) => s + d.freed, 0)) / total)}% freed`;
-    status.textContent = `Finished. ${demo.decisions.filter((d) => d.freed > 0).length} of `
-      + `${demo.decisions.length} calls shortened, ${nf.format(demo.decisions.reduce((s, d) => s + d.freed, 0))} characters freed.`;
+    run.textContent = `Replay — ${Math.round((100 * freedTotal) / total)}% freed`;
+    runs += 1;
+    status.textContent = `Replay ${runs} finished. ${shortened} of ${demo.decisions.length} calls `
+      + `shortened, ${nf.format(freedTotal)} of ${nf.format(total)} characters freed.`;
   };
 
   const reset = () => {
-    rows.forEach((row, i) => {
+    rows.forEach((row) => {
       row.dataset.state = 'pending';
       row.querySelector('.demo__fill').style.setProperty('--keep', 1);
       row.querySelector('.demo__outcome').textContent = 'to score';
@@ -1092,17 +1118,20 @@ if (demo && list) {
     .sort((a, b) => demo.decisions[a].keepResult - demo.decisions[b].keepResult);
 
   const still = matchMedia('(prefers-reduced-motion: reduce)');
-  settleAll();
-  run.disabled = false;
-  run.textContent = 'Replay';
+  // The page already shows the settled state; the button is the only thing this
+  // script adds, so it is hidden in the markup and revealed here.
+  run.hidden = false;
+  run.textContent = `Replay — ${Math.round((100 * freedTotal) / total)}% freed`;
 
   run.addEventListener('click', () => {
-    if (still.matches) { settleAll(); return; }
     run.disabled = true;
     run.textContent = 'Scoring…';
     reset();
     let freed = 0;
     let step = 0;
+    // Under reduced motion the rows still resolve one at a time and the counter
+    // still counts — CSS has already removed every transition, so what changes
+    // is content, not movement. Same cadence, nothing sliding.
     const tick = () => {
       if (step >= order.length) { settleAll(); return; }
       const index = order[step];
@@ -1116,7 +1145,7 @@ if (demo && list) {
         // One announcement per decision would flood a screen reader; the end
         // state is announced once, in `settleAll`.
         tick();
-      }, 340);
+      }, still.matches ? 120 : 340);
     };
     tick();
   });

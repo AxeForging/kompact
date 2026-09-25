@@ -21,7 +21,11 @@ window.DEMO = {
    "reason": "result_dropped",
    "freed": 6796,
    "keepResult": 0.158,
-   "keepCall": 0.973
+   "keepCall": 0.973,
+   "outcome": "head only",
+   "state": "head",
+   "share": 15,
+   "keep": 0.0543
   },
   {
    "id": "t2",
@@ -34,7 +38,11 @@ window.DEMO = {
    "reason": "kept",
    "freed": 0,
    "keepResult": 0.762,
-   "keepCall": 0.946
+   "keepCall": 0.946,
+   "outcome": "kept",
+   "state": "kept",
+   "share": 74,
+   "keep": 1
   },
   {
    "id": "t3",
@@ -47,7 +55,11 @@ window.DEMO = {
    "reason": "too small",
    "freed": 0,
    "keepResult": 0.02,
-   "keepCall": 0.037
+   "keepCall": 0.037,
+   "outcome": "too small",
+   "state": "small",
+   "share": 3,
+   "keep": 1
   },
   {
    "id": "t4",
@@ -60,7 +72,11 @@ window.DEMO = {
    "reason": "kept",
    "freed": 0,
    "keepResult": 0.282,
-   "keepCall": 0.27
+   "keepCall": 0.27,
+   "outcome": "kept",
+   "state": "kept",
+   "share": 29,
+   "keep": 1
   },
   {
    "id": "t5",
@@ -73,7 +89,11 @@ window.DEMO = {
    "reason": "call_dropped",
    "freed": 1597,
    "keepResult": 0.081,
-   "keepCall": 0.093
+   "keepCall": 0.093,
+   "outcome": "dropped",
+   "state": "dropped",
+   "share": 3,
+   "keep": 0
   },
   {
    "id": "t6",
@@ -86,7 +106,11 @@ window.DEMO = {
    "reason": "kept",
    "freed": 0,
    "keepResult": 0.282,
-   "keepCall": 0.27
+   "keepCall": 0.27,
+   "outcome": "kept",
+   "state": "kept",
+   "share": 11,
+   "keep": 1
   },
   {
    "id": "t7",
@@ -99,7 +123,11 @@ window.DEMO = {
    "reason": "kept",
    "freed": 0,
    "keepResult": 0.228,
-   "keepCall": 0.305
+   "keepCall": 0.305,
+   "outcome": "kept",
+   "state": "kept",
+   "share": 100,
+   "keep": 1
   },
   {
    "id": "t8",
@@ -112,7 +140,11 @@ window.DEMO = {
    "reason": "too small",
    "freed": 0,
    "keepResult": 0.003,
-   "keepCall": 0.059
+   "keepCall": 0.059,
+   "outcome": "too small",
+   "state": "small",
+   "share": 3,
+   "keep": 1
   },
   {
    "id": "t9",
@@ -125,7 +157,11 @@ window.DEMO = {
    "reason": "kept",
    "freed": 0,
    "keepResult": 0.297,
-   "keepCall": 0.277
+   "keepCall": 0.277,
+   "outcome": "kept",
+   "state": "kept",
+   "share": 5,
+   "keep": 1
   }
  ]
 };

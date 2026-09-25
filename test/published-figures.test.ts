@@ -144,6 +144,43 @@ describe('published figures match eval/RESULTS.md', () => {
       .toContain(`# ${count} tests`);
   });
 
+  /**
+   * The demonstration used to ship an empty `<ol>` and a hard-coded `0`, so with
+   * scripts blocked section 03 read "FREED 0 chars / DECIDED 0 of 9" beside a
+   * dead button, under prose referring to "the list above". `eval/demo.ts` now
+   * writes the settled rows into the markup; this is what stops that regressing.
+   */
+  describe('the demonstration is complete without scripts', () => {
+    const page = read('docs/index.html');
+    const data = read('docs/demo-data.js');
+    const decisions: Array<{ freed: number; outcome: string; chars: number }> =
+      JSON.parse(data.slice(data.indexOf('{'), data.lastIndexOf('}') + 1)).decisions;
+    const freed = decisions.reduce((sum, d) => sum + d.freed, 0);
+
+    it('renders every row into the page', () => {
+      const rows = page.match(/<li class="demo__call" data-state="/g) ?? [];
+      expect(rows.length, 'the <ol> ships empty; only JS fills it').toBe(decisions.length);
+    });
+
+    it('states each row outcome as text, not only as a data attribute', () => {
+      for (const outcome of new Set(decisions.map((d) => d.outcome))) {
+        expect(page).toContain(`<span class="demo__outcome">${outcome}</span>`);
+      }
+    });
+
+    it('ships the real total, not a zero waiting to be filled in', () => {
+      expect(page, 'the freed total ships as 0').not.toContain('id="d-freed">0<');
+      expect(page).toContain(`id="d-freed">${freed.toLocaleString('en-GB')}<`);
+      expect(page).toContain(`id="d-count">${decisions.length}<`);
+    });
+
+    // A control that cannot do anything is worse than no control.
+    it('hides the replay button until the script that drives it runs', () => {
+      expect(page).toMatch(/id="d-run" hidden/);
+      expect(read('docs/index.html')).toContain('run.hidden = false;');
+    });
+  });
+
   // A figure that was corrected once tends to survive somewhere.
   const published = [
     'README.md', 'CONTRIBUTING.md', 'CHANGELOG.md', 'DESIGN-BRIEF.md', '.impeccable.md',

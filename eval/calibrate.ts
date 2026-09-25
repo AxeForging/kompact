@@ -1,7 +1,7 @@
 /**
  * Refit the scorer on THIS machine's sessions.
  *
- * The shipped coefficients come from one person's 18 sessions. Another
+ * The shipped coefficients come from one person's 41 sessions. Another
  * operator's tool mix, output sizes and habits differ, so the honest default is
  * to refit locally and see whether it helps. This reports both, and only then
  * emits the weights.

@@ -281,13 +281,19 @@ not change this table.
 
 ## Calibrate it on your own sessions
 
-**The shipped coefficients were fitted on one person's 18 sessions.** Someone
+**The shipped coefficients were fitted on one person's 41 sessions.** Someone
 whose work is mostly `Bash`, or mostly web research, or who works in a language
 the labeller's eight-word shingles do not match, has a different distribution.
 Nothing here detects that for you, so refitting is the expected step, not an
 advanced one:
 
+Before any of that, `npm run dry-run` answers the cheaper question — how much
+this would free on *your* transcripts — by running the shipped `compact` over
+`~/.claude/projects` and printing a per-session table. It installs nothing,
+writes nothing, and needs no key.
+
 ```sh
+npm run dry-run             # what it would free on your own sessions
 npm run calibrate           # extract labels, then compare shipped vs refit
 bun eval/calibrate.ts --write
 ```
@@ -394,7 +400,7 @@ And a live Codex CLI, which needs >= 0.155 (this machine has 0.131).
 ```sh
 bun install
 npm run typecheck   # src + test + eval + hooks
-npm run test        # 122 tests
+npm run test        # 126 tests
 npm run validate    # plugin manifest
 ```
 

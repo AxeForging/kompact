@@ -75,11 +75,12 @@ policy changed.
 
 ## Calibrate on your own sessions
 
-The shipped coefficients were fitted on one person's 18 sessions. A different
+The shipped coefficients were fitted on one person's 41 sessions. A different
 tool mix scores differently, so refitting is the expected thing to do, not an
 advanced option:
 
 ```sh
+bun eval/sessions.ts         # first: what it would free here, nothing installed
 bun eval/extract-labels.ts   # labels from ~/.claude/projects, no hand-labelling
 bun eval/calibrate.ts        # compares shipped vs refit, held out by session
 bun eval/calibrate.ts --write

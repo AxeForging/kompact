@@ -28,6 +28,15 @@ jobs:
       - run: bun x tsc
       - run: bun x vitest run
 
+      # README and the page state a test count, and a test asserts the two agree
+      # with each other — which a count that is stale in both survives. This is
+      # the half that ties the stated number to the number of tests there are.
+      - name: the stated test count must be the real one
+        run: |
+          COUNT=$(bun x vitest run --reporter=json --outputFile=/tmp/v.json >/dev/null 2>&1; \
+                  bun -e 'const r=require("/tmp/v.json");console.log(r.numTotalTests)')
+          grep -q "# $COUNT tests" README.md || { echo "README says $(grep -o '# [0-9]* tests' README.md), vitest ran $COUNT"; exit 1; }
+
       # The interop test skips when vendor/ is missing; fail loudly if the
       # clone above stopped working rather than quietly losing the coverage.
       - name: the interop test must have run
