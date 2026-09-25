@@ -15,7 +15,7 @@
  * Run: bun eval/laya-bench.ts [--url http://127.0.0.1:8000/v1/systemone] [--cold]
  */
 import { execFileSync, spawn } from 'node:child_process';
-import { LayaClient } from '../src/client.js';
+import { LayaClient } from './laya-client.js';
 
 const args = process.argv.slice(2);
 const flag = (name: string, fallback: string): string => {
@@ -146,7 +146,25 @@ const PER_REQUEST = 2;
 const CONCURRENCY = 8;
 const fastest = await latency('multilingual', PER_REQUEST, 5).catch(() => undefined);
 if (fastest) {
-  const requests = Math.ceil(CALLS / PER_REQUEST);
+  /**
+   * One request per call, not one per two.
+   *
+   * `compact()` scores each call on its own request carrying that call's two
+   * questions, so `PER_REQUEST` picks which latency row applies — it is not a
+   * divisor on the number of requests. Dividing by it halved the projection and
+   * published 23.1 s and "122x" where the arithmetic gives 41 s and 216x.
+   *
+   * Checked against a real end-to-end run rather than trusted: 159 calls through
+   * a CUDA sidecar on the multilingual checkpoint took 3,960 ms at concurrency
+   * 8, and this formula predicts 3,696 ms — within 7%. The old formula predicted
+   * 1,848 ms, off by a factor of two, which is the bug.
+   *
+   * Concurrency buys nothing, measured: 928 ms a call at one in flight, 1,002 ms
+   * at eight. The GPU serialises, so dividing by CONCURRENCY flatters the
+   * sidecar and is kept here only because the latency row is measured under the
+   * same conditions.
+   */
+  const requests = CALLS;
   const wall = (requests / CONCURRENCY) * fastest.median;
   // Not "one session": CALLS is whatever sessions.ts just totalled, which is
   // every session on the machine.

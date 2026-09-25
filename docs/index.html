@@ -1786,7 +1786,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     It says so, every time it fires. On each compaction the plugin raises a notice reading
     <code>kept 34/212 messages, no summary (23% reduction;
     34&nbsp;kept,&nbsp;1&nbsp;results&nbsp;truncated,&nbsp;2&nbsp;calls&nbsp;dropped,&nbsp;4&nbsp;pinned;
-    41&nbsp;scored&nbsp;via&nbsp;features;&nbsp;compacted&nbsp;in&nbsp;4ms)</code> — and writes the
+    41&nbsp;scored;&nbsp;compacted&nbsp;in&nbsp;4ms)</code> — and writes the
     same line, plus one per decision, to the session log. The parts sum to what was scored, and
     the time is the whole compaction — collecting the calls, scoring them, deciding, and
     rebuilding the transcript — for the 41 calls in that one, not the 1,762 in

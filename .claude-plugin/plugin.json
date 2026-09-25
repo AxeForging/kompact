@@ -1,7 +1,7 @@
 {
   "name": "laya-compact",
   "version": "0.1.0",
-  "description": "Local, offline context compaction: scores every tool call and keeps only what is still needed verbatim. No API key.",
+  "description": "Local, offline context compaction: scores every tool call and keeps only what is still needed verbatim. No API key, no GPU, no network call. The built-in logistic scorer measures AUC 0.905 \u00b1 0.078 over ten grouped splits of 1063 labelled calls, against 0.719 \u00b1 0.026 for the best zero-shot Laya checkpoint it replaced, which it beat on 10 of 10 paired splits.",
   "author": {
     "name": "AxeForging",
     "url": "https://github.com/AxeForging"
@@ -9,18 +9,6 @@
   "license": "MIT",
   "homepage": "https://github.com/AxeForging/laya-compact",
   "userConfig": {
-    "scorer": {
-      "type": "string",
-      "title": "Scorer",
-      "description": "features = built-in logistic model, no network (measured AUC 0.905 \u00b1 0.078 over ten grouped splits). laya = a local laya-serve sidecar (measured AUC 0.719 \u00b1 0.026 zero-shot on the same splits; use only with a checkpoint fine-tuned on your own sessions).",
-      "default": "features"
-    },
-    "layaUrl": {
-      "type": "string",
-      "title": "Laya sidecar URL",
-      "description": "Only used when scorer = laya.",
-      "default": "http://127.0.0.1:8000/v1/systemone"
-    },
     "keepThreshold": {
       "type": "number",
       "title": "Keep floor",
@@ -57,30 +45,6 @@
       "description": "Characters of a dropped tool result kept, so a wrong drop costs a re-run and not the content.",
       "default": 300
     },
-    "maxCallStateTokens": {
-      "type": "number",
-      "title": "Maximum state tokens per call",
-      "description": "Only used when scorer = laya. Must stay under the checkpoint's state budget (768 on multilingual) or the server truncates silently.",
-      "default": 700
-    },
-    "phrasing": {
-      "type": "string",
-      "title": "Question phrasing",
-      "description": "Question wording sent to a Laya sidecar: reproducible (default), direct or entailment. Ignored by the built-in scorer, which reads facts rather than wording. Measured over ten grouped splits: on the typed-decisions checkpoint direct reaches AUC 0.721 and reproducible 0.419, so the wording matters more than the checkpoint.",
-      "default": "reproducible"
-    },
-    "concurrency": {
-      "type": "number",
-      "title": "Concurrency",
-      "description": "Requests in flight at once while scoring. Default 8. Only meaningful with a Laya sidecar; the built-in scorer answers in microseconds and ignores it.",
-      "default": 8
-    },
-    "requestTimeoutMs": {
-      "type": "number",
-      "title": "Request timeout ms",
-      "description": "Deadline for one request to a Laya sidecar, in milliseconds. Default 30000. A sidecar that accepts a connection and then stalls would otherwise make compaction never return.",
-      "default": 30000
-    },
     "minYieldChars": {
       "type": "number",
       "title": "Min yield chars",
@@ -92,6 +56,12 @@
       "title": "Record what you repeat",
       "description": "Counts the shapes of the commands, requests and tool sequences you repeat, locally, so `npm run propose` can rank them and draft skills for the top ones. Signatures plus up to three redacted examples, kept in the plugin's own store and mirrored to ~/.claude/laya-signals.json. Nothing leaves the machine and no raw output is stored. Set to false to record nothing at all.",
       "default": true
+    },
+    "maxKeptChars": {
+      "type": "number",
+      "title": "Cap on a kept result",
+      "description": "Longest a KEPT tool result may be, in characters. Default 24000; 0 disables. Half of all tool output lives in about 3% of calls, so this frees 26.8% against 24.2% for the ranking alone while leaving the per-session worst case identical. 16000 nearly doubles the median session saving and costs one more session that keeps under half of what it later quoted.",
+      "default": 24000
     }
   }
 }

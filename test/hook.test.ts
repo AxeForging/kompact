@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  askerFor, compactSession, decisionLogLines, layaAsker, readLocalWeights, register, resolveHookConfig, summarize, toSessionMessages,
+  askerFor, compactSession, decisionLogLines, readLocalWeights, register, resolveHookConfig, summarize, toSessionMessages,
 } from '../hooks/laya-compact.js';
 import { FeatureAsker, parseWeights } from '../src/features.js';
 import type { CompactResult, Message } from '../src/index.js';
@@ -31,16 +31,19 @@ function transcript(): Message[] {
 }
 
 describe('resolveHookConfig', () => {
-  it('defaults to the built-in scorer and needs no key', () => {
+  it('needs no key and no sidecar', () => {
     const config = resolveHookConfig({});
-    expect(config.scorer).toBe('features');
     expect(config.compactAtPercent).toBe(60);
     expect(config.minReductionRatio).toBe(0.25);
   });
 
-  it('opts in to laya only when asked by name', () => {
-    expect(resolveHookConfig({ scorer: 'laya' }).scorer).toBe('laya');
-    expect(resolveHookConfig({ scorer: 'nonsense' }).scorer).toBe('features');
+  // The sidecar is gone from the product. A config still naming it must not
+  // resurrect it, and must not throw either: an old settings file is not an error.
+  it('ignores a scorer option left over from the sidecar', () => {
+    const config = resolveHookConfig({ scorer: 'laya', layaUrl: 'http://127.0.0.1:8000' });
+    expect('scorer' in config).toBe(false);
+    expect('layaUrl' in config).toBe(false);
+    expect(config.compactAtPercent).toBe(60);
   });
 
   it('passes numeric options through and ignores rubbish', () => {
@@ -80,22 +83,8 @@ describe('resolveHookConfig', () => {
 });
 
 describe('askerFor', () => {
-  it('returns the offline scorer by default', () => {
-    expect(askerFor(resolveHookConfig({}), never)).toBeInstanceOf(FeatureAsker);
-  });
-
-  it('returns an HTTP asker when laya is selected', () => {
-    expect(askerFor(resolveHookConfig({ scorer: 'laya' }), never)).not.toBeInstanceOf(FeatureAsker);
-  });
-
-  it('sends laya requests to the configured sidecar', async () => {
-    let seen = '';
-    const asker = layaAsker(async (url) => {
-      seen = url;
-      return { status: 200, ok: true, text: '{"answers":{}}' };
-    }, 'http://127.0.0.1:9999/v1/systemone');
-    await asker.ask('state', {});
-    expect(seen).toBe('http://127.0.0.1:9999/v1/systemone');
+  it('is the offline scorer, and there is no other', () => {
+    expect(askerFor()).toBeInstanceOf(FeatureAsker);
   });
 });
 
@@ -149,7 +138,7 @@ describe('summarize', () => {
     const line = summarize(stats({
       charsBefore: 1000, charsAfter: 770,
       kept: 34, resultsDropped: 1, callsDropped: 2, pinned: 4, requests: 41, ms: 4,
-    }), 'features');
+    }));
     // The page wraps inside the <code>, so compare on collapsed whitespace.
     const page = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'docs', 'index.html'), 'utf8')
       .replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
@@ -162,17 +151,19 @@ describe('summarize', () => {
   });
 
   it('shouts about silent truncation, which nothing else would reveal', () => {
-    expect(summarize(stats({ truncatedRequests: 4 }), 'laya')).toContain('4 STATES TRUNCATED');
-    expect(summarize(stats({}), 'features')).not.toContain('TRUNCATED');
+    expect(summarize(stats({ truncatedRequests: 4 }))).toContain('4 STATES TRUNCATED');
+    expect(summarize(stats({}))).not.toContain('TRUNCATED');
   });
 
-  it('names the scorer actually used', () => {
-    expect(summarize(stats({}), 'features')).toContain('via features');
-    expect(summarize(stats({ checkpoint: 'multilingual' }), 'laya')).toContain('via laya/multilingual');
+  // The notice used to name which scorer ran, because there were two. There is
+  // one, so it reports the time instead — the thing a reader can still act on.
+  it('reports how long the whole compaction took', () => {
+    expect(summarize(stats({ ms: 7 }))).toContain('compacted in 7ms');
+    expect(summarize(stats({}))).not.toContain('via laya');
   });
 
   it('reports scoring failures, because those silently keep content', () => {
-    expect(summarize(stats({ failedRequests: 2 }), 'features')).toContain('2 scoring failures (kept)');
+    expect(summarize(stats({ failedRequests: 2 }))).toContain('2 scoring failures (kept)');
   });
 });
 
@@ -250,30 +241,9 @@ describe('register', () => {
     expect(engine.toasts.join(' ')).toContain('fallback to built-in summary');
   });
 
-  // The one that matters most: a broken sidecar must never break a session.
-  it('falls back when the laya sidecar is unreachable', async () => {
-    const handlers = registered({ scorer: 'laya', preserveRecentMessages: 2 });
-    const engine = fakeEngine();
-    const result = await handlers.get('session.compact')!(
-      engine.$, { messages: asSession(transcript()) }, () => 'FELL_BACK');
-    expect(result).toBe('FELL_BACK');
-    expect(engine.toasts.join(' ')).toContain('sidecar unreachable');
-  });
-
-  // A sidecar that accepts the connection and then stalls is the failure the
-  // rejecting-fetch test above cannot reach: without a deadline the hook never
-  // returns at all, and the session appears frozen rather than degraded.
-  it('falls back when the laya sidecar accepts the request and then hangs', async () => {
-    const handlers = registered({
-      scorer: 'laya', preserveRecentMessages: 2, requestTimeoutMs: 20,
-    });
-    const engine = fakeEngine(10, () => new Promise<never>(() => {}));
-    const result = await handlers.get('session.compact')!(
-      engine.$, { messages: asSession(transcript()) }, () => 'FELL_BACK');
-    expect(result).toBe('FELL_BACK');
-    expect(engine.toasts.join(' ')).toContain('did not respond within 20ms');
-  });
-
+  // The sidecar is gone, so the failure it guarded against is gone with it. What
+  // remains is that ANY throw inside the hook falls back rather than breaking the
+  // session, which the scoring-failure path above still covers.
   it('requests compaction only once the context passes the threshold', async () => {
     const below = fakeEngine(10);
     await registered({ compactAtPercent: 60 }).get('turn.complete')!(below.$, {}, () => 'NEXT');

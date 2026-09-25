@@ -11,7 +11,6 @@ import type {
 import { registerSignals } from './laya-signals.js';
 import { compact, reductionRatio } from '../src/compact.js';
 import { FeatureAsker, WEIGHTS_ENV, parseWeights, type Weights } from '../src/features.js';
-import { buildSystemOneRequest, parseSystemOneResponse } from '../src/request.js';
 import type {
   CompactOptions,
   CompactResult,
@@ -24,7 +23,6 @@ import type {
 const HOOK_DEFAULTS = {
   compactAtPercent: 60,
   minReductionRatio: 0.25,
-  scorer: 'features' as const,
 };
 
 export type HookFetchInit = { method?: string; headers?: Record<string, string>; body?: string };
@@ -32,13 +30,7 @@ export type HookFetchResponse = { status: number; ok: boolean; text: string };
 /** The shape of `$.http.fetch`, so the hook can be driven without an engine. */
 export type HookFetch = (url: string, init?: HookFetchInit) => Promise<HookFetchResponse>;
 
-export type Scorer = 'features' | 'laya';
-
 export type HookConfig = CompactOptions & {
-  scorer: Scorer;
-  layaUrl?: string;
-  /** Per-request deadline for the sidecar; see `withDeadline`. */
-  requestTimeoutMs?: number;
   compactAtPercent: number;
   minReductionRatio: number;
 };
@@ -66,27 +58,20 @@ export function resolveHookConfig(options: PluginOptions): HookConfig {
     'maxCallStateTokens',
     'truncateHeadChars',
     'concurrency',
+    'maxKeptChars',
   ] as const) {
     const value = options[key];
     if (typeof value === 'number' && Number.isFinite(value)) numbers[key] = value;
   }
   const config: HookConfig = {
     ...numbers,
-    scorer: optionString(options, 'scorer') === 'laya' ? 'laya' : HOOK_DEFAULTS.scorer,
     compactAtPercent: optionNumber(options, 'compactAtPercent', HOOK_DEFAULTS.compactAtPercent),
     minReductionRatio: optionNumber(options, 'minReductionRatio', HOOK_DEFAULTS.minReductionRatio),
   };
-  const layaUrl = optionString(options, 'layaUrl');
-  if (layaUrl) config.layaUrl = layaUrl;
-  const timeout = options['requestTimeoutMs'];
-  if (typeof timeout === 'number' && Number.isFinite(timeout) && timeout > 0) {
-    config.requestTimeoutMs = timeout;
-  }
   const goal = optionString(options, 'goal');
   if (goal) config.goal = goal;
-  // Only meaningful with `scorer: laya` — the built-in scorer reads facts, not
-  // wording. Unreachable until now: `phrasing` existed so the wording comparison
-  // could be re-run, and no plugin option carried it through.
+  // The built-in scorer reads each question's instructions as well as the state,
+  // so wording is not inert here even though it was introduced for the sidecar.
   const phrasing = optionString(options, 'phrasing');
   if (phrasing === 'reproducible' || phrasing === 'direct' || phrasing === 'entailment') {
     config.phrasing = phrasing;
@@ -133,47 +118,19 @@ export async function withDeadline<T>(
   }
 }
 
-/** A `Asker` over the engine's `$.http.fetch`, for the optional Laya sidecar. */
-export function layaAsker(
-  fetchFn: HookFetch,
-  baseUrl?: string,
-  timeoutMs = LAYA_TIMEOUT_MS,
-  sleep?: Sleep,
-): Asker {
-  return {
-    async ask(state, questions) {
-      const request = buildSystemOneRequest({ baseUrl }, state, questions);
-      const response = await withDeadline(
-        fetchFn(request.url, {
-          method: request.method,
-          headers: request.headers,
-          body: request.body,
-        }),
-        timeoutMs,
-        `laya sidecar at ${request.url}`,
-        sleep,
-      );
-      return parseSystemOneResponse(response.status, response.ok, response.text);
-    },
-  };
-}
-
 /**
- * `features` by default, and deliberately: measured on 721 labelled calls from
- * real sessions, the built-in logistic model reaches AUC 0.895 ± 0.072 where
- * the best zero-shot Laya checkpoint and phrasing reached 0.721 ± 0.021 over the
- * same ten grouped splits (`eval/RESULTS.md`) — and it needs no
- * sidecar, no GPU and no network call.
+ * The scorer. There is one now.
+ *
+ * The optional Laya sidecar is gone from the product and kept in the evaluation,
+ * where its findings stay reproducible. The reason is ranking quality measured
+ * the same way for both, over ten grouped splits of the same 1,063 labelled
+ * calls: AUC 0.905 +/- 0.078 here against 0.719 +/- 0.026 for the best
+ * checkpoint and wording, won on 10 of 10 paired splits. A sidecar that also
+ * wants a GPU, ~1.7 GB of VRAM and a 7.6 s cold start has to win on quality to
+ * be worth its dependency, and it did not.
  */
-export function askerFor(
-  config: HookConfig,
-  fetchFn: HookFetch,
-  weights?: Weights,
-  sleep?: Sleep,
-): Asker {
-  return config.scorer === 'laya'
-    ? layaAsker(fetchFn, config.layaUrl, config.requestTimeoutMs, sleep)
-    : FeatureAsker.fromWeights(weights);
+export function askerFor(weights?: Weights): Asker {
+  return FeatureAsker.fromWeights(weights);
 }
 
 /**
@@ -287,7 +244,7 @@ export async function compactSession(
   weights?: Weights,
   sleep?: Sleep,
 ): Promise<SessionCompaction> {
-  const result = await compact(messages, askerFor(config, fetchFn, weights, sleep), config);
+  const result = await compact(messages, askerFor(weights), config);
   return { result, messages: toSessionMessages(messages, result.messages) };
 }
 
@@ -295,7 +252,7 @@ function percent(ratio: number): string {
   return `${Math.round(ratio * 100)}%`;
 }
 
-export function summarize(result: CompactResult, scorer: Scorer): string {
+export function summarize(result: CompactResult): string {
   const { stats } = result;
   const parts = [
     stats.kept > 0 ? `${stats.kept} kept` : '',
@@ -306,12 +263,11 @@ export function summarize(result: CompactResult, scorer: Scorer): string {
     // Silent truncation is the one failure that would otherwise be invisible.
     stats.truncatedRequests > 0 ? `${stats.truncatedRequests} STATES TRUNCATED` : '',
   ].filter(Boolean);
-  const via = scorer === 'laya' ? `laya/${stats.checkpoint || '?'}` : 'features';
   // `stats.ms` is the whole `compact()` call — collect, score, decide, rebuild —
   // not the scoring alone, and saying "scored ... in Xms" read as if it were.
   // The number a reader wants is how long compaction took, so say that.
   return `${percent(reductionRatio(result))} reduction; ${parts.join(', ') || 'no tool calls'}; ` +
-    `${stats.requests} scored via ${via}; compacted in ${stats.ms}ms`;
+    `${stats.requests} scored; compacted in ${stats.ms}ms`;
 }
 
 const UI_LOG_MAX_CHARS = 4096;
@@ -378,10 +334,10 @@ export const register: Register = (on: On, options: PluginOptions) => {
       for (const line of decisionLogLines(result)) $.ui.log(line);
       // Too little saved is not worth losing the summary's narrative over.
       if (reductionRatio(result) < config.minReductionRatio) {
-        notify($, `fallback to built-in summary (below ${percent(config.minReductionRatio)}: ${summarize(result, config.scorer)})`);
+        notify($, `fallback to built-in summary (below ${percent(config.minReductionRatio)}: ${summarize(result)})`);
         return next(event);
       }
-      notify($, `kept ${messages.length}/${event.messages.length} messages, no summary (${summarize(result, config.scorer)})`);
+      notify($, `kept ${messages.length}/${event.messages.length} messages, no summary (${summarize(result)})`);
       return { messages };
     } catch (error) {
       // Any failure at all falls back rather than risking a broken session.

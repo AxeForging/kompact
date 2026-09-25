@@ -1,5 +1,5 @@
-import { buildSystemOneRequest, parseSystemOneResponse } from './request.js';
-import type { Asker, SystemOneQuestions, SystemOneResponse, SystemOneState } from './types.js';
+import { buildSystemOneRequest, parseSystemOneResponse } from '../src/request.js';
+import type { Asker, SystemOneQuestions, SystemOneResponse, SystemOneState } from '../src/types.js';
 
 export interface LayaClientOptions {
   /** Only needed when the sidecar runs with `LAYA_API_KEY`; `LAYA_API_KEY` env by default. */

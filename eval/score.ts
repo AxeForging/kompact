@@ -11,7 +11,7 @@
  */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { LayaClient } from '../src/client.js';
+import { LayaClient } from './laya-client.js';
 import { pool, rowTokens } from '../src/compact.js';
 import { inputTokens, noulAnswer, routedModel, CONTEXT_LENGTH } from '../src/request.js';
 import { questionsFor } from '../src/questions.js';
