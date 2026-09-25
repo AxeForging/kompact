@@ -210,9 +210,25 @@ ul.plain li::marker{ color: var(--ink-3); }
 /* margin-block only: margin:0 here killed the wrap's auto centring and the bar
    sat 180px left of every other thing on the page. */
 .contents-bar .contents{ margin-block:0; padding-block: var(--space-xs); gap: var(--space-xs) var(--space-md); }
+/* Wrapped, this bar measured 140px of an 844px phone screen and held it for the
+   whole 23,000px scroll — a sixth of every screen, for a bar that then could not
+   say where you were. One row that scrolls costs about 48px. */
+@media (max-width: 640px){
+  .contents-bar .contents{
+    flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity; scrollbar-width: none;
+  }
+  .contents-bar .contents::-webkit-scrollbar{ display:none; }
+  .contents-bar .contents a{ flex: 0 0 auto; scroll-snap-align: start; }
+}
 /* --on-flood-2 is 5.63:1 on the flood and about 2:1 on paper. */
 .contents-bar .contents a{ color: var(--ink-2); }
 .contents-bar .contents a:hover, .contents-bar .contents a[aria-current]{ color: var(--accent-ink); }
+/* Colour alone, and it failed: the generic rule below paints the underline
+   --on-flood, which is paper on this bar, so the only signal of where you were
+   reading was a 0.035 lightness change. WCAG 1.4.1, on the one control whose
+   whole job is answering "where am I" in a 17,000px document. */
+.contents-bar .contents a[aria-current]{ border-bottom-color: currentColor; font-weight:700; }
 
 .contents a:hover{ color: var(--on-flood); border-bottom-color: var(--on-flood); }
 .contents a[aria-current="true"]{ color: var(--on-flood); border-bottom-color: var(--on-flood); }
@@ -324,6 +340,19 @@ table.rows caption{ text-align:left; }
     letter-spacing:0.06em; text-transform:uppercase; color: var(--ink-3);
     position:sticky; left:0; padding-bottom: var(--space-xs);
   }
+  /* A command block is not a table, and told every phone reader that it was. */
+  .cmd pre::before{
+    content: "drag the commands sideways for the rest of them";
+  }
+}
+.glossary{ display:grid; grid-template-columns: minmax(9rem, 13rem) minmax(0,1fr);
+  gap: 0 var(--space-lg); margin: var(--space-md) 0 0; }
+.glossary dt{ font-family: var(--sans); font-size: var(--text-sm); font-weight:600; color: var(--ink); }
+.glossary dt, .glossary dd{ margin:0; padding-block: var(--space-xs); border-bottom: 1px solid var(--rule); }
+.glossary dt code, .glossary dd code{ font-size: 0.95em; }
+@media (max-width: 560px){
+  .glossary{ grid-template-columns: 1fr; }
+  .glossary dt{ border-bottom:0; padding-bottom:0; }
 }
 table.data{ width:100%; min-width: 30rem; border-collapse: collapse; font-family: var(--sans); font-size: var(--text-sm); }
 table.data th, table.data td{ text-align:left; padding: var(--space-xs) var(--space-md) var(--space-xs) 0;
@@ -417,7 +446,14 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 .demo__outcome{ font-weight:600; letter-spacing:0.02em; color: var(--ink-3); }
 .demo__call[data-state="kept"] .demo__outcome{ color: var(--ink); }
 .demo__call[data-state="small"] .demo__outcome{ color: var(--ink-2); font-style: italic; }
-.demo__call[data-state="head"] .demo__outcome{ color: var(--accent-ink); }
+/* `head only` and `dropped` both read accent, so a partial loss and a total one
+   were the same colour on the one column whose job is telling them apart.
+   Accent alone now means the result is gone; a head row keeps the ink and takes
+   an accent rule, matching the accent fill still left in its bar. */
+.demo__call[data-state="head"] .demo__outcome{
+  color: var(--ink); text-decoration: underline; text-decoration-color: var(--accent-ink);
+  text-decoration-thickness: 1px; text-underline-offset: 3px;
+}
 .demo__call[data-state="head"] .demo__fill{ background: var(--accent); }
 .demo__call[data-state="dropped"] .demo__outcome{ color: var(--accent-ink); }
 .demo__call[data-state="dropped"] .demo__who b,
@@ -566,7 +602,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <p class="upfront__do">
       <a href="#install">Install it</a> &#8212; or run <code>npm&#160;run&#160;dry&#8209;run</code>
       first and see what it frees on your own sessions, installing nothing
-      (<a href="#cost">section 04</a>).
+      (<a href="#cost">section 04, Cost</a>).
     </p>
   </div>
   <div class="colophon reveal" style="--d:170ms">
@@ -578,7 +614,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 <nav class="contents-bar" aria-label="Contents">
   <div class="contents wrap">
-    <a href="#result">Evidence</a><a href="#shape">The shape of it</a><a href="#demo">Watch it decide</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#next">What's next</a><a href="#faq">FAQ</a><a href="#session">Your session</a><a href="#install">Install</a>
+    <a href="#result">Evidence</a><a href="#shape">The shape of it</a><a href="#demo">Watch it decide</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#next">What's next</a><a href="#faq">FAQ</a><a href="#session">Your session</a><a href="#glossary">Glossary</a><a href="#install">Install</a>
   </div>
 </nav>
 
@@ -705,7 +741,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     Laya config’s <span class="num val">0.380–0.642</span>. The coefficients that ship are fitted
     on all <span class="num val">41</span> sessions, where the same measurement gives
     <span class="num val">0.789</span> and <span class="num val">0.051</span> —
-    <a href="#next">section 07</a> says why that is the pair to plan around.
+    <a href="#next">section 07, What’s next</a> says why that is the pair to plan around.
   </p>
 </section>
 
@@ -759,7 +795,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     A session that finds a test failing only on CI, tracks it to a timezone in a fixture, and
     fixes it. Below is what the shipped scorer did to it, every row written into this page when
     the demonstration was generated, with nothing overridden. One call is refused outright as
-    <em>too small</em> — dropping it would free less than it risks — and the last two are
+    <em>too small</em> — dropping it would free less than it risks — the first keeps its call but
+    only the <em>head</em> of its result, its first 300 characters, and the last two are
     <em>pinned</em>, because they fall inside the six most recent messages the plugin never
     touches. If scripting is on, <em>Replay</em> re-runs the
     decisions in the order the ranking spends in, lowest first.
@@ -792,6 +829,12 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <!-- /demo:render -->
   </div>
 
+  <p class="caption">
+    <b>Two layers to every bar.</b> The outline is how big that result was against the largest in
+    the session; the filled part is how much of it survived the decision. So a <em>head only</em>
+    row keeps its outline and shrinks its fill to 300 characters, and a <em>dropped</em> row keeps
+    its outline with nothing in it.
+  </p>
   <p class="caption">
     <b>Freed is not a slice of tool output.</b> Dropping a call takes its input with it, so a
     few of those characters were never in the column to its left. The <code>git&nbsp;log</code>
@@ -1147,7 +1190,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <div class="next">
     <div class="next__item">
       <p class="next__when">Blocks a 1.0</p>
-      <p class="next__what"><b>A live A/B.</b> Task outcome is measured in <a href="#checked">section 06</a> as far as a
+      <p class="next__what"><b>A live A/B.</b> Task outcome is measured in <a href="#checked">section 06, Verification</a> as far as a
         transcript allows — how often the information would no longer be there. Whether that
         changes what an assistant does needs the same session replayed both ways, against a real
         model, and it has not been.</p>
@@ -1176,7 +1219,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p class="next__when">Wanted</p>
       <p class="next__what"><b>A fine-tuned Laya checkpoint that wins.</b> The bar is 0.905, not
         chance. <code>eval/</code> re-runs the whole comparison for anyone who tries, and the
-        <a href="#cost">section 04</a> is the other half of that decision.</p>
+        <a href="#cost">section 04, Cost</a> is the other half of that decision.</p>
     </div>
     <div class="next__item">
       <p class="next__when">Structural</p>
@@ -1220,7 +1263,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p>Sometimes — <span class="num val">0.19</span> outputs a session where it would actually
         cost you something, and 27 of 32 sessions lose nothing at all. Counting every reuse
         anywhere later, including ones that had already happened before a real compaction could
-        fire, the upper bound is 1.34 a session. Both are in <a href="#losses">section 05</a>, and 47 of the 55 are
+        fire, the upper bound is 1.34 a session. Both are in <a href="#losses">section 05, Where it loses</a>, and 47 of the 55 are
         command output. A dropped result keeps its first 300 characters when the call survives, and a call
         that recorded a change is never dropped at all. Every failure mode falls back to Claude
         Code's own summary rather than to a half-compacted transcript, and a single failed request
@@ -1265,14 +1308,23 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     34&nbsp;kept,&nbsp;1&nbsp;results&nbsp;truncated,&nbsp;2&nbsp;calls&nbsp;dropped,&nbsp;4&nbsp;pinned;
     41&nbsp;scored&nbsp;via&nbsp;features&nbsp;in&nbsp;4ms)</code> — and writes the same line, plus
     one per decision, to the session log. The parts sum to what was scored, and the time is for
-    the 41 calls in that compaction, not the 1,762 in <a href="#cost">section 04</a>. If anything at all goes wrong you get
+    the 41 calls in that compaction, not the 1,762 in <a href="#cost">section 04, Cost</a>. If anything at all goes wrong you get
     the other notice instead, naming the reason:
-    <code>fallback to built-in summary (…)</code>. Silence at a compaction means the hook never
-    ran, which is the <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> or the version check in
-    <a href="#install">section 10</a>, not a bad decision.
-    <code>claude&nbsp;plugin&nbsp;list</code> confirms it is installed; only the notice confirms
-    it is running.
+    <code>fallback to built-in summary (…)</code>, naming the reason. Silence at a compaction is
+    different: it means the hook never ran at all, which is a setup answer rather than a bad
+    decision. <code>claude&nbsp;plugin&nbsp;list</code> confirms it is installed; only the notice
+    confirms it is running. Two checks, in this order:
   </p>
+  <ul class="plain">
+    <li><code>echo&nbsp;$CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> must print <code>1</code>.
+      Empty is the usual answer and the usual cause. It has to be exported <em>before</em> Claude
+      Code starts, so typing <code>export</code> into a session that is already running changes
+      nothing for that session — and nothing for the next terminal either, unless the line is in
+      your shell's startup file.</li>
+    <li><code>claude&nbsp;plugin&nbsp;list</code> must show <code>laya-compact</code>. If it does,
+      the variable is <code>1</code>, and no notice ever appears, the build is older than function
+      hooks: see the version rule in <a href="#install">section 10, Install</a>.</li>
+  </ul>
 
   <h3>What it does to a session, in full</h3>
   <ul class="plain">
@@ -1288,28 +1340,79 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> to turn every function hook off. Either way
       the next compaction is Claude Code’s own summary again.</li>
   </ul>
+
+  <h3 id="glossary">What the words mean</h3>
+  <p>
+    Every term this page uses for its own machinery, in one place, because most readers arrive in
+    the middle of it rather than at the top.
+  </p>
+  <dl class="glossary">
+    <dt>AUC</dt>
+    <dd>How often the scorer ranks a call that turned out to be needed above one that did not, over
+      every possible pair. 0.5 is a coin flip; 1.0 never gets a pair the wrong way round.</dd>
+    <dt>Calibration error</dt>
+    <dd>The average gap between a score and what actually happens at it. At 0.035, calls scored
+      near 0.30 are genuinely needed about 30% of the time — which is what makes a threshold mean
+      something rather than just order things.</dd>
+    <dt>keep&#8209;result, keep&#8209;call</dt>
+    <dd>The two probabilities scored for every call: whether its <em>output</em> is still needed
+      word for word, and whether the <em>call itself</em> should stay. They differ often, which is
+      why both exist.</dd>
+    <dt>The floor</dt>
+    <dd><code>keepThreshold</code>, 0.2 by default. At or above it nothing is dropped, whatever the
+      budget still wants. It is the guard the budget cannot argue with.</dd>
+    <dt>The budget</dt>
+    <dd><code>targetReduction</code>, 0.5 by default. The fraction of droppable characters to free.
+      Calls are dropped lowest-score-first until it is met, and then dropping stops — so a session
+      with little to gain loses little.</dd>
+    <dt>Head only</dt>
+    <dd>The call survives and its result is cut to its first 300 characters. Enough to see what it
+      was and to run it again.</dd>
+    <dt>Pinned</dt>
+    <dd>Inside the six newest messages, which are never touched. A pinned call is not scored for
+      dropping at all, so its 1.000 is a statement about the rule, not about the call.</dd>
+    <dt>Dry run</dt>
+    <dd><code>npm run dry-run</code>: scores the transcripts already on your machine and prints what
+      it would have freed. It writes nothing, installs nothing, and needs no plugin.</dd>
+  </dl>
 </section>
 
 <section class="wrap" id="install" aria-labelledby="install-h">
   <p class="rubric"><span class="rubric__n">10</span>Install</p>
   <h2 id="install-h">Function hooks are early access, so turn them on first.</h2>
-  <p class="lede">Tested on Claude Code 2.1.281, which has function hooks. Which release first
-     shipped them is <em>not established here</em> — on a build without them the plugin installs
-     and silently never runs, so check <code>claude&nbsp;--version</code> first and see the
-     <a href="#checked">verification ledger</a>.</p>
+  <p class="lede">Tested on Claude Code 2.1.281, which has function hooks. So the rule is
+     <b>2.1.281 or later works; below it is unknown rather than broken</b> — which release first
+     shipped them is <em>not established here</em>, and on a build without them the plugin
+     installs and silently never runs. Check <code>claude&nbsp;--version</code>, then
+     <a href="#session">section 09, Your session</a> for the notice that proves it fired, and the
+     <a href="#checked">verification ledger</a> for what is and is not established.</p>
   <p>
-    <strong>Or don’t install it yet.</strong> Clone the repository and run
+    <strong>Or don’t install it yet.</strong> Clone
+    <a rel="noopener" href="https://github.com/AxeForging/laya-compact">the repository</a> and run
     <code>npm&nbsp;run&nbsp;dry-run</code>: it scores your own transcripts with the same code the
     hook calls and prints what it would have freed, writing nothing and installing nothing.
-    <a href="#cost">Section 04</a> has the range to expect.
+    Node 18 or later, and it reads the sessions already in <code>~/.claude/projects</code> — with
+    none there it has nothing to score and says so.
+    <a href="#cost">Section 04, Cost</a> has the range to expect.
   </p>
   <div class="cmd">
     <div class="cmd__head">
-      <p class="label">shell — three commands</p>
+      <p class="label">shell — try it without installing anything</p>
       <button class="copy" type="button" data-copy hidden>Copy</button>
-      <p class="visually-hidden" id="copy-status" role="status" aria-live="polite"></p>
+      <p class="visually-hidden" role="status" aria-live="polite"></p>
     </div>
-    <pre tabindex="0" data-label="Shell commands"><code id="cmd-text">export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
+    <pre tabindex="0" data-label="Shell commands to try it without installing"><code>git clone https://github.com/AxeForging/laya-compact
+cd laya-compact
+npm install
+npm run dry-run</code></pre>
+  </div>
+  <div class="cmd">
+    <div class="cmd__head">
+      <p class="label">shell — then install it</p>
+      <button class="copy" type="button" data-copy hidden>Copy</button>
+      <p class="visually-hidden" role="status" aria-live="polite"></p>
+    </div>
+    <pre tabindex="0" data-label="Shell commands to install it"><code>export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
 
 claude plugin marketplace add AxeForging/laya-compact
 claude plugin install laya-compact@laya-compact</code></pre>
@@ -1340,38 +1443,42 @@ claude plugin install laya-compact@laya-compact</code></pre>
 <script src="distribution-data.js"></script>
 <script src="timeline-data.js"></script>
 <script>
-const command = document.getElementById('cmd-text');
-const copyStatus = document.getElementById('copy-status');
-// Revealed here for the same reason the Replay button is: with scripts blocked
-// the command is selectable text and a Copy button would be a control that
-// cannot act. The announcement lives in a sibling status, not on the button --
-// aria-live on a control makes its own accessible name the live region.
-const copyButton = document.querySelector('[data-copy]');
-if (copyButton) copyButton.hidden = false;
-
-copyButton?.addEventListener('click', async (event) => {
-  const button = event.currentTarget;
-  const restore = () => { button.textContent = 'Copy'; delete button.dataset.done; };
-  try {
-    await navigator.clipboard.writeText(command.textContent.trim());
-    button.textContent = 'Copied';
-    button.dataset.done = '1';
-    copyStatus.textContent = 'Three commands copied to the clipboard.';
-    setTimeout(restore, 2000);
-  } catch {
-    // Clipboard refused (insecure origin, or permission denied). Select the
-    // command so the keyboard shortcut works, rather than only apologising.
-    const range = document.createRange();
-    range.selectNodeContents(command);
-    const selection = getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
-    button.textContent = 'Selected — press Ctrl/⌘C';
-    button.dataset.done = '1';
-    copyStatus.textContent = 'The clipboard refused. The commands are selected — press Ctrl or Cmd C.';
-    setTimeout(restore, 4000);
-  }
-});
+// Buttons are revealed here for the same reason the Replay button is: with
+// scripts blocked the commands are selectable text and a Copy button would be a
+// control that cannot act. The announcement lives in a sibling status, not on
+// the button -- aria-live on a control makes its own accessible name the live
+// region. Wired per block, because there are two.
+for (const block of document.querySelectorAll('.cmd')) {
+  const command = block.querySelector('pre code');
+  const button = block.querySelector('[data-copy]');
+  const status = block.querySelector('[role="status"]');
+  if (!command || !button) continue;
+  button.hidden = false;
+  const lines = command.textContent.trim().split('\n').filter(Boolean).length;
+  const many = lines === 1 ? 'One command' : `${lines} commands`;
+  button.addEventListener('click', async () => {
+    const restore = () => { button.textContent = 'Copy'; delete button.dataset.done; };
+    try {
+      await navigator.clipboard.writeText(command.textContent.trim());
+      button.textContent = 'Copied';
+      button.dataset.done = '1';
+      if (status) status.textContent = `${many} copied to the clipboard.`;
+      setTimeout(restore, 2000);
+    } catch {
+      // Clipboard refused (insecure origin, or permission denied). Select the
+      // command so the keyboard shortcut works, rather than only apologising.
+      const range = document.createRange();
+      range.selectNodeContents(command);
+      const selection = getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      button.textContent = 'Selected — press Ctrl/⌘C';
+      button.dataset.done = '1';
+      if (status) status.textContent = `The clipboard refused. ${many} selected — press Ctrl or Cmd C.`;
+      setTimeout(restore, 4000);
+    }
+  });
+}
 
 // A scrollable box needs a keyboard handle; a box that fits does not. The
 // markup ships the handle so it survives with scripts blocked, and this takes
@@ -1463,10 +1570,15 @@ if (plot && stack && plateCanvas && plateAnim && plateCanvas.getContext && !slow
 
   const RUN_MS = 1600;
   let playing = false;
-  const settle = () => { playing = false; paint(1); };
+  // Assigned once the button below exists. Both ends of a run go through it, so
+  // a run that finishes on its own puts the button back rather than leaving it
+  // reading "Stop".
+  let syncLabel = () => {};
+  const settle = () => { playing = false; paint(1); syncLabel(); };
   const play = () => {
     if (playing) return;
     playing = true;
+    syncLabel();
     const started = performance.now();
     paint(0);
     const step = (now) => {
@@ -1497,7 +1609,11 @@ if (plot && stack && plateCanvas && plateAnim && plateCanvas.getContext && !slow
   replay.type = 'button';
   replay.className = 'plate__replay';
   replay.textContent = 'Replay the ordering';
-  replay.addEventListener('click', play);
+  // A control that can only start a 1.6s animation is not control over it. This
+  // stops a run in flight, and stopping settles on the data rather than
+  // abandoning a half-drawn scramble.
+  syncLabel = () => { replay.textContent = playing ? 'Stop' : 'Replay the ordering'; };
+  replay.addEventListener('click', () => { if (playing) settle(); else play(); });
   stack.closest('.plate__scroll').after(replay);
 
   // Play when it is on screen, not while it is still below the fold.
