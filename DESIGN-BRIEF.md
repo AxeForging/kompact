@@ -28,12 +28,21 @@ shadows, not from colour fills. One accent, iron-oxide — AxeForging, forging �
 reserved for measured values and honesty markers. If it appears on a heading or
 a button for decoration, that is a bug.
 
-**Second pass.** The first version was believable and under-read. The register
-rises: a condensed gothic display face against the body serif at greater scale
-contrast, so a heading reads as plant lettering stamped on the page rather than
-as another paragraph; the accent at full strength rather than held back; and one
-piece of motion that carries information. Nothing about the claims gets louder —
-the figures went *down* in this pass, not up.
+**Second pass — visual only.** The first version was believable and under-read.
+What changes is what the page *looks* like; what it says does not.
+
+- **The ground floods.** The iron-oxide that was a 10% accent becomes the field
+  the masthead sits in, inverting to paper for the evidence below — the move
+  Hermes makes with its blue.
+- **A high-contrast display serif** at real scale against the body serif, so a
+  heading reads as a printed plate rather than as another paragraph.
+- **One image**, which this page has never had, and it is made of the data:
+  every scored call in the corpus as a field of marks, positioned by its score
+  and marked by whether it turned out to be needed. It has to read as a plot
+  someone made, not a picture someone bought.
+
+Nothing about the claims gets louder. If a sentence rises to match the ground,
+the ground was applied wrongly.
 
 ## 4. Layout strategy
 
