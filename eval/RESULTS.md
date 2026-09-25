@@ -11,25 +11,25 @@ the first run of this scorer reported 0.918, which is inside the range below but
 nowhere near its centre.
 
 ```
-corpus (local labels), laya answers (local scores): 1063 calls, 78 positives, 18 sessions
+corpus (local labels, 1063 of 2239 rows scored by every config), laya answers (local scores): 1063 calls, 75 positives, 18 sessions
 10 grouped splits, 30% of sessions held out each time
 
 scorer                             AUC mean     sd    min    max  drop@90%
 --------------------------------------------------------------------------
-logistic (features)                   0.895  0.073  0.688  0.929     38.8%
-output size only                      0.876  0.011  0.855  0.890     11.4%
-laya typed-decisions/direct           0.721  0.021  0.686  0.754     12.1%
-laya multilingual/direct              0.667  0.022  0.644  0.713      4.5%
-laya english/entailment               0.628  0.015  0.610  0.658     18.0%
-laya multilingual/reproducible        0.610  0.015  0.594  0.632      2.5%
+logistic (features)                   0.905  0.078  0.684  0.944     35.4%
+output size only                      0.878  0.010  0.855  0.890     11.9%
+laya typed-decisions/direct           0.719  0.026  0.666  0.754     12.1%
+laya multilingual/direct              0.667  0.023  0.638  0.713      4.5%
+laya english/entailment               0.625  0.016  0.602  0.658     18.0%
+laya multilingual/reproducible        0.610  0.016  0.594  0.632      2.5%
 laya multilingual/entailment          0.604  0.015  0.578  0.622      3.1%
-laya english/reproducible             0.541  0.017  0.521  0.566      4.1%
-laya english/direct                   0.483  0.016  0.462  0.516     10.1%
-laya typed-decisions/entailment       0.420  0.028  0.391  0.495      5.2%
-laya typed-decisions/reproducible     0.419  0.024  0.393  0.469      8.2%
+laya english/reproducible             0.539  0.016  0.521  0.566      4.1%
+laya english/direct                   0.480  0.012  0.462  0.502     10.1%
+laya typed-decisions/reproducible     0.419  0.025  0.393  0.470      8.2%
+laya typed-decisions/entailment       0.416  0.023  0.379  0.472      5.2%
 
 paired vs best laya (typed-decisions/direct):
-  logistic - laya AUC: mean +0.174 (sd 0.062, range 0.002 to 0.216)
+  logistic - laya AUC: mean +0.186 (sd 0.062, range 0.018 to 0.227)
   logistic won 10/10 splits
   -> the free scorer wins on every split; the sidecar is not justified for this task.
 
@@ -42,26 +42,26 @@ The scorer produces a ranking; this turns it into a decision. The shipped
 defaults are **budget 0.5, floor 0.10**.
 
 ```
-local labels: 1063 calls, 78 genuinely needed, 18 sessions
+local labels: 2239 calls, 247 genuinely needed, 41 sessions
 
 policy                         freed   wrong  +head     kept chars kept
 -----------------------------------------------------------------------
-threshold only, 0.5 (old)      97.6%      74     33      5.1%       8.5%
+threshold only, 0.5 (old)      95.3%     225     34      8.9%      16.9%
 
-budget 0.7, floor 0.50         71.5%      45     14     42.3%      62.7%
-budget 0.7, floor 0.30         65.5%      35      9     55.1%      70.2%
-budget 0.7, floor 0.20         62.6%      34     10     56.4%      71.3%
-budget 0.7, floor 0.15         60.3%      23      3     70.5%      74.2%
-budget 0.7, floor 0.10         52.9%      14      2     82.1%      79.2%
-budget 0.7, floor 0.05          8.6%       7      3     91.0%      98.5%
+budget 0.7, floor 0.50         70.5%     176     17     28.7%      44.1%
+budget 0.7, floor 0.30         60.4%     148      8     40.1%      53.9%
+budget 0.7, floor 0.20         33.9%      77      4     68.8%      90.2%
+budget 0.7, floor 0.15         11.9%      65      4     73.7%      91.6%
+budget 0.7, floor 0.10          9.6%      58      7     76.5%      96.1%
+budget 0.7, floor 0.05          3.7%      31     28     87.4%      98.7%
 
-budget 0.5, floor 0.10         42.4%      12      2     84.6%      87.5%
-budget 0.6, floor 0.10         44.4%      13      2     83.3%      82.9%
-budget 0.7, floor 0.10         52.9%      14      2     82.1%      79.2%
-budget 0.8, floor 0.10         60.7%      21      4     73.1%      74.3%
+budget 0.5, floor 0.10          6.9%      38      1     84.6%      97.4%
+budget 0.6, floor 0.10          8.3%      48      2     80.6%      96.6%
+budget 0.7, floor 0.10          9.6%      58      7     76.5%      96.1%
+budget 0.8, floor 0.10         10.9%      64      9     74.1%      95.9%
 
 shipped code path (src/compact.ts decideAll, the same defaults):
-  43.0% freed, 84.6% of reused outputs kept, 0 of 138 mutating calls dropped
+  5.7% freed, 84.6% of reused outputs kept, 0 of 220 mutating calls dropped
 
 wrong  = needed outputs that were dropped anyway
 +head  = of those, how many kept their first 300 characters
@@ -78,27 +78,54 @@ task outcome, and it over-counts, because a reuse that had already happened by
 the time a real compaction fired costs nothing when the output is dropped now.
 
 ```
-local labels: 1063 calls in 18 sessions, 78 reused later
+local labels: 2239 calls in 41 sessions, 247 reused later
 
-dropped anyway: 10 (12.8% of the reused outputs)
-per session:    0.56 outputs
-of those, kept their first 300 characters: 0, lost entirely: 10
+dropped anyway: 55 (22.3% of the reused outputs)
+per session:    1.34 outputs
+of those, kept their first 300 characters: 1, lost entirely: 54
 
 how the assistant would get it back:
-  command, side effects unknown     9      38,046 chars
-  re-read                           1       1,162 chars
+  command, side effects unknown    47      42,389 chars
+  re-read                           4      53,680 chars
+  not repeatable                    4       2,122 chars
 
 which tool produced it:
-  Bash                              9      38,046 chars
-  Read                              1       1,162 chars
+  Bash                             47      42,389 chars
+  Read                              4      53,680 chars
+  AskUserQuestion                   4       2,122 chars
 
 why it was needed:
-  reused in a later tool input      9      38,873 chars
-  quoted in later text              1         335 chars
+  reused in a later tool input     42      86,405 chars
+  quoted in later text             13      11,786 chars
 
-Not recoverable by re-running, and no head left: 9 of 1063 calls (0.8%), 0.50 per session.
+Not recoverable by re-running, and no head left: 51 of 2239 calls (2.3%), 1.24 per session.
 NOT measured here: whether an assistant given the compacted transcript still
 finishes the task. That needs a live A/B and is listed as unverified.
+```
+
+## Whether the work survives — `eval/outcome.ts`
+
+The measurement every other figure here stands in for. Every other one asks
+whether an output was reused *somewhere* later, which counts reuses that had
+already happened when a real compaction fired and could not therefore be lost.
+This finds where the engine would actually compact, decides only the calls that
+exist at that point, and counts the reuses that come afterwards whose source was
+dropped. It is still not a replay: it measures how often the information would
+no longer be there, which is the necessary condition for the work to suffer.
+
+```
+local labels: 2239 calls, 32 sessions with a compaction point
+compacting at 60% of a session's tool output
+
+calls present when it fires:        1038
+of those, reused only afterwards:   68
+and dropped anyway:                 6 (8.8% of them)
+                                    56,199 characters
+per session:                        0.19
+sessions that lose nothing:         27 of 32
+
+This is the necessary condition for the work to suffer, not proof that it
+did: nothing here replays an assistant against the compacted transcript.
 ```
 
 ## What it frees in practice — `eval/sessions.ts`
@@ -110,12 +137,12 @@ one corpus, and the per-session column as the range that matters.
 ```
 session              calls  tok before  tok after    freed  scoring
 -------------------------------------------------------------------
-25e65eab-4941-41ea     473     273,749    215,853    21.1%     51ms
-20628921-046d-4fc0     576     587,002    397,801    32.2%     53ms
-78d7d176-4c84-4936     335     391,638    366,311     6.5%     32ms
-agent-aca4b44fdb68      58      32,560     23,815    26.9%      3ms
+25e65eab-4941-41ea     473     273,749    217,627    20.5%     50ms
+20628921-046d-4fc0     658     627,179    423,305    32.5%     73ms
+78d7d176-4c84-4936     335     391,638    366,317     6.5%     34ms
+agent-aca4b44fdb68      58      32,560     23,834    26.8%      4ms
 -------------------------------------------------------------------
-total                 1442   1,284,949  1,003,780    21.9%    139ms
+total                 1524   1,325,126  1,031,083    22.2%    161ms
 ```
 
 ## What the sidecar costs to run — `eval/laya-bench.ts`
@@ -126,39 +153,39 @@ of the router; only latency is per checkpoint.
 
 ```
 sidecar: http://127.0.0.1:8000/v1/systemone
-memory:  4945 MB resident (pid 1407371)
-gpu:     NVIDIA GeForce RTX 4060 Laptop GPU, 175 MiB, 8188 MiB
+memory:  4944 MB resident (pid 1407371)
+gpu:     NVIDIA GeForce RTX 4060 Laptop GPU, 176 MiB, 8188 MiB
 
 All three checkpoints are loaded by one process, so the memory above is the
 whole router. Latency is per checkpoint, 5 runs, median and worst:
 
 checkpoint           questions    median    worst  per question  input tok
 --------------------------------------------------------------------------
-english                      1    392 ms   665 ms      391.8 ms        104
-english                      2    584 ms   590 ms      291.9 ms        208
-english                      4    968 ms   974 ms      241.9 ms        416
-english                      8   1684 ms  1689 ms      210.5 ms        832
-multilingual                 1    123 ms   134 ms      122.7 ms         99
-multilingual                 2    183 ms   188 ms       91.6 ms        198
-multilingual                 4    310 ms   329 ms       77.4 ms        396
-multilingual                 8    736 ms   771 ms       92.0 ms        792
-typed-decisions              1    548 ms   738 ms      548.0 ms        104
-typed-decisions              2    800 ms   824 ms      400.0 ms        208
-typed-decisions              4   1259 ms  1279 ms      314.7 ms        416
-typed-decisions              8   2228 ms  2284 ms      278.5 ms        832
+english                      1    383 ms   388 ms      383.3 ms        104
+english                      2    573 ms   583 ms      286.7 ms        208
+english                      4    968 ms  1048 ms      242.1 ms        416
+english                      8   2014 ms  2152 ms      251.8 ms        832
+multilingual                 1    133 ms   143 ms      133.4 ms         99
+multilingual                 2    218 ms   225 ms      109.0 ms        198
+multilingual                 4    390 ms   438 ms       97.5 ms        396
+multilingual                 8    808 ms   813 ms      101.0 ms        792
+typed-decisions              1    455 ms   702 ms      455.1 ms        104
+typed-decisions              2    695 ms   807 ms      347.5 ms        208
+typed-decisions              4   1133 ms  1140 ms      283.3 ms        416
+typed-decisions              8   1910 ms  1971 ms      238.7 ms        832
 
 input tok is usage.input_tokens, which is the per-question row count times the
 number of questions — not the size of the state.
 
-Scoring one session: 1442 calls, 2 questions a request, 8 in flight.
-  fastest checkpoint: 21.5 s and 4945 MB resident held for the session
-  built-in scorer:    0.14 s and no process at all
-  ratio:              155x the time
-(1442 calls and 139 ms come from the eval/sessions.ts run in
+Scoring one session: 1524 calls, 2 questions a request, 8 in flight.
+  fastest checkpoint: 23.0 s and 4944 MB resident held for the session
+  built-in scorer:    0.16 s and no process at all
+  ratio:              143x the time
+(1524 calls and 161 ms come from the eval/sessions.ts run in
  this same report, so the two sides are the same work.)
 
-cold start:   7.7 s to first answer
-  memory:     3084 MB resident (pid 1992025)
-  gpu after:  NVIDIA GeForce RTX 4060 Laptop GPU, 5172 MiB, 8188 MiB
-  gpu before: NVIDIA GeForce RTX 4060 Laptop GPU, 175 MiB, 8188 MiB
+cold start:   7.1 s to first answer
+  memory:     3087 MB resident (pid 2036432)
+  gpu after:  NVIDIA GeForce RTX 4060 Laptop GPU, 5173 MiB, 8188 MiB
+  gpu before: NVIDIA GeForce RTX 4060 Laptop GPU, 176 MiB, 8188 MiB
 ```

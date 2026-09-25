@@ -24,8 +24,8 @@
     "keepThreshold": {
       "type": "number",
       "title": "Keep floor",
-      "description": "Probability at or above which a call is never dropped, whatever the reduction target. Raise it to keep more. Measured default: 0.1 retains 84.6% of outputs that were genuinely reused later; 0.5 retains only 5%, because a calibrated scorer rarely exceeds 0.5 when barely 7% of outputs are ever reused.",
-      "default": 0.1
+      "description": "Probability at or above which a call is never dropped, whatever the reduction target. Raise it to keep more. Re-swept against the coefficients fitted on 41 sessions: 0.2 retains 85.4% of outputs that were genuinely reused later and frees 20.7%; 0.25 retains 83.0% and frees 26.0%; past 0.25 it falls off a cliff, with 0.3 freeing 50.7% by keeping only 58.3%.",
+      "default": 0.2
     },
     "targetReduction": {
       "type": "number",

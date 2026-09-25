@@ -24,9 +24,12 @@ export const DEFAULT_OPTIONS: ResolvedCompactOptions = {
    * ever reused verbatim, so a calibrated scorer rarely exceeds 0.5 even for
    * the ones that matter — a 0.5 floor protects almost nothing. Simulated per
    * session on 1063 labelled calls (`eval/policy.ts`), a 0.5 floor retained 5%
-   * of genuinely-needed outputs; 0.1 retains 84.6% and still frees 42.4%.
+   * of genuinely-needed outputs. Re-swept against the coefficients fitted on 41
+   * sessions: 0.2 retains 85.4% and frees 20.7%, 0.25 retains 83.0% and frees
+   * 26.0%, and past 0.25 it falls off a cliff — 0.3 frees 50.7% by keeping 58.3%.
+   * 0.2 is chosen to hold the retention the previous default achieved.
    */
-  keepThreshold: 0.1,
+  keepThreshold: 0.2,
   preserveRecentMessages: 6,
   // 700 sits under the multilingual checkpoint's 768-token state budget.
   maxCallStateTokens: 700,

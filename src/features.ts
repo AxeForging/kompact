@@ -109,8 +109,17 @@ export function score(weights: readonly number[], features: readonly number[]): 
 }
 
 /**
- * Fitted on 1063 labelled calls from 18 real sessions (`eval/fit.ts`).
- * Leave-one-session-out: AUC 0.862, ECE 0.019.
+ * Fitted on 2239 labelled calls from 41 real sessions (`eval/fit.ts`).
+ * Leave-one-session-out: AUC 0.789, ECE 0.051.
+ *
+ * Both are worse than the 0.862 and 0.019 an earlier fit reported on 18 of those
+ * same sessions, and the corpus is still one person's. Widening it within one
+ * person's own work cost seven points of AUC and nearly tripled the calibration
+ * error, which is the most direct evidence available that these coefficients do
+ * not transfer as far as a single number suggests. `npm run calibrate` exists
+ * for that, and `targetReadAgain` is the clearest case: it was +0.03 on the
+ * narrow corpus and is -0.59 here, because with more sessions "the assistant
+ * read this again later" turns out to mean the output was reproducible.
  * `size=long` and `age=a while back` are the reference levels, hence absent.
  *
  * **`tool=Grep|Glob` is 0.0 because it was never trained, not because it does
@@ -121,14 +130,14 @@ export function score(weights: readonly number[], features: readonly number[]): 
  * is search-heavy should run `npm run calibrate`; that is what it is for.
  */
 export const KEEP_RESULT_WEIGHTS: readonly number[] = [
-  -0.515317, -0.479700, -1.355646, -2.357281, 0.0, -0.853392, 2.120621, 0.034102,
-  -3.084978, -1.401635, -1.648688, 0.038320, -0.354798,
+  -0.854504, -0.080158, -0.103559, -1.961938, 0.0, -0.203870, 2.283794, -0.585116,
+  -3.047582, -1.474709, -0.259475, 0.074074, 0.097573,
 ];
 
-/** Same fit, for whether the call itself still matters. LOSO AUC 0.971, ECE 0.027. */
+/** Same fit, for whether the call itself still matters. LOSO AUC 0.909, ECE 0.047. */
 export const KEEP_CALL_WEIGHTS: readonly number[] = [
-  -0.562709, -0.749810, -1.415168, 0.469063, 0.0, -0.241080, 3.793986, 5.488180,
-  -2.517782, -0.959560, -0.587864, 0.056336, 0.048620,
+  -0.614181, -0.379293, -0.405222, 0.438643, 0.0, -0.059718, 3.600786, 4.605452,
+  -2.658946, -1.263787, 0.195068, 0.062363, 0.059608,
 ];
 
 /**

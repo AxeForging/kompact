@@ -98,7 +98,7 @@ for (const floor of [0.5, 0.3, 0.2, 0.15, 0.1, 0.05]) {
 }
 console.log();
 for (const target of [0.5, 0.6, 0.7, 0.8]) {
-  show(`budget ${target.toFixed(1)}, floor 0.10`, simulate('budget', 0.10, target));
+  show(`budget ${target.toFixed(1)}, floor 0.20`, simulate('budget', 0.20, target));
 }
 
 // The rows above simulate the policy. This runs the shipped code, so it also

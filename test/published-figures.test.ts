@@ -64,7 +64,7 @@ const bench = {
 const logistic = scorerRow('logistic (features)');
 const laya = scorerRow('laya typed-decisions/direct');
 const sizeOnly = scorerRow('output size only');
-const shipped = policyRow('budget 0.5, floor 0.10');
+const shipped = policyRow('budget 0.5, floor 0.20');
 const closest = /range ([\d.]+) to [\d.]+/.exec(results)?.[1];
 
 describe('published figures match eval/RESULTS.md', () => {
