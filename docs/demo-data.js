@@ -24,7 +24,7 @@ window.DEMO = {
    "keepCall": 0.973,
    "outcome": "head only",
    "state": "head",
-   "share": 15,
+   "share": 38.3,
    "keep": 0.0543
   },
   {
@@ -41,7 +41,7 @@ window.DEMO = {
    "keepCall": 0.946,
    "outcome": "kept",
    "state": "kept",
-   "share": 74,
+   "share": 86.1,
    "keep": 1
   },
   {
@@ -58,7 +58,7 @@ window.DEMO = {
    "keepCall": 0.037,
    "outcome": "too small",
    "state": "small",
-   "share": 3,
+   "share": 4.3,
    "keep": 1
   },
   {
@@ -75,7 +75,7 @@ window.DEMO = {
    "keepCall": 0.27,
    "outcome": "kept",
    "state": "kept",
-   "share": 29,
+   "share": 53.5,
    "keep": 1
   },
   {
@@ -92,7 +92,7 @@ window.DEMO = {
    "keepCall": 0.093,
    "outcome": "dropped",
    "state": "dropped",
-   "share": 3,
+   "share": 17.8,
    "keep": 0
   },
   {
@@ -109,7 +109,7 @@ window.DEMO = {
    "keepCall": 0.27,
    "outcome": "kept",
    "state": "kept",
-   "share": 11,
+   "share": 33.9,
    "keep": 1
   },
   {
@@ -143,7 +143,7 @@ window.DEMO = {
    "keepCall": 1,
    "outcome": "kept",
    "state": "kept",
-   "share": 3,
+   "share": 2.4,
    "keep": 1
   },
   {
@@ -160,7 +160,7 @@ window.DEMO = {
    "keepCall": 1,
    "outcome": "kept",
    "state": "kept",
-   "share": 5,
+   "share": 22.3,
    "keep": 1
   }
  ]

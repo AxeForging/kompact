@@ -404,8 +404,13 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 .demo__who span{ display:block; color: var(--ink-3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .demo__track{ position:relative; height: 16px; background: var(--paper-sunk); min-width:0;
   border-right: 1px solid var(--ink-3); }
+/* The output's own extent, so "output, and what survives of it" draws both. */
+.demo__was{
+  position:absolute; inset-block:0; left:0; width: var(--w);
+  background: var(--rule); outline: 1px solid var(--ink-3); outline-offset:-1px;
+}
 .demo__fill{
-  position:absolute; inset-block:0; left:0; width: var(--w); background: var(--ink-2);
+  position:absolute; inset:0; width:100%; background: var(--ink-2);
   transform-origin: left center; transform: scaleX(var(--keep, 1));
 }
 .demo__scores{ color: var(--ink-3); font-variant-numeric: tabular-nums; text-align:right; }
@@ -565,7 +570,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </p>
   </div>
   <div class="colophon reveal" style="--d:170ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>140</b> tests</span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>141</b> tests</span>
     <span><b>0</b> network calls by default</span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
 </div>
@@ -783,15 +788,15 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <span>keep&#8209;result &#183; keep&#8209;call<br>size</span><span>Outcome</span>
     </p>
     <ol class="demo__list" id="d-list">
-      <li class="demo__call" data-state="head"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:15%;--keep:0.0543"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.158 · <span class="visually-hidden">keep-call </span>0.973<br>7,186 ch</span><span class="demo__outcome">head only</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:74%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.762 · <span class="visually-hidden">keep-call </span>0.946<br>36,341 ch</span><span class="demo__outcome">kept</span></li>
-      <li class="demo__call" data-state="small"><span class="demo__who"><b>Grep</b><span>JWT_SECRET</span></span><span class="demo__track"><span class="demo__fill" style="--w:3%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.020 · <span class="visually-hidden">keep-call </span>0.037<br>89 ch</span><span class="demo__outcome">too small</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>src/config.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:29%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.282 · <span class="visually-hidden">keep-call </span>0.270<br>14,026 ch</span><span class="demo__outcome">kept</span></li>
-      <li class="demo__call" data-state="dropped"><span class="demo__who"><b>Bash</b><span>git log --oneline -20 -- src/auth.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:3%;--keep:0"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.081 · <span class="visually-hidden">keep-call </span>0.093<br>1,547 ch</span><span class="demo__outcome">dropped</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>.github/workflows/ci.yml</span></span><span class="demo__track"><span class="demo__fill" style="--w:11%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.282 · <span class="visually-hidden">keep-call </span>0.270<br>5,615 ch</span><span class="demo__outcome">kept</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Bash</b><span>gh run view 4821 --log | tail -60</span></span><span class="demo__track"><span class="demo__fill" style="--w:100%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.228 · <span class="visually-hidden">keep-call </span>0.305<br>49,001 ch</span><span class="demo__outcome">kept</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Edit</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:3%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>1.000 · <span class="visually-hidden">keep-call </span>1.000<br>29 ch</span><span class="demo__outcome">kept</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:5%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>1.000 · <span class="visually-hidden">keep-call </span>1.000<br>2,432 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="head"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:38.3%"><span class="demo__fill" style="--keep:0.0543"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.158 · <span class="visually-hidden">keep-call </span>0.973<br>7,186 ch</span><span class="demo__outcome">head only</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:86.1%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.762 · <span class="visually-hidden">keep-call </span>0.946<br>36,341 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="small"><span class="demo__who"><b>Grep</b><span>JWT_SECRET</span></span><span class="demo__track"><span class="demo__was" style="--w:4.3%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.020 · <span class="visually-hidden">keep-call </span>0.037<br>89 ch</span><span class="demo__outcome">too small</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>src/config.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:53.5%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.282 · <span class="visually-hidden">keep-call </span>0.270<br>14,026 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="dropped"><span class="demo__who"><b>Bash</b><span>git log --oneline -20 -- src/auth.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:17.8%"><span class="demo__fill" style="--keep:0"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.081 · <span class="visually-hidden">keep-call </span>0.093<br>1,547 ch</span><span class="demo__outcome">dropped</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>.github/workflows/ci.yml</span></span><span class="demo__track"><span class="demo__was" style="--w:33.9%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.282 · <span class="visually-hidden">keep-call </span>0.270<br>5,615 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Bash</b><span>gh run view 4821 --log | tail -60</span></span><span class="demo__track"><span class="demo__was" style="--w:100%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.228 · <span class="visually-hidden">keep-call </span>0.305<br>49,001 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Edit</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:2.4%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>1.000 · <span class="visually-hidden">keep-call </span>1.000<br>29 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:22.3%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>1.000 · <span class="visually-hidden">keep-call </span>1.000<br>2,432 ch</span><span class="demo__outcome">kept</span></li>
     </ol>
     <!-- /demo:render -->
   </div>

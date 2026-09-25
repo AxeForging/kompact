@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   askerFor, compactSession, decisionLogLines, layaAsker, readLocalWeights, register, resolveHookConfig, summarize, toSessionMessages,
 } from '../hooks/laya-compact.js';
@@ -126,6 +128,29 @@ describe('summarize', () => {
       maxRowTokens: 700, truncatedRequests: 0, checkpoint: '', requests: 3, failedRequests: 0, ms: 12,
       ...extra,
     },
+  });
+
+  /**
+   * The page prints this notice under "How you know it is running" and tells the
+   * reader that seeing something else means the hook never ran. It quoted a
+   * string invented from memory — neither "freed" nor "floor" appears in any
+   * notice — so a correctly-working install would have looked broken. The drift
+   * guard binds the page to eval/RESULTS.md and nothing bound it to hooks/.
+   */
+  it('emits the shape the page tells readers to look for', () => {
+    const line = summarize(stats({ kept: 34, resultsDropped: 1, callsDropped: 2, requests: 41, ms: 190 }), 'features');
+    // The page wraps inside the <code>, so compare on collapsed whitespace.
+    const page = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'docs', 'index.html'), 'utf8')
+      .replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
+    for (const part of ['% reduction;', 'kept,', 'results truncated,', 'calls dropped;', 'scored via features in']) {
+      expect(line, `summarize() no longer produces "${part}"`).toContain(part);
+      expect(page, `docs/index.html quotes a notice without "${part}"`).toContain(part);
+    }
+    // And nothing the notice cannot contain.
+    for (const invented of ['0.2 floor', '% freed,']) {
+      expect(line).not.toContain(invented);
+      expect(page, `docs/index.html quotes "${invented}", which no notice emits`).not.toContain(invented);
+    }
   });
 
   it('shouts about silent truncation, which nothing else would reveal', () => {

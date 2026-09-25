@@ -98,8 +98,10 @@ const stateName = (d: (typeof decisions)[number]): string =>
     : d.action === 'drop_call' ? 'dropped' : 'head';
 const widest = Math.max(...decisions.map((d) => d.chars));
 /** Bar width is the call's share of the largest output. */
+/** Square-root, not linear: on a linear scale with a 3% floor, 29, 89 and 1,547
+ * characters all drew at the same 17px — a 53x range rendered identically. */
 const share = (d: (typeof decisions)[number]): number =>
-  Math.max(3, Math.round((100 * d.chars) / widest));
+  Math.max(1.5, Math.round(1000 * Math.sqrt(d.chars / widest)) / 10);
 /** scaleX of what survived. `freed` counts the tool input too, so a tiny result
  * can free more characters than it holds; the bar shows the result, hence the clamp. */
 const keep = (d: (typeof decisions)[number]): number =>
@@ -158,7 +160,13 @@ const markup = [
   ...shown.map((d) => '  ' + [
     `<li class="demo__call" data-state="${d.state}">`,
     `<span class="demo__who"><b>${esc(d.tool)}</b><span>${esc(d.target) || '—'}</span></span>`,
-    `<span class="demo__track"><span class="demo__fill" style="--w:${d.share}%;--keep:${d.keep}"></span></span>`,
+    // Two marks, not one: a ghost at the output's own extent, and inside it the
+    // part that survived. Drawing only the survivor meant the two rows where
+    // anything was actually freed were the two whose graphic showed nothing —
+    // a fully dropped 1,547-char output and a kept 49,001-char one rendered
+    // identically, as an empty full-width track.
+    `<span class="demo__track"><span class="demo__was" style="--w:${d.share}%">`
+      + `<span class="demo__fill" style="--keep:${d.keep}"></span></span></span>`,
     `<span class="demo__scores"><span class="visually-hidden">keep-result </span>${d.keepResult.toFixed(3)} · `
       + `<span class="visually-hidden">keep-call </span>${d.keepCall.toFixed(3)}<br>${num(d.chars)} ch</span>`,
     `<span class="demo__outcome">${d.outcome}</span>`,
