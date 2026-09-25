@@ -1763,7 +1763,9 @@ for (const event of ['beforeprint', 'afterprint']) {
 
 // Report which section is being read, in the contents row.
 const quick = matchMedia('(prefers-reduced-motion: reduce)');
-const links = [...document.querySelectorAll('.contents a')];
+// Not the Top link: it points at the header, which is on screen at the start, so
+// the bar opened every session announcing that you were reading "Top".
+const links = [...document.querySelectorAll('.contents a:not(.contents__top)')];
 const sections = links.map((a) => document.querySelector(a.getAttribute('href'))).filter(Boolean);
 if ('IntersectionObserver' in window && sections.length) {
   const seen = new Map();
