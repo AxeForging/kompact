@@ -104,7 +104,9 @@ export function goalFromMessages(messages: readonly Message[]): string {
 }
 
 /** Tools whose call changes its target, so an earlier read of it is now stale. */
-const MUTATING = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
+/** Tools that changed something. Stated once: leaving `NotebookEdit` out of one
+ *  copy of this list is a bug this repo has already had. */
+export const MUTATING: ReadonlySet<string> = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 
 /** Input keys that name what a call acted on, most specific first. */
 const TARGET_KEYS = [

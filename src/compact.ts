@@ -1,6 +1,6 @@
 import { CONTEXT_LENGTH, DEFAULT_MODEL, inputTokens, noulAnswer, routedModel } from './request.js';
 import { DEFAULT_PHRASING, questionsFor } from './questions.js';
-import { buildCallState, callContexts, collectToolCalls, goalFromMessages } from './state.js';
+import { MUTATING, buildCallState, callContexts, collectToolCalls, goalFromMessages } from './state.js';
 import type {
   CallAction,
   CallAnswer,
@@ -82,7 +82,6 @@ export function resolveOptions(options: CompactOptions = {}): ResolvedCompactOpt
  * fires, and their outputs are 1.0% of the corpus, so keeping every one of them
  * costs almost nothing.
  */
-const MUTATING = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 
 export function decideCall(
   call: Pick<ToolCall, 'id' | 'tool' | 'pinned'>,

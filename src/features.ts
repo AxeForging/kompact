@@ -19,6 +19,7 @@
  * with a checkpoint fine-tuned on their own sessions — the bar it has to clear
  * is this file, not chance.
  */
+import { MUTATING, describeSize } from './state.js';
 import type { Asker, SystemOneQuestions, SystemOneResponse, SystemOneState } from './types.js';
 
 export const FEATURE_NAMES = [
@@ -38,12 +39,6 @@ export const FEATURE_NAMES = [
 ] as const;
 
 /** Output size in words, thresholded here because a model cannot read digits. */
-function sizeBucket(chars: number): 'very short' | 'short' | 'long' | 'very long' {
-  if (chars < 200) return 'very short';
-  if (chars < 2_000) return 'short';
-  if (chars < 20_000) return 'long';
-  return 'very long';
-}
 
 /**
  * Normalises whatever a client sent into the prose this scorer reads.
@@ -59,7 +54,7 @@ export function normaliseCallText(state: string, instructions = ''): string {
   if (/The output was (very short|short|long|very long)\./.test(text)) return text;
   const chars = /\((?:[^)]*?, )?(\d[\d_,]*) chars\)/.exec(instructions)?.[1];
   if (chars === undefined) return text;
-  const size = sizeBucket(Number(chars.replace(/[_,]/g, '')));
+  const size = describeSize(Number(chars.replace(/[_,]/g, '')));
   return `${text}\nThe output was ${size}.`;
 }
 
@@ -87,7 +82,7 @@ export function featureVector(state: string, tool: string, isError: boolean): nu
     // `NotebookEdit` belongs here: `decideCall`'s never-drop set names it, and
     // leaving it out of the feature made the two disagree. The corpus has none,
     // so this changes no fitted weight.
-    tool === 'Edit' || tool === 'Write' || tool === 'MultiEdit' || tool === 'NotebookEdit' ? 1 : 0,
+    MUTATING.has(tool) ? 1 : 0,
     tool === 'Grep' || tool === 'Glob' ? 1 : 0,
     isError ? 1 : 0,
     facts.includes('changed afterwards') ? 1 : 0,

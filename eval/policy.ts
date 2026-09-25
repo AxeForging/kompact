@@ -10,12 +10,12 @@
  *
  * Run: bun eval/policy.ts
  */
+import { MUTATING } from '../src/state.js';
 import { loadCorpus, rowKey } from './corpus.js';
 import { DEFAULT_OPTIONS, decideAll } from '../src/compact.js';
 import type { CallAnswer, ToolCall } from '../src/index.js';
 
 /** Mirrors `decideCall`'s own list; a mutating call's input is the change record. */
-const MUTATING = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 import { outOfFoldScores } from './oof.js';
 
 const { rows, from } = loadCorpus(import.meta.dirname);
