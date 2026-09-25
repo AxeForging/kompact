@@ -757,6 +757,64 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
   .demo__run{ margin-left:0; width:100%; }
 }
 
+/* ── The ladder: one compaction after another ─────────────────────────── */
+/* The one figure on this page whose subject is TIME rather than a corpus. Each
+   row is the same context window; the dark part is what the session still held
+   and the red part is what that pass handed back, so six rows read as six
+   refills of the same bar rather than six different measurements. */
+.ladder__h{ margin-top: var(--space-2xl); }
+.ladder{
+  list-style:none; margin: var(--space-lg) 0 var(--space-sm); padding:0;
+  --at: 60%;
+}
+.ladder__row{
+  display:grid; grid-template-columns: 8ch minmax(0,1fr) 7ch 17ch;
+  gap: var(--space-md); align-items:center; padding: 6px 0;
+  font-family: var(--sans); font-size: var(--text-xs);
+}
+.ladder__row + .ladder__row{ border-top: 1px solid var(--rule); }
+.ladder__label{ color: var(--ink-2); font-weight:600; letter-spacing:0.02em; }
+.ladder__track{
+  position:relative; height: 14px; background: var(--paper-sunk);
+  outline:1px solid var(--rule); outline-offset:-1px; min-width:0;
+}
+/* Where the engine asks. Every row crosses it, which is the point of the figure. */
+.ladder__track::after{
+  content:""; position:absolute; inset-block:-3px; left: var(--at); width:1px;
+  background: var(--ink-3);
+}
+.ladder__held{ position:absolute; inset-block:0; left:0; width: var(--w); background: var(--ink-2); }
+.ladder__back{
+  position:absolute; inset-block:0; left: var(--l); width: var(--w);
+  background: var(--accent); transform-origin: left center;
+}
+.ladder__num{
+  text-align:right; font-variant-numeric: tabular-nums; font-weight:600;
+  color: var(--accent-ink);
+}
+.ladder__num--under{ color: var(--ink-3); font-weight:400; }
+.ladder__unit{ font-weight:400; color: var(--ink-3); margin-left: 2px; }
+.ladder__ms{ color: var(--ink-3); font-variant-numeric: tabular-nums; }
+/* The pass that is refused. It is drawn, because a figure that showed only the
+   passes taken would be an advertisement rather than a measurement. */
+.ladder__row--over .ladder__label{ color: var(--ink-3); font-weight:400; font-style:italic; }
+.ladder__row--over .ladder__back{ background: var(--rule-firm); }
+.ladder__row--over{ border-top: 1px solid var(--ink-3) !important; }
+
+@media (prefers-reduced-motion: no-preference){
+  .ladder__back{ transition: transform 560ms cubic-bezier(0.16,1,0.3,1); }
+  .ladder__row.reveal--armed .ladder__back{ transform: scaleX(0); }
+}
+
+@media (max-width: 640px){
+  .ladder__row{
+    grid-template-columns: minmax(0,1fr) 7ch; gap: var(--space-xs) var(--space-md);
+    grid-template-areas: "label num" "track track" "ms ms";
+  }
+  .ladder__label{ grid-area: label; } .ladder__num{ grid-area: num; }
+  .ladder__track{ grid-area: track; } .ladder__ms{ grid-area: ms; }
+}
+
 /* ── FAQ ──────────────────────────────────────────────────────────────── */
 .faq{ margin-top: var(--space-lg); border-top:1px solid var(--rule-firm); }
 .faq__item{ border-bottom:1px solid var(--rule); padding: var(--space-md) 0; }
@@ -897,6 +955,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       87.9% of their characters &#8212; the missing <a href="#losses">12.1%</a> is mostly the cap.</span></p>
     <p><b>190&#8239;ms</b><span>to score 1,762 calls, against 216&#215; that for the neural
       sidecar it replaced, on an RTX&#160;4060 Laptop.</span></p>
+    <p><b>6&#215;</b><span>before the model summary runs. Each pass costs about 27&#8239;ms and
+      hands back ten points of context window, so <a href="#demo">the summary is deferred</a>,
+      not replaced.</span></p>
     <p><b>Never</b><span>drops an <code>Edit</code>, <code>Write</code>, <code>MultiEdit</code> or
       <code>NotebookEdit</code> call, whatever it scores. Only their output can be trimmed.</span></p>
     <p class="upfront__do">
@@ -906,8 +967,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </p>
   </div>
   <div class="colophon reveal" style="--d:170ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>210</b> tests</span>
-    <span><b>0</b> network calls</span><span><b>4</b> claims <a href="#checked">not verified</a></span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>214</b> tests</span>
+    <span><b>0</b> network calls</span><span><b>5</b> claims <a href="#checked">not verified</a></span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
 </div>
 </header>
@@ -1183,7 +1244,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <p class="caption" id="sweep-caption"></p>
   </section>
 
-  <h3>The Edit it wanted to delete</h3>
+  <details class="more">
+    <summary><h3>The Edit it wanted to delete, and the two rules that came out of it</h3></summary>
   <p>
     The first time this ran, <strong>the scorer dropped the <code>Edit</code> that fixed the
     bug</strong>. Both its scores were low and honestly so — “Applied 1 edit to src/auth.ts”
@@ -1209,6 +1271,57 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     not worth acting on however confident it is, so that call reads <em>too small</em> rather
     than <em>dropped</em>.
   </p>
+  </details>
+
+  <h3 class="ladder__h">And then it does it again.</h3>
+  <!-- passes:render -->
+  <p>
+    One compaction is not the product; the loop is. The engine asks at 60% of the window, this
+    answers, you keep working, and it asks again. Each answer costs about
+    <span class="num val">27.78164300000003&#8239;ms</span> and hands back
+    <span class="num val">11 points</span> of window &#8212; so the model
+    summary, which is a model call and rewrites your session into prose, runs after the
+    sixth of them rather than the first.
+  </p>
+  <ol class="ladder" id="ladder">
+      <li class="ladder__row"><span class="ladder__label">pass 1</span><span class="ladder__track"><span class="ladder__held" style="--w:49.2%"></span><span class="ladder__back" style="--l:49.2%;--w:11.2%"></span></span><span class="ladder__num">&#8722;11.2<span class="ladder__unit">pts</span></span><span class="ladder__ms">34&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 2</span><span class="ladder__track"><span class="ladder__held" style="--w:50.6%"></span><span class="ladder__back" style="--l:50.6%;--w:10.8%"></span></span><span class="ladder__num">&#8722;10.8<span class="ladder__unit">pts</span></span><span class="ladder__ms">27&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 3</span><span class="ladder__track"><span class="ladder__held" style="--w:49.4%"></span><span class="ladder__back" style="--l:49.4%;--w:10.6%"></span></span><span class="ladder__num">&#8722;10.6<span class="ladder__unit">pts</span></span><span class="ladder__ms">26&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 4</span><span class="ladder__track"><span class="ladder__held" style="--w:50.2%"></span><span class="ladder__back" style="--l:50.2%;--w:10.3%"></span></span><span class="ladder__num">&#8722;10.3<span class="ladder__unit">pts</span></span><span class="ladder__ms">27&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 5</span><span class="ladder__track"><span class="ladder__held" style="--w:51.2%"></span><span class="ladder__back" style="--l:51.2%;--w:8.9%"></span></span><span class="ladder__num">&#8722;8.9<span class="ladder__unit">pts</span></span><span class="ladder__ms">28&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 6</span><span class="ladder__track"><span class="ladder__held" style="--w:51.9%"></span><span class="ladder__back" style="--l:51.9%;--w:8.4%"></span></span><span class="ladder__num">&#8722;8.4<span class="ladder__unit">pts</span></span><span class="ladder__ms">28&#8239;ms</span></li>
+      <li class="ladder__row ladder__row--over"><span class="ladder__label">hand over</span><span class="ladder__track"><span class="ladder__held" style="--w:60.9%"></span><span class="ladder__back" style="--l:60.9%;--w:4.6%"></span></span><span class="ladder__num ladder__num--under">&#8722;4.6<span class="ladder__unit">pts</span></span><span class="ladder__ms">below the 5&#8209;point floor</span></li>
+  </ol>
+  <p class="caption">One real session of 7,138 messages, replayed against a
+    200k&#8209;token window. The dark part of each bar is what the session was still
+    holding; the red part is what that pass handed back. Across 5 sessions on this
+    machine the loop answered <b>11</b> compactions that would otherwise each have been a
+    model summary. Snapshot of one machine's transcripts, which grow as you work &#8212;
+    <code>eval/passes.ts</code> re-runs it on yours.</p>
+  <!-- /passes:render -->
+  <details class="more">
+    <summary><h3>Why a percentage of the window, and not a percentage of the session</h3></summary>
+    <p>
+      Until this version the rule was <code>minReductionRatio: 0.25</code>: take the pass if it
+      removed a quarter of the transcript. <code>eval/passes.ts</code> replays the loop on real
+      sessions and that bar took <span class="num val">0</span> of
+      <span class="num val">15</span> passes &#8212; every one went to the model summary while
+      this could still free ten points of window in under 40&#8239;ms.
+    </p>
+    <p>
+      The unit was the mistake. A quarter of a 7,000-message session and a quarter of a 200-message
+      one are not the same amount of room to keep working in, and room is what runs out. Points of
+      the context window are comparable between them, and they are the same unit as the 60% trigger
+      &#8212; which makes the rule its own guard: a pass that is taken leaves the session at least
+      five points below the trigger, so it has to grow back through them before another compaction
+      can be asked for. Compacting on every turn stops being possible rather than discouraged.
+    </p>
+    <p>
+      The ceiling is <code>maxPasses: 6</code> and it is a backstop, not the dial. Raised to 8 or
+      12, the largest session measured still stops at six on its own: the seventh pass reclaims
+      4.6 points, the floor refuses it, and the summary runs. What ends the loop is the floor.
+    </p>
+  </details>
 </section>
 
 <section class="flooded" id="shape" aria-labelledby="shape-h">
@@ -1655,7 +1768,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 <section class="wrap" id="checked" aria-labelledby="checked-h">
   <p class="rubric"><span class="rubric__n">08</span>Verification</p>
-  <h2 id="checked-h">Including the one that was not.</h2>
+  <h2 id="checked-h">Seven claims checked, five not.</h2>
   <div class="ledger">
     <div class="ledger__row ledger__row--open">
       <p class="ledger__claim">The minimum Claude Code version <span class="flag">— not verified</span></p>
@@ -1671,6 +1784,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         the drafts validate as skills. Whether writing one saves anyone anything is not measured at
         all: it needs the same work done twice, once with the skill and once without. Every one of the 10
         repeated command shapes is a generic shell verb, which is evidence against rather than for.</p>
+    </div>
+    <div class="ledger__row ledger__row--open">
+      <p class="ledger__claim">What deferring the summary costs <span class="flag">— not verified</span></p>
+      <p class="ledger__how">Six passes run before the model summary does, and how much room each one buys is measured. What the assistant loses by not getting a narrative summary for six compactions is not: this keeps verbatim tool calls and prose, which is a different thing from a story about them. <code>maxPasses</code> exists so the summary happens eventually, and its value is a judgement, not a result.</p>
     </div>
     <div class="ledger__row ledger__row--open">
       <p class="ledger__claim">The engine calling <code>session.compact</code> live <span class="flag">— not verified</span></p>
@@ -2559,6 +2676,29 @@ if (tl && sweepCanvas && sweepSection && sweepCanvas.getContext) {
     freedEl.textContent = fmt.format(freed);
     draw();
     finish(freed, order.find((x) => x.keep >= tl.floor));
+  }
+}
+
+/* ── the ladder ────────────────────────────────────────────────────────────
+   The figure ships settled — every bar is in the markup, written there by
+   eval/passes.ts. This only arms it and lets it draw once, in order, when it
+   comes on screen, so what a reader sees is six refills of the same window
+   rather than six bars that were always there. Nothing here knows any numbers. */
+{
+  const ladder = document.getElementById('ladder');
+  const still = matchMedia('(prefers-reduced-motion: reduce)');
+  if (ladder && !still.matches && 'IntersectionObserver' in window) {
+    const bars = [...ladder.querySelectorAll('.ladder__back')];
+    for (const bar of bars) bar.closest('.ladder__row').classList.add('reveal--armed');
+    const watch = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        watch.disconnect();
+        bars.forEach((bar, i) => setTimeout(
+          () => bar.closest('.ladder__row').classList.remove('reveal--armed'), i * 170));
+      }
+    }, { threshold: 0.3 });
+    watch.observe(ladder);
   }
 }
 

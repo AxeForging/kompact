@@ -233,6 +233,62 @@ describe('published figures match eval/RESULTS.md', () => {
     });
   });
 
+  /**
+   * The ladder figure in section 03.
+   *
+   * Every row is written by `eval/passes.ts --publish`, including the sentence
+   * above it — which is the point of these three. The sentence used to say "the
+   * sixth" as hand-typed prose beside a figure that draws however many passes
+   * the measurement found, and on a page whose rule is that no number is typed
+   * by hand that was the wrong kind of six.
+   */
+  describe('the compaction ladder', () => {
+    const page = read('docs/index.html');
+    const rows = page.match(/<li class="ladder__row[^"]*"/g) ?? [];
+    const refused = rows.filter((row) => row.includes('ladder__row--over'));
+    const taken = rows.length - refused.length;
+
+    it('draws the pass that was refused, not only the ones that were taken', () => {
+      expect(rows.length, 'no ladder rows in the page').toBeGreaterThan(1);
+      expect(refused.length, 'the hand-over row is missing or duplicated').toBe(1);
+    });
+
+    it('never draws more taken passes than the shipped ceiling allows', () => {
+      const hook = read('hooks/kompact.ts');
+      const ceiling = Number(/maxPasses: (\d+)/.exec(hook)?.[1]);
+      expect(Number.isFinite(ceiling)).toBe(true);
+      expect(taken).toBeLessThanOrEqual(ceiling);
+    });
+
+    it('counts the same passes in its sentence as it draws', () => {
+      const words = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh',
+        'eighth', 'ninth', 'tenth'];
+      expect(page, `the sentence should say "the ${words[taken - 1]}" for ${taken} taken passes`)
+        .toContain(`runs after the\n    ${words[taken - 1]} of them rather than the first`);
+    });
+  });
+
+  /**
+   * The verification ledger counts itself.
+   *
+   * The heading read "Including the one that was not" while four rows carried
+   * the not-verified flag, and then five. A page that asks to be checked on its
+   * arithmetic cannot miscount its own open claims.
+   */
+  it('says how many claims are open and how many are checked', () => {
+    const page = read('docs/index.html');
+    const body = page.slice(page.indexOf('<main>'));
+    const rows = [...body.matchAll(/<div class="ledger__row( ledger__row--open)?">/g)];
+    const open = rows.filter((row) => row[1]).length;
+    const checked = rows.length - open;
+    const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight',
+      'nine', 'ten', 'eleven', 'twelve'];
+    const heading = /<h2 id="checked-h">([^<]*)<\/h2>/.exec(body)?.[1] ?? '';
+    expect(heading.toLowerCase(), `${checked} checked and ${open} open`)
+      .toBe(`${words[checked]} claims checked, ${words[open]} not.`);
+    expect(page).toContain(`And the ${checked} claims that are verified`);
+  });
+
   // A figure that was corrected once tends to survive somewhere.
   const published = [
     'README.md', 'CONTRIBUTING.md', 'CHANGELOG.md', 'DESIGN-BRIEF.md', '.impeccable.md',

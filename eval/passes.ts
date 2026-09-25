@@ -118,6 +118,10 @@ async function runSession(all: readonly Message[]): Promise<Pass[]> {
   return passes;
 }
 
+const PUBLISH = args.includes('--publish');
+type Row = { name: string; messages: number; passes: Pass[] };
+const rows: Row[] = [];
+
 const paths = walk(join(homedir(), '.claude', 'projects'))
   .map((path) => ({ path, size: statSync(path).size }))
   .sort((a, b) => b.size - a.size)
@@ -148,6 +152,7 @@ for (const { path } of paths) {
     (ppByPass[index] ??= []).push(pass.pp);
   });
   const name = path.split('/').pop()?.slice(0, 8) ?? '?';
+  rows.push({ name, messages: messages.length, passes });
   console.log(
     `${name.padEnd(18)}${String(messages.length).padStart(7)}${String(taken.length).padStart(8)}` +
     `${passes.map((p) => `${p.pp.toFixed(1)}${p.taken ? '' : '*'}`).join(' ').padStart(30)}` +
@@ -186,3 +191,79 @@ for (const pp of [3, 4, 5, 7, 10]) {
   console.log(`  minFreedPercent  ${String(pp).padStart(5)}  takes ${String(taken).padStart(3)} of ${everyPass.length}`);
 }
 console.log(`\nratio seen per pass: ${everyPass.map((p) => ratioOf(p).toFixed(2)).join(' ')}`);
+
+
+/**
+ * The figure on the landing page.
+ *
+ * Same contract as `eval/demo.ts` and `eval/signals-page.ts`: the numbers are
+ * written into the markup by the script that measured them, so the settled
+ * figure is there with scripting off and no number on the page was typed by
+ * hand. The animation replays what is already rendered.
+ */
+if (PUBLISH) {
+  const { writeFileSync, readFileSync } = await import('node:fs');
+  // The longest loop, which is the one the claim is about. A session that takes
+  // one pass is not a ladder and would make the figure say less than the table.
+  const best = [...rows].sort(
+    (a, b) => b.passes.filter((p) => p.taken).length - a.passes.filter((p) => p.taken).length,
+  )[0];
+  if (!best) throw new Error('no session looped; nothing to publish');
+  const taken = best.passes.filter((pass) => pass.taken);
+  const shown = best.passes.map((pass) => ({
+    from: (100 * pass.tokensBefore) / WINDOW,
+    to: (100 * pass.tokensAfter) / WINDOW,
+    ms: Math.round(pass.ms),
+    taken: pass.taken,
+  }));
+  const medianMs = [...taken.map((pass) => pass.ms)].sort((a, b) => a - b)[
+    Math.floor(taken.length / 2)] ?? 0;
+  const medianPp = [...taken.map((pass) => pass.pp)].sort((a, b) => a - b)[
+    Math.floor(taken.length / 2)] ?? 0;
+  const avoided = rows.reduce((n, r) => n + r.passes.filter((p) => p.taken).length, 0);
+  const ordinal = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh',
+    'eighth', 'ninth', 'tenth'][taken.length - 1] ?? `${taken.length}th`;
+
+  const bar = (row: { from: number; to: number; ms: number; taken: boolean }, index: number): string => {
+    const label = row.taken ? `pass ${index + 1}` : 'hand over';
+    const note = row.taken
+      ? `<span class="ladder__num">&#8722;${(row.from - row.to).toFixed(1)}<span class="ladder__unit">pts</span></span>` +
+        `<span class="ladder__ms">${row.ms}&#8239;ms</span>`
+      : `<span class="ladder__num ladder__num--under">&#8722;${(row.from - row.to).toFixed(1)}<span class="ladder__unit">pts</span></span>` +
+        `<span class="ladder__ms">below the ${FLOOR}&#8209;point floor</span>`;
+    return `      <li class="ladder__row${row.taken ? '' : ' ladder__row--over'}">` +
+      `<span class="ladder__label">${label}</span>` +
+      `<span class="ladder__track"><span class="ladder__held" style="--w:${row.to.toFixed(1)}%"></span>` +
+      `<span class="ladder__back" style="--l:${row.to.toFixed(1)}%;--w:${(row.from - row.to).toFixed(1)}%"></span></span>` +
+      note + '</li>';
+  };
+
+  // The sentence is generated too. It carried "six" as prose beside a figure
+  // that draws however many passes the measurement found, which is exactly the
+  // kind of number this page does not let anyone type.
+  const markup = `  <p>
+    One compaction is not the product; the loop is. The engine asks at ${AT}% of the window, this
+    answers, you keep working, and it asks again. Each answer costs about
+    <span class="num val">${medianMs}&#8239;ms</span> and hands back
+    <span class="num val">${medianPp.toFixed(0)} points</span> of window &#8212; so the model
+    summary, which is a model call and rewrites your session into prose, runs after the
+    ${ordinal} of them rather than the first.
+  </p>
+  <ol class="ladder" id="ladder">\n${shown.map(bar).join('\n')}\n  </ol>
+  <p class="caption">One real session of ${best.messages.toLocaleString()} messages, replayed against a
+    ${(WINDOW / 1000)}k&#8209;token window. The dark part of each bar is what the session was still
+    holding; the red part is what that pass handed back. Across ${rows.length} sessions on this
+    machine the loop answered <b>${avoided}</b> compactions that would otherwise each have been a
+    model summary. Snapshot of one machine's transcripts, which grow as you work &#8212;
+    <code>eval/passes.ts</code> re-runs it on yours.</p>`;
+
+  const page = join(import.meta.dirname, '..', 'docs', 'index.html');
+  const html = readFileSync(page, 'utf8');
+  const open = '  <!-- passes:render -->\n';
+  const close = '\n  <!-- /passes:render -->';
+  const from = html.indexOf(open);
+  const to = html.indexOf(close);
+  if (from < 0 || to < 0) throw new Error(`no passes:render markers in ${page}`);
+  writeFileSync(page, html.slice(0, from + open.length) + markup + html.slice(to));
+  console.log(`\nspliced ${shown.length} rows into docs/index.html (${taken.length} taken)`);
+}
