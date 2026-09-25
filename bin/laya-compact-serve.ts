@@ -25,7 +25,7 @@ if (args.includes('--help') || args.includes('-h')) {
   --help           this
 
 POST /v1/systemone with {state, questions}; answers come back as nouls. No
-model is loaded and no GPU is touched — it is thirteen coefficients over facts
+model is loaded and no GPU is touched — it is twelve coefficients over facts
 already present in the state. For Codex CLI, put this in
 ~/.codex/fast-jev-compaction.json:
 

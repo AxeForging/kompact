@@ -34,6 +34,33 @@ function policyRow(name: string): { freed: string; kept: string; charsKept: stri
   return { freed: freed!, kept: kept!, charsKept: charsKept! };
 }
 
+/** `total   1282   1,131,093   882,442   22.0%   104ms` — the sessions block. */
+function sessionsTotal(): { calls: string; freed: string; ms: string } | undefined {
+  const line = results.split('\n').find((l) => /^total\s+\d/.test(l));
+  if (!line) return undefined;
+  const [, calls, , , freed, ms] = line.trim().split(/\s+/);
+  return { calls: calls!, freed: freed!, ms: ms!.replace('ms', '') };
+}
+
+/** `multilingual   8   700 ms   773 ms   87.5 ms   792` — one latency cell. */
+function latency(checkpoint: string, questions: number): string | undefined {
+  return new RegExp(`^${checkpoint}\\s+${questions}\\s+(\\d+) ms`, 'm').exec(results)?.[1];
+}
+
+const scalar = (re: RegExp): string | undefined => re.exec(results)?.[1];
+
+const sessions = sessionsTotal();
+const bench = {
+  coldStart: scalar(/cold start:\s+([\d.]+) s/),
+  warmMb: scalar(/memory:\s+(\d+) MB resident/),
+  coldMb: scalar(/memory:\s+(\d+) MB resident \(pid \d+\)\n  gpu after/),
+  oneSession: scalar(/fastest checkpoint: ([\d.]+) s/),
+  ratio: scalar(/ratio:\s+(\d+)x/),
+  multilingual8: latency('multilingual', 8),
+  english8: latency('english', 8),
+  typed8: latency('typed-decisions', 8),
+};
+
 const logistic = scorerRow('logistic (features)');
 const laya = scorerRow('laya typed-decisions/direct');
 const sizeOnly = scorerRow('output size only');
@@ -60,6 +87,61 @@ describe('published figures match eval/RESULTS.md', () => {
       });
     }
   }
+
+  // The blocks that drifted while this test watched the other two. Both are
+  // generated into eval/RESULTS.md, which is committed, so this runs on a runner
+  // even though neither measurement can be taken there.
+  it('quotes the measured session totals, not an older corpus', () => {
+    expect(sessions, 'eval/RESULTS.md has no sessions block').toBeDefined();
+    const page = read('docs/index.html');
+    expect(page, 'the page quotes a call count from an older corpus')
+      .toContain(Number(sessions!.calls).toLocaleString('en-GB'));
+    expect(page).toContain(`${sessions!.freed}`);
+    expect(page).toContain(`${sessions!.ms} ms`);
+  });
+
+  // Not "every file must quote every figure" — a file may legitimately mention
+  // only some. This fires where a file *does* make the claim and the value has
+  // gone stale, which is exactly how the last four drifted.
+  it('quotes no stale sidecar figure anywhere', () => {
+    expect(bench.coldStart, 'eval/RESULTS.md has no sidecar block').toBeDefined();
+    const claims: Array<[RegExp, string, string]> = [
+      [/(\d+)x the time/g, bench.ratio!, 'ratio'],
+      [/(\d+)\u00d7 the time/g, bench.ratio!, 'ratio'],
+      [/([\d.]+) s to score a session/g, bench.oneSession!, 'one-session time'],
+      [/takes \*\*([\d.]+) s on the fastest/g, bench.oneSession!, 'one-session time'],
+      [/starts in ([\d.]+) s/g, bench.coldStart!, 'cold start'],
+      [/([\d.]+) s to start/g, bench.coldStart!, 'cold start'],
+      [/cold start to first answer \| \*\*([\d.]+) s\*\*/g, bench.coldStart!, 'cold start'],
+      [/scorer scores in\s+(\d+) ms/g, sessions!.ms, 'built-in scoring time'],
+      [/against (\d+) ms for the built-in/g, sessions!.ms, 'built-in scoring time'],
+    ];
+    for (const path of ['README.md', 'docs/index.html', 'CHANGELOG.md', 'skills/laya-compact/SKILL.md']) {
+      const text = read(path);
+      for (const [pattern, want, what] of claims) {
+        for (const match of text.matchAll(pattern)) {
+          expect(match[1], `${path} quotes a stale ${what}: "${match[0]}"`).toBe(want);
+        }
+      }
+    }
+  });
+
+  it('quotes the measured latencies', () => {
+    const page = read('docs/index.html');
+    const readme = read('README.md');
+    for (const ms of [bench.multilingual8!, bench.english8!, bench.typed8!]) {
+      const pretty = Number(ms).toLocaleString('en-GB');
+      expect(`${readme}\n${page}`, `no file quotes the measured ${ms} ms`)
+        .toMatch(new RegExp(`\\b(${ms}|${pretty.replace(',', ',')})\\b`));
+    }
+  });
+
+  it('states the number of tests it has', () => {
+    const count = read('docs/index.html').match(/<b>(\d+)<\/b> tests/)?.[1];
+    expect(count, 'the page states no test count').toBeDefined();
+    expect(read('README.md'), 'README and the page disagree on the test count')
+      .toContain(`# ${count} tests`);
+  });
 
   // A figure that was corrected once tends to survive somewhere.
   const published = [

@@ -364,7 +364,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     the one path that uses either.
   </p>
   <div class="colophon reveal" style="--d:170ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>114</b> tests</span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>117</b> tests</span>
     <span><b>0</b> network calls by default</span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
   <nav class="contents reveal" style="--d:210ms" aria-label="Contents">
@@ -379,7 +379,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p class="lede">
     The plugin started as a port onto <a rel="noopener" href="https://github.com/NandhaKishorM/laya">Laya</a>,
     a 322M-parameter decision model that runs locally. Measured against 1,063 tool calls
-    labelled from 18 real sessions, a thirteen-coefficient logistic regression over facts
+    labelled from 18 real sessions, a twelve-coefficient logistic regression over facts
     already computed for free beat every Laya checkpoint and question wording.
   </p>
 
@@ -401,7 +401,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
           <td></td>
         </tr>
         <tr class="reveal" style="--d:220ms">
-          <th scope="row" class="row__name">Built&#8209;in scorer<span>13 coefficients</span></th>
+          <th scope="row" class="row__name">Built&#8209;in scorer<span>12 fitted coefficients</span></th>
           <td class="row__plot">
             <div class="track">
               <div class="bar bar--best" style="--w:79%;--d:260ms"></div>
@@ -526,7 +526,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 <section class="wrap" id="cost">
   <p class="rubric"><span class="rubric__n">03</span>Cost</p>
-  <h2>108&nbsp;ms to score 1,071 tool calls.</h2>
+  <h2>139&nbsp;ms to score 1,442 tool calls.</h2>
   <p class="lede">
     Compaction stops being a model call and becomes arithmetic. These are whole session
     logs, so the totals span more than one context window, so the ratio is what transfers.
@@ -539,17 +539,17 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         <th scope="col" class="n">Freed</th><th scope="col" class="n">Scoring</th>
       </tr></thead>
       <tbody>
-        <tr><th scope="row">25e65eab</th><td class="n">473</td><td class="n">273,749</td><td class="n">214,329</td><td class="n val">21.7%</td><td class="n">50 ms</td></tr>
-        <tr><th scope="row">20628921</th><td class="n">292</td><td class="n">376,317</td><td class="n">260,955</td><td class="n val">30.7%</td><td class="n">35 ms</td></tr>
-        <tr><th scope="row">agent-aca4b</th><td class="n">58</td><td class="n">32,560</td><td class="n">23,815</td><td class="n val">26.9%</td><td class="n">4 ms</td></tr>
-        <tr><th scope="row">78d7d176</th><td class="n">248</td><td class="n">237,577</td><td class="n">215,664</td><td class="n val">9.2%</td><td class="n">18 ms</td></tr>
-        <tr><th scope="row">Total</th><td class="n">1,071</td><td class="n">920,203</td><td class="n">714,763</td><td class="n val">22.3%</td><td class="n">108 ms</td></tr>
+        <tr><th scope="row">25e65eab</th><td class="n">473</td><td class="n">273,749</td><td class="n">215,853</td><td class="n val">21.1%</td><td class="n">51 ms</td></tr>
+        <tr><th scope="row">20628921</th><td class="n">576</td><td class="n">587,002</td><td class="n">397,801</td><td class="n val">32.2%</td><td class="n">53 ms</td></tr>
+        <tr><th scope="row">agent-aca4b</th><td class="n">58</td><td class="n">32,560</td><td class="n">23,815</td><td class="n val">26.9%</td><td class="n">3 ms</td></tr>
+        <tr><th scope="row">78d7d176</th><td class="n">335</td><td class="n">391,638</td><td class="n">366,311</td><td class="n val">6.5%</td><td class="n">32 ms</td></tr>
+        <tr><th scope="row">Total</th><td class="n">1,442</td><td class="n">1,284,949</td><td class="n">1,003,780</td><td class="n val">21.9%</td><td class="n">139 ms</td></tr>
       </tbody>
     </table>
   </div>
   <p class="caption">
     Modest on purpose. An earlier default freed 65.9% of these same sessions, and did it by
-    deleting almost everything that mattered. Measured 25 September 2026 on one machine’s own
+    deleting almost everything that mattered. Measured on one machine’s own
     transcripts, which grow as work continues — the per-session column is the figure that carries.
   </p>
 
@@ -597,19 +597,19 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <div class="scroller">
     <table class="data">
       <thead><tr>
-        <th scope="col">Scoring one session, 1,071 calls</th><th scope="col" class="n">Time</th>
+        <th scope="col">Scoring one session, 1,442 calls</th><th scope="col" class="n">Time</th>
         <th scope="col" class="n">Memory held</th><th scope="col" class="n">VRAM</th>
         <th scope="col" class="n">Cold start</th>
       </tr></thead>
       <tbody>
-        <tr class="same"><th scope="row">Built-in scorer</th><td class="n mark">108 ms</td><td class="n">none</td><td class="n">none</td><td class="n">none</td></tr>
-        <tr><th scope="row">Laya, fastest checkpoint</th><td class="n">14.5 s</td><td class="n">4.9 GB</td><td class="n">~5.0 GB</td><td class="n">7.6 s</td></tr>
+        <tr class="same"><th scope="row">Built-in scorer</th><td class="n mark">139 ms</td><td class="n">none</td><td class="n">none</td><td class="n">none</td></tr>
+        <tr><th scope="row">Laya, fastest checkpoint</th><td class="n">21.5 s</td><td class="n">4.9 GB</td><td class="n">~5.0 GB</td><td class="n">7.7 s</td></tr>
       </tbody>
     </table>
   </div>
   <p class="caption">
-    134× the time, for a lower AUC, on an RTX 4060 Laptop. Per request the fastest checkpoint
-    answers eight questions in 735 ms and the slowest in 1,943 ms. Fine-tuning moves the AUC; it
+    155× the time, for a lower AUC, on an RTX 4060 Laptop. Per request the fastest checkpoint
+    answers eight questions in 736 ms and the slowest in 2,228 ms. Fine-tuning moves the AUC; it
     does not move this table.
   </p>
 </section>
@@ -676,8 +676,16 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
   <p>
     <strong>One feature does most of the work.</strong> Output size alone scores 0.876 with a
-    quarter of the variance. The other twelve coefficients earn their place on characters freed
-    at a given safety level, not on ranking.
+    quarter of the variance. The other coefficients earn their place on characters freed at a
+    given safety level, not on ranking.
+  </p>
+  <p>
+    <strong>It has never seen a <code>Grep</code>.</strong> The corpus contains no
+    <code>Grep</code> and no <code>Glob</code> call at all, so that feature never fired during
+    fitting and its weight is <span class="num val">0.0</span> — zero by absence, not by
+    measurement. A search falls to the reference level, alongside <code>WebFetch</code> and
+    <code>Agent</code>, about which this scorer also knows nothing. Thirteen features were
+    defined; <span class="num val">twelve</span> were fitted.
   </p>
   <p>
     <strong>The shipped coefficients are one person’s sessions.</strong> A different tool mix

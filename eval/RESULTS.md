@@ -11,7 +11,7 @@ the first run of this scorer reported 0.918, which is inside the range below but
 nowhere near its centre.
 
 ```
-corpus (local labels): 1063 calls, 78 positives, 18 sessions
+corpus (local labels), laya answers (local scores): 1063 calls, 78 positives, 18 sessions
 10 grouped splits, 30% of sessions held out each time
 
 scorer                             AUC mean     sd    min    max  drop@90%
@@ -110,12 +110,12 @@ one corpus, and the per-session column as the range that matters.
 ```
 session              calls  tok before  tok after    freed  scoring
 -------------------------------------------------------------------
-25e65eab-4941-41ea     473     273,749    215,853    21.1%     43ms
-20628921-046d-4fc0     452     490,913    329,913    32.8%     36ms
-78d7d176-4c84-4936     299     333,871    312,861     6.3%     21ms
-agent-aca4b44fdb68      58      32,560     23,815    26.9%      4ms
+25e65eab-4941-41ea     473     273,749    215,853    21.1%     51ms
+20628921-046d-4fc0     576     587,002    397,801    32.2%     53ms
+78d7d176-4c84-4936     335     391,638    366,311     6.5%     32ms
+agent-aca4b44fdb68      58      32,560     23,815    26.9%      3ms
 -------------------------------------------------------------------
-total                 1282   1,131,093    882,442    22.0%    104ms
+total                 1442   1,284,949  1,003,780    21.9%    139ms
 ```
 
 ## What the sidecar costs to run — `eval/laya-bench.ts`
@@ -126,39 +126,39 @@ of the router; only latency is per checkpoint.
 
 ```
 sidecar: http://127.0.0.1:8000/v1/systemone
-memory:  4929 MB resident (pid 1407371)
-gpu:     NVIDIA GeForce RTX 4060 Laptop GPU, 169 MiB, 8188 MiB
+memory:  4945 MB resident (pid 1407371)
+gpu:     NVIDIA GeForce RTX 4060 Laptop GPU, 175 MiB, 8188 MiB
 
 All three checkpoints are loaded by one process, so the memory above is the
 whole router. Latency is per checkpoint, 5 runs, median and worst:
 
 checkpoint           questions    median    worst  per question  input tok
 --------------------------------------------------------------------------
-english                      1    377 ms   646 ms      377.1 ms        104
-english                      2    554 ms   569 ms      277.2 ms        208
-english                      4    953 ms   961 ms      238.2 ms        416
-english                      8   1772 ms  2120 ms      221.5 ms        832
-multilingual                 1    140 ms   152 ms      140.0 ms         99
-multilingual                 2    214 ms   250 ms      106.9 ms        198
-multilingual                 4    367 ms   384 ms       91.8 ms        396
-multilingual                 8    700 ms   773 ms       87.5 ms        792
-typed-decisions              1    465 ms   715 ms      464.5 ms        104
-typed-decisions              2    680 ms   692 ms      340.1 ms        208
-typed-decisions              4   1186 ms  1226 ms      296.5 ms        416
-typed-decisions              8   1995 ms  2195 ms      249.3 ms        832
+english                      1    392 ms   665 ms      391.8 ms        104
+english                      2    584 ms   590 ms      291.9 ms        208
+english                      4    968 ms   974 ms      241.9 ms        416
+english                      8   1684 ms  1689 ms      210.5 ms        832
+multilingual                 1    123 ms   134 ms      122.7 ms         99
+multilingual                 2    183 ms   188 ms       91.6 ms        198
+multilingual                 4    310 ms   329 ms       77.4 ms        396
+multilingual                 8    736 ms   771 ms       92.0 ms        792
+typed-decisions              1    548 ms   738 ms      548.0 ms        104
+typed-decisions              2    800 ms   824 ms      400.0 ms        208
+typed-decisions              4   1259 ms  1279 ms      314.7 ms        416
+typed-decisions              8   2228 ms  2284 ms      278.5 ms        832
 
 input tok is usage.input_tokens, which is the per-question row count times the
 number of questions — not the size of the state.
 
-Scoring one session: 1071 calls, 2 questions a request, 8 in flight.
-  fastest checkpoint: 15.0 s and 4945 MB resident held for the session
-  built-in scorer:    0.11 s and no process at all
-  ratio:              139x the time
-(1071 calls and 108 ms are this machine's own measurement from
- eval/sessions.ts, so the two sides are the same work.)
+Scoring one session: 1442 calls, 2 questions a request, 8 in flight.
+  fastest checkpoint: 21.5 s and 4945 MB resident held for the session
+  built-in scorer:    0.14 s and no process at all
+  ratio:              155x the time
+(1442 calls and 139 ms come from the eval/sessions.ts run in
+ this same report, so the two sides are the same work.)
 
-cold start:   7.1 s to first answer
-  memory:     3095 MB resident (pid 1861357)
-  gpu after:  NVIDIA GeForce RTX 4060 Laptop GPU, 5166 MiB, 8188 MiB
-  gpu before: NVIDIA GeForce RTX 4060 Laptop GPU, 169 MiB, 8188 MiB
+cold start:   7.7 s to first answer
+  memory:     3084 MB resident (pid 1992025)
+  gpu after:  NVIDIA GeForce RTX 4060 Laptop GPU, 5172 MiB, 8188 MiB
+  gpu before: NVIDIA GeForce RTX 4060 Laptop GPU, 175 MiB, 8188 MiB
 ```

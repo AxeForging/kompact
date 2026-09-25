@@ -18,7 +18,7 @@ TypeSafe's hosted Jev model.
   calls from 18 real sessions, AUC 0.895 ± 0.073 against 0.721 ± 0.021 for the
   best Laya checkpoint and wording, winning 10 of 10 paired splits. With the
   shipped defaults it frees 42.4% of droppable tool output on the labelled
-  corpus and 9–31% of a real session's tokens, scoring ~1,000 calls in ~100 ms.
+  corpus and 6–32% of a real session's tokens, scoring ~1,400 calls in ~140 ms.
   The 50–88% figure an earlier draft of this entry carried came from the
   threshold-only policy, which also dropped 74 of 78 outputs that were reused
   later; see `eval/RESULTS.md`.
@@ -28,9 +28,9 @@ TypeSafe's hosted Jev model.
   costs nothing: reused-output retention is unchanged at 84.6%.
 - **Laya stays available** behind the same `Asker` seam for anyone with a
   checkpoint fine-tuned on their own sessions, and is now measurable rather than
-  only comparable: `eval/laya-bench.ts` reports 7.6 s to start, ~4.9 GB resident,
-  ~5.0 GB of VRAM, and 14.5 s to score a session the built-in scorer scores in
-  108 ms.
+  only comparable: `eval/laya-bench.ts` reports 7.7 s to start, ~4.9 GB resident,
+  ~5.0 GB of VRAM, and 21.5 s to score a session the built-in scorer scores in
+  139 ms.
 - **Local calibration.** `npm run calibrate` refits on your own transcripts and
   emits `LAYA_COMPACT_WEIGHTS`; the shipped coefficients come from one person's
   sessions and should not be assumed to transfer.

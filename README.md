@@ -68,7 +68,7 @@ which `npm run eval:results` regenerates and
 
 | scorer | AUC (mean ± sd) | worst split | chars freed at 90% safety |
 |---|---|---|---|
-| **built-in logistic, 13 features** | **0.895 ± 0.073** | 0.688 | **38.8%** |
+| **built-in logistic, 12 fitted features** | **0.895 ± 0.073** | 0.688 | **38.8%** |
 | output size alone | 0.876 ± 0.011 | 0.855 | 11.4% |
 | laya typed-decisions, "direct" | 0.721 ± 0.021 | 0.686 | 12.1% |
 | laya multilingual, "direct" | 0.667 ± 0.022 | 0.644 | 4.5% |
@@ -83,9 +83,15 @@ puts it at AUC 0.862 with ECE 0.019, an order of magnitude better calibrated
 than Laya's 0.42-0.71, which is what makes `keepThreshold` mean anything.
 
 Note also that **output size alone** scores 0.876 with a quarter of the
-variance. Most of the signal is "big outputs get reused"; the other twelve
-features earn their place on the product metric (39% of characters freed against
-11%), not on ranking.
+variance. Most of the signal is "big outputs get reused"; the other features
+earn their place on the product metric (39% of characters freed against 11%),
+not on ranking.
+
+And one of the thirteen was never fitted. **The corpus contains no `Grep` and no
+`Glob` call**, so that feature never fired and its coefficient is `0.0` — zero by
+absence, not by measurement. A search scores at the reference level, alongside
+`WebFetch` and `Agent`, about which this scorer also knows nothing. If your work
+is search-heavy, `npm run calibrate` is not optional politeness.
 
 This is not a criticism of Laya. Its own README says the base checkpoints score
 near chance on typed-decision workflows and that it should be treated as a fast
@@ -117,7 +123,7 @@ CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude --plugin-dir .
 The plugin ships one skill, `laya-compact`, covering how to read its decision
 log, choose a threshold, calibrate, and diagnose a compaction that kept or
 dropped the wrong thing. What it costs every session is its 80-word
-description; the 3 KB body loads only when the skill is invoked.
+description; the 6 KB body loads only when the skill is invoked.
 
 Claude Code's `session.compact` hook returns a replacement message list, so the
 plugin *replaces* compaction rather than repairing it: user and assistant text is
@@ -231,19 +237,19 @@ Measured on one machine, RTX 4060 Laptop, one `laya-serve` process
 
 | | |
 |---|---|
-| cold start to first answer | **7.6 s** |
+| cold start to first answer | **7.7 s** |
 | resident memory | **3.1 GB** at first answer, **4.9 GB** warm |
 | VRAM | **~5.0 GB** |
-| latency, `multilingual`, 8 questions | **735 ms** median |
-| latency, `english` / `typed-decisions`, 8 questions | 1,820 ms / 1,943 ms |
+| latency, `multilingual`, 8 questions | **736 ms** median |
+| latency, `english` / `typed-decisions`, 8 questions | 1,684 ms / 2,228 ms |
 
 `laya-serve` loads every checkpoint at startup and routes per request, so memory
 and start-up are properties of the router, not of the checkpoint you pick. Only
 latency is per checkpoint.
 
-Scoring one real session — 1,071 calls, two questions a request, eight in flight
-— takes **14.5 s on the fastest checkpoint against 108 ms for the built-in
-scorer**, holding ~5 GB the whole time. That is 134x the time for a lower AUC,
+Scoring one real session — 1,442 calls, two questions a request, eight in flight
+— takes **21.5 s on the fastest checkpoint against 139 ms for the built-in
+scorer**, holding ~5 GB the whole time. That is 155x the time for a lower AUC,
 which is the arithmetic behind the default. Fine-tuning changes the AUC; it does
 not change this table.
 
@@ -348,7 +354,7 @@ And a live Codex CLI, which needs >= 0.155 (this machine has 0.131).
 ```sh
 bun install
 npm run typecheck   # src + test + eval + hooks
-npm run test        # 72 tests
+npm run test        # 117 tests
 npm run validate    # plugin manifest
 ```
 

@@ -84,7 +84,10 @@ export function featureVector(state: string, tool: string, isError: boolean): nu
     1,
     tool === 'Read' ? 1 : 0,
     tool === 'Bash' ? 1 : 0,
-    tool === 'Edit' || tool === 'Write' || tool === 'MultiEdit' ? 1 : 0,
+    // `NotebookEdit` belongs here: `decideCall`'s never-drop set names it, and
+    // leaving it out of the feature made the two disagree. The corpus has none,
+    // so this changes no fitted weight.
+    tool === 'Edit' || tool === 'Write' || tool === 'MultiEdit' || tool === 'NotebookEdit' ? 1 : 0,
     tool === 'Grep' || tool === 'Glob' ? 1 : 0,
     isError ? 1 : 0,
     facts.includes('changed afterwards') ? 1 : 0,
@@ -109,6 +112,13 @@ export function score(weights: readonly number[], features: readonly number[]): 
  * Fitted on 1063 labelled calls from 18 real sessions (`eval/fit.ts`).
  * Leave-one-session-out: AUC 0.862, ECE 0.019.
  * `size=long` and `age=a while back` are the reference levels, hence absent.
+ *
+ * **`tool=Grep|Glob` is 0.0 because it was never trained, not because it does
+ * not matter.** The corpus contains no `Grep` and no `Glob` call at all, so the
+ * feature never fired during fitting and its weight never left zero. A Grep or a
+ * Glob therefore scores at the reference level — the same as a `WebFetch` or an
+ * `Agent` — and this scorer has no evidence about any of them. Anyone whose work
+ * is search-heavy should run `npm run calibrate`; that is what it is for.
  */
 export const KEEP_RESULT_WEIGHTS: readonly number[] = [
   -0.515317, -0.479700, -1.355646, -2.357281, 0.0, -0.853392, 2.120621, 0.034102,

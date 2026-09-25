@@ -137,10 +137,13 @@ console.log(`\ninput tok is usage.input_tokens, which is the per-question row co
 console.log(`number of questions — not the size of the state.`);
 
 // The comparison that decides whether any of this is worth running.
-const CALLS = 1_071;
+// Passed in by `eval/results.ts` from the `sessions.ts` run it just captured,
+// so the two sides of the comparison are the same work. Hard-coding them here
+// is how they drifted: the session corpus grows and these did not.
+const CALLS = Number(flag('--calls', '1071'));
+const BUILT_IN_MS = Number(flag('--built-in-ms', '108'));
 const PER_REQUEST = 2;
 const CONCURRENCY = 8;
-const BUILT_IN_MS = 108;
 const fastest = await latency('multilingual', PER_REQUEST, 5).catch(() => undefined);
 if (fastest) {
   const requests = Math.ceil(CALLS / PER_REQUEST);
@@ -151,8 +154,8 @@ if (fastest) {
     `${residentMb().replace(/ \(pid \d+\)/, '')} held for the session`);
   console.log(`  built-in scorer:    ${(BUILT_IN_MS / 1000).toFixed(2)} s and no process at all`);
   console.log(`  ratio:              ${(wall / BUILT_IN_MS).toFixed(0)}x the time`);
-  console.log(`(${CALLS} calls and ${BUILT_IN_MS} ms are this machine's own measurement from`);
-  console.log(` eval/sessions.ts, so the two sides are the same work.)`);
+  console.log(`(${CALLS} calls and ${BUILT_IN_MS} ms come from the eval/sessions.ts run in`);
+  console.log(` this same report, so the two sides are the same work.)`);
 }
 
 if (args.includes('--cold')) await coldStart(flag('--cold-port', '8001'));
