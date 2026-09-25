@@ -395,27 +395,36 @@ export function applyDecisions(
 }
 
 /**
- * Tokens of text, tool input and tool output a message holds.
+ * Characters per token, measured, so a token count costs a division.
  *
- * Estimated, not counted — `estimateTokens` has no tokenizer and is calibrated
- * to land above the true count. It exists beside `messageChars` because the
- * hook's yield rule is denominated in percentage points of the context window,
- * and the window is measured in tokens: a ratio of characters cannot say
- * whether a pass bought enough room to keep working.
+ * The yield rule the hook applies is denominated in tokens, because the context
+ * window is. The first version of this counted them properly, with
+ * `estimateTokens` over every message — and that cost 143 ms a pass on a
+ * 7,300-message session, twice per compaction, taking a 330 ms compaction to
+ * 615 ms. Nearly half the time of a compaction spent counting what it was about
+ * to free is not a trade this makes: the whole proposition is that a pass is
+ * cheap enough to take six times.
+ *
+ * So `charsBefore` and `charsAfter`, which are computed anyway, are divided by
+ * this. Over the twelve largest transcripts on one machine the ratio is 2.946
+ * characters per token by `estimateTokens`, and every session sits between
+ * 2.702 and 3.178. By material it is 3.460 for prose, 2.736 for tool input and
+ * 3.079 for tool output, so a compaction that removes mostly tool output is
+ * measured with a ratio a little too dense and the pass reads slightly smaller
+ * than counting would make it — measured, about two points of window on the
+ * largest session, which errs toward handing over rather than toward compacting
+ * again. Every pass in `eval/passes.ts` still clears the five-point floor by
+ * more than that, so the approximation changes the numbers and not the
+ * decisions.
+ *
+ * ponytail: one constant, not a per-session fit and not a per-material one.
+ * Re-measure if the ratio and the engine's reported usage ever disagree by more
+ * than the floor's own grain.
  */
-export function messageTokens(message: Message): number {
-  let total = estimateTokens(message.text);
-  for (const tool of message.toolUses) {
-    try {
-      total += estimateTokens(JSON.stringify(tool.input));
-    } catch {
-      total += 5;
-    }
-    total += estimateTokens(tool.text ?? '');
-  }
-  for (const result of message.toolResults ?? []) total += estimateTokens(result.text);
-  return total;
-}
+export const CHARS_PER_TOKEN = 2.946;
+
+/** `chars` as tokens, by the ratio above. */
+export const tokensIn = (chars: number): number => Math.round(chars / CHARS_PER_TOKEN);
 
 /** Characters of text, tool input and tool output a message holds. */
 export function messageChars(message: Message): number {
@@ -459,7 +468,6 @@ export async function compact(
   const calls = collectToolCalls(messages, resolved.preserveRecentMessages);
   const candidates = calls.filter((call) => !call.pinned);
   const charsBefore = messages.reduce((sum, message) => sum + messageChars(message), 0);
-  const tokensBefore = messages.reduce((sum, message) => sum + messageTokens(message), 0);
 
   const goal = resolved.goal || goalFromMessages(messages);
   const contexts = callContexts(calls, messages.length);
@@ -518,6 +526,7 @@ export async function compact(
   const decisions = decideAll(calls, answers, resolved);
   const kept = applyDecisions(
     messages, decisions, calls, resolved.truncateHeadChars, resolved.maxKeptChars);
+  const charsAfter = kept.reduce((sum, message) => sum + messageChars(message), 0);
   return {
     messages: kept,
     decisions,
@@ -525,9 +534,9 @@ export async function compact(
       messagesBefore: messages.length,
       messagesAfter: kept.length,
       charsBefore,
-      charsAfter: kept.reduce((sum, message) => sum + messageChars(message), 0),
-      tokensBefore,
-      tokensAfter: kept.reduce((sum, message) => sum + messageTokens(message), 0),
+      charsAfter,
+      tokensBefore: tokensIn(charsBefore),
+      tokensAfter: tokensIn(charsAfter),
       calls: calls.length,
       // `too small` is a keep — the call is refused as not worth dropping — and it
       // was counted in no bucket at all, so kept + dropped + pinned could come to

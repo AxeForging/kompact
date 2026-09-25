@@ -254,23 +254,25 @@ total                 1762   1,534,095  1,161,392    24.3%    190ms</pre></div>
 <p>Same caveat as <code>sessions.ts</code>: this machine's transcripts, which grow as you work, so it is a snapshot rather than a constant.</p>
 <div class="scroller" tabindex="0" role="region" aria-label="How many passes before the summary is due — measured output"><pre>window 200,000 tokens, compacting at 60%, floor 5 pp, ceiling 6 passes
 
-session       msgs  passes   pp reclaimed per pass          ms per pass
------------------------------------------------------------------------
-20628921      7085       6   11.2 10.8 10.6 10.3 8.9 8.4 4.6*  39 32 31 31 32 31 32
-25e65eab      1455       2   13.2 8.9 5.0*                     30 29 29
-78d7d176      1140       1   5.6 3.0*                          25 23
-agent-a2       294       1   5.6                               29
-agent-ad       201       1   5.3 3.7*                          24 25
+session       msgs  passes   pp reclaimed per pass         ms per pass
+----------------------------------------------------------------------
+20628921      7376       6   9.0 9.4 8.6 8.3 7.5 6.6 6.7†   15 10 10 8 8 8 8
+25e65eab      1455       2   12.4 7.4 3.7*                  20 15 13
+78d7d176      1140       1   5.7 3.4*                       8 15
+agent-a2       294       0   5.0*                           11
+agent-ad       201       0   5.0*                           6
 
-* = the pass that fell below the floor. That is the hand-over; it is not taken.</pre></div>
-<p><strong>11 engine summaries avoided across 5 sessions.</strong> Slowest single pass 39 ms.</p>
-<p>The decay is much flatter than compacting one transcript repeatedly suggests — 11.2, 10.8, 10.6, 10.3, 8.9, 8.4 percentage points on the largest session — because fresh tool output arrives between passes. What ends the loop is the floor, not exhaustion, and raising the ceiling past 6 changes nothing: at 8 and at 12 the same session still stops at 6, because the seventh pass reclaims 4.6 points and the floor refuses it. That is what makes the ceiling a backstop rather than the dial that decides anything.</p>
+* = refused by the floor, † = refused by the ceiling. Neither is taken, but only
+the first says the loop had run out of things worth freeing.</pre></div>
+<p><strong>9 engine summaries avoided across 3 sessions.</strong> Slowest single pass 20 ms.</p>
+<p>The decay is much flatter than compacting one transcript repeatedly suggests — 9.0, 9.4, 8.6, 8.3, 7.5, 6.6 percentage points on the largest session, the second pass reclaiming <em>more</em> than the first — because fresh tool output arrives between passes. Compacting a transcript against itself measures exhaustion and reports a decay production never sees.</p>
+<p>The ceiling binds on the largest session, and that is deliberate. Raised to 8 it runs 9.0 9.4 8.6 8.3 7.5 6.6 6.7 5.3 and stops on the floor at the ninth; at 12 it stops in the same place. So six is not where the loop runs out — it is where this hands over anyway, because what deferring the summary costs is not measured and a backstop whose value is a judgement should be the conservative one.</p>
 <h3 id="which-bar-to-use">Which bar to use</h3>
 <p>Every pass above, scored by both candidate rules:</p>
-<div class="scroller" tabindex="0" role="region" aria-label="How many passes before the summary is due — table (2)"><table class="data"><thead><tr><th>bar</th><th>passes taken, of 15</th></tr></thead><tbody><tr><th scope="row"><code>minReductionRatio</code> 0.25 <em>(what shipped)</em></th><td><strong>0</strong></td></tr><tr><th scope="row"><code>minReductionRatio</code> 0.15</th><td>5</td></tr><tr><th scope="row"><code>minReductionRatio</code> 0.08</th><td>11</td></tr><tr><th scope="row"><code>minFreedPercent</code> 3</th><td>14</td></tr><tr><th scope="row"><strong><code>minFreedPercent</code> 5</strong> <em>(shipped now)</em></th><td><strong>11</strong></td></tr><tr><th scope="row"><code>minFreedPercent</code> 7</th><td>8</td></tr><tr><th scope="row"><code>minFreedPercent</code> 10</th><td>5</td></tr></tbody></table></div>
-<p><code>minReductionRatio: 0.25</code> took none of them. It asks whether a pass was a large <em>fraction of the transcript</em>; the passes above run 0.05 to 0.22 of theirs, so the bar was never cleared, and kompact handed every one of these compactions to the model summary while it could still free ten points of window in under 35 ms.</p>
+<div class="scroller" tabindex="0" role="region" aria-label="How many passes before the summary is due — table (2)"><table class="data"><thead><tr><th>bar</th><th>passes taken, of 14</th></tr></thead><tbody><tr><th scope="row"><code>minReductionRatio</code> 0.25 <em>(what shipped)</em></th><td><strong>0</strong></td></tr><tr><th scope="row"><code>minReductionRatio</code> 0.15</th><td>2</td></tr><tr><th scope="row"><code>minReductionRatio</code> 0.08</th><td>11</td></tr><tr><th scope="row"><code>minFreedPercent</code> 3</th><td>14</td></tr><tr><th scope="row"><strong><code>minFreedPercent</code> 5</strong> <em>(shipped now)</em></th><td><strong>10</strong></td></tr><tr><th scope="row"><code>minFreedPercent</code> 7</th><td>7</td></tr><tr><th scope="row"><code>minFreedPercent</code> 10</th><td>1</td></tr></tbody></table></div>
+<p><code>minReductionRatio: 0.25</code> took none of them. It asks whether a pass was a large <em>fraction of the transcript</em>; the passes above run 0.06 to 0.20 of theirs, so the bar was never cleared, and kompact handed every one of these compactions to the model summary while it could still free nine points of window in under 20 ms.</p>
 <p>The unit is the fix rather than the value. Percentage points of the context window are what runs out, are comparable between a large session and a small one, and are the same unit as <code>compactAtPercent</code> — which makes the yield rule a hysteresis band for free: a taken pass leaves the fill at least <code>minFreedPercent</code> below the trigger, so the session has to grow back through it before another compaction can be requested.</p>
-<p><strong>Not verified:</strong> whether deferring the engine's summary costs the assistant anything. <code>applyDecisions</code> never touches prose, so what kompact leaves behind is verbatim tool calls and the user's and assistant's own words — not a narrative. <code>maxPasses: 6</code> is the backstop for that, and it is a guess, not a measurement.</p>
+<p><strong>Not verified:</strong> whether deferring the engine's summary costs the assistant anything. <code>applyDecisions</code> never touches prose, so what kompact leaves behind is verbatim tool calls and the user's and assistant's own words — not a narrative. <code>maxPasses: 6</code> is the backstop for that, and it is a judgement, not a measurement: the floor would allow eight.</p>
 <h2 id="what-the-cap-costs-and-one-idea-that-did-not-work-eval-cap-ts">What the cap costs, and one idea that did not work — <code>eval/cap.ts</code></h2>
 <p>The cap (<code>maxKeptChars</code>) shortens outputs the <em>ranking kept</em>. It is a separate lever from the floor, and it composes: the ranking alone frees 23.1% of the corpus, the cap alone 10.8%, and both 25.6%.</p>
 <p>Retention here is the share of <strong>reused shingles</strong> still present — the only measure both levers share, since dropping loses whole outputs and capping loses the far end of one.</p>

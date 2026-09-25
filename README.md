@@ -219,9 +219,9 @@ question is when to stop answering and let the engine write its summary instead.
 Until this version the rule was `minReductionRatio: 0.25` — take the pass if it
 removed a quarter of the transcript. `bun eval/passes.ts` replays the real loop
 on real sessions, giving each pass the compacted prefix *plus the real
-continuation* rather than its own output, and that bar took **0 of 15** passes.
-Every one of them went to the model summary while kompact could still free ten
-points of context window in under 40 ms.
+continuation* rather than its own output, and that bar took **0 of 14** passes.
+Every one of them went to the model summary while kompact could still free nine
+points of context window in under 20 ms.
 
 The unit was the mistake. A quarter of a 7,000-message session and a quarter of
 a 200-message one are not the same amount of room to keep working in, and room
@@ -229,12 +229,12 @@ is what runs out. `minFreedPercent` is denominated in percentage points of the
 context window, which is comparable between them and is the same unit as
 `compactAtPercent`:
 
-| bar | passes taken, of 15 |
+| bar | passes taken, of 14 |
 |---|---|
 | `minReductionRatio` 0.25 *(old default)* | **0** |
 | `minReductionRatio` 0.08 | 11 |
-| **`minFreedPercent` 5** *(shipped)* | **11** |
-| `minFreedPercent` 10 | 5 |
+| **`minFreedPercent` 5** *(shipped)* | **10** |
+| `minFreedPercent` 10 | 1 |
 
 Sharing a unit with the trigger makes the rule its own guard. A pass that is
 taken leaves the session at least `minFreedPercent` below `compactAtPercent`, so
@@ -244,9 +244,12 @@ A two-turn cooldown covers the rest, because `$.session.usage()` reports the
 tokens the *last response* was answered over and is stale for a turn after a
 compaction.
 
-`maxPasses: 6` is a backstop, not the dial. Raised to 8 or 12, the largest
-session measured still stops at six on its own: the seventh pass reclaims 4.6
-points, the floor refuses it, and the summary runs.
+`maxPasses: 6` is a backstop, and on the largest session measured it is the
+thing that stops the loop: raised to 8 that session runs 9.0 9.4 8.6 8.3 7.5
+6.6 6.7 5.3 and stops on the floor at the ninth, and at 12 it stops in the same
+place. Six is therefore not where the loop runs out — it is where this hands
+over anyway, because what deferring the summary costs is not measured and a
+backstop whose value is a judgement should be the conservative one.
 
 **Not verified:** what deferring the summary costs. `applyDecisions` never
 touches prose, so what survives six passes is verbatim tool calls and the
@@ -556,7 +559,7 @@ Being precise about this, because "it compiles" is not evidence.
 | The Codex plugin works against the server | `jev-compact`'s own parser, pairing, scorer and HTTP client, driven over its recorded Codex rollout fixture, produce discriminating scores |
 | The plugin loads in a real engine | `claude --plugin-dir .` with function hooks on |
 | `turn.complete` fires and requests compaction | verified live: the hook was invoked in a real session, `$.session.usage()` returned a real percentage, and `$.session.compact()` was called |
-| The loop takes several passes before handing over | the production loop replayed on real transcripts — compacted prefix plus real continuation, not a pass fed its own output: 11 passes taken across 5 sessions, the largest stopping at 6 on the floor rather than the ceiling (`eval/passes.ts`) |
+| The loop takes several passes before handing over | the production loop replayed on real transcripts — compacted prefix plus real continuation, not a pass fed its own output: 9 passes taken across 3 sessions, none slower than 20 ms (`eval/passes.ts`) |
 
 **Not verified:** the engine invoking `session.compact` *in a live session* and
 accepting the replacement message list. Forcing it needs genuine context
@@ -588,7 +591,7 @@ And a live Codex CLI, which needs >= 0.155 (this machine has 0.131).
 ```sh
 bun install
 npm run typecheck   # src + test + eval + hooks
-npm run test        # 214 tests
+npm run test        # 215 tests
 npm run validate    # plugin manifest
 ```
 

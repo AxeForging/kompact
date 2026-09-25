@@ -26,9 +26,9 @@ import { readdirSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-import { compact } from '../src/compact.js';
+import { compact, messageChars, tokensIn } from '../src/compact.js';
 import { FeatureAsker } from '../src/features.js';
-import { collectToolCalls, estimateTokens } from '../src/state.js';
+import { collectToolCalls } from '../src/state.js';
 import { readTranscript } from './transcript.js';
 import type { Message } from '../src/index.js';
 
@@ -60,15 +60,15 @@ function walk(dir: string): string[] {
   return out;
 }
 
-/** What one message costs the window, the way `src/state.ts` counts it. */
-function messageTokens(message: Message): number {
-  let total = estimateTokens(message.text);
-  for (const tool of message.toolUses) {
-    total += estimateTokens(JSON.stringify(tool.input)) + estimateTokens(tool.text ?? '');
-  }
-  for (const result of message.toolResults ?? []) total += estimateTokens(result.text);
-  return total;
-}
+/**
+ * What one message costs the window.
+ *
+ * The same model the shipped rule uses — characters over `CHARS_PER_TOKEN` —
+ * rather than `estimateTokens` per message, so this eval measures the thing the
+ * hook will actually do. Counting properly here and approximating there would
+ * make every pass count in this table slightly optimistic about the real bar.
+ */
+const messageTokens = (message: Message): number => tokensIn(messageChars(message));
 
 const tokensOf = (messages: readonly Message[]): number =>
   messages.reduce((sum, message) => sum + messageTokens(message), 0);
@@ -77,7 +77,11 @@ const asker = FeatureAsker.fromWeights();
 const trigger = Math.round((WINDOW * AT) / 100);
 const floorTokens = Math.round((WINDOW * FLOOR) / 100);
 
-type Pass = { pp: number; ms: number; tokensBefore: number; tokensAfter: number; taken: boolean };
+type Pass = {
+  pp: number; ms: number; tokensBefore: number; tokensAfter: number; taken: boolean;
+  /** Why a refused pass was refused. The two are different findings. */
+  why: 'taken' | 'floor' | 'ceiling';
+};
 
 /** What `minReductionRatio` sees: freed as a share of the live context. */
 const ratioOf = (pass: Pass): number => pass.pp * WINDOW / 100 / pass.tokensBefore;
@@ -107,9 +111,10 @@ async function runSession(all: readonly Message[]): Promise<Pass[]> {
     const ms = performance.now() - started;
     const after = tokensOf(result.messages);
     const freed = tokens - after;
-    const taken = freed >= floorTokens && passes.length < MAX_PASSES;
+    const why = freed < floorTokens ? 'floor' : passes.length >= MAX_PASSES ? 'ceiling' : 'taken';
+    const taken = why === 'taken';
     passes.push({
-      pp: (100 * freed) / WINDOW, ms, tokensBefore: tokens, tokensAfter: after, taken,
+      pp: (100 * freed) / WINDOW, ms, tokensBefore: tokens, tokensAfter: after, taken, why,
     });
     if (!taken) return passes;
     live = result.messages;
@@ -155,7 +160,7 @@ for (const { path } of paths) {
   rows.push({ name, messages: messages.length, passes });
   console.log(
     `${name.padEnd(18)}${String(messages.length).padStart(7)}${String(taken.length).padStart(8)}` +
-    `${passes.map((p) => `${p.pp.toFixed(1)}${p.taken ? '' : '*'}`).join(' ').padStart(30)}` +
+    `${passes.map((p) => `${p.pp.toFixed(1)}${p.why === 'taken' ? '' : p.why === 'floor' ? '*' : '\u2020'}`).join(' ').padStart(30)}` +
     `${passes.map((p) => Math.round(p.ms)).join(' ').padStart(22)}`,
   );
 }
@@ -165,7 +170,8 @@ const median = (values: number[]): number => {
   return sorted[Math.floor(sorted.length / 2)] ?? 0;
 };
 
-console.log(`\n* = the pass that fell below the floor; that is the hand-over, and it is not taken.`);
+console.log(`\n* = refused by the floor, \u2020 = refused by the ceiling. Neither is taken, but only`);
+console.log(`the first says the loop had run out of things worth freeing.`);
 console.log(`\n${takenTotal} engine summaries avoided across ${sessionsWithLoop} sessions ` +
   `(${(takenTotal / Math.max(1, sessionsWithLoop)).toFixed(1)} per session that loops at all).`);
 console.log(`slowest single pass ${Math.round(slowest)} ms.`);
@@ -215,22 +221,29 @@ if (PUBLISH) {
     to: (100 * pass.tokensAfter) / WINDOW,
     ms: Math.round(pass.ms),
     taken: pass.taken,
+    why: pass.why,
   }));
-  const medianMs = [...taken.map((pass) => pass.ms)].sort((a, b) => a - b)[
-    Math.floor(taken.length / 2)] ?? 0;
+  const medianMs = Math.round([...taken.map((pass) => pass.ms)].sort((a, b) => a - b)[
+    Math.floor(taken.length / 2)] ?? 0);
+  const slowest = Math.round(Math.max(...best.passes.map((pass) => pass.ms)));
+  const oldBarTakes = everyPass.filter((pass) => ratioOf(pass) >= 0.25).length;
+  const looped = rows.filter((row) => row.passes.some((pass) => pass.taken)).length;
   const medianPp = [...taken.map((pass) => pass.pp)].sort((a, b) => a - b)[
     Math.floor(taken.length / 2)] ?? 0;
   const avoided = rows.reduce((n, r) => n + r.passes.filter((p) => p.taken).length, 0);
   const ordinal = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh',
     'eighth', 'ninth', 'tenth'][taken.length - 1] ?? `${taken.length}th`;
 
-  const bar = (row: { from: number; to: number; ms: number; taken: boolean }, index: number): string => {
+  const bar = (row: { from: number; to: number; ms: number; taken: boolean; why: string }, index: number): string => {
     const label = row.taken ? `pass ${index + 1}` : 'hand over';
+    const why = row.why === 'floor'
+      ? `below the ${FLOOR}&#8209;point floor`
+      : `${MAX_PASSES} passes is the ceiling`;
     const note = row.taken
       ? `<span class="ladder__num">&#8722;${(row.from - row.to).toFixed(1)}<span class="ladder__unit">pts</span></span>` +
         `<span class="ladder__ms">${row.ms}&#8239;ms</span>`
       : `<span class="ladder__num ladder__num--under">&#8722;${(row.from - row.to).toFixed(1)}<span class="ladder__unit">pts</span></span>` +
-        `<span class="ladder__ms">below the ${FLOOR}&#8209;point floor</span>`;
+        `<span class="ladder__ms">${why}</span>`;
     return `      <li class="ladder__row${row.taken ? '' : ' ladder__row--over'}">` +
       `<span class="ladder__label">${label}</span>` +
       `<span class="ladder__track"><span class="ladder__held" style="--w:${row.to.toFixed(1)}%"></span>` +
@@ -252,10 +265,37 @@ if (PUBLISH) {
   <ol class="ladder" id="ladder">\n${shown.map(bar).join('\n')}\n  </ol>
   <p class="caption">One real session of ${best.messages.toLocaleString()} messages, replayed against a
     ${(WINDOW / 1000)}k&#8209;token window. The dark part of each bar is what the session was still
-    holding; the red part is what that pass handed back. Across ${rows.length} sessions on this
-    machine the loop answered <b>${avoided}</b> compactions that would otherwise each have been a
-    model summary. Snapshot of one machine's transcripts, which grow as you work &#8212;
-    <code>eval/passes.ts</code> re-runs it on yours.</p>`;
+    holding; the red part is what that pass handed back. Of ${rows.length} sessions measured on this
+    machine, ${looped} looped at all, and between them the loop answered <b>${avoided}</b>
+    compactions that would otherwise each have been a model summary. Snapshot of one machine's
+    transcripts, which grow as you work &#8212; <code>eval/passes.ts</code> re-runs it on yours.</p>
+  <details class="more">
+    <summary><h3>Why a percentage of the window, and not a percentage of the session</h3></summary>
+    <p>
+      Until this version the rule was <code>minReductionRatio: 0.25</code>: take the pass if it
+      removed a quarter of the transcript. Replaying the loop on real sessions, that bar took
+      <span class="num val">${oldBarTakes}</span> of <span class="num val">${everyPass.length}</span>
+      passes &#8212; every one went to the model summary while this could still free
+      ${medianPp.toFixed(0)} points of window in under ${slowest}&#8239;ms.
+    </p>
+    <p>
+      The unit was the mistake. A quarter of a ${best.messages.toLocaleString()}-message session and
+      a quarter of a 200-message one are not the same amount of room to keep working in, and room is
+      what runs out. Points of the context window are comparable between them, and they are the same
+      unit as the ${AT}% trigger &#8212; which makes the rule its own guard: a pass that is taken
+      leaves the session at least ${FLOOR} points below the trigger, so it has to grow back through
+      them before another compaction can be asked for. Compacting on every turn stops being possible
+      rather than discouraged.
+    </p>
+    <p>
+      The ceiling is <code>maxPasses: ${MAX_PASSES}</code>, and on the session drawn above it is
+      what stops the loop rather than the floor. That is deliberate: raised to 8 the same session
+      runs one more pass and then stops on the floor, and at 12 it stops in the same place. So
+      ${MAX_PASSES} is not where the loop runs out &#8212; it is where this hands over anyway,
+      because <a href="#checked">what deferring the summary costs</a> is not measured, and a
+      backstop whose value is a judgement should be the conservative one.
+    </p>
+  </details>`;
 
   const page = join(import.meta.dirname, '..', 'docs', 'index.html');
   const html = readFileSync(page, 'utf8');

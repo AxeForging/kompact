@@ -185,45 +185,50 @@ work, so it is a snapshot rather than a constant.
 ```
 window 200,000 tokens, compacting at 60%, floor 5 pp, ceiling 6 passes
 
-session       msgs  passes   pp reclaimed per pass          ms per pass
------------------------------------------------------------------------
-20628921      7085       6   11.2 10.8 10.6 10.3 8.9 8.4 4.6*  39 32 31 31 32 31 32
-25e65eab      1455       2   13.2 8.9 5.0*                     30 29 29
-78d7d176      1140       1   5.6 3.0*                          25 23
-agent-a2       294       1   5.6                               29
-agent-ad       201       1   5.3 3.7*                          24 25
+session       msgs  passes   pp reclaimed per pass         ms per pass
+----------------------------------------------------------------------
+20628921      7376       6   9.0 9.4 8.6 8.3 7.5 6.6 6.7†   15 10 10 8 8 8 8
+25e65eab      1455       2   12.4 7.4 3.7*                  20 15 13
+78d7d176      1140       1   5.7 3.4*                       8 15
+agent-a2       294       0   5.0*                           11
+agent-ad       201       0   5.0*                           6
 
-* = the pass that fell below the floor. That is the hand-over; it is not taken.
+* = refused by the floor, † = refused by the ceiling. Neither is taken, but only
+the first says the loop had run out of things worth freeing.
 ```
 
-**11 engine summaries avoided across 5 sessions.** Slowest single pass 39 ms.
+**9 engine summaries avoided across 3 sessions.** Slowest single pass 20 ms.
 
 The decay is much flatter than compacting one transcript repeatedly suggests —
-11.2, 10.8, 10.6, 10.3, 8.9, 8.4 percentage points on the largest session —
-because fresh tool output arrives between passes. What ends the loop is the
-floor, not exhaustion, and raising the ceiling past 6 changes nothing: at 8 and
-at 12 the same session still stops at 6, because the seventh pass reclaims 4.6
-points and the floor refuses it. That is what makes the ceiling a backstop
-rather than the dial that decides anything.
+9.0, 9.4, 8.6, 8.3, 7.5, 6.6 percentage points on the largest session, the
+second pass reclaiming *more* than the first — because fresh tool output arrives
+between passes. Compacting a transcript against itself measures exhaustion and
+reports a decay production never sees.
+
+The ceiling binds on the largest session, and that is deliberate. Raised to 8 it
+runs 9.0 9.4 8.6 8.3 7.5 6.6 6.7 5.3 and stops on the floor at the ninth; at 12
+it stops in the same place. So six is not where the loop runs out — it is where
+this hands over anyway, because what deferring the summary costs is not measured
+and a backstop whose value is a judgement should be the conservative one.
 
 ### Which bar to use
 
 Every pass above, scored by both candidate rules:
 
-| bar | passes taken, of 15 |
+| bar | passes taken, of 14 |
 |---|---|
 | `minReductionRatio` 0.25 *(what shipped)* | **0** |
-| `minReductionRatio` 0.15 | 5 |
+| `minReductionRatio` 0.15 | 2 |
 | `minReductionRatio` 0.08 | 11 |
 | `minFreedPercent` 3 | 14 |
-| **`minFreedPercent` 5** *(shipped now)* | **11** |
-| `minFreedPercent` 7 | 8 |
-| `minFreedPercent` 10 | 5 |
+| **`minFreedPercent` 5** *(shipped now)* | **10** |
+| `minFreedPercent` 7 | 7 |
+| `minFreedPercent` 10 | 1 |
 
 `minReductionRatio: 0.25` took none of them. It asks whether a pass was a large
-*fraction of the transcript*; the passes above run 0.05 to 0.22 of theirs, so
+*fraction of the transcript*; the passes above run 0.06 to 0.20 of theirs, so
 the bar was never cleared, and kompact handed every one of these compactions to
-the model summary while it could still free ten points of window in under 35 ms.
+the model summary while it could still free nine points of window in under 20 ms.
 
 The unit is the fix rather than the value. Percentage points of the context
 window are what runs out, are comparable between a large session and a small
@@ -235,7 +240,8 @@ before another compaction can be requested.
 **Not verified:** whether deferring the engine's summary costs the assistant
 anything. `applyDecisions` never touches prose, so what kompact leaves behind is
 verbatim tool calls and the user's and assistant's own words — not a narrative.
-`maxPasses: 6` is the backstop for that, and it is a guess, not a measurement.
+`maxPasses: 6` is the backstop for that, and it is a judgement, not a
+measurement: the floor would allow eight.
 
 ## What the cap costs, and one idea that did not work — `eval/cap.ts`
 

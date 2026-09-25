@@ -5,7 +5,8 @@ import {
 } from '../src/state.js';
 import {
   DEFAULT_OPTIONS, TRUNCATION_MARK,
-  applyDecisions, compact, decideAll, decideCall, pool, resolveOptions, rowTokens,
+  applyDecisions, compact, decideAll, decideCall, messageChars, pool, resolveOptions, rowTokens,
+  tokensIn,
 } from '../src/compact.js';
 import { CONTEXT_LENGTH, STATE_BUDGET, buildSystemOneRequest } from '../src/request.js';
 import { questionsFor } from '../src/questions.js';
@@ -340,6 +341,32 @@ describe('speed', () => {
     expect(result.stats.ms).toBeGreaterThan(0);
     expect(result.stats.ms).toBeLessThanOrEqual(elapsed + 5);
     expect(elapsed, `compacting ${result.stats.calls} calls took ${elapsed}ms`).toBeLessThan(4_000);
+  });
+
+  /**
+   * Token accounting must not cost a pass over the transcript.
+   *
+   * The yield rule is denominated in tokens, and the first version of it counted
+   * them with `estimateTokens` over every message, twice per compaction. That
+   * took a 330 ms compaction on a 7,300-message session to 615 ms — nearly half
+   * the time spent counting what was about to be freed, on a plugin whose whole
+   * proposition is that a pass is cheap enough to take six times. The fix is one
+   * measured ratio and a division; this is what stops the counting coming back.
+   */
+  it('reports tokens without walking the transcript again', async () => {
+    const messages: Message[] = [];
+    for (let i = 0; i < 400; i += 1) {
+      messages.push(...pair(`t${i}`, 'Bash', { command: `run ${i}` }, 'x'.repeat(4_000)));
+    }
+    const chars = messages.reduce((sum, message) => sum + messageChars(message), 0);
+    const started = Date.now();
+    const result = await compact(messages, new FeatureAsker(), {});
+    const elapsed = Date.now() - started;
+    expect(result.stats.tokensBefore).toBe(tokensIn(chars));
+    expect(result.stats.tokensAfter).toBe(tokensIn(result.stats.charsAfter));
+    // Generous, because a loaded CI box is slow; the regression this guards was
+    // an 86% increase, not a few per cent.
+    expect(elapsed, `${chars.toLocaleString()} characters took ${elapsed}ms`).toBeLessThan(1_500);
   });
 });
 
