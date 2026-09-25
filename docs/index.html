@@ -397,16 +397,9 @@ table.rows caption{ text-align:left; }
      calls the usual cause. A hanging indent keeps a wrapped line from reading as
      a second command, and the drag hint goes with the scrolling it described. */
   .cmd pre{ overflow-x: visible; background: none; }
-  /* The hang goes on each command, not on the block: `text-indent` only ever
-     indents a block's first line, so every line after it — a wrap continuation
-     and the next command alike — sat at the same x, and `git clone <url>` read
-     as two commands while `cd laya-compact` read as one wrapped line. */
-  .cmd pre code{ display:block; white-space: normal; }
-  .cmd__line{
-    display:block; white-space: pre-wrap; overflow-wrap: anywhere;
-    text-indent: -2ch; padding-left: 2ch;
-  }
-  .cmd__gap{ display:block; height: 1lh; }
+  /* Only the hang is narrow-width. The block/one-command-per-line rules live
+     outside this query — see below. */
+  .cmd__line{ text-indent: -2ch; padding-left: 2ch; }
   .cmd pre::before{ content: none; }
 }
 .glossary{ display:grid; grid-template-columns: minmax(9rem, 13rem) minmax(0,1fr);
@@ -636,6 +629,14 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 .cmd__head{ display:flex; justify-content:space-between; align-items:center; gap: var(--space-md);
   padding: var(--space-xs) var(--space-sm) var(--space-xs) var(--space-md); border-bottom:1px solid var(--rule); }
 .cmd__head .label{ margin:0; }
+/* One command per line, at every width. The markup carries no newlines any more
+   — each command is its own element — so these rules are what makes it a list of
+   commands rather than one long string. They were briefly inside the 560px query,
+   which meant every viewport above it rendered and copied the four commands run
+   together. */
+.cmd pre code{ display:block; white-space: normal; }
+.cmd__line{ display:block; white-space: pre-wrap; overflow-wrap: anywhere; }
+.cmd__gap{ display:block; height: 1lh; }
 .cmd pre{ margin:0; padding: var(--space-md); overflow-x:auto; font-size: var(--text-sm); line-height:1.75;
   font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; font-variant-ligatures:none;
   /* At 390px the longest command runs 92px past the edge. The six tables got
@@ -1731,12 +1732,22 @@ for (const block of document.querySelectorAll('.cmd')) {
   const status = block.querySelector('[role="status"]');
   if (!command || !button) continue;
   button.hidden = false;
-  const lines = command.textContent.trim().split('\n').filter(Boolean).length;
+  // Each command is its own element now, so the newlines that used to separate
+  // them are gone from the markup: `textContent` would hand the clipboard
+  // `...laya-compactcd laya-compactnpm install`, which pastes as one broken
+  // command. Read the lines and put the newlines back.
+  const commandText = () => {
+    const rows = command.querySelectorAll('.cmd__line, .cmd__gap');
+    return rows.length
+      ? [...rows].map((row) => row.textContent).join('\n').trim()
+      : command.textContent.trim();
+  };
+  const lines = commandText().split('\n').filter(Boolean).length;
   const many = lines === 1 ? 'One command' : `${lines} commands`;
   button.addEventListener('click', async () => {
     const restore = () => { button.textContent = 'Copy'; delete button.dataset.done; };
     try {
-      await navigator.clipboard.writeText(command.textContent.trim());
+      await navigator.clipboard.writeText(commandText());
       button.textContent = 'Copied';
       button.dataset.done = '1';
       if (status) status.textContent = `${many} copied to the clipboard.`;

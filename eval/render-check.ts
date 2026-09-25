@@ -108,6 +108,25 @@ const PROBE = String.raw`
   // where the heading and the first fact were simply not on screen.
   const bar = document.querySelector('.contents-bar');
   const barH = bar ? Math.round(bar.getBoundingClientRect().height) : 0;
+  // What the Copy button would actually put on the clipboard. Splitting each
+  // command into its own element to fix a wrapping bug removed the newlines
+  // between them, so textContent handed over one run-together string: the second
+  // command joined to the end of the first, on the one block the page asks a
+  // reader to run.
+  for (const block of document.querySelectorAll('.cmd')) {
+    const code = block.querySelector('pre code');
+    if (!code) continue;
+    const rows = [...code.querySelectorAll('.cmd__line')];
+    const copied = rows.length
+      ? rows.map((row) => row.textContent).join('\n').trim()
+      : code.textContent.trim();
+    const got = copied.split('\n').map((line) => line.trim()).filter(Boolean);
+    const want = rows.map((row) => (row.textContent || '').trim()).filter(Boolean);
+    const label = (block.querySelector('.label')?.textContent || '?').slice(0, 34);
+    say(want.length > 0 && got.length === want.length && want.every((line, i) => got[i] === line),
+        'copy keeps one line per command @' + w, label + ' -> ' + got.length + '/' + want.length);
+  }
+
   // Every in-page link, not just the nav: the glossary's twelve term anchors are
   // the ones a reader arrives at mid-argument, and nothing was checking them.
   const seenTarget = new Set();
