@@ -40,7 +40,7 @@ API rejects those, which breaks the session the compaction was meant to save.
 that test passing and do not weaken it into a fixture.
 
 Failures must fail safe: a scorer that is down, a malformed response, or a
-saving below `minReductionRatio` all fall back to the host's built-in
+saving below `minFreedPercent` all fall back to the host's built-in
 compaction, and a single failed request keeps its call. A wrong keep costs
 context; a wrong drop costs work that cannot be recovered.
 

@@ -67,16 +67,30 @@ function handlers(options: Record<string, unknown>) {
 }
 
 const engine = () => {
+  const store = new Map<string, unknown>();
   const logs: string[] = [];
   return {
     logs,
     $: {
       ui: { log: (t: string) => logs.push(t), toast: () => {} },
-      clock: { sleep: (ms: number) => new Promise<void>((r) => setTimeout(r, ms)) },
+      clock: {
+        sleep: (ms: number) => new Promise<void>((r) => setTimeout(r, ms)),
+        now: () => 1_700_000_000_000,
+      },
       env: { get: async () => undefined },
       settings: { read: async () => ({}) },
       http: { fetch: async () => { throw new Error('offline'); } },
-      session: { usage: async () => ({ context: { percent: 0 } }), compact: async () => {} },
+      store: {
+        get: async (key: string) => store.get(key),
+        set: async (key: string, value: unknown) => { store.set(key, value); },
+        delete: async (key: string) => { store.delete(key); },
+      },
+      session: {
+        usage: async () => ({ context: { percent: 0, window: 200_000, tokens: 0 } }),
+        compact: async () => {},
+        id: async () => 'real-transcript',
+        turns: async () => 1,
+      },
     },
   };
 };
@@ -114,7 +128,7 @@ function checkSession(label: string, load: () => Message[] | undefined, minCalls
      */
     it('introduces no orphaned tool call or result that was not already there', async () => {
       const before = pairingIsIntact(messages!);
-      const result = await handlers({ minReductionRatio: 0 }).get('session.compact')!(
+      const result = await handlers({ minFreedPercent: 0 }).get('session.compact')!(
         engine().$, { messages: messages! }, () => 'FELL_BACK');
       expect(result).not.toBe('FELL_BACK');
       const after = pairingIsIntact(result.messages);
@@ -123,7 +137,7 @@ function checkSession(label: string, load: () => Message[] | undefined, minCalls
     });
 
     it('never touches user or assistant prose', async () => {
-      const result = await handlers({ minReductionRatio: 0 }).get('session.compact')!(
+      const result = await handlers({ minFreedPercent: 0 }).get('session.compact')!(
         engine().$, { messages: messages! }, () => 'FELL_BACK');
       const before = messages!.filter((m) => m.text.trim() !== '').map((m) => m.text);
       const after = new Set((result.messages as Message[]).map((m) => m.text));
@@ -132,7 +146,7 @@ function checkSession(label: string, load: () => Message[] | undefined, minCalls
 
     it('actually frees characters, and reports how many', async () => {
       const eng = engine();
-      const result = await handlers({ minReductionRatio: 0 }).get('session.compact')!(
+      const result = await handlers({ minFreedPercent: 0 }).get('session.compact')!(
         eng.$, { messages: messages! }, () => 'FELL_BACK');
       expect(result.messages.length).toBeLessThanOrEqual(messages!.length);
       expect(eng.logs.join(' ')).toMatch(/decisions/);

@@ -170,6 +170,70 @@ agent-a7606f063386      33      42,819     41,272     3.6%      2ms
 total                 1762   1,534,095  1,161,392    24.3%    190ms
 ```
 
+## How many passes before the summary is due — `eval/passes.ts`
+
+The other scripts measure one compaction. Production is a loop: the engine asks
+at `compactAtPercent`, kompact answers, the session keeps growing, the engine
+asks again. This simulates that loop on real transcripts — each pass gets the
+compacted prefix *plus the real continuation*, not its own output, because
+feeding a pass its own output measures exhaustion and reports a decay that
+production never sees.
+
+Same caveat as `sessions.ts`: this machine's transcripts, which grow as you
+work, so it is a snapshot rather than a constant.
+
+```
+window 200,000 tokens, compacting at 60%, floor 5 pp, ceiling 4 passes
+
+session       msgs  passes   pp reclaimed per pass    ms per pass
+-----------------------------------------------------------------
+20628921      7049       4   11.2 10.8 10.6 10.3 8.9*  33 27 27 27 27
+25e65eab      1455       2   13.2 8.9 5.0*             27 24 24
+78d7d176      1140       1   5.6 3.0*                  19 21
+agent-a2       294       1   5.6                       28
+agent-ad       201       1   5.3 3.7*                  24 25
+
+* = the pass that fell below the floor. That is the hand-over; it is not taken.
+```
+
+**9 engine summaries avoided across 5 sessions.** Slowest single pass 33 ms.
+
+The decay is much flatter than compacting one transcript repeatedly suggests —
+11.2, 10.8, 10.6, 10.3 percentage points on the largest session — because fresh
+tool output arrives between passes. What ends the loop is the floor, not
+exhaustion.
+
+### Which bar to use
+
+Every pass above, scored by both candidate rules:
+
+| bar | passes taken, of 13 |
+|---|---|
+| `minReductionRatio` 0.25 *(what shipped)* | **0** |
+| `minReductionRatio` 0.15 | 5 |
+| `minReductionRatio` 0.08 | 10 |
+| `minFreedPercent` 3 | 12 |
+| **`minFreedPercent` 5** *(shipped now)* | **10** |
+| `minFreedPercent` 7 | 7 |
+| `minFreedPercent` 10 | 5 |
+
+`minReductionRatio: 0.25` took none of them. It asks whether a pass was a large
+*fraction of the transcript*; the passes above run 0.05 to 0.22 of theirs, so
+the bar was never cleared, and kompact handed every one of these compactions to
+the model summary while it could still free ten points of window in under 35 ms.
+
+The unit is the fix rather than the value. Percentage points of the context
+window are what runs out, are comparable between a large session and a small
+one, and are the same unit as `compactAtPercent` — which makes the yield rule a
+hysteresis band for free: a taken pass leaves the fill at least
+`minFreedPercent` below the trigger, so the session has to grow back through it
+before another compaction can be requested.
+
+**Not verified:** whether deferring the engine's summary costs the assistant
+anything. `applyDecisions` never touches prose, so what kompact leaves behind is
+verbatim tool calls and the user's and assistant's own words — not a narrative.
+`maxPasses: 4` is the backstop for that, and it is a guess, not a measurement.
+
 ## Where the sidecar fails quietly — `eval/truncation.ts`
 
 Needs a live `laya-serve`, so this section is empty on a machine without one.

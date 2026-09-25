@@ -33,11 +33,17 @@
       "description": "Context percentage at which turn.complete requests compaction.",
       "default": 60
     },
-    "minReductionRatio": {
+    "minFreedPercent": {
       "type": "number",
-      "title": "Minimum reduction ratio",
-      "description": "Below this estimated character reduction, delegate to the built-in summary instead.",
-      "default": 0.25
+      "title": "Minimum points of context window freed",
+      "description": "A pass is taken instead of the model summary only if it reclaims this many percentage points of the context window. Over 16 real compactions the old 0.25 character-reduction bar took 2, both from one 29-message session; a 5-point floor takes 12 (eval/passes.ts).",
+      "default": 5
+    },
+    "maxPasses": {
+      "type": "number",
+      "title": "Passes before handing over",
+      "description": "Compactions kompact answers on one transcript before the engine's summary runs regardless. A backstop: on measured sessions the floor is reached first.",
+      "default": 4
     },
     "truncateHeadChars": {
       "type": "number",

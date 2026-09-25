@@ -1,6 +1,13 @@
 import { CONTEXT_LENGTH, DEFAULT_MODEL, inputTokens, noulAnswer, routedModel } from './request.js';
 import { DEFAULT_PHRASING, questionsFor } from './questions.js';
-import { MUTATING, buildCallState, callContexts, collectToolCalls, goalFromMessages } from './state.js';
+import {
+  MUTATING,
+  buildCallState,
+  callContexts,
+  collectToolCalls,
+  estimateTokens,
+  goalFromMessages,
+} from './state.js';
 import type {
   CallAction,
   CallAnswer,
@@ -387,6 +394,29 @@ export function applyDecisions(
   return kept;
 }
 
+/**
+ * Tokens of text, tool input and tool output a message holds.
+ *
+ * Estimated, not counted — `estimateTokens` has no tokenizer and is calibrated
+ * to land above the true count. It exists beside `messageChars` because the
+ * hook's yield rule is denominated in percentage points of the context window,
+ * and the window is measured in tokens: a ratio of characters cannot say
+ * whether a pass bought enough room to keep working.
+ */
+export function messageTokens(message: Message): number {
+  let total = estimateTokens(message.text);
+  for (const tool of message.toolUses) {
+    try {
+      total += estimateTokens(JSON.stringify(tool.input));
+    } catch {
+      total += 5;
+    }
+    total += estimateTokens(tool.text ?? '');
+  }
+  for (const result of message.toolResults ?? []) total += estimateTokens(result.text);
+  return total;
+}
+
 /** Characters of text, tool input and tool output a message holds. */
 export function messageChars(message: Message): number {
   let total = message.text.length;
@@ -429,6 +459,7 @@ export async function compact(
   const calls = collectToolCalls(messages, resolved.preserveRecentMessages);
   const candidates = calls.filter((call) => !call.pinned);
   const charsBefore = messages.reduce((sum, message) => sum + messageChars(message), 0);
+  const tokensBefore = messages.reduce((sum, message) => sum + messageTokens(message), 0);
 
   const goal = resolved.goal || goalFromMessages(messages);
   const contexts = callContexts(calls, messages.length);
@@ -495,6 +526,8 @@ export async function compact(
       messagesAfter: kept.length,
       charsBefore,
       charsAfter: kept.reduce((sum, message) => sum + messageChars(message), 0),
+      tokensBefore,
+      tokensAfter: kept.reduce((sum, message) => sum + messageTokens(message), 0),
       calls: calls.length,
       // `too small` is a keep — the call is refused as not worth dropping — and it
       // was counted in no bucket at all, so kept + dropped + pinned could come to

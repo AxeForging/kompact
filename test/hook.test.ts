@@ -34,7 +34,8 @@ describe('resolveHookConfig', () => {
   it('needs no key and no sidecar', () => {
     const config = resolveHookConfig({});
     expect(config.compactAtPercent).toBe(60);
-    expect(config.minReductionRatio).toBe(0.25);
+    expect(config.minFreedPercent).toBe(5);
+    expect(config.maxPasses).toBe(4);
   });
 
   // The sidecar is gone from the product. A config still naming it must not
@@ -189,16 +190,37 @@ function fakeEngine(percent = 10, fetch = async (): Promise<never> => {
   const logs: string[] = [];
   const toasts: string[] = [];
   let compactRequested = 0;
+  let turns = 20;
+  // A 200,000-token window, which is what the percentage-point floor is a
+  // fraction of; the fixture transcript is small, so the floor it implies is
+  // small too and a pass clears it.
+  let window = 4_000;
+  const store = new Map<string, unknown>();
   const $ = {
     ui: { log: (t: string) => logs.push(t), toast: (t: string) => toasts.push(t) },
     http: { fetch },
-    clock: { sleep: (ms: number) => new Promise<void>((r) => setTimeout(r, ms)) },
+    clock: {
+      sleep: (ms: number) => new Promise<void>((r) => setTimeout(r, ms)),
+      now: () => 1_700_000_000_000,
+    },
+    store: {
+      get: async (key: string) => store.get(key),
+      set: async (key: string, value: unknown) => { store.set(key, value); },
+      delete: async (key: string) => { store.delete(key); },
+    },
     session: {
-      usage: async () => ({ context: { percent } }),
+      usage: async () => ({ context: { percent, window, tokens: 0 } }),
       compact: async () => { compactRequested += 1; },
+      id: async () => 'fixture-session',
+      turns: async () => turns,
     },
   };
-  return { $, logs, toasts, get compactRequested() { return compactRequested; } };
+  return {
+    $, logs, toasts, store,
+    get compactRequested() { return compactRequested; },
+    setTurns: (value: number) => { turns = value; },
+    setWindow: (value: number) => { window = value; },
+  };
 }
 
 function registered(options: Record<string, unknown> = {}) {
@@ -233,12 +255,75 @@ describe('register', () => {
   });
 
   it('falls back to the built-in summary when it saves too little', async () => {
-    const handlers = registered({ preserveRecentMessages: 2, minReductionRatio: 0.99 });
+    const handlers = registered({ preserveRecentMessages: 2, minFreedPercent: 99 });
     const engine = fakeEngine();
     const result = await handlers.get('session.compact')!(
       engine.$, { messages: asSession(transcript()) }, () => 'FELL_BACK');
     expect(result).toBe('FELL_BACK');
     expect(engine.toasts.join(' ')).toContain('fallback to built-in summary');
+  });
+
+  /**
+   * The ladder. `minReductionRatio` made kompact hand over after one pass at
+   * most, and on real sessions after none; these are the rules that replace it.
+   */
+  it('counts each taken pass against the transcript, not the process', async () => {
+    const handlers = registered({ preserveRecentMessages: 2, keepThreshold: 0.9 });
+    const engine = fakeEngine();
+    const event = { messages: asSession(transcript()) };
+    await handlers.get('session.compact')!(engine.$, event, () => 'FELL_BACK');
+    await handlers.get('session.compact')!(engine.$, event, () => 'FELL_BACK');
+    const stored = engine.store.get('passes') as Record<string, { passes: number }>;
+    expect(stored['fixture-session|main']?.passes).toBe(2);
+  });
+
+  // A precompute's result is kept for a compaction that may never come, so it
+  // must not spend a pass off the ceiling.
+  it('does not spend a pass on a speculative precompute', async () => {
+    const handlers = registered({ preserveRecentMessages: 2, keepThreshold: 0.9 });
+    const engine = fakeEngine();
+    const event = { messages: asSession(transcript()), trigger: 'precompute' };
+    await handlers.get('session.compact')!(engine.$, event, () => 'FELL_BACK');
+    expect(engine.store.get('passes')).toBeUndefined();
+  });
+
+  it('hands over once the ceiling is reached, however much a pass frees', async () => {
+    const handlers = registered({ preserveRecentMessages: 2, keepThreshold: 0.9, maxPasses: 1 });
+    const engine = fakeEngine();
+    const event = { messages: asSession(transcript()) };
+    expect(await handlers.get('session.compact')!(engine.$, event, () => 'FELL_BACK'))
+      .not.toBe('FELL_BACK');
+    expect(await handlers.get('session.compact')!(engine.$, event, () => 'FELL_BACK'))
+      .toBe('FELL_BACK');
+  });
+
+  // Handing over means the engine rewrote the transcript, so the next kompact
+  // pass is pass 1 again. Leaving the count behind would make it pass 5.
+  it('clears the count when it hands over', async () => {
+    const handlers = registered({ preserveRecentMessages: 2, keepThreshold: 0.9, maxPasses: 1 });
+    const engine = fakeEngine();
+    const event = { messages: asSession(transcript()) };
+    await handlers.get('session.compact')!(engine.$, event, () => 'FELL_BACK');
+    await handlers.get('session.compact')!(engine.$, event, () => 'FELL_BACK');
+    const stored = engine.store.get('passes') as Record<string, unknown>;
+    expect(stored['fixture-session|main']).toBeUndefined();
+  });
+
+  /**
+   * `$.session.usage()` reports the tokens the LAST RESPONSE was answered over,
+   * so for a turn or two after a compaction it still reads above the trigger.
+   * Without the cooldown that reads as compacting on every turn.
+   */
+  it('does not ask again on the turn straight after a pass', async () => {
+    const handlers = registered({ preserveRecentMessages: 2, keepThreshold: 0.9 });
+    const engine = fakeEngine(80);
+    await handlers.get('session.compact')!(
+      engine.$, { messages: asSession(transcript()) }, () => 'FELL_BACK');
+    await handlers.get('turn.complete')!(engine.$, {}, () => 'NEXT');
+    expect(engine.compactRequested).toBe(0);
+    engine.setTurns(40);
+    await handlers.get('turn.complete')!(engine.$, {}, () => 'NEXT');
+    expect(engine.compactRequested).toBe(1);
   });
 
   // The sidecar is gone, so the failure it guarded against is gone with it. What

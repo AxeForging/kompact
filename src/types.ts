@@ -212,6 +212,9 @@ export interface CompactResult {
     messagesAfter: number;
     charsBefore: number;
     charsAfter: number;
+    /** Estimated tokens before and after; the unit the context window is in. */
+    tokensBefore: number;
+    tokensAfter: number;
     calls: number;
     kept: number;
     resultsDropped: number;

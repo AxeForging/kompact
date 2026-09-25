@@ -187,7 +187,8 @@ The type declarations in `types/` were written by Claude Code 2.1.281.
 | `targetReduction` | `0.5` | fraction of droppable tool output to free |
 | `preserveRecentMessages` | `6` | newest messages pinned; the first is always kept |
 | `compactAtPercent` | `60` | context percentage that triggers compaction |
-| `minReductionRatio` | `0.25` | below this saving, delegate to the built-in summary |
+| `minFreedPercent` | `5` | a pass is taken only if it reclaims this many percentage points of the context window; below it, the built-in summary runs |
+| `maxPasses` | `4` | compactions kompact answers on one transcript before handing over regardless |
 | `truncateHeadChars` | `300` | head kept of a dropped result |
 | `maxCallStateTokens` | `700` | `scorer=laya` only; must stay under the checkpoint's budget |
 | `minYieldChars` | `200` | fewest characters a drop must free to be worth making |
@@ -524,7 +525,7 @@ And a live Codex CLI, which needs >= 0.155 (this machine has 0.131).
 ```sh
 bun install
 npm run typecheck   # src + test + eval + hooks
-npm run test        # 205 tests
+npm run test        # 210 tests
 npm run validate    # plugin manifest
 ```
 

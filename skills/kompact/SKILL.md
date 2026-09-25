@@ -65,7 +65,7 @@ overrides it.
 | Not freeing enough context | **raise `targetReduction`** to 0.7 | 0.7 frees 52.9% against 0.5's 42.4%, and keeps 82.1% of reused outputs against 84.6% |
 | Freeing far too much | **lower `targetReduction`** | the floor alone frees very little: floor 0.05 frees 8.6% |
 | Compaction never triggers | lower `compactAtPercent` | it only fires above that share of the window |
-| Falls back to the built-in summary | lower `minReductionRatio` | the saving was under it, or this session had little to drop |
+| Falls back to the built-in summary | lower `minFreedPercent`, or raise `maxPasses` | the pass freed less than that share of the window, or the ceiling was reached and the summary is now due |
 
 Lowering `keepThreshold` does **not** free more. It lowers the floor, so more
 calls become droppable, but the budget still stops at `targetReduction`. Earlier
