@@ -119,6 +119,7 @@ describe('summarize', () => {
     messages: [], decisions: [],
     stats: {
       messagesBefore: 10, messagesAfter: 8, charsBefore: 1000, charsAfter: 500,
+      tokensBefore: 260, tokensAfter: 130,
       calls: 3, kept: 1, resultsDropped: 1, callsDropped: 1, pinned: 0,
       maxRowTokens: 700, truncatedRequests: 0, checkpoint: '', requests: 3, failedRequests: 0, ms: 12,
       ...extra,

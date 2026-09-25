@@ -425,6 +425,15 @@ async function readPasses($: PassEngine): Promise<PassStore> {
   }
 }
 
+/** `$.session.turns()` is not worth failing a compaction over. */
+async function turnsOr($: { session: { turns: () => Promise<number> } }, fallback: number): Promise<number> {
+  try {
+    return await $.session.turns();
+  } catch {
+    return fallback;
+  }
+}
+
 async function writePasses($: PassEngine, store: PassStore): Promise<void> {
   try {
     await $.store.set(PASSES_KEY, prunePasses(store));
@@ -490,8 +499,8 @@ export const register: Register = (on: On, options: PluginOptions) => {
       if (!speculative) {
         store[key] = {
           passes: seen + 1,
-          lastTurn: await $.session.turns().catch(() => 0),
-          lastAt: $.clock.now(),
+          lastTurn: await turnsOr($, 0),
+          lastAt: await $.clock.now(),
         };
         await writePasses($, store);
       }
@@ -518,7 +527,7 @@ export const register: Register = (on: On, options: PluginOptions) => {
        */
       const store = await readPasses($);
       const record = store[passKey(await $.session.id())];
-      const turns = await $.session.turns().catch(() => 0);
+      const turns = await turnsOr($, 0);
       if (record && turns - record.lastTurn < COOLDOWN_TURNS) return next(event);
       compacting = true;
       await $.session.compact();

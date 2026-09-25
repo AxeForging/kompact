@@ -210,12 +210,57 @@ A dropped result is **not deleted**: its first `truncateHeadChars` characters
 survive with a note, and the assistant can re-run the tool. That is why 90%
 safety is a defensible setting: a miss costs a re-run, not the work.
 
+### It runs more than once before the model summary does
+
+One compaction is the mechanism; the loop is the product. The engine asks at
+`compactAtPercent`, kompact answers, you keep working, and it asks again. The
+question is when to stop answering and let the engine write its summary instead.
+
+Until this version the rule was `minReductionRatio: 0.25` — take the pass if it
+removed a quarter of the transcript. `bun eval/passes.ts` replays the real loop
+on real sessions, giving each pass the compacted prefix *plus the real
+continuation* rather than its own output, and that bar took **0 of 15** passes.
+Every one of them went to the model summary while kompact could still free ten
+points of context window in under 40 ms.
+
+The unit was the mistake. A quarter of a 7,000-message session and a quarter of
+a 200-message one are not the same amount of room to keep working in, and room
+is what runs out. `minFreedPercent` is denominated in percentage points of the
+context window, which is comparable between them and is the same unit as
+`compactAtPercent`:
+
+| bar | passes taken, of 15 |
+|---|---|
+| `minReductionRatio` 0.25 *(old default)* | **0** |
+| `minReductionRatio` 0.08 | 11 |
+| **`minFreedPercent` 5** *(shipped)* | **11** |
+| `minFreedPercent` 10 | 5 |
+
+Sharing a unit with the trigger makes the rule its own guard. A pass that is
+taken leaves the session at least `minFreedPercent` below `compactAtPercent`, so
+it has to grow back through that band before another compaction can be
+requested — compacting on every turn is not possible rather than discouraged.
+A two-turn cooldown covers the rest, because `$.session.usage()` reports the
+tokens the *last response* was answered over and is stale for a turn after a
+compaction.
+
+`maxPasses: 6` is a backstop, not the dial. Raised to 8 or 12, the largest
+session measured still stops at six on its own: the seventh pass reclaims 4.6
+points, the floor refuses it, and the summary runs.
+
+**Not verified:** what deferring the summary costs. `applyDecisions` never
+touches prose, so what survives six passes is verbatim tool calls and the
+session's own words — which is a different thing from a narrative about them.
+Nothing here has measured whether an assistant misses it.
+
 ### The cap on what is kept
 
 The ranking decides *which* outputs to drop. It never had an opinion about how
 much of the ones it keeps is worth carrying, and that turns out to be where the
-characters are. Over 68 sessions and 5,151 calls on one machine, **half of all
-tool output lives in about 3% of the calls**.
+characters are. Over 72 sessions and 5,945 calls on one machine, **half of all
+tool output lives in about 3% of the calls**. Like `eval/sessions.ts`, this reads
+whatever `~/.claude/projects` holds, so the corpus size here is a snapshot that
+grows as you work; the shape it reports has not moved.
 
 `bun eval/where-reused.ts` asks where inside a reused output the reuse actually
 falls, by giving every 8-word shingle its character offset and finding which
@@ -231,16 +276,16 @@ measure, the share of later-quoted passages still present afterwards:
 
 | policy | freed | quoted passages kept |
 | --- | --- | --- |
-| ranking only (shipped before this) | 24.2% | 83.0% |
-| ranking + cap 24,000 | **26.8%** | 82.9% |
-| ranking + cap 16,000 | 30.6% | 82.2% |
-| ranking + cap 8,000 | 43.3% | 79.3% |
-| **cap 8,000, no ranking at all** | **31.8%** | **96.1%** |
+| ranking only (shipped before this) | 23.1% | 81.6% |
+| ranking + cap 24,000 | **25.5%** | 81.5% |
+| ranking + cap 16,000 | 29.4% | 80.8% |
+| ranking + cap 8,000 | 42.0% | 77.7% |
+| **cap 8,000, no ranking at all** | **30.3%** | **96.0%** |
 
 **The last row is the uncomfortable one, and it is not buried.** On aggregate a
 cap with no model beats the whole scorer on both axes at once: more freed, and
 far more of what got quoted still present. Per session it is less flattering —
-across the 46 sessions with ten or more quoted passages the cap has sessions
+across the 50 sessions with ten or more quoted passages the cap has sessions
 that keep *none* of what was quoted from them, which the ranking does not — so
 the cap ships as an addition to the ranking rather than a replacement for it.
 Anyone who wants the honest minimum can set `keepThreshold: 0` and keep the cap.
@@ -250,9 +295,9 @@ leaving the tail exactly where it was. Per session, against shipping no cap:
 
 | | median freed | median kept | 10th pct | worst | sessions under half |
 | --- | --- | --- | --- | --- | --- |
-| no cap | 7.3% | 97.8% | 66.7% | 37.5% | 2 |
-| cap 24,000 | 9.6% | 96.5% | 66.7% | 37.5% | 2 |
-| cap 16,000 | 14.9% | 94.6% | 66.7% | 37.5% | 3 |
+| no cap | 7.3% | 97.3% | 69.2% | 37.5% | 2 |
+| cap 24,000 | 9.4% | 96.5% | 69.2% | 37.5% | 2 |
+| cap 16,000 | 14.8% | 94.5% | 67.6% | 37.5% | 3 |
 
 16,000 doubles the median session's saving and costs one more session that keeps
 under half of what it quoted. That is a defensible setting; it is not one a
@@ -268,14 +313,14 @@ session on the labelled corpus (`eval/policy.ts`):
 
 | policy | tool output freed | reused outputs kept | reused chars kept |
 |---|---|---|---|
-| absolute cut at 0.5 (an earlier default) | 97.6% | **5.1%** | 8.5% |
-| **budget 0.5, floor 0.1 (shipped)** | 42.4% | **84.6%** | **87.5%** |
-| budget 0.7, floor 0.1 | 52.9% | 82.1% | 79.2% |
-| budget 0.7, floor 0.05 | 8.6% | 92.3% | 98.9% |
+| absolute cut at 0.5 (an earlier default) | 95.3% | **8.9%** | 16.9% |
+| **budget 0.5, floor 0.20 (shipped)** | 23.4% | **77.3%** | **92.2%** |
+| budget 0.7, floor 0.20 | 33.9% | 68.8% | 90.2% |
+| budget 0.7, floor 0.05 | 3.7% | 87.4% | 98.7% |
 
 Run through the shipped code rather than the simulation above, the same defaults
-give **43.0% freed and 84.6% of reused outputs kept** — the small difference is
-the one rule the sweep has no notion of, below.
+give **33.7% freed, 77.7% of reused outputs kept and 87.9% of their characters** —
+the differences are the cap and the one rule the sweep has no notion of, below.
 
 Freeing nearly everything is easy and nearly worthless. This is why `calibrate`
 is an accuracy upgrade rather than a prerequisite: the policy adapts to your
@@ -285,20 +330,21 @@ distribution without it.
 
 An `Edit`, `Write`, `MultiEdit` or `NotebookEdit` call is never dropped. Its
 *result* can be — "Applied 1 edit to src/auth.ts" is worth nothing, and exactly
-1 of the 138 mutating calls in the corpus had an output that was ever needed
+1 of the 220 mutating calls in the corpus had an output that was ever needed
 verbatim — but its *input* is the only record that the change happened, and
 unlike a read it cannot be recovered by running it again.
 
 This came out of the demonstration on the page: with the scorer left to itself,
 it dropped the `Edit` that fixed the bug the session was about, because the
 output was worthless and the file was not read again afterwards. Across the
-corpus the rule rescues **21 of 138** such calls and costs nothing — reused-output
-retention is unchanged at 84.6%, and freed rises from 42.9% to 43.0%, because the
-budget then continues down the ranking.
+corpus the rule applies to 220 such calls, and re-running the same decisions with
+the guard removed shows what it actually saves: **15 of them** would otherwise
+lose their call or their output, against the single output in those 220 that was
+ever needed verbatim.
 
-### What the other 22.7% costs
+### What the other 22.3% costs
 
-"77.3% of reused outputs kept" invites you to supply your own answer for the
+"77.7% of reused outputs kept" invites you to supply your own answer for the
 rest, so `eval/recovery.ts` prices it. Held-out scores, shipped policy, per
 session: **55 of the 247 reused outputs are dropped** — 1.34 per session, and
 only one of them kept a head.
