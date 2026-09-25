@@ -11,6 +11,11 @@
  * Run: bun eval/policy.ts
  */
 import { loadCorpus, rowKey } from './corpus.js';
+import { DEFAULT_OPTIONS, decideAll } from '../src/compact.js';
+import type { CallAnswer, ToolCall } from '../src/index.js';
+
+/** Mirrors `decideCall`'s own list; a mutating call's input is the change record. */
+const MUTATING = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 import { outOfFold } from './logistic.js';
 import { featureVector } from '../src/features.js';
 
@@ -103,6 +108,44 @@ console.log();
 for (const target of [0.5, 0.6, 0.7, 0.8]) {
   show(`budget ${target.toFixed(1)}, floor 0.10`, simulate('budget', 0.10, target));
 }
+
+// The rows above simulate the policy. This runs the shipped code, so it also
+// carries `decideCall`'s guarantee that a mutating call is never dropped — which
+// the simulation has no notion of, and which moves the figure slightly.
+{
+  let freed = 0;
+  let total = 0;
+  let needed = 0;
+  let kept = 0;
+  let mutatingDropped = 0;
+  for (const session of sessions) {
+    const calls = rows.filter((row) => row.session === session);
+    const asToolCalls: ToolCall[] = calls.map((row) => ({
+      id: rowKey(row), tool_use_id: rowKey(row), tool: row.tool, input: {},
+      callIndex: 0, resultIndex: 1, resultText: '', resultChars: row.output_chars,
+      isError: row.is_error, pinned: false,
+    }));
+    const answers = new Map<string, CallAnswer>(calls.map((row) => [
+      rowKey(row),
+      { keepResult: score.get(rowKey(row))!, keepCall: callScore.get(rowKey(row))! },
+    ]));
+    const actions = new Map(decideAll(asToolCalls, answers, DEFAULT_OPTIONS).map((d) => [d.id, d.action]));
+    for (const row of calls) {
+      const action = actions.get(rowKey(row))!;
+      total += row.output_chars;
+      if (action !== 'keep') freed += row.output_chars;
+      if (MUTATING.has(row.tool) && action === 'drop_call') mutatingDropped += 1;
+      if (!row.result_needed) continue;
+      needed += 1;
+      if (action === 'keep') kept += 1;
+    }
+  }
+  console.log(`\nshipped code path (src/compact.ts decideAll, the same defaults):`);
+  console.log(`  ${((100 * freed) / total).toFixed(1)}% freed, ` +
+    `${((100 * kept) / needed).toFixed(1)}% of reused outputs kept, ` +
+    `${mutatingDropped} of ${rows.filter((r) => MUTATING.has(r.tool)).length} mutating calls dropped`);
+}
+
 console.log('\nwrong  = needed outputs that were dropped anyway');
 console.log('+head  = of those, how many kept their first 300 characters');
 console.log('kept   = share of needed outputs not dropped at all');

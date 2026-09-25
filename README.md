@@ -159,9 +159,28 @@ session on the labelled corpus (`eval/policy.ts`):
 | budget 0.7, floor 0.1 | 52.9% | 82.1% | 79.2% |
 | budget 0.7, floor 0.05 | 8.6% | 92.3% | 98.9% |
 
+Run through the shipped code rather than the simulation above, the same defaults
+give **43.0% freed and 84.6% of reused outputs kept** — the small difference is
+the one rule the sweep has no notion of, below.
+
 Freeing nearly everything is easy and nearly worthless. This is why `calibrate`
 is an accuracy upgrade rather than a prerequisite: the policy adapts to your
 distribution without it.
+
+### One rule the scorer does not get a vote on
+
+An `Edit`, `Write`, `MultiEdit` or `NotebookEdit` call is never dropped. Its
+*result* can be — "Applied 1 edit to src/auth.ts" is worth nothing, and exactly
+1 of the 138 mutating calls in the corpus had an output that was ever needed
+verbatim — but its *input* is the only record that the change happened, and
+unlike a read it cannot be recovered by running it again.
+
+This came out of the demonstration on the page: with the scorer left to itself,
+it dropped the `Edit` that fixed the bug the session was about, because the
+output was worthless and the file was not read again afterwards. Across the
+corpus the rule rescues **21 of 138** such calls and costs nothing — reused-output
+retention is unchanged at 84.6%, and freed rises from 42.9% to 43.0%, because the
+budget then continues down the ranking.
 
 ### What the other 15.4% costs
 

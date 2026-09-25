@@ -18,7 +18,7 @@ import { dirname, join } from 'node:path';
 import {
   KEEP_CALL_WEIGHTS, KEEP_RESULT_WEIGHTS, featureVector, score,
 } from '../src/features.js';
-import { DEFAULT_OPTIONS, decideAll } from '../src/compact.js';
+import { DEFAULT_OPTIONS, decideAll, decideCall } from '../src/compact.js';
 import { auc, ece } from '../eval/metrics.js';
 import type { CallAnswer, ToolCall } from '../src/index.js';
 
@@ -86,6 +86,65 @@ describe('the shipped coefficients, on the committed corpus', () => {
     // but not for the failure this policy replaced, which kept 5%.
     expect(kept / needed).toBeGreaterThan(0.75);
     expect(freed / total).toBeGreaterThan(0.30);
+  });
+});
+
+describe('a call that recorded a change is never dropped', () => {
+  // Found by looking at the landing page's own demonstration: the scorer dropped
+  // the Edit that fixed the bug the session was about. Its output is worthless —
+  // 1 of 138 mutating calls in the corpus has one that was ever needed verbatim —
+  // but its input is the only record the change happened, and re-running an Edit
+  // is not a way to recover it.
+  const mutating = ['Edit', 'Write', 'MultiEdit', 'NotebookEdit'];
+
+  it('drops the result and keeps the call, however low both scores are', () => {
+    const calls: ToolCall[] = mutating.map((tool, i) => ({
+      id: `m${i}`, tool_use_id: `m${i}`, tool, input: { file_path: 'a.ts' },
+      callIndex: 0, resultIndex: 1, resultText: 'Applied 1 edit', resultChars: 14,
+      isError: false, pinned: false,
+    }));
+    for (const call of calls) {
+      const decision = decideCall(call, { keepResult: 0.0001, keepCall: 0.0001 }, { keepThreshold: 0.1 });
+      expect(decision.action, `${call.tool} lost its call`).toBe('drop_result');
+    }
+    // A read scoring the same is still dropped outright — the guard is not a
+    // general softening, it is specific to information that cannot be re-fetched.
+    expect(decideCall(
+      { id: 'r', tool: 'Read', pinned: false },
+      { keepResult: 0.0001, keepCall: 0.0001 },
+      { keepThreshold: 0.1 },
+    ).action).toBe('drop_call');
+  });
+
+  it('keeps every mutating call in the committed corpus', () => {
+    const bySession = new Map<string, number[]>();
+    rows.forEach((row, index) => {
+      bySession.set(row.session, [...(bySession.get(row.session) ?? []), index]);
+    });
+    let dropped = 0;
+    let seen = 0;
+    for (const indexes of bySession.values()) {
+      const calls: ToolCall[] = indexes.map((i) => ({
+        id: rows[i]!.tool_use_id, tool_use_id: rows[i]!.tool_use_id, tool: rows[i]!.tool,
+        input: {}, callIndex: 0, resultIndex: 1, resultText: '', resultChars: rows[i]!.output_chars,
+        isError: rows[i]!.is_error, pinned: false,
+      }));
+      const answers = new Map<string, CallAnswer>(indexes.map((i) => [
+        rows[i]!.tool_use_id,
+        {
+          keepResult: score(KEEP_RESULT_WEIGHTS, features[i]!),
+          keepCall: score(KEEP_CALL_WEIGHTS, features[i]!),
+        },
+      ]));
+      const actions = new Map(decideAll(calls, answers, DEFAULT_OPTIONS).map((d) => [d.id, d.action]));
+      for (const i of indexes) {
+        if (!mutating.includes(rows[i]!.tool)) continue;
+        seen += 1;
+        if (actions.get(rows[i]!.tool_use_id) === 'drop_call') dropped += 1;
+      }
+    }
+    expect(seen).toBe(138);
+    expect(dropped).toBe(0);
   });
 });
 
