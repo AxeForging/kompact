@@ -18,12 +18,12 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (path: string): string => readFileSync(join(root, path), 'utf8');
 const results = read('eval/RESULTS.md');
 
-/** `logistic (features)   0.895  0.073  0.689  0.927   38.9%` */
-function scorerRow(name: string): { mean: string; sd: string; min: string; drop: string } {
+/** `logistic (features)   0.905  0.078  0.684  0.944  0.044   35.4%` */
+function scorerRow(name: string): { mean: string; sd: string; min: string; ece: string; drop: string } {
   const line = results.split('\n').find((l) => l.trimStart().startsWith(name));
   if (!line) throw new Error(`no row for ${name} in eval/RESULTS.md`);
-  const [mean, sd, min, , drop] = line.slice(name.length).trim().split(/\s+/);
-  return { mean: mean!, sd: sd!, min: min!, drop: drop! };
+  const [mean, sd, min, , ece, drop] = line.slice(name.length).trim().split(/\s+/);
+  return { mean: mean!, sd: sd!, min: min!, ece: ece!, drop: drop! };
 }
 
 /** `budget 0.5, floor 0.10   42.5%  12  2  84.6%  87.5%` */

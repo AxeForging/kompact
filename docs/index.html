@@ -472,9 +472,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <div class="upfront reveal" style="--d:150ms">
     <p><b>0.905 &#177; 0.078</b><span>ranking quality, 10 grouped splits of 18 sessions; worst split 0.684.
       <b>0.789</b> leave&#8209;one&#8209;out over all 41.</span></p>
-    <p><b>12.8&#8211;32.4%</b><span>of tokens freed per session, keeping 77.3% of the outputs
+    <p><b>3.6&#8211;32.6%</b><span>of tokens freed per session, keeping 77.3% of the outputs
       that were reused later.</span></p>
-    <p><b>164&#8239;ms</b><span>to score 1,543 calls. No key, no GPU, no request.</span></p>
+    <p><b>190&#8239;ms</b><span>to score 1,762 calls. No key, no GPU, no request.</span></p>
     <p class="upfront__do">
       <a href="#install">Install it</a> &#8212; or run <code>npm&#160;run&#160;dry&#8209;run</code>
       first and see what it frees on your own sessions, installing nothing
@@ -603,9 +603,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p class="caption">
     Every scorer judged on the same held-out sessions each split, so the comparison is paired.
     Splitting by session, not by row: calls inside one session are correlated and splitting on
-    rows would leak. On this corpus the calibration error is 0.019 against Laya’s 0.42–0.71,
-    which is what makes the keep-threshold mean anything — on all 41 sessions it is 0.051, and
-    <a href="#next">section 07</a> says so.
+    rows would leak. Across those same splits the calibration error is
+    <span class="num val">0.044</span> against every Laya config’s
+    <span class="num val">0.380–​0.642</span>, which is what makes the keep-threshold mean
+    anything. Held out one session at a time instead, the shipped fit is 0.051, and
+    <a href="#next">section 07</a> says why that is the number to plan around.
   </p>
 </section>
 
@@ -714,7 +716,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 <section class="wrap" id="cost" aria-labelledby="cost-h">
   <p class="rubric"><span class="rubric__n">04</span>Cost</p>
-  <h2 id="cost-h">164&nbsp;ms to score 1,543 tool calls.</h2>
+  <h2 id="cost-h">190&nbsp;ms to score 1,762 tool calls.</h2>
   <p class="lede">
     Compaction stops being a model call and becomes arithmetic. These are whole session
     logs, so the totals span more than one context window, so the ratio is what transfers.
@@ -728,11 +730,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         <th scope="col" class="n">Freed</th><th scope="col" class="n">Scoring</th>
       </tr></thead>
       <tbody>
-        <tr><th scope="row">25e65eab</th><td class="n">473</td><td class="n">273,749</td><td class="n">222,052</td><td class="n val">18.9%</td><td class="n">52 ms</td></tr>
-        <tr><th scope="row">20628921</th><td class="n">677</td><td class="n">635,869</td><td class="n">429,763</td><td class="n val">32.4%</td><td class="n">74 ms</td></tr>
-        <tr><th scope="row">agent-aca4b</th><td class="n">58</td><td class="n">32,560</td><td class="n">25,029</td><td class="n val">23.1%</td><td class="n">4 ms</td></tr>
-        <tr><th scope="row">78d7d176</th><td class="n">335</td><td class="n">391,638</td><td class="n">341,578</td><td class="n val">12.8%</td><td class="n">33 ms</td></tr>
-        <tr><th scope="row">Total</th><td class="n">1,543</td><td class="n">1,333,816</td><td class="n">1,018,422</td><td class="n val">23.6%</td><td class="n">164 ms</td></tr>
+        <tr><th scope="row">25e65eab</th><td class="n">473</td><td class="n">273,749</td><td class="n">222,052</td><td class="n val">18.9%</td><td class="n">49 ms</td></tr>
+        <tr><th scope="row">20628921</th><td class="n">921</td><td class="n">825,889</td><td class="n">556,490</td><td class="n val">32.6%</td><td class="n">110 ms</td></tr>
+        <tr><th scope="row">78d7d176</th><td class="n">335</td><td class="n">391,638</td><td class="n">341,578</td><td class="n val">12.8%</td><td class="n">28 ms</td></tr>
+        <tr><th scope="row">agent-a7606f</th><td class="n">33</td><td class="n">42,819</td><td class="n">41,272</td><td class="n val">3.6%</td><td class="n">2 ms</td></tr>
+        <tr><th scope="row">Total</th><td class="n">1,762</td><td class="n">1,534,095</td><td class="n">1,161,392</td><td class="n val">24.3%</td><td class="n">190 ms</td></tr>
       </tbody>
     </table>
   </div>
@@ -751,11 +753,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     your own history. If the number it prints is not worth having, you have lost a minute.
   </p>
   <p>
-    Expect somewhere in <span class="num val">12.8%</span> to <span class="num val">32.4%</span>,
-    and expect the spread to be your tool mix rather than noise. The 12.8% session is mostly
-    large reads that get read again; the 32.4% one is mostly commands whose output is never
-    quoted afterwards. A session with no long outputs at all has nothing to free, and the dry
-    run will say so rather than pretend otherwise.
+    Expect somewhere in <span class="num val">3.6%</span> to <span class="num val">32.6%</span>,
+    and expect the spread to be your tool mix and your session’s length rather than noise. The
+    32.6% session is mostly commands whose output is never quoted afterwards; the 12.8% one is
+    mostly large reads that get read again; the 3.6% one is 33 calls long, and a session that
+    short has almost nothing to free. The dry run tells you which of those you are.
   </p>
 
   <h3>Why it frees a fifth and not four fifths</h3>
@@ -804,19 +806,19 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <table class="data">
       <caption class="visually-hidden">what the sidecar costs to run</caption>
       <thead><tr>
-        <th scope="col">Scoring 1,543 calls, the four sessions above</th><th scope="col" class="n">Time</th>
+        <th scope="col">Scoring 1,762 calls, the four sessions above</th><th scope="col" class="n">Time</th>
         <th scope="col" class="n">Memory held</th><th scope="col" class="n">VRAM</th>
         <th scope="col" class="n">Cold start</th>
       </tr></thead>
       <tbody>
-        <tr class="same"><th scope="row">Built-in scorer</th><td class="n mark">164 ms</td><td class="n">none</td><td class="n">none</td><td class="n">none</td></tr>
-        <tr><th scope="row">Laya, fastest checkpoint</th><td class="n">21.5 s</td><td class="n">5.0 GB</td><td class="n">~5.0 GB</td><td class="n">7.1 s</td></tr>
+        <tr class="same"><th scope="row">Built-in scorer</th><td class="n mark">190 ms</td><td class="n">none</td><td class="n">none</td><td class="n">none</td></tr>
+        <tr><th scope="row">Laya, fastest checkpoint</th><td class="n">23.1 s</td><td class="n">5.0 GB</td><td class="n">~5.0 GB</td><td class="n">7.6 s</td></tr>
       </tbody>
     </table>
   </div>
   <p class="caption">
-    131× the time, for a lower AUC, on an RTX 4060 Laptop. Per request the fastest checkpoint
-    answers eight questions in 665 ms and the slowest in 1,974 ms. Fine-tuning moves the AUC; it
+    122× the time, for a lower AUC, on an RTX 4060 Laptop. Per request the fastest checkpoint
+    answers eight questions in 573 ms and the slowest in 1,906 ms. Fine-tuning moves the AUC; it
     does not move this table.
   </p>
 </section>
@@ -826,8 +828,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <h2 id="losses-h">The model we dropped fails quietly, which is worse than failing.</h2>
   <p>
     Laya’s English checkpoint reads 512 tokens and discards the rest with HTTP 200 and no
-    warning. Padding one decisive sentence with unrelated filler, the same question was asked
-    of a 4,278-character state and a 21,078-character state:
+    warning. <code>eval/truncation.ts</code> asks one question — <em>the text says the
+    deployment was rolled back</em> — of four states. Every one of them states the fact
+    verbatim. Only the position of the sentence changes.
   </p>
   <div class="scroller" tabindex="0" role="region" aria-label="Table: the truncation test — scrolls sideways">
     <table class="data">
@@ -837,16 +840,28 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         <th scope="col" class="n">Tokens read</th><th scope="col" class="n">Answer</th>
       </tr></thead>
       <tbody>
-        <tr><th scope="row">The sentence alone</th><td class="n">78</td><td class="n">48</td><td class="n">0.6107</td></tr>
-        <tr class="same"><th scope="row">…plus filler</th><td class="n">4,278</td><td class="n mark">512</td><td class="n mark">0.4113</td></tr>
-        <tr class="same"><th scope="row">…plus 5× the filler</th><td class="n">21,078</td><td class="n mark">512</td><td class="n mark">0.4113</td></tr>
+        <tr><th scope="row">The sentence alone</th><td class="n">85</td><td class="n">47</td><td class="n">0.8472</td></tr>
+        <tr class="same"><th scope="row">First, plus filler</th><td class="n">8,140</td><td class="n mark">512</td><td class="n mark">0.9152</td></tr>
+        <tr class="same"><th scope="row">First, plus 5× filler</th><td class="n">40,360</td><td class="n mark">512</td><td class="n mark">0.9152</td></tr>
+        <tr><th scope="row">Last, after 5× filler</th><td class="n">40,360</td><td class="n">512</td><td class="n val">0.2191</td></tr>
       </tbody>
     </table>
   </div>
   <p class="caption">
-    Bit-identical. Five times the input, the same answer — and <strong>0.41 for a fact the text
-    stated verbatim</strong>, which is the wrong side of any threshold. Both upstream projects
-    send the whole conversation, up to 25,000 tokens, as one state.
+    Rows two and three are bit-identical: <strong>32,220 characters were discarded</strong> and
+    nothing in the response says so. Row four is the bill for that. It is the same 40,360
+    characters and the same sentence, moved to the end where the cut removes it, and the answer
+    falls from 0.9152 to <strong>0.2191 for a fact the text still states verbatim</strong> —
+    from the right side of any threshold to the wrong one. A caller cannot tell rows three and
+    four apart: same HTTP 200, same shape, same silence. Whether an answer is about your input
+    or about the first 512 tokens of it is settled by where the evidence happened to fall. Both
+    upstream projects send the whole conversation, up to 25,000 tokens, as one state.
+  </p>
+  <p class="caption">
+    This table used to be three rows that no script produced — the one claim here with no code
+    behind it, on a page arguing that every figure is generated. It is
+    <code>npm&nbsp;run&nbsp;eval:truncation</code> now, and the figures it prints are these. The
+    ones it replaced are retracted: they showed the cut but not what the cut costs.
   </p>
 
   <h3>What the other 22.3% costs</h3>

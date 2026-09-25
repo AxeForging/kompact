@@ -15,7 +15,7 @@
  */
 import { join } from 'node:path';
 import { dot, fitLogistic as fit, sigmoid } from './logistic.js';
-import { auc, droppableAt } from './metrics.js';
+import { auc, droppableAt, ece } from './metrics.js';
 import { FEATURE_NAMES, featureVector } from '../src/features.js';
 import { loadCorpus, loadScores, rowKey } from './corpus.js';
 
@@ -51,7 +51,7 @@ const layaConfigs = Object.keys(cache)
   .filter((key) => rows.filter((r) => cache[key]![rowKey(r)]).length >= rows.length * 0.95)
   .sort();
 
-interface Run { auc: number; drop90: number }
+interface Run { auc: number; ece: number; drop90: number }
 const results = new Map<string, Run[]>();
 const record = (name: string, run: Run): void => {
   const list = results.get(name) ?? [];
@@ -77,7 +77,13 @@ while (iteration < ITERATIONS && attempts < ITERATIONS * 50) {
   const chars = test.map((r) => r.output_chars);
   const scoreRun = (scores: number[]): Run => {
     const at90 = droppableAt(scores, y, chars, 0.9);
-    return { auc: auc(scores, y), drop90: (100 * at90.droppedChars) / Math.max(1, at90.totalChars) };
+    // Calibration, not just ranking: the shipped policy compares a probability
+    // to a floor, so a scorer that ranks well and is calibrated badly is not
+    // usable at a fixed threshold. This column is the evidence for saying so.
+    return {
+      auc: auc(scores, y), ece: ece(scores, y),
+      drop90: (100 * at90.droppedChars) / Math.max(1, at90.totalChars),
+    };
   };
 
   const w = fit(train.map((r) => x.get(rowKey(r))!), train.map((r) => (r.result_needed ? 1 : 0)));
@@ -98,16 +104,20 @@ function stats(values: number[]): { mean: number; sd: number; lo: number; hi: nu
 console.log(`corpus (${from}), laya answers (${scoresFrom}): ${rows.length} calls, ${rows.filter((r) => r.result_needed).length} positives, ${sessions.length} sessions`);
 console.log(`${iteration} grouped splits, ${Math.round(100 * TEST_FRAC)}% of sessions held out each time\n`);
 
-const header = `${'scorer'.padEnd(34)}${'AUC mean'.padStart(9)}${'sd'.padStart(7)}${'min'.padStart(7)}${'max'.padStart(7)}${'drop@90%'.padStart(10)}`;
+const header = `${'scorer'.padEnd(34)}${'AUC mean'.padStart(9)}${'sd'.padStart(7)}${'min'.padStart(7)}${'max'.padStart(7)}${'ECE'.padStart(7)}${'drop@90%'.padStart(10)}`;
 console.log(header);
 console.log('-'.repeat(header.length));
 const ranked = [...results.entries()]
-  .map(([name, runs]) => ({ name, a: stats(runs.map((r) => r.auc)), d: stats(runs.map((r) => r.drop90)) }))
+  .map(([name, runs]) => ({
+    name, a: stats(runs.map((r) => r.auc)), e: stats(runs.map((r) => r.ece)),
+    d: stats(runs.map((r) => r.drop90)),
+  }))
   .sort((p, q) => q.a.mean - p.a.mean);
-for (const { name, a, d } of ranked) {
+for (const { name, a, e, d } of ranked) {
   console.log(
     `${name.padEnd(34)}${a.mean.toFixed(3).padStart(9)}${a.sd.toFixed(3).padStart(7)}` +
-    `${a.lo.toFixed(3).padStart(7)}${a.hi.toFixed(3).padStart(7)}${d.mean.toFixed(1).padStart(9)}%`,
+    `${a.lo.toFixed(3).padStart(7)}${a.hi.toFixed(3).padStart(7)}${e.mean.toFixed(3).padStart(7)}` +
+    `${d.mean.toFixed(1).padStart(9)}%`,
   );
 }
 

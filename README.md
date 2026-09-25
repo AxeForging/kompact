@@ -29,17 +29,22 @@ state with every request, and point the questions at calls inside it. Jev reads
 state; multilingual reads 1024.
 
 Over-long states are **truncated silently**: HTTP 200, no warning, a score
-computed from the first few percent. Measured on a state padded with irrelevant
-filler around one decisive sentence:
+computed from the first 512 tokens. `npm run eval:truncation` asks one question
+— *the text says the deployment was rolled back* — of four states. All four
+state the fact verbatim; only where the sentence sits changes.
 
 | state | chars | tokens read | answer |
 |---|---|---|---|
-| the sentence alone | 78 | 48 | 0.611 |
-| sentence + filler | 4,278 | 512 | 0.4113 |
-| sentence + filler | 21,078 | **512** | **0.4113** |
+| the sentence alone | 85 | 47 | 0.8472 |
+| first, plus filler | 8,140 | **512** | **0.9152** |
+| first, plus 5× filler | 40,360 | **512** | **0.9152** |
+| last, after 5× filler | 40,360 | 512 | **0.2191** |
 
-The 4k and 21k rows are bit-identical. Diluted, the English checkpoint answered
-**0.41 — below any sane threshold — for a fact the state stated verbatim**.
+Rows two and three are bit-identical: **32,220 characters were discarded** and
+nothing in the response says so. Row four is what that costs — the same 40,360
+characters and the same sentence, moved past the cut, and the answer falls from
+0.9152 to **0.2191 for a fact the text still states verbatim**. A caller cannot
+tell rows three and four apart: same 200, same shape, same silence.
 
 So the state is inverted: **one small prose state per tool call**, sized to the
 checkpoint's real budget and asserted in the test suite. Every number is turned
@@ -263,19 +268,19 @@ Measured on one machine, RTX 4060 Laptop, one `laya-serve` process
 
 | | |
 |---|---|
-| cold start to first answer | **7.1 s** |
+| cold start to first answer | **7.6 s** |
 | resident memory | **3.1 GB** at first answer, **4.9 GB** warm |
 | VRAM | **~5.0 GB** |
-| latency, `multilingual`, 8 questions | **665 ms** median |
-| latency, `english` / `typed-decisions`, 8 questions | 1,719 ms / 1,974 ms |
+| latency, `multilingual`, 8 questions | **573 ms** median |
+| latency, `english` / `typed-decisions`, 8 questions | 1,704 ms / 1,906 ms |
 
 `laya-serve` loads every checkpoint at startup and routes per request, so memory
 and start-up are properties of the router, not of the checkpoint you pick. Only
 latency is per checkpoint.
 
-Scoring one real session — 1,543 calls, two questions a request, eight in flight
-— takes **21.5 s on the fastest checkpoint against 164 ms for the built-in
-scorer**, holding ~5 GB the whole time. That is 131x the time for a lower AUC,
+Scoring this machine's sessions — 1,762 calls, two questions a request, eight in
+flight — takes **23.1 s on the fastest checkpoint against 190 ms for the built-in
+scorer**, holding ~5 GB the whole time. That is 122x the time for a lower AUC,
 which is the arithmetic behind the default. Fine-tuning changes the AUC; it does
 not change this table.
 

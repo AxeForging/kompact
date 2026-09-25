@@ -14,19 +14,19 @@ nowhere near its centre.
 corpus (local labels, 1063 of 2239 rows scored by every config), laya answers (local scores): 1063 calls, 75 positives, 18 sessions
 10 grouped splits, 30% of sessions held out each time
 
-scorer                             AUC mean     sd    min    max  drop@90%
---------------------------------------------------------------------------
-logistic (features)                   0.905  0.078  0.684  0.944     35.4%
-output size only                      0.878  0.010  0.855  0.890     11.9%
-laya typed-decisions/direct           0.719  0.026  0.666  0.754     12.1%
-laya multilingual/direct              0.667  0.023  0.638  0.713      4.5%
-laya english/entailment               0.625  0.016  0.602  0.658     18.0%
-laya multilingual/reproducible        0.610  0.016  0.594  0.632      2.5%
-laya multilingual/entailment          0.604  0.015  0.578  0.622      3.1%
-laya english/reproducible             0.539  0.016  0.521  0.566      4.1%
-laya english/direct                   0.480  0.012  0.462  0.502     10.1%
-laya typed-decisions/reproducible     0.419  0.025  0.393  0.470      8.2%
-laya typed-decisions/entailment       0.416  0.023  0.379  0.472      5.2%
+scorer                             AUC mean     sd    min    max    ECE  drop@90%
+---------------------------------------------------------------------------------
+logistic (features)                   0.905  0.078  0.684  0.944  0.044     35.4%
+output size only                      0.878  0.010  0.855  0.890  0.069     11.9%
+laya typed-decisions/direct           0.719  0.026  0.666  0.754  0.413     12.1%
+laya multilingual/direct              0.667  0.023  0.638  0.713  0.588      4.5%
+laya english/entailment               0.625  0.016  0.602  0.658  0.417     18.0%
+laya multilingual/reproducible        0.610  0.016  0.594  0.632  0.634      2.5%
+laya multilingual/entailment          0.604  0.015  0.578  0.622  0.642      3.1%
+laya english/reproducible             0.539  0.016  0.521  0.566  0.380      4.1%
+laya english/direct                   0.480  0.012  0.462  0.502  0.445     10.1%
+laya typed-decisions/reproducible     0.419  0.025  0.393  0.470  0.382      8.2%
+laya typed-decisions/entailment       0.416  0.023  0.379  0.472  0.428      5.2%
 
 paired vs best laya (typed-decisions/direct):
   logistic - laya AUC: mean +0.186 (sd 0.062, range 0.018 to 0.227)
@@ -137,12 +137,37 @@ one corpus, and the per-session column as the range that matters.
 ```
 session              calls  tok before  tok after    freed  scoring
 -------------------------------------------------------------------
-25e65eab-4941-41ea     473     273,749    222,052    18.9%     52ms
-20628921-046d-4fc0     677     635,869    429,763    32.4%     74ms
-78d7d176-4c84-4936     335     391,638    341,578    12.8%     33ms
-agent-aca4b44fdb68      58      32,560     25,029    23.1%      4ms
+25e65eab-4941-41ea     473     273,749    222,052    18.9%     49ms
+20628921-046d-4fc0     921     825,889    556,490    32.6%    110ms
+agent-a7606f063386      33      42,819     41,272     3.6%      2ms
+78d7d176-4c84-4936     335     391,638    341,578    12.8%     28ms
 -------------------------------------------------------------------
-total                 1543   1,333,816  1,018,422    23.6%    164ms
+total                 1762   1,534,095  1,161,392    24.3%    190ms
+```
+
+## Where the sidecar fails quietly — `eval/truncation.ts`
+
+Needs a live `laya-serve`, so this section is empty on a machine without one.
+The claim it backs is the page's, and until this script existed the rows behind
+it were prose nobody could re-run.
+
+```
+sidecar: http://127.0.0.1:8000/v1/systemone
+checkpoint: english
+question: "The text says the deployment was rolled back"
+stated verbatim in every state: "The deployment was rolled back at 14:02 because the migration locked the users table."
+
+state                    characters  tokens read   answer
+---------------------------------------------------------
+the sentence alone               85           47   0.8472
+first, plus filler            8,140          512   0.9152
+first, plus 5× filler        40,360          512   0.9152
+last, after 5× filler        40,360          512   0.2191
+
+The cut: 8,140 characters and 40,360 characters both read as 512 tokens and both answer 0.9152, bit-identical. 32,220 characters were discarded, with HTTP 200 and no warning.
+The cost: move that same sentence to the end of that same filler and the answer falls from 0.9152 to 0.2191 — for a fact the text still states verbatim. Nothing in the response distinguishes the two.
+
+Both upstream projects send the whole conversation, up to 25,000 tokens, as a single state.
 ```
 
 ## What the sidecar costs to run — `eval/laya-bench.ts`
@@ -153,39 +178,39 @@ of the router; only latency is per checkpoint.
 
 ```
 sidecar: http://127.0.0.1:8000/v1/systemone
-memory:  4944 MB resident (pid 1407371)
-gpu:     NVIDIA GeForce RTX 4060 Laptop GPU, 176 MiB, 8188 MiB
+memory:  4958 MB resident (pid 1407371)
+gpu:     NVIDIA GeForce RTX 4060 Laptop GPU, 227 MiB, 8188 MiB
 
 All three checkpoints are loaded by one process, so the memory above is the
 whole router. Latency is per checkpoint, 5 runs, median and worst:
 
 checkpoint           questions    median    worst  per question  input tok
 --------------------------------------------------------------------------
-english                      1    413 ms   687 ms      413.2 ms        104
-english                      2    587 ms   593 ms      293.5 ms        208
-english                      4    966 ms   973 ms      241.6 ms        416
-english                      8   1719 ms  1757 ms      214.9 ms        832
-multilingual                 1    111 ms   115 ms      110.6 ms         99
-multilingual                 2    184 ms   191 ms       92.1 ms        198
-multilingual                 4    309 ms   318 ms       77.3 ms        396
-multilingual                 8    665 ms   677 ms       83.1 ms        792
-typed-decisions              1    461 ms   731 ms      460.9 ms        104
-typed-decisions              2    815 ms  1229 ms      407.6 ms        208
-typed-decisions              4   1167 ms  1207 ms      291.7 ms        416
-typed-decisions              8   1974 ms  2016 ms      246.7 ms        832
+english                      1    381 ms   389 ms      381.2 ms        104
+english                      2    599 ms   629 ms      299.5 ms        208
+english                      4    968 ms   983 ms      242.1 ms        416
+english                      8   1704 ms  1771 ms      213.1 ms        832
+multilingual                 1    123 ms   125 ms      122.6 ms         99
+multilingual                 2    186 ms   190 ms       93.1 ms        198
+multilingual                 4    313 ms   317 ms       78.2 ms        396
+multilingual                 8    573 ms   627 ms       71.6 ms        792
+typed-decisions              1    383 ms   662 ms      383.2 ms        104
+typed-decisions              2    596 ms   680 ms      298.0 ms        208
+typed-decisions              4   1143 ms  1226 ms      285.7 ms        416
+typed-decisions              8   1906 ms  1921 ms      238.3 ms        832
 
 input tok is usage.input_tokens, which is the per-question row count times the
 number of questions — not the size of the state.
 
-Scoring 1543 calls, the sessions above: 2 questions a request, 8 in flight.
-  fastest checkpoint: 21.5 s and 4958 MB resident held for the session
-  built-in scorer:    0.16 s and no process at all
-  ratio:              131x the time
-(1543 calls and 164 ms come from the eval/sessions.ts run in
+Scoring 1762 calls, the sessions above: 2 questions a request, 8 in flight.
+  fastest checkpoint: 23.1 s and 4958 MB resident held for the session
+  built-in scorer:    0.19 s and no process at all
+  ratio:              122x the time
+(1762 calls and 190 ms come from the eval/sessions.ts run in
  this same report, so the two sides are the same work.)
 
-cold start:   7.1 s to first answer
-  memory:     3085 MB resident (pid 2039361)
-  gpu after:  NVIDIA GeForce RTX 4060 Laptop GPU, 5162 MiB, 8188 MiB
-  gpu before: NVIDIA GeForce RTX 4060 Laptop GPU, 165 MiB, 8188 MiB
+cold start:   7.6 s to first answer
+  memory:     3088 MB resident (pid 2211697)
+  gpu after:  NVIDIA GeForce RTX 4060 Laptop GPU, 5194 MiB, 8188 MiB
+  gpu before: NVIDIA GeForce RTX 4060 Laptop GPU, 227 MiB, 8188 MiB
 ```

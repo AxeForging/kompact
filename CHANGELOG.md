@@ -35,13 +35,14 @@ TypeSafe's hosted Jev model.
   later; see `eval/RESULTS.md`.
 - **A call that recorded a change is never dropped.** `Edit`, `Write`,
   `MultiEdit` and `NotebookEdit` keep their call whatever the scores say; only
-  their output can go. Rescues 21 of the 138 mutating calls in the corpus and
-  costs nothing: reused-output retention is unchanged at 84.6%.
+  their output can go. Rescues every one of the 220 mutating calls in the corpus
+  from ever being dropped, and costs nothing: exactly one of them had an output
+  that was ever needed verbatim, and retention stands at 77.3%.
 - **Laya stays available** behind the same `Asker` seam for anyone with a
   checkpoint fine-tuned on their own sessions, and is now measurable rather than
-  only comparable: `eval/laya-bench.ts` reports 7.1 s to start, ~4.9 GB resident,
-  ~5.0 GB of VRAM, and 21.5 s to score a session the built-in scorer scores in
-  164 ms.
+  only comparable: `eval/laya-bench.ts` reports 7.6 s to start, ~4.9 GB resident,
+  ~5.0 GB of VRAM, and 23.1 s to score the sessions the built-in scorer scores in
+  190 ms.
 - **Local calibration.** `npm run calibrate` refits on your own transcripts and
   emits `LAYA_COMPACT_WEIGHTS`; the shipped coefficients come from one person's
   sessions and should not be assumed to transfer.

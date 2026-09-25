@@ -100,6 +100,14 @@ one corpus, and the per-session column as the range that matters.
 
 ${sessions}
 
+## Where the sidecar fails quietly — \`eval/truncation.ts\`
+
+Needs a live \`laya-serve\`, so this section is empty on a machine without one.
+The claim it backs is the page's, and until this script existed the rows behind
+it were prose nobody could re-run.
+
+${optional('truncation.ts')}
+
 ## What the sidecar costs to run — \`eval/laya-bench.ts\`
 
 Needs a live \`laya-serve\`, so this section is empty on a machine without one.

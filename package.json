@@ -36,6 +36,7 @@
     "docs": "bun eval/demo.ts && bun eval/distribution.ts && bun eval/make-eval-page.ts",
     "eval:fit": "bun eval/fit.ts",
     "eval:score": "bun eval/score.ts",
+    "eval:truncation": "bun eval/truncation.ts",
     "docs:plot": "bun eval/distribution.ts",
     "smoke": "bun test/live-smoke.ts",
     "ckpt": "bun test/ckpt-compare.ts"
