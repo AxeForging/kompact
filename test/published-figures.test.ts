@@ -224,6 +224,32 @@ describe('published figures match eval/RESULTS.md', () => {
     }
   });
 
+  // The page claims it is complete with scripts blocked, and nothing checked it.
+  // The check needs no browser: strip every script from the markup and assert the
+  // content is still there and every control that cannot act without one ships
+  // hidden. A button that does nothing is worse than no button.
+  it('is complete with scripts blocked, and ships no dead controls', () => {
+    const page = read('docs/index.html');
+    const noscript = page.replace(/<script[^>]*>[\s\S]*?<\/script>/g, '');
+    expect(noscript).not.toContain('<script');
+
+    const rows = (pattern: RegExp): number => (noscript.match(pattern) ?? []).length;
+    expect(rows(/demo__call/g), 'the demo table is rendered by script').toBeGreaterThanOrEqual(9);
+    expect(rows(/ledger__row/g), 'the ledger is rendered by script').toBeGreaterThanOrEqual(10);
+    expect(rows(/<dt>/g), 'the glossary is rendered by script').toBeGreaterThanOrEqual(12);
+    expect(rows(/<details class="more"/g), 'the folded blocks need script').toBeGreaterThanOrEqual(18);
+
+    // Each of these acts only through script, so each ships hidden and is
+    // revealed by the script that gives it something to do.
+    for (const control of [
+      'class="copy" type="button" data-copy hidden',
+      'id="d-run" hidden',
+      'id="sweep" hidden',
+    ]) {
+      expect(noscript, `a control that cannot act is visible: ${control}`).toContain(control);
+    }
+  });
+
   // Renumbering has silently broken these twice. Moving the demo to the front of
   // the page shifted Evidence from 01 to 02, and two references — one to a
   // calibration figure, one to an outcome — went on naming the old number and
