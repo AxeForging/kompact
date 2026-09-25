@@ -883,7 +883,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
        gets <span class="val">0.789</span>, not <span class="val">0.905</span>.
        That is the number to plan around.</p>
   </div>
-  <p class="caption">
+    <details class="more">
+    <summary>How to read these two numbers, and which corpus they come from</summary>
+<p class="caption">
     <b>What these two numbers are.</b> <span class="num val">AUC</span> is the chance that a
     needed output outranks an unneeded one, if you pick one of each at random: 0.5 is a coin
     flip, 1.0 is perfect ordering. <span class="num val">Calibration error</span> is how far the
@@ -902,6 +904,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <span class="num val">0.789</span> and <span class="num val">0.051</span> —
     <a href="#next">the gaps in section 07</a> says why that is the pair to plan around.
   </p>
+  </details>
 </section>
 
 <section class="flooded" id="shape" aria-labelledby="shape-h">
