@@ -126,7 +126,7 @@ a:hover{ color: var(--accent); }
    its reader to decide in about a minute and the first figure used to be a
    scroll away. Typographic, on the flood, no card. */
 .upfront{
-  display:grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  display:grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
   gap: var(--space-sm) var(--space-xl);
   border-top:1px solid var(--flood-rule); padding-top: var(--space-md);
   margin-bottom: var(--space-lg); font-family: var(--sans);
@@ -471,7 +471,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   .row__value b{ display:inline; margin-left: var(--space-xs); }
   table.rows tr{ padding-block: var(--space-sm); border-bottom:1px solid var(--rule); }
   .ledger__row{ grid-template-columns: 1fr; gap: var(--space-2xs); }
-  .rows__ticks{ display:none; }
+  
 }
 
 @media print{
@@ -548,7 +548,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
           <td></td>
         </tr>
         <tr class="reveal" style="--d:220ms">
-          <th scope="row" class="row__name">Built&#8209;in scorer<span>12 fitted coefficients</span></th>
+          <th scope="row" class="row__name">Built&#8209;in scorer<span>12 of 13 coefficients fitted</span></th>
           <td class="row__plot">
             <div class="track">
               <div class="bar bar--best" style="--w:81%;--d:260ms"></div>
@@ -610,7 +610,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
     <div class="chart__key">
       <span class="key key--sd">spread across 10 splits (±1 sd)</span>
-      <span class="key key--worst">worst single split</span>
+      <span class="key key--worst">worst single split, marked on the winner only</span>
       <span>Higher is better. The scale starts at 0.50, below which a scorer is worse than chance.</span>
     </div>
   </div>
@@ -625,7 +625,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     coefficients that ship are fitted on all <span class="num val">41</span>, and
     leave-one-session-out across those 41 gives <span class="num val">0.789</span> with
     calibration error <span class="num val">0.051</span>: seven points and nearly three times the
-    error, against the same measurement on 18 of them. That is the honest figure for a session
+    error, against the 0.862 and 0.019 the same measurement gives on 18 of them. That is the honest figure for a session
     like this operator's, and <a href="#next">section 07</a> has why.
   </p>
   <p class="caption">
@@ -896,7 +896,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <h3>What the other 22.3% costs</h3>
   <p>
     “77.3% of reused outputs kept” invites you to supply your own answer for the rest, so here
-    it is, priced. Held-out scores, shipped policy, per session: <strong>55 of the 247 reused
+    it is, priced. (77.3 and 22.3 sum to 99.6, not 100: the two figures come from
+    <code>eval/policy.ts</code> and <code>eval/recovery.ts</code>, which disagree by one output
+    on where a partial head counts. Neither is rounded to hide it.) Held-out scores, shipped policy, per session: <strong>55 of the 247 reused
     outputs are dropped</strong> — 1.34 a session, and only one of them kept a head.
   </p>
   <div class="scroller" tabindex="0" role="region" aria-label="Table: what a wrong drop costs">
@@ -1036,7 +1038,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <div class="next">
     <div class="next__item">
       <p class="next__when">Blocks a 1.0</p>
-      <p class="next__what"><b>A live A/B.</b> Task outcome is <a href="#checked">measured</a> as far as a
+      <p class="next__what"><b>A live A/B.</b> Task outcome is measured in <a href="#checked">section 06</a> as far as a
         transcript allows — how often the information would no longer be there. Whether that
         changes what an assistant does needs the same session replayed both ways, against a real
         model, and it has not been.</p>
@@ -1065,7 +1067,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p class="next__when">Wanted</p>
       <p class="next__what"><b>A fine-tuned Laya checkpoint that wins.</b> The bar is 0.905, not
         chance. <code>eval/</code> re-runs the whole comparison for anyone who tries, and the
-        <a href="#cost">cost table</a> is the other half of that decision.</p>
+        <a href="#cost">section 04</a> is the other half of that decision.</p>
     </div>
     <div class="next__item">
       <p class="next__when">Structural</p>
@@ -1164,6 +1166,18 @@ claude plugin install laya-compact@laya-compact</code></pre>
     response, or a saving below the minimum) falls back to the built-in summary.
   </p>
 
+  <h3>How you know it is running</h3>
+  <p>
+    It says so, every time it fires. On each compaction the plugin raises a notice —
+    <code>kept 34/212 messages, no summary (23% freed, 0.2 floor)</code> — and writes the same
+    line, plus one line per decision, to the session log. If anything at all goes wrong you get
+    the other notice instead, naming the reason:
+    <code>fallback to built-in summary (…)</code>. Silence at a compaction means the hook never
+    ran, which is the <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> or the version check above,
+    not a bad decision. <code>claude&nbsp;plugin&nbsp;list</code> confirms it is installed;
+    only the notice confirms it is running.
+  </p>
+
   <h3 id="session">What it does to a session, in full</h3>
   <ul class="plain">
     <li>The <b>last six messages</b> are never touched, whatever they contain.</li>
@@ -1225,6 +1239,29 @@ copyButton?.addEventListener('click', async (event) => {
     setTimeout(restore, 4000);
   }
 });
+
+// A scrollable box needs a keyboard handle; a box that fits does not. The
+// markup ships the handle so it survives with scripts blocked, and this takes
+// it away again wherever there is nothing to scroll to.
+const boxes = [...document.querySelectorAll('.scroller, .plate__scroll, .cmd pre')];
+const retune = () => {
+  for (const box of boxes) {
+    const overflows = box.scrollWidth > box.clientWidth + 1;
+    if (overflows) {
+      box.setAttribute('tabindex', '0');
+      if (box.dataset.label) box.setAttribute('aria-label', box.dataset.label);
+      if (box.dataset.role) box.setAttribute('role', box.dataset.role);
+    } else {
+      box.removeAttribute('tabindex');
+      if (box.hasAttribute('aria-label')) box.dataset.label = box.getAttribute('aria-label');
+      if (box.hasAttribute('role')) box.dataset.role = box.getAttribute('role');
+      box.removeAttribute('role');
+      box.removeAttribute('aria-label');
+    }
+  }
+};
+retune();
+addEventListener('resize', retune, { passive: true });
 
 // Report which section is being read, in the contents row.
 const links = [...document.querySelectorAll('.contents a')];
@@ -1288,8 +1325,9 @@ if (demo && list && list.children.length === demo.decisions.length) {
     running = false;
     run.textContent = `Replay — ${Math.round((100 * freedTotal) / total)}% freed`;
     runs += 1;
-    status.textContent = `Replay ${runs} finished. ${shortened} of ${demo.decisions.length} calls `
-      + `shortened, ${nf.format(freedTotal)} of ${nf.format(total)} characters freed.`;
+    status.textContent = `Replay ${runs} ${cancelled ? 'stopped early, showing the end state' : 'finished'}. `
+      + `${shortened} of ${demo.decisions.length} calls shortened, `
+      + `${nf.format(freedTotal)} of ${nf.format(total)} characters freed.`;
   };
 
   const reset = () => {
@@ -1314,12 +1352,14 @@ if (demo && list && list.children.length === demo.decisions.length) {
   run.textContent = `Replay — ${Math.round((100 * freedTotal) / total)}% freed`;
 
   let running = false;
+  let cancelled = false;
   run.addEventListener('click', () => {
-    // Guarded rather than disabled: `run.disabled = true` while the button had
-    // focus blurred it to <body> and nothing ever gave it back.
-    if (running) return;
+    // Never disabled: `run.disabled = true` while the button had focus blurred
+    // it to <body> and nothing gave it back. A second press stops instead.
+    if (running) { cancelled = true; return; }
     running = true;
-    run.textContent = 'Scoring…';
+    cancelled = false;
+    run.textContent = 'Stop';
     reset();
     let freed = 0;
     let step = 0;
@@ -1327,7 +1367,7 @@ if (demo && list && list.children.length === demo.decisions.length) {
     // still counts — CSS has already removed every transition, so what changes
     // is content, not movement. Same cadence, nothing sliding.
     const tick = () => {
-      if (step >= order.length) { settleAll(); return; }
+      if (cancelled || step >= order.length) { settleAll(); return; }
       const index = order[step];
       paint(index, false);
       setTimeout(() => {
