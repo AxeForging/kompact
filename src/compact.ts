@@ -38,6 +38,16 @@ export const DEFAULT_OPTIONS: ResolvedCompactOptions = {
   phrasing: DEFAULT_PHRASING,
   truncateHeadChars: 300,
   minYieldChars: 200,
+  /**
+   * A cap on what is KEPT, which the ranking never had an opinion about.
+   *
+   * See `CompactOptions.maxKeptChars` for the measurements. Short version: half
+   * of all output characters live in about 3% of calls, reuse falls evenly
+   * through an output rather than at its head, and 24,000 is the largest cap
+   * measured to free more (26.8% against 24.2%) while leaving the per-session
+   * tail identical to shipping no cap at all.
+   */
+  maxKeptChars: 24_000,
 };
 
 function finite(value: number | undefined, fallback: number): number {
@@ -66,6 +76,10 @@ export function resolveOptions(options: CompactOptions = {}): ResolvedCompactOpt
     minYieldChars: Math.max(
       0,
       Math.floor(finite(options.minYieldChars, DEFAULT_OPTIONS.minYieldChars)),
+    ),
+    maxKeptChars: Math.max(
+      0,
+      Math.floor(finite(options.maxKeptChars, DEFAULT_OPTIONS.maxKeptChars)),
     ),
   };
 }
@@ -238,6 +252,7 @@ export function applyDecisions(
   decisions: readonly CallDecision[],
   calls: readonly ToolCall[],
   headChars: number,
+  maxKeptChars = 0,
 ): Message[] {
   const byId = new Map(calls.map((call) => [call.id, call]));
   const actions = new Map<string, CallDecision['action']>();
@@ -245,11 +260,22 @@ export function applyDecisions(
     const call = byId.get(decision.id);
     if (call && decision.action !== 'keep') actions.set(call.tool_use_id, decision.action);
   }
+  /**
+   * The cap applies to a result the ranking kept, so it is the one rewrite that
+   * can fire on a message no decision mentions. `touched` has to see it, or a
+   * 200,000-character output the scorer liked passes through whole.
+   */
+  const over = (text: string | undefined): boolean =>
+    maxKeptChars > 0 && (text ?? '').length > maxKeptChars + 120;
+  const capped = (tool_use_id: string, text: string | undefined): boolean =>
+    !actions.has(tool_use_id) && over(text);
   const kept: Message[] = [];
   for (const message of messages) {
     const touched =
-      message.toolUses.some((tool) => actions.has(tool.tool_use_id)) ||
-      (message.toolResults ?? []).some((result) => actions.has(result.tool_use_id));
+      message.toolUses.some((tool) => actions.has(tool.tool_use_id) || capped(tool.tool_use_id, tool.text)) ||
+      (message.toolResults ?? []).some(
+        (result) => actions.has(result.tool_use_id) || capped(result.tool_use_id, result.text),
+      );
     if (!touched) {
       kept.push(message);
       continue;
@@ -257,8 +283,10 @@ export function applyDecisions(
     const toolUses = message.toolUses
       .filter((tool) => actions.get(tool.tool_use_id) !== 'drop_call')
       .map((tool) => {
-        if (actions.get(tool.tool_use_id) !== 'drop_result') return tool;
-        const text = truncatedResultText(tool.text ?? '', tool.isError ?? false, headChars);
+        const dropped = actions.get(tool.tool_use_id) === 'drop_result';
+        if (!dropped && !capped(tool.tool_use_id, tool.text)) return tool;
+        const text = truncatedResultText(
+          tool.text ?? '', tool.isError ?? false, dropped ? headChars : maxKeptChars);
         if ((tool.text ?? '') === text) return tool;
         // Spread first so engine-owned fields (result, agentId, durationMs)
         // survive the rebuild; only `text` is deliberately replaced.
@@ -269,8 +297,10 @@ export function applyDecisions(
     const toolResults = (message.toolResults ?? [])
       .filter((result) => actions.get(result.tool_use_id) !== 'drop_call')
       .map((result) => {
-        if (actions.get(result.tool_use_id) !== 'drop_result') return result;
-        const text = truncatedResultText(result.text, result.isError ?? false, headChars);
+        const dropped = actions.get(result.tool_use_id) === 'drop_result';
+        if (!dropped && !capped(result.tool_use_id, result.text)) return result;
+        const text = truncatedResultText(
+          result.text, result.isError ?? false, dropped ? headChars : maxKeptChars);
         return text === result.text ? result : { ...result, text };
       });
     if (
@@ -392,7 +422,8 @@ export async function compact(
   // An unanswered call keeps both halves: a wrong keep costs context, a wrong
   // drop destroys work that cannot be recovered.
   const decisions = decideAll(calls, answers, resolved);
-  const kept = applyDecisions(messages, decisions, calls, resolved.truncateHeadChars);
+  const kept = applyDecisions(
+    messages, decisions, calls, resolved.truncateHeadChars, resolved.maxKeptChars);
   return {
     messages: kept,
     decisions,

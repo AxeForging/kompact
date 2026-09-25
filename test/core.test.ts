@@ -222,6 +222,66 @@ describe('applyDecisions', () => {
     const kept = applyDecisions(messages, [], collectToolCalls(messages, 2), 300);
     expect(kept[0]).toBe(messages[0]);
   });
+
+  /**
+   * The cap is the one rewrite that fires with no decision behind it, so the
+   * thing to check is that it reaches a result the ranking KEPT. Every other
+   * truncation in this file is reached through an action.
+   */
+  const capped = (size: number, max: number): string => {
+    const messages = transcript([
+      ...pair('big', 'Read', { file_path: 'src/huge.ts' }, 'y'.repeat(size)),
+    ]);
+    const kept = applyDecisions(messages, [], collectToolCalls(messages, 2), 300, max);
+    const result = kept.flatMap((m) => m.toolResults ?? []).find((r) => r.tool_use_id === 'big');
+    return result?.text ?? '';
+  };
+
+  it('caps a result no decision mentions', () => {
+    const text = capped(60_000, 24_000);
+    expect(text.length).toBeLessThan(60_000);
+    expect(text).toContain('laya-compact truncated');
+    expect(text.startsWith('y'.repeat(24_000))).toBe(true);
+  });
+
+  it('leaves a result under the cap exactly as it was', () => {
+    expect(capped(5_000, 24_000)).toBe('y'.repeat(5_000));
+  });
+
+  it('does nothing when the cap is off', () => {
+    expect(capped(60_000, 0)).toBe('y'.repeat(60_000));
+    // The default argument is the same as off, so an old four-argument caller
+    // keeps the behaviour it had.
+    const messages = transcript([
+      ...pair('big', 'Read', { file_path: 'src/huge.ts' }, 'y'.repeat(60_000)),
+    ]);
+    const kept = applyDecisions(messages, [], collectToolCalls(messages, 2), 300);
+    const result = kept.flatMap((m) => m.toolResults ?? []).find((r) => r.tool_use_id === 'big');
+    expect(result?.text).toHaveLength(60_000);
+  });
+
+  it('still gives a dropped result the head length, not the cap', () => {
+    const messages = transcript([
+      ...pair('big', 'Read', { file_path: 'src/huge.ts' }, 'y'.repeat(60_000)),
+    ]);
+    const calls = collectToolCalls(messages, 2);
+    const drop = calls.find((c) => c.tool_use_id === 'big')!;
+    const kept = applyDecisions(
+      messages,
+      [{ id: drop.id, tool: drop.tool, action: 'drop_result', reason: 'result_dropped',
+         keepResult: 0, keepCall: 1 }],
+      calls, 300, 24_000,
+    );
+    const result = kept.flatMap((m) => m.toolResults ?? []).find((r) => r.tool_use_id === 'big');
+    expect(result?.text.startsWith('y'.repeat(300))).toBe(true);
+    expect(result?.text.length).toBeLessThan(500);
+  });
+
+  it('resolves the documented default', () => {
+    expect(resolveOptions({}).maxKeptChars).toBe(24_000);
+    expect(resolveOptions({ maxKeptChars: 0 }).maxKeptChars).toBe(0);
+    expect(resolveOptions({ maxKeptChars: -5 }).maxKeptChars).toBe(0);
+  });
 });
 
 describe('pool', () => {

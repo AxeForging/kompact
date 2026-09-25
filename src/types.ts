@@ -148,6 +148,46 @@ export interface CompactOptions {
    * says, because the upside cannot repay the risk.
    */
   minYieldChars?: number;
+  /**
+   * Longest a KEPT tool result may be, in characters. Default 24,000; 0 disables.
+   *
+   * The ranking decides which outputs to drop. This decides how much of the ones
+   * it keeps is worth carrying, and it is a separate question, because output
+   * size is brutally lopsided: measured over 68 sessions and 5,151 calls on one
+   * machine, half of all output characters live in about 3% of the calls.
+   *
+   * `eval/where-reused.ts` asks where inside a reused output the reuse falls.
+   * The answer is: everywhere — median depth 0.46 of the way through, only 9%
+   * of reused passages inside the first tenth — so a cap is close to sampling
+   * the output at random, and a tail window does not beat a plain head (it
+   * measured slightly worse at every budget).
+   *
+   * What makes a cap worth having anyway is the size distribution.
+   * `eval/cap.ts` scores both levers on one corpus by one measure, the share of
+   * later-quoted passages still present:
+   *
+   *     ranking only (shipped)   24.2% freed   83.0% of quoted passages kept
+   *     cap 24,000 added         26.8% freed   82.9%
+   *     cap 16,000 added         30.6% freed   82.2%
+   *     cap 8,000 added          43.3% freed   79.3%
+   *     cap 8,000, no ranking    31.8% freed   96.1%
+   *
+   * The last row is the uncomfortable one and it is reported rather than buried:
+   * on aggregate, a cap with no model beats the shipped ranking on both axes at
+   * once. Per session it is less flattering — the cap has sessions that lose
+   * every quoted passage, which the ranking does not — so this ships as an
+   * addition to the ranking and not a replacement for it.
+   *
+   * 24,000 is the default because it is the largest setting measured to leave
+   * the tail exactly as it is: across the 46 sessions with ten or more quoted
+   * passages, the tenth percentile (66.7%), the worst session (37.5%) and the
+   * number of sessions keeping under half (2) are identical to shipping no cap
+   * at all, while the median session frees 9.6% instead of 7.3%. 16,000 doubles
+   * the median session's saving and costs one more such session; that is a
+   * defensible setting, and it is not the one a default should take on the
+   * reader's behalf.
+   */
+  maxKeptChars?: number;
 }
 
 export interface ResolvedCompactOptions {
@@ -160,6 +200,7 @@ export interface ResolvedCompactOptions {
   phrasing: Phrasing;
   truncateHeadChars: number;
   minYieldChars: number;
+  maxKeptChars: number;
 }
 
 export interface CompactResult {

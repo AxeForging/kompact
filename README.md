@@ -191,6 +191,7 @@ The type declarations in `types/` were written by Claude Code 2.1.281.
 | `truncateHeadChars` | `300` | head kept of a dropped result |
 | `maxCallStateTokens` | `700` | `scorer=laya` only; must stay under the checkpoint's budget |
 | `minYieldChars` | `200` | fewest characters a drop must free to be worth making |
+| `maxKeptChars` | `24000` | longest a **kept** result may be; `0` disables |
 | `phrasing` | `reproducible` | `scorer=laya` only; `direct` or `entailment` |
 | `concurrency` | `8` | requests in flight; `scorer=laya` only in practice |
 | `requestTimeoutMs` | `30000` | deadline for one sidecar request |
@@ -207,6 +208,54 @@ floor the ranking is not worth acting on however confident it is.
 A dropped result is **not deleted**: its first `truncateHeadChars` characters
 survive with a note, and the assistant can re-run the tool. That is why 90%
 safety is a defensible setting: a miss costs a re-run, not the work.
+
+### The cap on what is kept
+
+The ranking decides *which* outputs to drop. It never had an opinion about how
+much of the ones it keeps is worth carrying, and that turns out to be where the
+characters are. Over 68 sessions and 5,151 calls on one machine, **half of all
+tool output lives in about 3% of the calls**.
+
+`bun eval/where-reused.ts` asks where inside a reused output the reuse actually
+falls, by giving every 8-word shingle its character offset and finding which
+ones later text quotes. Reuse is spread through the output, not gathered at the
+front: median depth **0.46** of the way in, only **9%** of quoted passages
+inside the first tenth. A tail window does not help either — head-and-tail
+measured slightly *worse* than a plain head at every budget, so that idea is
+dead and this is where it is buried.
+
+A cap is worth having anyway, because of the size distribution rather than the
+position of the reuse. `bun eval/cap.ts` scores both levers on one corpus by one
+measure, the share of later-quoted passages still present afterwards:
+
+| policy | freed | quoted passages kept |
+| --- | --- | --- |
+| ranking only (shipped before this) | 24.2% | 83.0% |
+| ranking + cap 24,000 | **26.8%** | 82.9% |
+| ranking + cap 16,000 | 30.6% | 82.2% |
+| ranking + cap 8,000 | 43.3% | 79.3% |
+| **cap 8,000, no ranking at all** | **31.8%** | **96.1%** |
+
+**The last row is the uncomfortable one, and it is not buried.** On aggregate a
+cap with no model beats the whole scorer on both axes at once: more freed, and
+far more of what got quoted still present. Per session it is less flattering —
+across the 46 sessions with ten or more quoted passages the cap has sessions
+that keep *none* of what was quoted from them, which the ranking does not — so
+the cap ships as an addition to the ranking rather than a replacement for it.
+Anyone who wants the honest minimum can set `keepThreshold: 0` and keep the cap.
+
+`24000` is the default because it is the largest cap measured to free more while
+leaving the tail exactly where it was. Per session, against shipping no cap:
+
+| | median freed | median kept | 10th pct | worst | sessions under half |
+| --- | --- | --- | --- | --- | --- |
+| no cap | 7.3% | 97.8% | 66.7% | 37.5% | 2 |
+| cap 24,000 | 9.6% | 96.5% | 66.7% | 37.5% | 2 |
+| cap 16,000 | 14.9% | 94.6% | 66.7% | 37.5% | 3 |
+
+16,000 doubles the median session's saving and costs one more session that keeps
+under half of what it quoted. That is a defensible setting; it is not one a
+default should take on anyone's behalf.
 
 **Why a floor and a budget, not a threshold.** The scorer produces a ranking,
 and that ranking generalises across sessions. An absolute probability cut does
