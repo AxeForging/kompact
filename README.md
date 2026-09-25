@@ -146,6 +146,19 @@ The type declarations in `types/` were written by Claude Code 2.1.281.
 | `minReductionRatio` | `0.25` | below this saving, delegate to the built-in summary |
 | `truncateHeadChars` | `300` | head kept of a dropped result |
 | `maxCallStateTokens` | `700` | `scorer=laya` only; must stay under the checkpoint's budget |
+| `minYieldChars` | `200` | fewest characters a drop must free to be worth making |
+| `phrasing` | `reproducible` | `scorer=laya` only; `direct` or `entailment` |
+| `concurrency` | `8` | requests in flight; `scorer=laya` only in practice |
+| `requestTimeoutMs` | `30000` | deadline for one sidecar request |
+
+Two of these do nothing under the default scorer and say so in the manifest:
+`maxCallStateTokens` sizes a state only a model reads, and `phrasing` changes
+wording the built-in scorer never looks at.
+
+A call is also never dropped when doing so would free less than `minYieldChars`.
+Dropping an 89-character `Grep` result freed 126 characters — about thirty tokens
+— for a real chance of losing something the session went on to need; below the
+floor the ranking is not worth acting on however confident it is.
 
 A dropped result is **not deleted**: its first `truncateHeadChars` characters
 survive with a note, and the assistant can re-run the tool. That is why 90%
@@ -284,6 +297,14 @@ works against it by repointing one URL — no second plugin to write:
 ```sh
 npm run serve        # http://127.0.0.1:8770/v1/systemone, no model, no GPU
 ```
+
+`npx laya-compact-serve --help` lists the rest: `--port`, `--host`, `--api-key`,
+or `LAYA_COMPACT_PORT` / `LAYA_COMPACT_HOST` / `LAYA_COMPACT_API_KEY`. It also
+answers `GET /health`, and rejects a body over 1 MB with `413`. Binding beyond
+`127.0.0.1` without a key warns, because the endpoint takes arbitrary text.
+
+`LayaClient` — the path to a real Laya sidecar, not this server — reads
+`LAYA_URL` and `LAYA_API_KEY` from the environment when neither is passed.
 
 For Codex CLI, install [fatelei/jev-compact][up2] and put this in
 `~/.codex/fast-jev-compaction.json`:

@@ -60,11 +60,52 @@ export function loadScores(
   return { scores, from: path.includes('fixtures') ? 'fixture' : 'local scores' };
 }
 
-export function loadCorpus(dir: string, fixtureOnly = false): { rows: LabelRow[]; from: string } {
+/** Every row id that every cached Laya configuration answered. */
+function scoredKeys(dir: string, forced: boolean): Set<string> {
+  const priv = join(dir, 'scores.json');
+  const path = !forced && existsSync(priv) ? priv : join(dir, 'fixtures', 'scores.json');
+  if (!existsSync(path)) return new Set();
+  const raw = JSON.parse(readFileSync(path, 'utf8')) as Record<string, Record<string, unknown>>;
+  const configs = Object.values(raw);
+  if (configs.length === 0) return new Set();
+  // Only ids every configuration answered: a row one checkpoint skipped cannot
+  // take part in a paired comparison either.
+  return new Set(
+    Object.keys(configs[0]!).filter((id) => configs.every((byId) => byId[id] !== undefined)),
+  );
+}
+
+/**
+ * The labelled corpus, restricted to the rows every scorer was run against.
+ *
+ * Sessions accumulate on this machine faster than nine Laya configurations can
+ * be scored against them — a full re-score is hours of sidecar time — so
+ * `labels.jsonl` drifts ahead of `scores.json`.
+ *
+ * `paired` decides what to do about that, and only two scripts should set it.
+ * `repeat.ts` and `baseline.ts` compare Laya against the logistic model, and
+ * scoring one on everything and the other on a subset would not be a comparison
+ * — so they take the intersection. Everything else — the policy sweep, recovery
+ * cost, task outcome, the fit itself — involves no Laya at all, and throwing
+ * away two thirds of the labelled data to match a constraint that does not apply
+ * to them would be superstition. `npm run eval:score` is what grows the overlap.
+ */
+export function loadCorpus(
+  dir: string,
+  { fixtureOnly = false, paired = false }: { fixtureOnly?: boolean; paired?: boolean } = {},
+): { rows: LabelRow[]; from: string } {
   const forced = fixtureOnly || process.argv.includes('--fixture');
   const priv = join(dir, 'labels.jsonl');
   const path = !forced && existsSync(priv) ? priv : join(dir, 'fixtures', 'labels.jsonl');
-  const rows = readFileSync(path, 'utf8')
+  const all = readFileSync(path, 'utf8')
     .split('\n').filter((line) => line.trim() !== '').map((line) => JSON.parse(line) as LabelRow);
-  return { rows, from: path.endsWith('fixtures/labels.jsonl') ? 'fixture' : 'local labels' };
+  const scored = paired ? scoredKeys(dir, forced) : new Set<string>();
+  const rows = scored.size === 0
+    ? all
+    : all.filter((row) => scored.has(rowKey(row)) || scored.has(row.tool_use_id));
+  const where = path.endsWith('fixtures/labels.jsonl') ? 'fixture' : 'local labels';
+  const from = rows.length === all.length
+    ? where
+    : `${where}, ${rows.length} of ${all.length} rows scored by every config`;
+  return { rows, from };
 }

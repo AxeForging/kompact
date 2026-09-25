@@ -12,7 +12,7 @@ import type { SystemOneQuestions, ToolCall } from './types.js';
  * history?"). `reproducible` asks what is true of the text instead, which is
  * also the property the decision actually turns on: re-running a tool recovers
  * a file, but never recovers a test failure. The other two exist so Phase 4 can
- * measure them against labels rather than us guessing.
+ * measure them against labels rather than us guessing (`eval/score.ts`).
  */
 export type Phrasing = 'reproducible' | 'direct' | 'entailment';
 

@@ -11,11 +11,12 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { dot, fitLogistic as fit, sigmoid } from './logistic.js';
 import { auc, ece } from './metrics.js';
+import { loadCorpus } from './corpus.js';
 import { FEATURE_NAMES, featureVector } from '../src/features.js';
 import type { LabelRow } from './extract-labels.js';
 
-const rows: LabelRow[] = readFileSync(join(import.meta.dirname, 'labels.jsonl'), 'utf8')
-  .split('\n').filter((l) => l.trim() !== '').map((l) => JSON.parse(l) as LabelRow);
+const { rows, from } = loadCorpus(import.meta.dirname);
+console.log(`corpus (${from}): ${rows.length} calls, ${new Set(rows.map((r) => r.session)).size} sessions\n`);
 
 
 

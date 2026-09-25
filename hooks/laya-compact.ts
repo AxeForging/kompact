@@ -57,6 +57,7 @@ export function resolveHookConfig(options: PluginOptions): HookConfig {
   const numbers: Partial<Omit<CompactOptions, 'goal' | 'phrasing'>> = {};
   for (const key of [
     'keepThreshold',
+    'minYieldChars',
     // `targetReduction` is the main dial and the manifest has always offered it,
     // but it was missing from this list, so setting it did nothing.
     'targetReduction',

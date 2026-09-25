@@ -30,7 +30,7 @@ const TEST_FRAC = num('--test-frac', 0.3);
 /** A split with too few positives cannot produce a meaningful AUC. */
 const MIN_TEST_POSITIVES = 5;
 
-const { rows, from } = loadCorpus(dir);
+const { rows, from } = loadCorpus(dir, { paired: true });
 
 const sessions = [...new Set(rows.map((r) => r.session))];
 const x = new Map(rows.map((r) => [rowKey(r), featureVector(r.state, r.tool, r.is_error)]));

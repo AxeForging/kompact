@@ -1,5 +1,5 @@
 /**
- * Phase 4 — measure every checkpoint x phrasing against the Phase 3 labels.
+ * Measures every checkpoint x phrasing against the labelled corpus.
  *
  * Accuracy is the wrong metric: only ~10% of outputs are needed verbatim, so
  * "keep everything" already scores 90%. What matters is ranking quality (AUC)
@@ -21,7 +21,10 @@ import type { LabelRow } from './extract-labels.js';
 
 const dir = import.meta.dirname;
 const args = process.argv.slice(2);
-const port = args.includes('--port') ? args[args.indexOf('--port') + 1] : '8001';
+// 8000 is `laya-serve`'s own default (LAYA_PORT). This said 8001, and since no
+// npm script ran this file nobody hit it: every request failed instantly with
+// "Unable to connect" and the cache silently kept whatever it already had.
+const port = args.includes('--port') ? args[args.indexOf('--port') + 1] : '8000';
 const limit = args.includes('--limit') ? Number(args[args.indexOf('--limit') + 1]) : Infinity;
 const baseUrl = `http://127.0.0.1:${port}/v1/systemone`;
 

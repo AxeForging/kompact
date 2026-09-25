@@ -89,6 +89,12 @@ export interface LabelRow {
   /** Exactly the state production would send for this call. */
   state: string;
   state_tokens: number;
+  /** Index of the message holding this call's result. */
+  result_index: number;
+  /** Index of the message that first reused the output verbatim; -1 if none. */
+  first_reuse_index: number;
+  /** Messages in the whole session. */
+  messages: number;
   labeled_at: string;
 }
 
@@ -121,6 +127,10 @@ export function labelSession(path: string, session: string, today: string): Labe
   const pending = new Map<string, Set<string>>();
   const matches = new Map<string, Set<string>>();
   const quotedBy = new Map<string, string>();
+  // The message index of the first reuse. Without it "was this output needed"
+  // cannot be asked *relative to a compaction point*, which is the difference
+  // between recovery cost and task outcome.
+  const firstReuse = new Map<string, number>();
 
   messages.forEach((message, index) => {
     // Look up first: a later message quoting an earlier output is the signal.
@@ -145,6 +155,7 @@ export function labelSession(path: string, session: string, today: string): Labe
           if (!quotedBy.has(id)) {
             quotedBy.set(id, message.toolUses.length > 0 ? 'reused in a later tool input' : 'quoted in later text');
           }
+          if (!firstReuse.has(id)) firstReuse.set(id, index);
         }
       }
     }
@@ -186,6 +197,12 @@ export function labelSession(path: string, session: string, today: string): Labe
       evidence,
       state: built.state,
       state_tokens: built.tokens,
+      /** Where the call's result sits in the transcript. */
+      result_index: call.resultIndex,
+      /** Message index of the first verbatim reuse, or -1 if never reused. */
+      first_reuse_index: firstReuse.get(call.id) ?? -1,
+      /** Messages in the session, so an index can be read as a position. */
+      messages: messages.length,
       labeled_at: today,
     };
   });

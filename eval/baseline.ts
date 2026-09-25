@@ -17,7 +17,7 @@ import { auc, droppableAt } from './metrics.js';
 import type { LabelRow } from './extract-labels.js';
 
 const dir = import.meta.dirname;
-const { rows, from } = loadCorpus(dir);
+const { rows, from } = loadCorpus(dir, { paired: true });
 console.log(`corpus (${from}): ${rows.length} calls\n`);
 
 /** Features are read back out of the state prose the model was given, so the

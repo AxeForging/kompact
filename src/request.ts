@@ -37,7 +37,12 @@ export const CONTEXT_LENGTH: Record<string, number> = {
   'typed-decisions': 1024,
 };
 
-/** `laya-serve` rejects a state above this with HTTP 413 (`MAX_STATE_CHARS`). */
+/**
+ * The size at which `laya-serve` itself answers 413. Documentation, not a check:
+ * nothing here compares a state against it, because the per-call states this
+ * package builds are two orders of magnitude smaller. `src/server.ts` enforces
+ * its own, larger, body limit.
+ */
 export const MAX_STATE_CHARS = 50_000;
 
 export interface SystemOneRequest {

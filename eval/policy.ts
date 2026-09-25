@@ -16,19 +16,11 @@ import type { CallAnswer, ToolCall } from '../src/index.js';
 
 /** Mirrors `decideCall`'s own list; a mutating call's input is the change record. */
 const MUTATING = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
-import { outOfFold } from './logistic.js';
-import { featureVector } from '../src/features.js';
+import { outOfFoldScores } from './oof.js';
 
 const { rows, from } = loadCorpus(import.meta.dirname);
-
-const xs = rows.map((r) => featureVector(r.state, r.tool, r.is_error));
-const score = new Map<string, number>();
-outOfFold(rows, xs, rows.map((r) => (r.result_needed ? 1 : 0)))
-  .forEach((p, i) => score.set(rowKey(rows[i]!), p));
 /** The second model decides whether a drop keeps a head or removes the call. */
-const callScore = new Map<string, number>();
-outOfFold(rows, xs, rows.map((r) => (r.call_needed ? 1 : 0)))
-  .forEach((p, i) => callScore.set(rowKey(rows[i]!), p));
+const { result: score, call: callScore } = outOfFoldScores(import.meta.dirname, rows);
 /** What `truncateHeadChars` preserves when only the result is dropped. */
 const HEAD = 300;
 

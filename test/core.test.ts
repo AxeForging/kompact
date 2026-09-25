@@ -292,7 +292,7 @@ describe('decideAll ranks before it drops', () => {
     callIndex: 0, resultIndex: 1, resultText: 'x'.repeat(chars), resultChars: chars,
     isError: false, pinned: false,
   });
-  const options = { keepThreshold: 0.1, targetReduction: 0.5, truncateHeadChars: 300 };
+  const options = { keepThreshold: 0.1, targetReduction: 0.5, truncateHeadChars: 300, minYieldChars: 0 };
 
   // Every other test scores uniformly, so the ordering this function exists to
   // produce was never exercised: with one score for all, any order looks right.

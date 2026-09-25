@@ -90,40 +90,13 @@ export interface CallDecision extends CallAnswer {
   id: string;
   tool: string;
   action: CallAction;
-  /** `budget` means it scored low but the reduction target was already met. */
-  reason: 'pinned' | 'kept' | 'budget' | 'result_dropped' | 'call_dropped';
+  /**
+   * `budget` means it scored low but the reduction target was already met;
+   * `too small` that dropping it would have freed less than it risked.
+   */
+  reason: 'pinned' | 'kept' | 'budget' | 'too small' | 'result_dropped' | 'call_dropped';
 }
 
-export interface HistoryToolCall {
-  id: string;
-  tool: string;
-  input: string;
-  result: string;
-}
-
-export interface HistoryEntry {
-  i: number;
-  role: Role;
-  text: string;
-  /** Structured per call, or one compact line per call once the state has to shrink. */
-  tool_calls?: HistoryToolCall[] | string[];
-}
-
-/** A whole-conversation state, as the upstreams sent it. Superseded by the
- * per-call prose states in `state.ts`; kept because `applyDecisions` and the
- * host adapters still speak this vocabulary. */
-export interface CompactionState {
-  context: string;
-  goal: string;
-  history: HistoryEntry[];
-}
-
-export interface FittedState {
-  state: CompactionState;
-  tokens: number;
-  /** Which fitting stage produced the state, for diagnostics. */
-  stage: string;
-}
 
 export interface CompactOptions {
   /** Ongoing task description; defaults to the last few user prompts. */
@@ -166,6 +139,15 @@ export interface CompactOptions {
   phrasing?: Phrasing;
   /** Characters of a dropped tool result to retain. Default 300. */
   truncateHeadChars?: number;
+  /**
+   * Fewest characters a drop must actually free to be worth making. Default 200.
+   *
+   * Dropping an 89-character `Grep` result freed 126 characters — about thirty
+   * tokens — in exchange for a real chance of losing something the session went
+   * on to need. Below this floor the ranking is not worth acting on, whatever it
+   * says, because the upside cannot repay the risk.
+   */
+  minYieldChars?: number;
 }
 
 export interface ResolvedCompactOptions {
@@ -177,6 +159,7 @@ export interface ResolvedCompactOptions {
   targetReduction: number;
   phrasing: Phrasing;
   truncateHeadChars: number;
+  minYieldChars: number;
 }
 
 export interface CompactResult {

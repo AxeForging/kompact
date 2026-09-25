@@ -27,19 +27,12 @@
  * Run: bun eval/recovery.ts [--fixture]
  */
 import { loadCorpus, rowKey } from './corpus.js';
-import { outOfFold } from './logistic.js';
+import { outOfFoldScores } from './oof.js';
 import { DEFAULT_OPTIONS, decideAll, freedBy } from '../src/compact.js';
-import { featureVector } from '../src/features.js';
 import type { CallAnswer, ToolCall } from '../src/index.js';
 
 const { rows, from } = loadCorpus(import.meta.dirname);
-const xs = rows.map((row) => featureVector(row.state, row.tool, row.is_error));
-const resultScore = new Map<string, number>();
-const callScore = new Map<string, number>();
-outOfFold(rows, xs, rows.map((r) => (r.result_needed ? 1 : 0)))
-  .forEach((p, i) => resultScore.set(rowKey(rows[i]!), p));
-outOfFold(rows, xs, rows.map((r) => (r.call_needed ? 1 : 0)))
-  .forEach((p, i) => callScore.set(rowKey(rows[i]!), p));
+const { result: resultScore, call: callScore } = outOfFoldScores(import.meta.dirname, rows);
 
 /** Re-reading an unchanged file gives the same bytes; re-running a build does not. */
 const DETERMINISTIC_READS = new Set(['Read', 'Grep', 'Glob', 'NotebookRead']);

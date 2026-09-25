@@ -34,6 +34,7 @@ export const DEFAULT_OPTIONS: ResolvedCompactOptions = {
   targetReduction: 0.5,
   phrasing: DEFAULT_PHRASING,
   truncateHeadChars: 300,
+  minYieldChars: 200,
 };
 
 function finite(value: number | undefined, fallback: number): number {
@@ -58,6 +59,10 @@ export function resolveOptions(options: CompactOptions = {}): ResolvedCompactOpt
     truncateHeadChars: Math.max(
       0,
       Math.floor(finite(options.truncateHeadChars, DEFAULT_OPTIONS.truncateHeadChars)),
+    ),
+    minYieldChars: Math.max(
+      0,
+      Math.floor(finite(options.minYieldChars, DEFAULT_OPTIONS.minYieldChars)),
     ),
   };
 }
@@ -121,7 +126,10 @@ export function freedBy(call: ToolCall, action: CallAction, headChars: number): 
 export function decideAll(
   calls: readonly ToolCall[],
   answers: ReadonlyMap<string, CallAnswer>,
-  options: Pick<ResolvedCompactOptions, 'keepThreshold' | 'targetReduction' | 'truncateHeadChars'>,
+  options: Pick<
+    ResolvedCompactOptions,
+    'keepThreshold' | 'targetReduction' | 'truncateHeadChars' | 'minYieldChars'
+  >,
 ): CallDecision[] {
   const unanswered: CallAnswer = { keepCall: 1, keepResult: 1 };
   const provisional = calls.map((call) => ({
@@ -129,7 +137,18 @@ export function decideAll(
     decision: decideCall(call, answers.get(call.id) ?? unanswered, options),
   }));
 
-  const droppable = provisional.filter((p) => p.decision.action !== 'keep');
+  // A drop that frees less than `minYieldChars` is refused before the budget is
+  // even computed: the ranking may be right and it still is not worth acting on,
+  // because the context saved cannot repay the chance of losing the content.
+  const minYield = options.minYieldChars ?? 0;
+  const tooSmall = new Set(
+    provisional
+      .filter((p) => p.decision.action !== 'keep'
+        && freedBy(p.call, p.decision.action, options.truncateHeadChars) < minYield)
+      .map((p) => p.decision.id),
+  );
+
+  const droppable = provisional.filter((p) => p.decision.action !== 'keep' && !tooSmall.has(p.decision.id));
   const budget =
     options.targetReduction *
     droppable.reduce((sum, p) => sum + freedBy(p.call, p.decision.action, options.truncateHeadChars), 0);
@@ -146,9 +165,14 @@ export function decideAll(
     freed += freedBy(entry.call, entry.decision.action, options.truncateHeadChars);
   }
 
-  return provisional.map(({ decision }) =>
-    spared.has(decision.id) ? { ...decision, action: 'keep' as const, reason: 'budget' as const } : decision,
-  );
+  return provisional.map(({ decision }) => {
+    if (tooSmall.has(decision.id)) {
+      return { ...decision, action: 'keep' as const, reason: 'too small' as const };
+    }
+    return spared.has(decision.id)
+      ? { ...decision, action: 'keep' as const, reason: 'budget' as const }
+      : decision;
+  });
 }
 
 /** Runs `worker` over `items` with at most `limit` in flight, preserving order. */

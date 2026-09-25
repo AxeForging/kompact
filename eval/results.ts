@@ -67,6 +67,20 @@ the time a real compaction fired costs nothing when the output is dropped now.
 ${run('recovery.ts')}
 \`\`\`
 
+## Whether the work survives — \`eval/outcome.ts\`
+
+The measurement every other figure here stands in for. Every other one asks
+whether an output was reused *somewhere* later, which counts reuses that had
+already happened when a real compaction fired and could not therefore be lost.
+This finds where the engine would actually compact, decides only the calls that
+exist at that point, and counts the reuses that come afterwards whose source was
+dropped. It is still not a replay: it measures how often the information would
+no longer be there, which is the necessary condition for the work to suffer.
+
+\`\`\`
+${run('outcome.ts')}
+\`\`\`
+
 ## What it frees in practice — \`eval/sessions.ts\`
 
 Not reproducible off this machine: it reads whatever \`~/.claude/projects\`

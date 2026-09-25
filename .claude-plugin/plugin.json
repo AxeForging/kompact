@@ -68,6 +68,24 @@
       "title": "Question phrasing",
       "description": "Question wording sent to a Laya sidecar: reproducible (default), direct or entailment. Ignored by the built-in scorer, which reads facts rather than wording. Measured over ten grouped splits: on the typed-decisions checkpoint direct reaches AUC 0.721 and reproducible 0.419, so the wording matters more than the checkpoint.",
       "default": "reproducible"
+    },
+    "concurrency": {
+      "type": "number",
+      "title": "Concurrency",
+      "description": "Requests in flight at once while scoring. Default 8. Only meaningful with a Laya sidecar; the built-in scorer answers in microseconds and ignores it.",
+      "default": 8
+    },
+    "requestTimeoutMs": {
+      "type": "number",
+      "title": "Request timeout ms",
+      "description": "Deadline for one request to a Laya sidecar, in milliseconds. Default 30000. A sidecar that accepts a connection and then stalls would otherwise make compaction never return.",
+      "default": 30000
+    },
+    "minYieldChars": {
+      "type": "number",
+      "title": "Min yield chars",
+      "description": "Fewest characters a drop must actually free to be worth making. Default 200. Below this the context saved cannot repay the chance of losing content the session still needs.",
+      "default": 200
     }
   }
 }
