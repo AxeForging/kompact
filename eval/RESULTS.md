@@ -110,12 +110,12 @@ one corpus, and the per-session column as the range that matters.
 ```
 session              calls  tok before  tok after    freed  scoring
 -------------------------------------------------------------------
-25e65eab-4941-41ea     473     273,749    215,853    21.1%     46ms
-20628921-046d-4fc0     444     488,763    329,577    32.6%     44ms
-78d7d176-4c84-4936     296     330,746    309,776     6.3%     21ms
+25e65eab-4941-41ea     473     273,749    215,853    21.1%     43ms
+20628921-046d-4fc0     452     490,913    329,913    32.8%     36ms
+78d7d176-4c84-4936     299     333,871    312,861     6.3%     21ms
 agent-aca4b44fdb68      58      32,560     23,815    26.9%      4ms
 -------------------------------------------------------------------
-total                 1271   1,125,818    879,021    21.9%    115ms
+total                 1282   1,131,093    882,442    22.0%    104ms
 ```
 
 ## What the sidecar costs to run — `eval/laya-bench.ts`
@@ -127,38 +127,38 @@ of the router; only latency is per checkpoint.
 ```
 sidecar: http://127.0.0.1:8000/v1/systemone
 memory:  4929 MB resident (pid 1407371)
-gpu:     NVIDIA GeForce RTX 4060 Laptop GPU, 185 MiB, 8188 MiB
+gpu:     NVIDIA GeForce RTX 4060 Laptop GPU, 169 MiB, 8188 MiB
 
 All three checkpoints are loaded by one process, so the memory above is the
 whole router. Latency is per checkpoint, 5 runs, median and worst:
 
 checkpoint           questions    median    worst  per question  input tok
 --------------------------------------------------------------------------
-english                      1    399 ms   699 ms      399.0 ms        104
-english                      2    568 ms   580 ms      284.0 ms        208
-english                      4    973 ms   991 ms      243.1 ms        416
-english                      8   1697 ms  1784 ms      212.2 ms        832
-multilingual                 1    123 ms   125 ms      122.6 ms         99
-multilingual                 2    192 ms   244 ms       95.9 ms        198
-multilingual                 4    509 ms   599 ms      127.2 ms        396
-multilingual                 8    861 ms   959 ms      107.6 ms        792
-typed-decisions              1    616 ms   866 ms      615.7 ms        104
-typed-decisions              2    686 ms   779 ms      343.2 ms        208
-typed-decisions              4   1371 ms  2119 ms      342.8 ms        416
-typed-decisions              8   2046 ms  2094 ms      255.7 ms        832
+english                      1    377 ms   646 ms      377.1 ms        104
+english                      2    554 ms   569 ms      277.2 ms        208
+english                      4    953 ms   961 ms      238.2 ms        416
+english                      8   1772 ms  2120 ms      221.5 ms        832
+multilingual                 1    140 ms   152 ms      140.0 ms         99
+multilingual                 2    214 ms   250 ms      106.9 ms        198
+multilingual                 4    367 ms   384 ms       91.8 ms        396
+multilingual                 8    700 ms   773 ms       87.5 ms        792
+typed-decisions              1    465 ms   715 ms      464.5 ms        104
+typed-decisions              2    680 ms   692 ms      340.1 ms        208
+typed-decisions              4   1186 ms  1226 ms      296.5 ms        416
+typed-decisions              8   1995 ms  2195 ms      249.3 ms        832
 
 input tok is usage.input_tokens, which is the per-question row count times the
 number of questions — not the size of the state.
 
 Scoring one session: 1071 calls, 2 questions a request, 8 in flight.
-  fastest checkpoint: 17.3 s and 4929 MB resident held for the session
+  fastest checkpoint: 15.0 s and 4945 MB resident held for the session
   built-in scorer:    0.11 s and no process at all
-  ratio:              160x the time
+  ratio:              139x the time
 (1071 calls and 108 ms are this machine's own measurement from
  eval/sessions.ts, so the two sides are the same work.)
 
-cold start:   7.6 s to first answer
-  memory:     3092 MB resident (pid 1854995)
-  gpu after:  NVIDIA GeForce RTX 4060 Laptop GPU, 5182 MiB, 8188 MiB
-  gpu before: NVIDIA GeForce RTX 4060 Laptop GPU, 185 MiB, 8188 MiB
+cold start:   7.1 s to first answer
+  memory:     3095 MB resident (pid 1861357)
+  gpu after:  NVIDIA GeForce RTX 4060 Laptop GPU, 5166 MiB, 8188 MiB
+  gpu before: NVIDIA GeForce RTX 4060 Laptop GPU, 169 MiB, 8188 MiB
 ```
