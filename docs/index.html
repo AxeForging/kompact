@@ -397,10 +397,16 @@ table.rows caption{ text-align:left; }
      calls the usual cause. A hanging indent keeps a wrapped line from reading as
      a second command, and the drag hint goes with the scrolling it described. */
   .cmd pre{ overflow-x: visible; background: none; }
-  .cmd pre code{
+  /* The hang goes on each command, not on the block: `text-indent` only ever
+     indents a block's first line, so every line after it — a wrap continuation
+     and the next command alike — sat at the same x, and `git clone <url>` read
+     as two commands while `cd laya-compact` read as one wrapped line. */
+  .cmd pre code{ display:block; white-space: normal; }
+  .cmd__line{
     display:block; white-space: pre-wrap; overflow-wrap: anywhere;
     text-indent: -2ch; padding-left: 2ch;
   }
+  .cmd__gap{ display:block; height: 1lh; }
   .cmd pre::before{ content: none; }
 }
 .glossary{ display:grid; grid-template-columns: minmax(9rem, 13rem) minmax(0,1fr);
@@ -409,7 +415,11 @@ table.rows caption{ text-align:left; }
 .glossary dt, .glossary dd{ margin:0; padding-block: var(--space-xs); border-bottom: 1px solid var(--rule); }
 .glossary dt code, .glossary dd code{ font-size: 0.95em; }
 /* Arriving at a definition should show which of the twelve answered you. */
-.gloss-back{ margin: var(--space-sm) 0 0; }
+.gloss-back{
+  margin: var(--space-sm) 0 0; position: sticky; z-index: 10;
+  top: calc(var(--nav-h, 56px) + env(safe-area-inset-top, 0px));
+  background: var(--paper); padding-block: var(--space-2xs);
+}
 .gloss-back button{
   font-family: var(--sans); font-size: var(--text-sm); font-weight:600; color: var(--accent-ink);
   background:none; border:0; border-bottom:1px solid currentColor; padding:0 0 2px; cursor:pointer;
@@ -713,8 +723,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <p><b>0.905 &#177; 0.078</b><span>ranking quality, 10 grouped splits of 18 sessions; worst split 0.684.
       <b>0.789</b> leave&#8209;one&#8209;out over all 41. Beat the 322M&#8209;parameter model it was
       built on, 10 of 10 paired splits.</span></p>
-    <p><b>3.6&#8211;32.6%</b><span>of tokens freed per session, keeping 77.3% of the outputs
-      that were reused later.</span></p>
+    <p><b>3.6&#8211;32.6%</b><span>of tokens freed, per session, on four real ones. Over the whole
+      corpus the shipped code frees 22.2% and keeps 77.7% of the outputs that were reused later.</span></p>
     <p><b>190&#8239;ms</b><span>to score 1,762 calls, against 122&#215; that for the neural
       sidecar it replaced, on an RTX&#160;4060 Laptop.</span></p>
     <p><b>Never</b><span>drops an <code>Edit</code>, <code>Write</code>, <code>MultiEdit</code> or
@@ -727,7 +737,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </div>
   <div class="colophon reveal" style="--d:170ms">
     <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>203</b> tests</span>
-    <span><b>0</b> network calls by default</span><span><b>6</b> claims <a href="#checked">not verified</a></span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
+    <span><b>0</b> network calls by default</span><span><b>4</b> claims <a href="#checked">not verified</a></span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
 </div>
 </header>
@@ -1623,10 +1633,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <button class="copy" type="button" data-copy hidden>Copy</button>
       <p class="visually-hidden" role="status" aria-live="polite"></p>
     </div>
-    <pre tabindex="0" data-label="Shell commands to try it without installing"><code>git clone https://github.com/AxeForging/laya-compact
-cd laya-compact
-npm install
-npm run dry-run</code></pre>
+    <pre tabindex="0" data-label="Shell commands to try it without installing"><code><span class="cmd__line">git clone https://github.com/AxeForging/laya-compact</span><span class="cmd__line">cd laya-compact</span><span class="cmd__line">npm install</span><span class="cmd__line">npm run dry-run</span></code></pre>
   </div>
   <div class="cmd">
     <div class="cmd__head">
@@ -1634,10 +1641,7 @@ npm run dry-run</code></pre>
       <button class="copy" type="button" data-copy hidden>Copy</button>
       <p class="visually-hidden" role="status" aria-live="polite"></p>
     </div>
-    <pre tabindex="0" data-label="Shell commands to install it"><code>export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
-
-claude plugin marketplace add AxeForging/laya-compact
-claude plugin install laya-compact@laya-compact</code></pre>
+    <pre tabindex="0" data-label="Shell commands to install it"><code><span class="cmd__line">export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1</span><span class="cmd__gap"></span><span class="cmd__line">claude plugin marketplace add AxeForging/laya-compact</span><span class="cmd__line">claude plugin install laya-compact@laya-compact</span></code></pre>
   </div>
   <p class="caption">
     It replaces compaction rather than repairing it: Claude Code’s <code>session.compact</code>

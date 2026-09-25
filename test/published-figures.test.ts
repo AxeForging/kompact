@@ -257,6 +257,7 @@ describe('published figures match eval/RESULTS.md', () => {
       ['laya english/direct', 'english on the wording that works'],
       ['laya multilingual/direct', 'multilingual on the same wording'],
       ['laya english/entailment', "english's best config"],
+      ['laya typed-decisions/direct', 'the best laya config of all'],
     ] as const) {
       const { mean } = scorerRow(config);
       expect(readme, `README no longer matches ${config} (${where}: ${mean})`).toContain(mean);
@@ -272,7 +273,11 @@ describe('published figures match eval/RESULTS.md', () => {
   // and a hand-typed count beside a hand-maintained list is the oldest way for a
   // page to start lying slowly.
   it('counts its own unverified claims correctly', () => {
-    const page = read('docs/index.html');
+    // `<style>` goes first, and that omission is why this test passed while the
+    // colophon said six: two of the six matches were the CSS rules that style the
+    // row, so the guard counted the stylesheet and confirmed a wrong number
+    // against itself. A check that can agree with the bug is worse than none.
+    const page = read('docs/index.html').replace(/<style[^>]*>[\s\S]*?<\/style>/g, '');
     const open = (page.match(/ledger__row--open/g) ?? []).length;
     expect(open, 'no unverified claims found, so this proves nothing').toBeGreaterThan(0);
     const claimed = /<b>(\d+)<\/b> claims <a href="#checked">not verified<\/a>/.exec(page)?.[1];

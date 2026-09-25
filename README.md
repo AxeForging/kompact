@@ -288,7 +288,7 @@ watch for `STATES TRUNCATED` in the compaction toast, which means states are
 overflowing the checkpoint and the scores are being computed on fragments.
 
 `phrasing` is worth setting if you do: on `typed-decisions`, `direct` scores AUC
-0.721 and `reproducible` 0.419, so the wording matters more than the checkpoint.
+0.719 and `reproducible` 0.419, so the wording matters more than the checkpoint.
 
 ### What it costs to run
 
