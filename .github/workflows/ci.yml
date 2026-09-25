@@ -89,5 +89,10 @@ jobs:
       # where it cannot, an image whose narrow-screen rule was overridden at
       # equal specificity 139 lines later, columns clipping their own text, and
       # section rules 64px wider than every other rule. This measures the page.
+      # The runner has no chromium-browser; setup-chrome reports where it put one.
+      - uses: browser-actions/setup-chrome@v1
+        id: chrome
       - name: the rendered page must hold up at 1400px and 390px
         run: bun run docs:check
+        env:
+          CHROME: ${{ steps.chrome.outputs.chrome-path }}

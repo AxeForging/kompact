@@ -15,7 +15,7 @@
  *
  * Run: bun eval/render-check.ts [--keep]
  */
-import { execFileSync, spawn } from 'node:child_process';
+import { execSync, spawn } from 'node:child_process';
 import { copyFileSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -130,15 +130,17 @@ const url = `file://${join(dir, 'index.html')}`;
  * `--screenshot` alongside it does not help. So: drive the DevTools protocol
  * directly. Bun ships a WebSocket client, so this needs no dependency.
  */
-/** GitHub's runners ship `google-chrome`; this machine has `chromium-browser`. */
+/** This machine has `chromium-browser`; GitHub's runners ship `google-chrome`. */
 function findBrowser(): string {
   const named = process.env['CHROME'];
-  const candidates = named
-    ? [named]
-    : ['chromium-browser', 'chromium', 'google-chrome', 'google-chrome-stable'];
+  if (named) return named;
+  const candidates = [
+    'chromium-browser', 'chromium', 'google-chrome', 'google-chrome-stable',
+    '/usr/bin/google-chrome', '/usr/bin/chromium-browser', '/usr/bin/chromium',
+  ];
   for (const binary of candidates) {
     try {
-      execFileSync('command', ['-v', binary], { shell: true, stdio: 'ignore' });
+      execSync(`command -v ${binary}`, { stdio: 'ignore' });
       return binary;
     } catch { /* not this one */ }
   }
