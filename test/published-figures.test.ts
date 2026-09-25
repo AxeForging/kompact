@@ -230,14 +230,30 @@ describe('published figures match eval/RESULTS.md', () => {
   // hidden. A button that does nothing is worse than no button.
   it('is complete with scripts blocked, and ships no dead controls', () => {
     const page = read('docs/index.html');
-    const noscript = page.replace(/<script[^>]*>[\s\S]*?<\/script>/g, '');
+    // Styles go too: a CSS comment on this page mentions `<details>` by name, and
+    // a tag counter cannot tell prose about markup from markup.
+    const noscript = page
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/g, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/g, '');
     expect(noscript).not.toContain('<script');
 
     const rows = (pattern: RegExp): number => (noscript.match(pattern) ?? []).length;
     expect(rows(/demo__call/g), 'the demo table is rendered by script').toBeGreaterThanOrEqual(9);
     expect(rows(/ledger__row/g), 'the ledger is rendered by script').toBeGreaterThanOrEqual(10);
     expect(rows(/<dt>/g), 'the glossary is rendered by script').toBeGreaterThanOrEqual(12);
-    expect(rows(/<details class="more"/g), 'the folded blocks need script').toBeGreaterThanOrEqual(18);
+    expect(rows(/<details class="more"/g), 'the folded blocks need script').toBeGreaterThanOrEqual(15);
+
+    // Nesting is the defect worth guarding, not the count. The script that
+    // wrapped these found its boundaries by searching forward, so the five FAQ
+    // answers ended up inside one another, six levels deep — two clicks to read
+    // one question, and the innermost invisible until four others were open.
+    let depth = 0;
+    for (const tag of noscript.match(/<\/?details\b/g) ?? []) {
+      depth += tag === '<details' ? 1 : -1;
+      expect(depth, 'a folded block is nested inside another').toBeLessThanOrEqual(1);
+      expect(depth, 'a folded block closes without opening').toBeGreaterThanOrEqual(0);
+    }
+    expect(depth, 'a folded block is never closed').toBe(0);
 
     // Each of these acts only through script, so each ships hidden and is
     // revealed by the script that gives it something to do.
