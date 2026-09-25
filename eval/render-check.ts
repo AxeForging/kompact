@@ -108,12 +108,18 @@ const PROBE = String.raw`
   // where the heading and the first fact were simply not on screen.
   const bar = document.querySelector('.contents-bar');
   const barH = bar ? Math.round(bar.getBoundingClientRect().height) : 0;
-  for (const link of document.querySelectorAll('.contents a[href^="#"]')) {
-    const target = document.querySelector(link.getAttribute('href'));
-    if (!target) { say(false, 'nav target exists @' + w, link.getAttribute('href')); continue; }
+  // Every in-page link, not just the nav: the glossary's twelve term anchors are
+  // the ones a reader arrives at mid-argument, and nothing was checking them.
+  const seenTarget = new Set();
+  for (const link of document.querySelectorAll('a[href^="#"]')) {
+    const href = link.getAttribute('href');
+    if (href === '#' || seenTarget.has(href)) continue;
+    seenTarget.add(href);
+    const target = document.querySelector(href);
+    if (!target) { say(false, 'link target exists @' + w, href); continue; }
     const margin = parseFloat(getComputedStyle(target).scrollMarginTop) || 0;
     say(margin >= barH, 'anchor clears the sticky bar @' + w,
-        link.getAttribute('href') + ' margin=' + Math.round(margin) + ' bar=' + barH);
+        href + ' margin=' + Math.round(margin) + ' bar=' + barH);
   }
 
   // A focusable box that cannot scroll is a tab stop that does nothing.
