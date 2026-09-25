@@ -2113,6 +2113,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       and the tool can be run again.</li>
     <li>A call that recorded a change — <code>Edit</code>, <code>Write</code>,
       <code>MultiEdit</code>, <code>NotebookEdit</code> — is <b>never dropped</b>, whatever it scores.</li>
+    <li>A kept result is still <b>capped at <a href="#g-the-cap">24,000 characters</a></b>, because
+      half of all tool output lives in about 3% of the calls.</li>
+    <li>It answers <b>at most six compactions</b> on one session, and only while a pass reclaims
+      five points of the context window. After that Claude Code's own summary runs.</li>
     <li>Nothing on disk changes. Compaction rewrites what is sent to the model for the rest of
       the session; the transcript in <code>~/.claude/projects</code> is untouched.</li>
     <li>Remove it with <code>claude plugin uninstall kompact</code>, or unset
@@ -2129,7 +2133,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p class="gloss-back" hidden><button type="button" id="gloss-back">&#8592; Back to where you were</button></p>
 
     <details class="more">
-    <summary><h3>The thirteen terms this page uses for its own machinery</h3></summary>
+    <summary><h3>The fourteen terms this page uses for its own machinery</h3></summary>
 <dl class="glossary">
     <dt id="g-auc">AUC</dt>
     <dd>How often the scorer ranks a call that turned out to be needed above one that did not, over
@@ -2161,6 +2165,13 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <dt id="g-the-floor">The floor</dt>
     <dd><code>keepThreshold</code>, 0.2 by default. At or above it nothing is dropped, whatever the
       budget still wants. It is the guard the budget cannot argue with.</dd>
+    <dt id="g-points-of-window">Points of the context window</dt>
+    <dd>The unit a compaction pass is judged in. One point is one per cent of the whole window,
+      so a pass that reclaims nine of them buys back nine per cent of everything the model
+      reads &#8212; comparable between a long session and a short one in a way that
+      &#8220;a quarter of the transcript&#8221; is not, and the same unit as the 60% at which
+      the engine asks. <code>minFreedPercent</code> is a floor in these, and because the two
+      share a unit, a pass that clears it leaves the session below the trigger by construction.</dd>
     <dt id="g-the-cap">The cap</dt>
     <dd><code>maxKeptChars</code>, 24,000 by default; 0 turns it off. The floor and the budget
       decide <em>which</em> results to drop. The cap decides how much of the ones they keep is

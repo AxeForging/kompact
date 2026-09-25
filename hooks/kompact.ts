@@ -368,10 +368,10 @@ export function decideHandover(input: {
   if (freedTokens < floor) {
     return {
       take: false,
-      why: `freed ${points.toFixed(1)} points of window, below the ${config.minFreedPercent}-point floor`,
+      why: `freed ${points.toFixed(1)}% of the context window, under the ${config.minFreedPercent}% floor`,
     };
   }
-  return { take: true, why: `freed ${points.toFixed(1)} points of window` };
+  return { take: true, why: `freed ${points.toFixed(1)}% of the context window` };
 }
 
 const UI_LOG_MAX_CHARS = 4096;
