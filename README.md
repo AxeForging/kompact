@@ -342,7 +342,7 @@ overflowing the checkpoint and the scores are being computed on fragments.
 ### What it costs to run
 
 Measured on one machine, RTX 4060 Laptop, one `laya-serve` process
-(`eval/laya-bench.ts`, which needs the sidecar live):
+(`eval/sidecar-bench.ts`, which needs the sidecar live):
 
 | | |
 |---|---|

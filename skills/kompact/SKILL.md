@@ -114,7 +114,7 @@ npm run eval:ci        # the same, on the committed fixture, no private data
 bun eval/repeat.ts     # 10 grouped splits: mean, sd, worst case, paired wins
 bun eval/policy.ts     # the threshold-vs-budget sweep, and the shipped path
 bun eval/recovery.ts   # what a wrong drop costs, and how it would be recovered
-bun eval/laya-bench.ts # sidecar memory, VRAM, cold start and latency
+bun eval/sidecar-bench.ts # sidecar memory, VRAM, cold start and latency
 bun eval/baseline.ts   # cheap-feature baselines and a label-confound check
 ```
 

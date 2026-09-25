@@ -21,7 +21,7 @@
  *
  * Needs a live `laya-serve`. Run: bun eval/truncation.ts [--url ...] [--model english]
  */
-import { LayaClient } from './laya-client.js';
+import { LayaClient } from './sidecar-client.js';
 import { inputTokens, noulAnswer } from '../src/request.js';
 import type { SystemOneQuestions } from '../src/types.js';
 

@@ -117,13 +117,13 @@ it were prose nobody could re-run.
 
 ${optional('truncation.ts')}
 
-## What the sidecar costs to run — \`eval/laya-bench.ts\`
+## What the sidecar costs to run — \`eval/sidecar-bench.ts\`
 
 Needs a live \`laya-serve\`, so this section is empty on a machine without one.
 One process serves all three checkpoints, so memory and start-up are properties
 of the router; only latency is per checkpoint.
 
-${optional('laya-bench.ts', '--cold', ...benchArgs)}
+${optional('sidecar-bench.ts', '--cold', ...benchArgs)}
 `;
 const out = join(here, 'RESULTS.md');
 writeFileSync(out, body);

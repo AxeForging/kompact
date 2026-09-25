@@ -163,7 +163,7 @@ a:hover{ color: var(--accent); }
    scroll away. Typographic, on the flood, no card. */
 /* The caveat is accurate and has to be somewhere; at full weight in the middle
    of the opening sentence it cost more clarity than the precision earned, since
-   "Laya" has not been introduced yet. */
+   the sidecar has not been introduced yet. */
 .standfirst__note{ color: var(--on-flood-2); }
 .upfront{
   display:grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
@@ -883,12 +883,12 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     verbatim</strong>, dropping only what is no longer needed &#8212; so a file you read is
     still the file, not a description of it. On your machine: no API key, no GPU, no network
     call &#8212; <span class="standfirst__note">no exceptions and no optional path that has any,
-    since the neural <a href="#g-sidecar">sidecar</a> this was named after
+    since the neural <a href="#g-sidecar">sidecar</a> this was built on
     <a href="#result">lost to thirteen coefficients</a> and was removed.</span>
   </p>
   <div class="upfront reveal" style="--d:150ms">
     <p><b>0.789</b><span>ranking quality, held out one session at a time across all 41 &#8212; the
-      number to plan around. On the narrower 18&#8209;session corpus every Laya configuration was
+      number to plan around. On the narrower 18&#8209;session corpus the neural model was
       scored against: <b>0.905 &#177; 0.078</b>, worst split 0.684, beating the
       322M&#8209;parameter model it was built on &#8212; un&#8209;fine&#8209;tuned, on a call it
       was never trained to make &#8212; 10 of 10 paired splits.</span></p>
@@ -929,10 +929,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p class="rubric"><span class="rubric__n">01</span>Evidence</p>
   <h2 id="result-h">It replaces a neural model that it beat.</h2>
   <p class="lede">
-    The plugin started as a port onto <a rel="noopener" href="https://github.com/NandhaKishorM/laya">Laya</a>,
-    a 322M-parameter decision model that runs locally. Measured against 1,063 tool calls
-    labelled from 18 real sessions, a thirteen-coefficient logistic regression over facts
-    already computed for free beat every Laya checkpoint and question wording.
+    The plugin started as a port onto
+    <a rel="noopener" href="https://github.com/NandhaKishorM/laya">a 322M&#8209;parameter neural
+    decision model</a> that runs locally. Measured against 1,063 tool calls labelled from 18 real
+    sessions, a thirteen-coefficient logistic regression over facts already computed for free beat
+    every checkpoint and question wording it was asked.
   </p>
 
   <div class="chart">
@@ -975,7 +976,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
           <td class="row__value">0.878 <span style="font-weight:400">± 0.010</span><b>most of the signal</b></td>
         </tr>
         <tr class="reveal" style="--d:360ms">
-          <th scope="row" class="row__name">Laya typed&#8209;decisions<span>“direct” wording</span></th>
+          <th scope="row" class="row__name">Neural, typed&#8209;decisions<span>“direct” wording</span></th>
           <td class="row__plot">
             <div class="track">
               <div class="bar" style="--w:43.8%;--d:400ms"></div>
@@ -985,7 +986,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
           <td class="row__value">0.719 <span style="font-weight:400">± 0.026</span><b>best of nine configs</b></td>
         </tr>
         <tr class="reveal" style="--d:430ms">
-          <th scope="row" class="row__name">Laya multilingual<span>“direct” wording</span></th>
+          <th scope="row" class="row__name">Neural, multilingual<span>“direct” wording</span></th>
           <td class="row__plot">
             <div class="track">
               <div class="bar" style="--w:33.4%;--d:470ms"></div>
@@ -995,7 +996,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
           <td class="row__value">0.667 <span style="font-weight:400">± 0.023</span></td>
         </tr>
         <tr class="reveal" style="--d:500ms">
-          <th scope="row" class="row__name">Laya english<span>“entailment” wording</span></th>
+          <th scope="row" class="row__name">Neural, English<span>“entailment” wording</span></th>
           <td class="row__plot">
             <div class="track">
               <div class="bar" style="--w:25%;--d:540ms"></div>
@@ -1042,11 +1043,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
   <p class="caption">
     <b>Read that bar as the narrow corpus.</b> Those splits hold out 30% of 18 sessions — the
-    ones every Laya config was scored against, so the comparison is possible at all — and every
+    ones the neural model was scored against, so the comparison is possible at all — and every
     scorer is judged on the same held-out sessions each split, which is what makes it paired.
     Splitting by session rather than by row, because calls inside one session are correlated.
     Across those splits the <a href="#g-calibration-error">calibration error</a> is <span class="num val">0.044</span> against every
-    Laya config’s <span class="num val">0.380–0.642</span>. The coefficients that ship are fitted
+    neural config’s <span class="num val">0.380–0.642</span>. The coefficients that ship are fitted
     on all <span class="num val">41</span> sessions, where the same measurement gives
     <span class="num val">0.789</span> and <span class="num val">0.051</span> —
     <a href="#next">the gaps in section 08</a> says why that is the pair to plan around.
@@ -1467,10 +1468,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <details class="more">
     <summary><h3>What the neural sidecar would have cost to run</h3></summary>
     <p>
-    Laya is not in this product any more &#8212; there is no option that turns it on, and nothing
-    shipped imports it. What it cost to run is a large part of why. The <code>eval/</code>
-    scripts still measure all of this against a live sidecar, so every row below is reproducible
-    rather than remembered. One <code>laya-serve</code> process loads every checkpoint and routes
+    The neural model is not in this product any more &#8212; there is no option that turns it on,
+    and nothing shipped imports it. What it cost to run is a large part of why. The
+    <code>eval/</code> scripts still measure all of this against a live sidecar, so every row below
+    is reproducible rather than remembered. One router process loads every checkpoint and routes
     per request, so memory and start-up belong to the router rather than to any one checkpoint.
   </p>
   <div class="scroller" tabindex="0" data-label="Table: what the sidecar would have cost to run">
@@ -1483,7 +1484,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       </tr></thead>
       <tbody>
         <tr class="same"><th scope="row">Built-in scorer</th><td class="n mark">190 ms</td><td class="n">none</td><td class="n">none</td><td class="n">none</td></tr>
-        <tr><th scope="row">Laya, fastest checkpoint, on a GPU</th><td class="n">41 s</td><td class="n">4.9 GB</td><td class="n">1.4 GB</td><td class="n">7.6 s</td></tr>
+        <tr><th scope="row">Neural sidecar, fastest checkpoint, on a GPU</th><td class="n">41 s</td><td class="n">4.9 GB</td><td class="n">1.4 GB</td><td class="n">7.6 s</td></tr>
       </tbody>
     </table>
   </div>
@@ -1494,11 +1495,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
   <p class="caption">
     This row is a correction. It used to read <span class="val">23.1 s</span> and
-    <span class="val">122×</span>, from a projection in <code>eval/laya-bench.ts</code> that
+    <span class="val">122×</span>, from a projection in <code>eval/sidecar-bench.ts</code> that
     divided the number of requests by the number of questions in a request — but a request
     carries one call's two questions, so there is one request per call and the projection halved
     itself. The VRAM said ~5.0 GB and was read off a router started with
-    <code>LAYA_DEVICE=cpu</code>, which puts almost nothing on the GPU at all. Both figures
+    in CPU mode, which puts almost nothing on the GPU at all. Both figures
     flattered the sidecar. The row now says what was measured end to end against a CUDA
     sidecar: <span class="val">24.9 ms</span> a call over 159 calls, multiplied out to the same
     1,762, with the VRAM read while the model was actually resident on the card. Concurrency
@@ -1512,7 +1513,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p class="rubric rubric--accent"><span class="rubric__n">07</span>Where it loses</p>
   <h2 id="losses-h">The model this replaced fails quietly, which is worse than failing.</h2>
   <p>
-    Laya’s English checkpoint reads 512 tokens and discards the rest with HTTP 200 and no
+    The English checkpoint reads 512 tokens and discards the rest with HTTP 200 and no
     warning. <code>eval/truncation.ts</code> asks one question — <em>the text says the
     deployment was rolled back</em> — of four states. Every one of them states the fact
     verbatim. Only the position of the sentence changes.
@@ -1746,7 +1747,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </div>
     <div class="next__item">
       <p class="next__when">Wanted</p>
-      <p class="next__what"><b>A fine-tuned Laya checkpoint that wins.</b> The bar is 0.905, not
+      <p class="next__what"><b>A fine-tuned neural checkpoint that wins.</b> The bar is 0.905, not
         chance. <code>eval/</code> re-runs the whole comparison for anyone who tries, and the
         <a href="#cost">section 06, Cost</a> is the other half of that decision.</p>
     </div>
@@ -1778,14 +1779,14 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <details class="more">
       <summary><h3>Why did the neural model lose?</h3></summary>
       <p>It was asked to read facts as prose that the features encode directly, and it was never
-        trained on this task. Laya's own documentation says the base checkpoints sit near chance on
+        trained on this task. The model’s own documentation says its base checkpoints sit near chance on
         typed-decision workflows and should be treated as a fast base to specialise. That is what
         was measured, and the wording mattered more than the checkpoint: on
         <code>typed-decisions</code>, asking what the assistant should <em>do</em> next scores
         <span class="num val">0.719</span>, and asking what is <em>true</em> of the text scores
         <span class="num val">0.416</span> — below the coin flip, which is worse
         than not scoring at all. That is the reverse of
-        what Laya's own documentation suggests, which is the finding rather than an
+        what that documentation suggests, which is the finding rather than an
         embarrassment: the checkpoint is better at a decision than at an entailment.</p>
       <p>The checkpoint named for English is also not the best at English. On that same
         wording it scores <span class="num val">0.480</span> &#8212; below the coin flip &#8212;
@@ -1963,7 +1964,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       calls at named moments, rather than a shell command it spawns. Early access, which is
       why <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> exists.</dd>
     <dt id="g-sidecar">Sidecar</dt>
-    <dd>The local <code>laya-serve</code> process this plugin was first built to score against,
+    <dd>The local neural&#8209;model process this plugin was first built to score against,
       over HTTP. It lost to the built-in model on <a href="#result">10 of 10 paired splits</a>
       and has been removed; <code>eval/</code> still measures it. It is the only thing here that
       ever wanted a GPU, and nothing here wants one now.</dd>
@@ -2007,7 +2008,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p>
     A derivative of <a rel="noopener" href="https://github.com/tamaratran/fast-jev-compaction">tamaratran/fast-jev-compaction</a>
     and <a rel="noopener" href="https://github.com/fatelei/jev-compact">fatelei/jev-compact</a>, both MIT, which do this
-    with TypeSafe’s hosted Jev model. Laya is Apache-2.0. This is MIT, by
+    with TypeSafe’s hosted Jev model. This is MIT, by
     <a rel="noopener" href="https://github.com/AxeForging">AxeForging</a>:
     <a rel="noopener" href="https://github.com/AxeForging/kompact">the source</a> and <a href="eval.html">the full evaluation</a>.
   </p>

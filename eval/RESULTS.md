@@ -195,7 +195,7 @@ The cost: move that same sentence to the end of that same filler and the answer 
 Both upstream projects send the whole conversation, up to 25,000 tokens, as a single state.
 ```
 
-## What the sidecar costs to run — `eval/laya-bench.ts`
+## What the sidecar costs to run — `eval/sidecar-bench.ts`
 
 Needs a live `laya-serve`, so this section is empty on a machine without one.
 One process serves all three checkpoints, so memory and start-up are properties

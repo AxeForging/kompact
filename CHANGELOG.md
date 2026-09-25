@@ -40,7 +40,7 @@ TypeSafe's hosted Jev model.
   that was ever needed verbatim, and retention stands at 77.3%.
 - **Laya stays available** behind the same `Asker` seam for anyone with a
   checkpoint fine-tuned on their own sessions, and is now measurable rather than
-  only comparable: `eval/laya-bench.ts` reports 7.6 s to start, ~4.9 GB resident,
+  only comparable: `eval/sidecar-bench.ts` reports 7.6 s to start, ~4.9 GB resident,
   ~5.0 GB of VRAM, and 23.1 s to score the sessions the built-in scorer scores in
   190 ms.
 - **Local calibration.** `npm run calibrate` refits on your own transcripts and

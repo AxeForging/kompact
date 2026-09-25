@@ -12,10 +12,10 @@
  * `--cold` additionally starts a second sidecar on a spare port and times it to
  * first answer. It never touches the one already running.
  *
- * Run: bun eval/laya-bench.ts [--url http://127.0.0.1:8000/v1/systemone] [--cold]
+ * Run: bun eval/sidecar-bench.ts [--url http://127.0.0.1:8000/v1/systemone] [--cold]
  */
 import { execFileSync, spawn } from 'node:child_process';
-import { LayaClient } from './laya-client.js';
+import { LayaClient } from './sidecar-client.js';
 
 const args = process.argv.slice(2);
 const flag = (name: string, fallback: string): string => {

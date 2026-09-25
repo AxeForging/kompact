@@ -1,7 +1,7 @@
 {
   "name": "kompact",
   "version": "0.1.0",
-  "description": "Laya-scored context compaction for coding agents. Local, offline, no API key.",
+  "description": "Local context compaction for coding agents. Scores every tool call, drops only what is no longer needed. No API key, no GPU, no network call.",
   "type": "module",
   "license": "MIT",
   "engines": {

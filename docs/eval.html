@@ -116,7 +116,7 @@ footer p{ max-width: 68ch; }
 <header>
   <div class="wrap">
     <h1>Evaluation results</h1>
-    <nav class="contents" aria-label="Contents"><a class="back" href="./">← kompact</a><a href="#ranking-quality-eval-repeat-ts">Ranking quality</a><a href="#what-the-shipped-coefficients-generalise-to-eval-fit-ts">What the shipped coefficients generalise to</a><a href="#decision-policy-eval-policy-ts">Decision policy</a><a href="#what-a-wrong-drop-costs-eval-recovery-ts">What a wrong drop costs</a><a href="#whether-the-work-survives-eval-outcome-ts">Whether the work survives</a><a href="#what-it-frees-in-practice-eval-sessions-ts">What it frees in practice</a><a href="#where-the-sidecar-fails-quietly-eval-truncation-ts">Where the sidecar fails quietly</a><a href="#what-the-sidecar-costs-to-run-eval-laya-bench-ts">What the sidecar costs to run</a></nav>
+    <nav class="contents" aria-label="Contents"><a class="back" href="./">← kompact</a><a href="#ranking-quality-eval-repeat-ts">Ranking quality</a><a href="#what-the-shipped-coefficients-generalise-to-eval-fit-ts">What the shipped coefficients generalise to</a><a href="#decision-policy-eval-policy-ts">Decision policy</a><a href="#what-a-wrong-drop-costs-eval-recovery-ts">What a wrong drop costs</a><a href="#whether-the-work-survives-eval-outcome-ts">Whether the work survives</a><a href="#what-it-frees-in-practice-eval-sessions-ts">What it frees in practice</a><a href="#where-the-sidecar-fails-quietly-eval-truncation-ts">Where the sidecar fails quietly</a><a href="#what-the-sidecar-costs-to-run-eval-sidecar-bench-ts">What the sidecar costs to run</a></nav>
   </div>
 </header>
 <main>
@@ -251,7 +251,7 @@ The cut: 8,140 characters and 40,360 characters both read as 512 tokens and both
 The cost: move that same sentence to the end of that same filler and the answer falls from 0.9152 to 0.2191 — for a fact the text still states verbatim. Nothing in the response distinguishes the two.
 
 Both upstream projects send the whole conversation, up to 25,000 tokens, as a single state.</pre></div>
-<h2 id="what-the-sidecar-costs-to-run-eval-laya-bench-ts">What the sidecar costs to run — <code>eval/laya-bench.ts</code></h2>
+<h2 id="what-the-sidecar-costs-to-run-eval-sidecar-bench-ts">What the sidecar costs to run — <code>eval/sidecar-bench.ts</code></h2>
 <p>Needs a live <code>laya-serve</code>, so this section is empty on a machine without one. One process serves all three checkpoints, so memory and start-up are properties of the router; only latency is per checkpoint.</p>
 <div class="scroller" tabindex="0" role="region" aria-label="What the sidecar costs to run — measured output"><pre>sidecar: http://127.0.0.1:8000/v1/systemone
 memory:  4958 MB resident (pid 1407371)
