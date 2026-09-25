@@ -246,7 +246,10 @@ if (PUBLISH) {
         `<span class="ladder__ms">${why}</span>`;
     return `      <li class="ladder__row${row.taken ? '' : ' ladder__row--over'}">` +
       `<span class="ladder__label">${label}</span>` +
-      `<span class="ladder__track"><span class="ladder__held" style="--w:${row.to.toFixed(1)}%"></span>` +
+      `<span class="visually-hidden">held ${row.to.toFixed(1)}% of the window, </span>` +
+      // The bar says exactly what the two numbers beside it say, so a screen
+      // reader is read the numbers and not two empty spans.
+      `<span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:${row.to.toFixed(1)}%"></span>` +
       `<span class="ladder__back" style="--l:${row.to.toFixed(1)}%;--w:${(row.from - row.to).toFixed(1)}%"></span></span>` +
       note + '</li>';
   };

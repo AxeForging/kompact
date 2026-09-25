@@ -569,7 +569,7 @@ Being precise about this, because "it compiles" is not evidence.
 | The Codex plugin works against the server | `jev-compact`'s own parser, pairing, scorer and HTTP client, driven over its recorded Codex rollout fixture, produce discriminating scores |
 | The plugin loads in a real engine | `claude --plugin-dir .` with function hooks on |
 | `turn.complete` fires and requests compaction | verified live: the hook was invoked in a real session, `$.session.usage()` returned a real percentage, and `$.session.compact()` was called |
-| The loop takes several passes before handing over | the production loop replayed on real transcripts — compacted prefix plus real continuation, not a pass fed its own output: 9 passes taken across 3 sessions, none slower than 20 ms (`eval/passes.ts`) |
+| The loop takes several passes before handing over | the production loop replayed on real transcripts — compacted prefix plus real continuation, not a pass fed its own output: 9 passes taken across 3 sessions, none slower than 20 ms (`eval/passes.ts`). The hook's own side of it — counter, ceiling, cleared record — is driven over a real transcript from disk in `test/real-transcript.test.ts` |
 
 **Not verified:** the engine invoking `session.compact` *in a live session* and
 accepting the replacement message list. Forcing it needs genuine context
@@ -601,7 +601,7 @@ And a live Codex CLI, which needs >= 0.155 (this machine has 0.131).
 ```sh
 bun install
 npm run typecheck   # src + test + eval + hooks
-npm run test        # 217 tests
+npm run test        # 219 tests
 npm run validate    # plugin manifest
 ```
 

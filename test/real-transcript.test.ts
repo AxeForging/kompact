@@ -69,10 +69,13 @@ function handlers(options: Record<string, unknown>) {
 const engine = () => {
   const store = new Map<string, unknown>();
   const logs: string[] = [];
+  const toasts: string[] = [];
   return {
     logs,
+    toasts,
+    store,
     $: {
-      ui: { log: (t: string) => logs.push(t), toast: () => {} },
+      ui: { log: (t: string) => logs.push(t), toast: (t: string) => toasts.push(t) },
       clock: {
         sleep: (ms: number) => new Promise<void>((r) => setTimeout(r, ms)),
         now: () => 1_700_000_000_000,
@@ -162,6 +165,38 @@ function checkSession(label: string, load: () => Message[] | undefined, minCalls
       expect(result.messages.length).toBeGreaterThan(0);
       expect(result.messages.length).toBeLessThanOrEqual(messages!.length);
       for (const message of result.messages) expect(message.role).toBeTruthy();
+    });
+
+    /**
+     * The ladder, on a real transcript rather than a hand-built one.
+     *
+     * `test/hook.test.ts` drives the pass counter over a six-message fixture,
+     * which proves the arithmetic and nothing about the shapes a live session
+     * holds. This runs the same loop over a transcript from disk: each pass
+     * gets the previous pass's own output, the counter has to reach the
+     * ceiling and stop there, and the notice has to name the pass a reader
+     * would see in the toast.
+     */
+    it('answers several compactions and then hands over', async () => {
+      const eng = engine();
+      const map = handlers({ maxPasses: 3, minFreedPercent: 0 });
+      let live = messages!;
+      const notices: string[] = [];
+      for (let pass = 0; pass < 4; pass += 1) {
+        const result = await map.get('session.compact')!(
+          eng.$, { messages: live }, () => 'FELL_BACK');
+        notices.push(eng.toasts.at(-1) ?? '');
+        if (result === 'FELL_BACK') break;
+        live = result.messages as Message[];
+      }
+      expect(notices.slice(0, 3).join(' ')).toContain('pass 1 of 3');
+      expect(notices.slice(0, 3).join(' ')).toContain('pass 3 of 3');
+      // The fourth is refused by the ceiling, whatever it would have freed.
+      expect(notices[3], 'the ceiling did not stop the loop')
+        .toContain('fallback to built-in summary');
+      // And the record is cleared, so the engine's summary starts a new ladder.
+      expect((eng.store.get('passes') as Record<string, unknown>)['real-transcript|main'])
+        .toBeUndefined();
     });
   });
 }

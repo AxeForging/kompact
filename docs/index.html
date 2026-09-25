@@ -994,7 +994,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </p>
   </div>
   <div class="colophon reveal" style="--d:170ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>217</b> tests</span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>219</b> tests</span>
     <span><b>0</b> network calls</span><span><b>5</b> claims <a href="#checked">not verified</a></span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
 </div>
@@ -1305,21 +1305,21 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p>
     One compaction is not the product; the loop is. The engine asks at 60% of the window, this
     answers, you keep working, and it asks again. Each answer costs about
-    <span class="num val">8&#8239;ms</span> and hands back
+    <span class="num val">9&#8239;ms</span> and hands back
     <span class="num val">9 points</span> of window &#8212; so the model
     summary, which is a model call and rewrites your session into prose, runs after the
     sixth of them rather than the first.
   </p>
   <ol class="ladder" id="ladder">
-      <li class="ladder__row"><span class="ladder__label">pass 1</span><span class="ladder__track"><span class="ladder__held" style="--w:51.7%"></span><span class="ladder__back" style="--l:51.7%;--w:9.0%"></span></span><span class="ladder__num">&#8722;9.0<span class="ladder__unit">pts</span></span><span class="ladder__ms">12&#8239;ms</span></li>
-      <li class="ladder__row"><span class="ladder__label">pass 2</span><span class="ladder__track"><span class="ladder__held" style="--w:50.7%"></span><span class="ladder__back" style="--l:50.7%;--w:9.4%"></span></span><span class="ladder__num">&#8722;9.4<span class="ladder__unit">pts</span></span><span class="ladder__ms">8&#8239;ms</span></li>
-      <li class="ladder__row"><span class="ladder__label">pass 3</span><span class="ladder__track"><span class="ladder__held" style="--w:51.7%"></span><span class="ladder__back" style="--l:51.7%;--w:8.6%"></span></span><span class="ladder__num">&#8722;8.6<span class="ladder__unit">pts</span></span><span class="ladder__ms">8&#8239;ms</span></li>
-      <li class="ladder__row"><span class="ladder__label">pass 4</span><span class="ladder__track"><span class="ladder__held" style="--w:52.0%"></span><span class="ladder__back" style="--l:52.0%;--w:8.3%"></span></span><span class="ladder__num">&#8722;8.3<span class="ladder__unit">pts</span></span><span class="ladder__ms">7&#8239;ms</span></li>
-      <li class="ladder__row"><span class="ladder__label">pass 5</span><span class="ladder__track"><span class="ladder__held" style="--w:52.5%"></span><span class="ladder__back" style="--l:52.5%;--w:7.5%"></span></span><span class="ladder__num">&#8722;7.5<span class="ladder__unit">pts</span></span><span class="ladder__ms">7&#8239;ms</span></li>
-      <li class="ladder__row"><span class="ladder__label">pass 6</span><span class="ladder__track"><span class="ladder__held" style="--w:53.7%"></span><span class="ladder__back" style="--l:53.7%;--w:6.6%"></span></span><span class="ladder__num">&#8722;6.6<span class="ladder__unit">pts</span></span><span class="ladder__ms">7&#8239;ms</span></li>
-      <li class="ladder__row ladder__row--over"><span class="ladder__label">hand over</span><span class="ladder__track"><span class="ladder__held" style="--w:53.3%"></span><span class="ladder__back" style="--l:53.3%;--w:6.7%"></span></span><span class="ladder__num ladder__num--under">&#8722;6.7<span class="ladder__unit">pts</span></span><span class="ladder__ms">6 passes is the ceiling</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 1</span><span class="visually-hidden">held 51.7% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:51.7%"></span><span class="ladder__back" style="--l:51.7%;--w:9.0%"></span></span><span class="ladder__num">&#8722;9.0<span class="ladder__unit">pts</span></span><span class="ladder__ms">14&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 2</span><span class="visually-hidden">held 50.7% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:50.7%"></span><span class="ladder__back" style="--l:50.7%;--w:9.4%"></span></span><span class="ladder__num">&#8722;9.4<span class="ladder__unit">pts</span></span><span class="ladder__ms">10&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 3</span><span class="visually-hidden">held 51.7% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:51.7%"></span><span class="ladder__back" style="--l:51.7%;--w:8.6%"></span></span><span class="ladder__num">&#8722;8.6<span class="ladder__unit">pts</span></span><span class="ladder__ms">9&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 4</span><span class="visually-hidden">held 52.0% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:52.0%"></span><span class="ladder__back" style="--l:52.0%;--w:8.3%"></span></span><span class="ladder__num">&#8722;8.3<span class="ladder__unit">pts</span></span><span class="ladder__ms">9&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 5</span><span class="visually-hidden">held 52.5% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:52.5%"></span><span class="ladder__back" style="--l:52.5%;--w:7.5%"></span></span><span class="ladder__num">&#8722;7.5<span class="ladder__unit">pts</span></span><span class="ladder__ms">8&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 6</span><span class="visually-hidden">held 53.7% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:53.7%"></span><span class="ladder__back" style="--l:53.7%;--w:6.6%"></span></span><span class="ladder__num">&#8722;6.6<span class="ladder__unit">pts</span></span><span class="ladder__ms">8&#8239;ms</span></li>
+      <li class="ladder__row ladder__row--over"><span class="ladder__label">hand over</span><span class="visually-hidden">held 53.3% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:53.3%"></span><span class="ladder__back" style="--l:53.3%;--w:6.7%"></span></span><span class="ladder__num ladder__num--under">&#8722;6.7<span class="ladder__unit">pts</span></span><span class="ladder__ms">6 passes is the ceiling</span></li>
   </ol>
-  <p class="caption">One real session of 7,397 messages, replayed against a
+  <p class="caption">One real session of 7,591 messages, replayed against a
     200k&#8209;token window. The dark part of each bar is what the session was still
     holding; the red part is what that pass handed back. Of 5 sessions measured on this
     machine, 3 looped at all, and between them the loop answered <b>9</b>
@@ -1332,10 +1332,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       removed a quarter of the transcript. Replaying the loop on real sessions, that bar took
       <span class="num val">0</span> of <span class="num val">14</span>
       passes &#8212; every one went to the model summary while this could still free
-      9 points of window in under 12&#8239;ms.
+      9 points of window in under 14&#8239;ms.
     </p>
     <p>
-      The unit was the mistake. A quarter of a 7,397-message session and
+      The unit was the mistake. A quarter of a 7,591-message session and
       a quarter of a 200-message one are not the same amount of room to keep working in, and room is
       what runs out. Points of the context window are comparable between them, and they are the same
       unit as the 60% trigger &#8212; which makes the rule its own guard: a pass that is taken
