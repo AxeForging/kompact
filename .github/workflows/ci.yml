@@ -44,6 +44,11 @@ jobs:
             | sed -r 's/\x1b\[[0-9;]*m//g' \
             | grep -q "committed session fixture > compacts offline and leaves no orphaned"
 
+      # `claude plugin validate` is the only check that reads the manifest the way
+      # the engine does — it is what caught `$.env?.get` being unreadable — so the
+      # CLI is installed rather than the step skipped. It needs no credentials.
+      - name: install the Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
       - run: bun run validate
 
       # `bin` pointed at a path `tsc` never built, so `npx laya-compact-serve`
