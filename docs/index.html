@@ -118,6 +118,7 @@ a:hover{ color: var(--accent); }
 .flooded :focus-visible{ outline-color: var(--on-flood); }
 .wordmark{
   font-family: var(--display); font-weight: 700; font-size: var(--text-display);
+  font-optical-sizing: none;
   line-height: 0.92; letter-spacing: -0.015em; margin: 0 0 var(--space-lg);
 }
 .wordmark em{ font-style: italic; font-weight: 400; }
@@ -147,9 +148,11 @@ section.flooded{ border-top: none; padding-block: clamp(var(--space-2xl), 5.5vw,
 .masthead.flooded{ max-width: none; }
 h2{
   font-family: var(--display); font-weight: 700; font-size: var(--text-xl);
+  font-optical-sizing: none;
   line-height: 0.98; letter-spacing:0; margin: 0 0 var(--space-md); max-width: 26ch;
 }
 h3{ font-family: var(--display); font-weight:600; font-size: var(--text-lg); line-height:1.15;
+  font-optical-sizing: none;
   letter-spacing:0.005em; margin: var(--space-2xl) 0 var(--space-xs); }
 p{ max-width: var(--measure); margin: 0 0 var(--space-md); }
 .lede{ font-size: 1.15rem; color: var(--ink-2); max-width: var(--measure); }

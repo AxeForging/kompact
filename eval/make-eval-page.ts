@@ -115,26 +115,31 @@ body{
   padding: env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0);
 }
 img{ max-width:100%; } [hidden]{ display:none !important; }
-main{ width:100%; max-width: var(--measure); margin-inline:auto; padding-inline: var(--gutter); }
+main{
+  width:100%; max-width: var(--measure); margin-inline:auto;
+  padding-inline: var(--gutter); padding-block-start: clamp(32px, 4.5vw, 56px);
+}
 /* Full-bleed ground; the reading measure is held by the wrapper inside it. */
 header{ background: var(--flood); color: var(--on-flood); }
 .wrap{
   width:100%; max-width: var(--measure); margin-inline:auto; padding-inline: var(--gutter);
   padding-block: clamp(44px, 7vw, 104px) clamp(18px, 2.5vw, 28px);
 }
+/* Optical sizing pinned to the text cut: Bodoni's large-opsz hairlines — the em-dash
+   among them — fall below one device pixel and drop out of the raster entirely. */
 h1{
-  font-family: var(--display); font-optical-sizing:auto; font-weight:500; color: var(--on-flood);
+  font-family: var(--display); font-optical-sizing:none; font-weight:500; color: var(--on-flood);
   font-size: clamp(3rem, 1.3rem + 6vw, 6rem); line-height:0.92; letter-spacing:-0.015em;
   text-wrap: balance; margin:0 0 clamp(24px, 3.5vw, 40px);
 }
 h2{
-  font-family: var(--display); font-optical-sizing:auto; font-weight:500;
+  font-family: var(--display); font-optical-sizing:none; font-weight:500;
   font-size: clamp(1.85rem, 1.25rem + 2.3vw, 2.9rem); line-height:1.06; letter-spacing:-0.01em;
   text-wrap: balance; margin: clamp(56px, 8vw, 88px) 0 14px; padding-top: 24px;
   border-top: 2px solid var(--ink); scroll-margin-top: 16px;
 }
 h2 code{ font-size:0.5em; font-weight:400; color: var(--ink-2); letter-spacing:0; }
-h3{ font-family: var(--display); font-weight:700; font-size:1.35rem; line-height:1.2; margin: 32px 0 8px; }
+h3{ font-family: var(--display); font-optical-sizing:none; font-weight:700; font-size:1.35rem; line-height:1.2; margin: 32px 0 8px; }
 p{ max-width: 68ch; margin: 0 0 16px; }
 a{ color: var(--accent-ink); text-underline-offset:3px; }
 a:hover{ color: var(--accent); }
@@ -161,9 +166,12 @@ pre{
   font-size:0.8125rem; line-height:1.55; font-variant-ligatures:none; color: var(--ink);
 }
 footer{
-  border-top:2px solid var(--ink); margin-top:64px; padding-block:24px 64px;
+  width:100%; max-width: var(--measure); margin: 64px auto 0;
+  padding-inline: var(--gutter); padding-block:24px 64px;
+  border-top:2px solid var(--ink);
   font-family: var(--sans); font-size:0.875rem; color: var(--ink-2);
 }
+footer p{ max-width: 68ch; }
 @media (max-width: 640px){
   :root{ --gutter: 16px; }
   html, body{ max-width:100%; overflow-x:hidden; overflow-x:clip; }
