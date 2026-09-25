@@ -285,6 +285,72 @@ Every grading is worse in the tail than the flat cap that frees the same amount.
 about where inside the output the reuse sits, and among the outputs that already
 survived the floor it has spent its information. Not shipped.
 
+## The half nothing touches — `eval/mass.ts`, `eval/inputs.ts`
+
+Every lever in this repository acts on tool **output**. `eval/mass.ts` asks
+whether that is where the characters are, over the 24 largest transcripts on one
+machine:
+
+| | share | characters |
+|---|---|---|
+| prose — never touched, by design | 10.2% | 1,209,283 |
+| tool **input** — touched only by dropping the whole call | 42.7% | 5,052,565 |
+| tool **output** — what the ranking and the cap act on | 47.1% | 5,576,131 |
+
+Tool input is nearly as large as tool output and no policy shortens any of it. A
+`Write` carries the whole file it wrote (6,690 characters a call), a
+`SubagentHandback` a whole report (21,974), a `Bash` its heredoc (864 average,
+and the tail is long).
+
+### What capping an input would cost
+
+`eval/inputs.ts` prices it the same way `eval/cap.ts` prices the output cap: the
+share of 8-word shingles that **later** text quotes which are still present
+afterwards, where later text is later prose and later tool inputs — which is
+where a quoted `old_string` turns up.
+
+| policy | freed, whole transcript | input reuse kept |
+|---|---|---|
+| cap every input at 32,000 | 0.1% | 99.8% |
+| cap every input at 16,000 | 1.9% | 98.7% |
+| cap every input at 12,000 | 2.8% | 97.4% |
+| cap every input at 8,000 | 4.8% | 89.6% |
+| cap every input at 6,000 | 6.6% | 81.6% |
+
+**Not shipped.** Set against the output cap — 20.7% of the corpus for 6.2% of
+reused characters — an input cap is a far worse exchange rate at every setting,
+and the knee arrives early: 8,000 already costs ten points of reuse.
+
+The reason is the same one that killed head-and-tail truncation: reuse inside an
+input is spread through it, not gathered at the front. Median depth 0.50 for
+`Write`, 0.47 for `Bash`, 0.62 for `Edit` — only 7.5% of quoted passages in a
+`Bash` input fall in its first tenth. A head cap is close to uniform sampling,
+so it loses reuse in proportion to what it frees.
+
+### The one exception, and why it is not a default
+
+Reuse density is not uniform across tools. Per thousand characters of input:
+
+| tool | inputs | characters | reused shingles | per 1,000 chars |
+|---|---|---|---|---|
+| `Write` | 126 | 879,805 | 49,815 | 56.6 |
+| `Edit` | 247 | 300,290 | 6,579 | 21.9 |
+| `Bash` | 4,513 | 3,428,309 | 45,958 | 13.4 |
+| `ExitPlanMode` | 8 | 94,544 | 149 | 1.6 |
+| `AskUserQuestion` | 22 | 40,195 | 27 | 0.7 |
+| `SubagentHandback` | 26 | 542,790 | **19** | **0.04** |
+| `Read` | 868 | 85,931 | **0** | **0** |
+
+`SubagentHandback` holds 9.6% of all input characters and is quoted afterwards
+almost never — two orders of magnitude below `Bash`. That is the best exchange
+rate anywhere in this file.
+
+It is still not shipped, for two reasons worth stating rather than hiding. It is
+**26 inputs on one machine**, which is not a sample. And `SubagentHandback` is
+not a tool a stock Claude Code install has, so a default built on it would be a
+default fitted to this operator's setup — the thing every other number here is
+arranged to avoid.
+
 ## Where the sidecar fails quietly — `eval/truncation.ts`
 
 Needs a live `laya-serve`, so this section is empty on a machine without one.

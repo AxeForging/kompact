@@ -1743,7 +1743,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
   </details>
   <details class="more">
-    <summary><h3>Four more things it does not do</h3></summary>
+    <summary><h3>Five more things it does not do</h3></summary>
     <p>
     <strong>A summary compresses harder.</strong> Freeing a third of the tokens is less than
     replacing the conversation with a few thousand tokens of prose. What you buy with the
@@ -1766,6 +1766,22 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <strong>The shipped coefficients are one person’s sessions.</strong> A different tool mix
     scores differently and nothing detects that for you, so <code>npm&nbsp;run&nbsp;calibrate</code>
     refits on your own transcripts and reports whether it helped.
+  </p>
+  <p>
+    <strong>It never shortens what a tool was <em>asked</em>.</strong> Every lever here acts on
+    output. <code>eval/mass.ts</code> says output is <span class="num val">47.1%</span> of a
+    transcript and tool <em>input</em> is <span class="num val">42.7%</span> &#8212; a
+    <code>Write</code> carries the whole file it wrote, a <code>Bash</code> its heredoc &#8212;
+    and nothing shortens any of it. <code>eval/inputs.ts</code> priced capping it and the trade
+    is poor: capping every input at 16,000 characters frees
+    <span class="num val">1.9%</span> of the transcript for
+    <span class="num val">1.3%</span> of the passages later steps quoted back, against
+    <span class="num val">20.7%</span> for <span class="num val">6.2%</span> on the output side.
+    Reuse inside an input sits at median depth <span class="num val">0.50</span>, so a head cap
+    samples it rather than trims it, which is the same reason head-and-tail truncation lost.
+    <a href="eval.html#the-half-nothing-touches-eval-mass-ts-eval-inputs-ts">The full table</a>
+    includes the one tool that would be worth capping and why a default built on 26 calls from
+    one machine would be a default fitted to this operator.
   </p>
   </details>
 </section>
