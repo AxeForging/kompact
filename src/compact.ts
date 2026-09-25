@@ -151,7 +151,23 @@ export function decideAll(
   const provisional = calls.map((call) => ({
     call,
     decision: decideCall(call, answers.get(call.id) ?? unanswered, options),
-  }));
+  })).map((entry) => {
+    /**
+     * A stub this tool wrote is the receipt for a drop it already made, and the
+     * receipt says "re-run the tool if needed". Re-truncating one frees nothing
+     * and `minYieldChars` already refuses it — but dropping the CALL frees the
+     * stub plus the input, which clears that bar easily, so a second compaction
+     * quietly deleted the invocation the note tells you to re-run. Measured on a
+     * 384-character stub: dropping the result frees 0 and is refused, dropping
+     * the call frees 432 and was not.
+     *
+     * So: having truncated a result, keep its call. The promise costs about 400
+     * characters per truncated call and is worthless without it.
+     */
+    if (entry.decision.action !== 'drop_call') return entry;
+    if (!entry.call.resultText.includes(TRUNCATION_MARK)) return entry;
+    return { ...entry, decision: { ...entry.decision, action: 'keep' as const, reason: 'kept' as const } };
+  });
 
   // A drop that frees less than `minYieldChars` is refused before the budget is
   // even computed: the ranking may be right and it still is not worth acting on,
@@ -233,10 +249,13 @@ export function rowTokens(used: number, questionCount: number): number {
   return questionCount > 0 ? used / questionCount : used;
 }
 
+/** The marker a truncated result carries, so a later pass can recognise its own work. */
+export const TRUNCATION_MARK = '[laya-compact truncated ';
+
 function truncatedResultText(text: string, isError: boolean, headChars: number): string {
   if (text.length <= headChars + 120) return text;
   const head = headChars > 0 ? `${text.slice(0, headChars)}\n` : '';
-  return `${head}[laya-compact truncated ${text.length - headChars} chars of this tool result${
+  return `${head}${TRUNCATION_MARK}${text.length - headChars} chars of this tool result${
     isError ? ' (error)' : ''
   }; re-run the tool if needed]`;
 }

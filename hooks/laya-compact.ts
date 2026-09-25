@@ -307,8 +307,11 @@ export function summarize(result: CompactResult, scorer: Scorer): string {
     stats.truncatedRequests > 0 ? `${stats.truncatedRequests} STATES TRUNCATED` : '',
   ].filter(Boolean);
   const via = scorer === 'laya' ? `laya/${stats.checkpoint || '?'}` : 'features';
+  // `stats.ms` is the whole `compact()` call — collect, score, decide, rebuild —
+  // not the scoring alone, and saying "scored ... in Xms" read as if it were.
+  // The number a reader wants is how long compaction took, so say that.
   return `${percent(reductionRatio(result))} reduction; ${parts.join(', ') || 'no tool calls'}; ` +
-    `${stats.requests} scored via ${via} in ${stats.ms}ms`;
+    `${stats.requests} scored via ${via}; compacted in ${stats.ms}ms`;
 }
 
 const UI_LOG_MAX_CHARS = 4096;

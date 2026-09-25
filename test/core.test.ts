@@ -4,6 +4,7 @@ import {
   targetOf,
 } from '../src/state.js';
 import {
+  DEFAULT_OPTIONS, TRUNCATION_MARK,
   applyDecisions, compact, decideAll, decideCall, pool, resolveOptions, rowTokens,
 } from '../src/compact.js';
 import { CONTEXT_LENGTH, STATE_BUDGET, buildSystemOneRequest } from '../src/request.js';
@@ -137,6 +138,32 @@ describe('decisions', () => {
     expect(decideCall(call, { keepCall: 0.9, keepResult: 0.9 }, { keepThreshold: 0.5 }).action).toBe('keep');
     expect(decideCall(call, { keepCall: 0.9, keepResult: 0.1 }, { keepThreshold: 0.5 }).action).toBe('drop_result');
     expect(decideCall(call, { keepCall: 0.1, keepResult: 0.1 }, { keepThreshold: 0.5 }).action).toBe('drop_call');
+  });
+
+  /**
+   * Compaction fires more than once in a long session, and the second pass sees
+   * the first pass's own stubs. Re-truncating one frees nothing and is refused
+   * by `minYieldChars`; dropping its call frees the stub plus the input, which
+   * clears that bar — so the invocation the note says to re-run was deleted.
+   */
+  it('keeps the call of a result it already truncated', () => {
+    const stub = `${'x'.repeat(300)}\n${TRUNCATION_MARK}40000 chars of this tool result; re-run the tool if needed]`;
+    const make = (id: string, text: string): ToolCall => ({
+      id, tool_use_id: id, tool: 'Bash', input: { command: 'npm test -- some/long/path.spec.ts' },
+      callIndex: 0, resultIndex: 1, resultText: text, resultChars: text.length,
+      isError: false, pinned: false,
+    });
+    const answers = new Map([
+      ['stub', { keepCall: 0.05, keepResult: 0.05 }],
+      ['fresh', { keepCall: 0.05, keepResult: 0.05 }],
+    ]);
+    const decisions = decideAll(
+      [make('stub', stub), make('fresh', 'y'.repeat(stub.length))], answers, DEFAULT_OPTIONS);
+    const by = new Map(decisions.map((d) => [d.id, d.action]));
+    expect(by.get('stub')).toBe('keep');
+    // The guard has to be about the marker, not the size: a fresh result of the
+    // same length is still the scorer's to drop.
+    expect(by.get('fresh')).toBe('drop_call');
   });
 
   it('never touches a pinned call', () => {
@@ -281,6 +308,38 @@ describe('applyDecisions', () => {
     expect(resolveOptions({}).maxKeptChars).toBe(24_000);
     expect(resolveOptions({ maxKeptChars: 0 }).maxKeptChars).toBe(0);
     expect(resolveOptions({ maxKeptChars: -5 }).maxKeptChars).toBe(0);
+  });
+});
+
+/**
+ * Compaction sits in front of every compaction the engine fires, so it is
+ * allowed to be wrong occasionally and never allowed to be slow. The built-in
+ * scorer does no I/O at all, which is the whole reason the default is not the
+ * neural sidecar: scoring one machine's 1,762 calls takes 23.1 s through
+ * `laya-serve` against 190 ms here.
+ *
+ * The bound is deliberately loose — measured at roughly 230 ms for 2,045 calls
+ * on a real 6,152-message session, so 4 s for 2,000 calls is about seventeen
+ * times the real figure. A loose bound still catches the failure that matters,
+ * which is someone turning a linear pass into a quadratic one; a tight bound
+ * catches a loaded CI runner and teaches everyone to ignore it.
+ */
+describe('speed', () => {
+  it('compacts two thousand calls well inside a budget no engine would notice', async () => {
+    const messages: Message[] = [{ role: 'user', text: 'a long session', toolUses: [] }];
+    for (let i = 0; i < 2_000; i += 1) {
+      messages.push(...pair(`p${i}`, i % 3 === 0 ? 'Read' : 'Bash',
+        { command: `npm test -- case/${i}.spec.ts` }, `output line ${i}\n`.repeat(40)));
+    }
+    messages.push({ role: 'assistant', text: 'done', toolUses: [] });
+    const started = Date.now();
+    const result = await compact(messages, new FeatureAsker(), {});
+    const elapsed = Date.now() - started;
+    expect(result.stats.calls).toBeGreaterThan(1_900);
+    // Reported time must be real, not a placeholder someone stopped updating.
+    expect(result.stats.ms).toBeGreaterThan(0);
+    expect(result.stats.ms).toBeLessThanOrEqual(elapsed + 5);
+    expect(elapsed, `compacting ${result.stats.calls} calls took ${elapsed}ms`).toBeLessThan(4_000);
   });
 });
 
