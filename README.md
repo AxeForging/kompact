@@ -481,8 +481,10 @@ advanced one:
 
 Before any of that, `npm run dry-run` answers the cheaper question — how much
 this would free on *your* transcripts — by running the shipped `compact` over
-`~/.claude/projects` and printing a per-session table. It installs nothing,
-writes nothing, and needs no key.
+`~/.claude/projects`. It prints two tables: what one compaction frees per
+session, and then the loop, replayed the way production runs it, with the passes
+it would take before handing over and the milliseconds each one costs. It
+installs nothing, writes nothing, and needs no key.
 
 ```sh
 npm run dry-run             # what it would free on your own sessions

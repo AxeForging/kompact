@@ -2040,7 +2040,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <strong>Or don’t install it yet.</strong> Clone
     <a rel="noopener" href="https://github.com/AxeForging/kompact">the repository</a> and run
     <code>npm&nbsp;run&nbsp;dry-run</code>: it scores your own transcripts with the same code the
-    hook calls and prints what it would have freed, writing nothing and installing nothing.
+    hook calls and prints both what one compaction would free and how many passes the loop
+    would take before handing over, writing nothing and installing nothing.
     Needs <code>git</code> and Node 18 or later, and it reads the sessions already in <code>~/.claude/projects</code> — with
     none there it has nothing to score and says so.
     <a href="#cost">Section 06, Cost</a> has the range to expect.
@@ -2190,8 +2191,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <dd>Inside the six newest messages, which are never touched. A pinned call is not scored for
       dropping at all, so its 1.000 is a statement about the rule, not about the call.</dd>
     <dt id="g-dry-run">Dry run</dt>
-    <dd><code>npm run dry-run</code>: scores the transcripts already on your machine and prints what
-      it would have freed. It writes nothing, installs nothing, and needs no plugin.</dd>
+    <dd><code>npm run dry-run</code>: scores the transcripts already on your machine and prints
+      what one compaction would free and how many passes the loop would take on each of them. It
+      writes nothing, installs nothing, and needs no plugin.</dd>
   </dl>
   </details>
 </section>

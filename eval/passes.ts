@@ -187,6 +187,7 @@ ppByPass.forEach((values, index) => {
  * two can be compared directly on the same runs: this counts how many of them
  * each bar would take.
  */
+if (args.includes('--sweep')) {
 console.log(`\nwhat each bar takes, over the ${everyPass.length} passes measured:`);
 for (const ratio of [0.25, 0.15, 0.10, 0.08, 0.05]) {
   const taken = everyPass.filter((pass) => ratioOf(pass) >= ratio).length;
@@ -197,6 +198,9 @@ for (const pp of [3, 4, 5, 7, 10]) {
   console.log(`  minFreedPercent  ${String(pp).padStart(5)}  takes ${String(taken).padStart(3)} of ${everyPass.length}`);
 }
 console.log(`\nratio seen per pass: ${everyPass.map((p) => ratioOf(p).toFixed(2)).join(' ')}`);
+} else {
+  console.log(`\n\`npm run eval:passes\` adds the sweep that set the defaults.`);
+}
 
 
 /**
