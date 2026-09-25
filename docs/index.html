@@ -215,12 +215,24 @@ table.rows caption{ text-align:left; }
 .scroller{
   overflow-x:auto; overscroll-behavior-x: contain; margin-top: var(--space-lg);
   /* Edge shadows appear only while there is more table to scroll to: the
-     `local` gradients mask the `scroll` ones as you reach each end. */
+     `local` gradients mask the `scroll` ones as you reach each end. At 14px and
+     16% alpha nobody saw them — a reader at 390px read a column cut off mid-word
+     with nothing saying it could be dragged — so they are 24px and 30%. */
   background:
-    linear-gradient(to right, var(--paper) 40%, transparent) left / 44px 100% no-repeat local,
-    linear-gradient(to left,  var(--paper) 40%, transparent) right / 44px 100% no-repeat local,
-    radial-gradient(farthest-side at 0 50%, oklch(0.245 0.012 45 / 0.16), transparent) left / 14px 100% no-repeat scroll,
-    radial-gradient(farthest-side at 100% 50%, oklch(0.245 0.012 45 / 0.16), transparent) right / 14px 100% no-repeat scroll;
+    linear-gradient(to right, var(--paper) 40%, transparent) left / 52px 100% no-repeat local,
+    linear-gradient(to left,  var(--paper) 40%, transparent) right / 52px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, oklch(0.245 0.012 45 / 0.30), transparent) left / 24px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, oklch(0.245 0.012 45 / 0.30), transparent) right / 24px 100% no-repeat scroll;
+}
+/* The shadow says "there is more"; this says which way, for anyone who reads the
+   caption before dragging a table. Only where a table cannot fit. */
+@media (max-width: 760px){
+  .scroller::before{
+    content: "drag the table sideways for the rest of it";
+    display:block; font-family: var(--sans); font-size: var(--text-xs);
+    letter-spacing:0.06em; text-transform:uppercase; color: var(--ink-3);
+    position:sticky; left:0; padding-bottom: var(--space-xs);
+  }
 }
 table.data{ width:100%; min-width: 30rem; border-collapse: collapse; font-family: var(--sans); font-size: var(--text-sm); }
 table.data th, table.data td{ text-align:left; padding: var(--space-xs) var(--space-md) var(--space-xs) 0;
