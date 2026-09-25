@@ -30,8 +30,8 @@
     "targetReduction": {
       "type": "number",
       "title": "Reduction target",
-      "description": "Fraction of droppable tool-output characters to free, 0-1. Calls are dropped lowest-score-first until this is met, then dropping stops. The keep floor outranks it, so a session where everything matters frees little.",
-      "default": 0.7
+      "description": "Fraction of droppable tool-output characters to free, 0-1. Calls are dropped lowest-score-first until this is met, then dropping stops. Measured: 0.5 frees 42.5% of tool output and leaves 87.5% of the characters reused later; 0.7 frees 52.9% and leaves 79.2%.",
+      "default": 0.5
     },
     "preserveRecentMessages": {
       "type": "number",

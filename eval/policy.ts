@@ -20,16 +20,30 @@ const rows: LabelRow[] = readFileSync(join(import.meta.dirname, 'labels.jsonl'),
   .split('\n').filter((l) => l.trim() !== '').map((l) => JSON.parse(l) as LabelRow);
 
 const xs = rows.map((r) => featureVector(r.state, r.tool, r.is_error));
-const ys = rows.map((r) => (r.result_needed ? 1 : 0));
-const score = new Map(rows.map((r, i) => [r.tool_use_id, 0]));
-outOfFold(rows, xs, ys).forEach((p, i) => score.set(rows[i]!.tool_use_id, p));
+const score = new Map<string, number>();
+outOfFold(rows, xs, rows.map((r) => (r.result_needed ? 1 : 0)))
+  .forEach((p, i) => score.set(rows[i]!.tool_use_id, p));
+/** The second model decides whether a drop keeps a head or removes the call. */
+const callScore = new Map<string, number>();
+outOfFold(rows, xs, rows.map((r) => (r.call_needed ? 1 : 0)))
+  .forEach((p, i) => callScore.set(rows[i]!.tool_use_id, p));
+/** What `truncateHeadChars` preserves when only the result is dropped. */
+const HEAD = 300;
 
 const sessions = [...new Set(rows.map((r) => r.session))];
 
-interface Outcome { freed: number; total: number; wrongDrops: number; needed: number; dropped: number; calls: number }
+interface Outcome {
+  freed: number; total: number; wrongDrops: number; needed: number; dropped: number; calls: number;
+  /** Wrong drops that kept a head, so the content is partly still there. */
+  wrongWithHead: number;
+  /** Characters of genuinely-needed output that survived a wrong drop. */
+  neededCharsKept: number;
+  neededCharsTotal: number;
+}
 
 function simulate(policy: 'threshold' | 'budget', floor: number, target: number): Outcome {
-  const out: Outcome = { freed: 0, total: 0, wrongDrops: 0, needed: 0, dropped: 0, calls: 0 };
+  const out: Outcome = { freed: 0, total: 0, wrongDrops: 0, needed: 0, dropped: 0, calls: 0,
+    wrongWithHead: 0, neededCharsKept: 0, neededCharsTotal: 0 };
   for (const session of sessions) {
     const calls = rows.filter((r) => r.session === session);
     out.total += calls.reduce((s, r) => s + r.output_chars, 0);
@@ -49,6 +63,16 @@ function simulate(policy: 'threshold' | 'budget', floor: number, target: number)
         freed += r.output_chars;
       }
     }
+    const droppedIds = new Set(toDrop.map((r) => r.tool_use_id));
+    for (const r of calls) {
+      if (!r.result_needed) continue;
+      out.neededCharsTotal += r.output_chars;
+      if (!droppedIds.has(r.tool_use_id)) { out.neededCharsKept += r.output_chars; continue; }
+      // Dropped although it was needed. A head survives unless the call itself
+      // also scored below the floor and was removed outright.
+      const keepsHead = (callScore.get(r.tool_use_id) ?? 0) >= floor;
+      if (keepsHead) { out.wrongWithHead += 1; out.neededCharsKept += Math.min(HEAD, r.output_chars); }
+    }
     for (const r of toDrop) {
       out.freed += r.output_chars;
       out.dropped += 1;
@@ -61,15 +85,16 @@ function simulate(policy: 'threshold' | 'budget', floor: number, target: number)
 const show = (name: string, o: Outcome): void => {
   const freedPct = (100 * o.freed) / o.total;
   const retained = o.needed === 0 ? 100 : (100 * (o.needed - o.wrongDrops)) / o.needed;
+  const charsKept = o.neededCharsTotal === 0 ? 100 : (100 * o.neededCharsKept) / o.neededCharsTotal;
   console.log(
-    `${name.padEnd(30)}${freedPct.toFixed(1).padStart(7)}%${String(o.dropped).padStart(8)}` +
-    `${String(o.wrongDrops).padStart(12)}${retained.toFixed(1).padStart(10)}%`,
+    `${name.padEnd(28)}${freedPct.toFixed(1).padStart(7)}%${String(o.wrongDrops).padStart(8)}` +
+    `${String(o.wrongWithHead).padStart(7)}${retained.toFixed(1).padStart(9)}%${charsKept.toFixed(1).padStart(10)}%`,
   );
 };
 
 console.log(`${rows.length} calls, ${rows.filter((r) => r.result_needed).length} genuinely needed, ${sessions.length} sessions\n`);
-console.log(`${'policy'.padEnd(30)}${'freed'.padStart(8)}${'dropped'.padStart(8)}${'wrong drops'.padStart(12)}${'needed kept'.padStart(11)}`);
-console.log('-'.repeat(69));
+console.log(`${'policy'.padEnd(28)}${'freed'.padStart(8)}${'wrong'.padStart(8)}${'+head'.padStart(7)}${'kept'.padStart(9)}${'chars kept'.padStart(11)}`);
+console.log('-'.repeat(71));
 show('threshold only, 0.5 (old)', simulate('threshold', 0.5, 0));
 console.log();
 for (const floor of [0.5, 0.3, 0.2, 0.15, 0.1, 0.05]) {
@@ -81,5 +106,8 @@ console.log();
 for (const target of [0.5, 0.6, 0.7, 0.8]) {
   show(`budget ${target.toFixed(1)}, floor 0.10`, simulate('budget', 0.10, target));
 }
-console.log('\n“needed kept” is the number that matters: a wrong drop is unrecoverable,');
-console.log('while freeing a little less only costs context.');
+console.log('\nwrong  = needed outputs that were dropped anyway');
+console.log('+head  = of those, how many kept their first 300 characters');
+console.log('kept   = share of needed outputs not dropped at all');
+console.log('chars kept = share of needed CHARACTERS still present afterwards,');
+console.log('             counting the heads that survived a partial drop.');

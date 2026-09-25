@@ -130,7 +130,7 @@ export interface CompactOptions {
   /** Requests in flight at once. Default 8. */
   concurrency?: number;
   /**
-   * Fraction of droppable tool-output characters to free, 0-1. Default 0.7.
+   * Fraction of droppable tool-output characters to free, 0-1. Default 0.5.
    *
    * The scorer produces a ranking; a fixed probability cut turns that ranking
    * into a decision badly, because each session has its own distribution. A
@@ -141,6 +141,11 @@ export interface CompactOptions {
    *
    * `keepThreshold` still wins: nothing at or above it is dropped to meet this
    * budget, so on a session where everything matters, little is freed.
+   *
+   * 0.5 rather than 0.7 because a wrong drop costs work and under-freeing only
+   * costs context. Measured per session on the labelled corpus: 0.5 frees 42.5%
+   * of tool output and leaves 87.5% of the characters that were reused later;
+   * 0.7 frees 52.9% and leaves 79.2%.
    */
   targetReduction?: number;
   /** Question wording variant. Default `reproducible`. */

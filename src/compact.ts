@@ -31,7 +31,7 @@ export const DEFAULT_OPTIONS: ResolvedCompactOptions = {
   // 700 sits under the multilingual checkpoint's 768-token state budget.
   maxCallStateTokens: 700,
   concurrency: 8,
-  targetReduction: 0.7,
+  targetReduction: 0.5,
   phrasing: DEFAULT_PHRASING,
   truncateHeadChars: 300,
 };

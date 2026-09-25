@@ -131,7 +131,7 @@ The type declarations in `types/` were written by Claude Code 2.1.274.
 | `scorer` | `features` | `features` (offline, AUC 0.918) or `laya` (a sidecar) |
 | `layaUrl` | `http://127.0.0.1:8000/v1/systemone` | only read when `scorer` is `laya` |
 | `keepThreshold` | `0.1` | a **floor**: at or above this, never dropped |
-| `targetReduction` | `0.7` | fraction of droppable tool output to free |
+| `targetReduction` | `0.5` | fraction of droppable tool output to free |
 | `preserveRecentMessages` | `6` | newest messages pinned; the first is always kept |
 | `compactAtPercent` | `60` | context percentage that triggers compaction |
 | `minReductionRatio` | `0.25` | below this saving, delegate to the built-in summary |
@@ -152,9 +152,12 @@ session on the labelled corpus (`eval/policy.ts`):
 
 | policy | tool output freed | outputs that were reused, kept |
 |---|---|---|
-| threshold 0.5 (an earlier default) | 97.6% | **5.1%** |
-| budget 0.7, floor 0.1 (shipped) | 52.9% | **82.1%** |
-| budget 0.7, floor 0.05 | 8.6% | 92.3% |
+| policy | tool output freed | reused outputs kept | reused chars kept |
+|---|---|---|---|
+| absolute cut at 0.5 (an earlier default) | 97.6% | **5.1%** | 8.5% |
+| **budget 0.5, floor 0.1 (shipped)** | 42.5% | **84.6%** | **87.5%** |
+| budget 0.7, floor 0.1 | 52.9% | 82.1% | 79.2% |
+| budget 0.7, floor 0.05 | 8.6% | 92.3% | 98.9% |
 
 Freeing nearly everything is easy and nearly worthless. This is why `calibrate`
 is an accuracy upgrade rather than a prerequisite: the policy adapts to your
