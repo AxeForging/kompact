@@ -41,7 +41,8 @@
     "docs:plot": "bun eval/distribution.ts",
     "docs:check": "bun eval/render-check.ts",
     "smoke": "bun test/live-smoke.ts",
-    "ckpt": "bun test/ckpt-compare.ts"
+    "ckpt": "bun test/ckpt-compare.ts",
+    "propose": "bun eval/propose.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

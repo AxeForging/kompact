@@ -76,13 +76,31 @@ export function redact(text: string): string {
   return out;
 }
 
-/** Collapses the parts of a command that vary between runs of the same work. */
-const ARGUMENT_SHAPES: ReadonlyArray<readonly [RegExp, string]> = [
+/** Quoted text first, so a `>` inside a string is not read as a redirection. */
+const QUOTED: ReadonlyArray<readonly [RegExp, string]> = [
   [/'[^']*'/g, '<str>'],
   [/"[^"]*"/g, '<str>'],
-  // Any path with a separator, including a bare relative one: `src/state.ts`
-  // must not leave `src` behind, which it did while this required a leading `/`.
-  [/(?:\.{1,2}\/|\/)?[\w.@-]+(?:\/[\w.@-]+)+\/?/g, '<path>'],
+];
+
+/**
+ * Redirections, which say nothing about what work was done.
+ *
+ * `cat x 2>/dev/null` and `cat x` are the same work, and keeping the difference
+ * cost real collapsing: on 2,142 calls of real sessions `2>/dev/null` normalised
+ * to `<n>><path>` and split one shape into two. `>&` comes first or `>` eats it.
+ */
+const REDIRECTIONS: ReadonlyArray<RegExp> = [
+  /\s*\d*>&\d+/g,
+  /\s*\d*>>?\s*[^\s|;&]+/g,
+  /\s*<\s*[^\s|;&<]+/g,
+];
+
+/** Collapses the parts of a command that vary between runs of the same work. */
+const ARGUMENT_SHAPES: ReadonlyArray<readonly [RegExp, string]> = [
+  // Any path with a separator, including a bare relative one and a `~/` home
+  // path: `src/state.ts` must not leave `src` behind, and `~/.claude/x` must not
+  // leave a bare `~`, both of which happened.
+  [/(?:~\/|\.{1,2}\/|\/)?[\w.@-]+(?:\/[\w.@-]+)+\/?/g, '<path>'],
   // A lone filename, once the paths are gone.
   [/\b[\w-]+\.(?:ts|tsx|js|jsx|mjs|cjs|json|md|yml|yaml|toml|py|rs|go|sh|css|html|svg|lock)\b/g, '<path>'],
   // A git sha needs at least one hex letter, or an all-digit CI run id reads as
@@ -94,6 +112,22 @@ const ARGUMENT_SHAPES: ReadonlyArray<readonly [RegExp, string]> = [
 ];
 
 /**
+ * What a pipeline stage *is*, in at most two tokens.
+ *
+ * Placeholders are skipped rather than counted, because a wrapper puts its
+ * argument first: taking the literal first two tokens of `timeout <n> bun <path>`
+ * gave `timeout <n>`, which throws away the only interesting word in it. Flags
+ * are kept — `sed -n` says more than `sed`.
+ */
+function stageProgram(shape: string): string {
+  return shape
+    .split(' ')
+    .filter((token) => !/^<(?:path|str|n|sha|v)>$/.test(token))
+    .slice(0, 2)
+    .join(' ');
+}
+
+/**
  * The countable shape of a shell command.
  *
  * `npm test -- test/auth.spec.ts` and `npm test -- test/hook.spec.ts` both give
@@ -102,14 +136,28 @@ const ARGUMENT_SHAPES: ReadonlyArray<readonly [RegExp, string]> = [
  * `gh run view`.
  */
 export function commandSignature(command: string): string {
-  return redact(command)
-    .split(/\s*(\|\||&&|\||;)\s*/)
+  let text = redact(command);
+  for (const [pattern, replacement] of QUOTED) text = text.replace(pattern, replacement);
+  for (const pattern of REDIRECTIONS) text = text.replace(pattern, '');
+
+  const parts = text.split(/\s*(\|\||&&|\||;)\s*/).filter((part) => part.trim() !== '');
+  const stages = parts.filter((part) => !/^(\|\||&&|\||;)$/.test(part)).length;
+
+  return parts
     .map((part) => {
       if (/^(\|\||&&|\||;)$/.test(part)) return part;
       let shape = part.trim();
       for (const [pattern, replacement] of ARGUMENT_SHAPES) shape = shape.replace(pattern, replacement);
       // Repeated placeholders carry no more information than one.
-      return shape.replace(/(<(?:path|str|n|sha|v)>)(\s+\1)+/g, '$1').replace(/\s+/g, ' ').trim();
+      shape = shape.replace(/(<(?:path|str|n|sha|v)>)(\s+\1)+/g, '$1').replace(/\s+/g, ' ').trim();
+      // A compound command is where this used to fall apart. Measured on 2,142
+      // real calls, 94% of command shapes were seen exactly once, because a
+      // six-stage one-off pipeline keeps six stages of argument shape and
+      // therefore matches nothing, ever. So a pipeline keeps only what each
+      // stage *is* — the program and its subcommand — while a single command
+      // keeps its full shape, where the arguments are the whole difference
+      // between `npm test` and `npm run build`.
+      return stages > 1 ? stageProgram(shape) : shape;
     })
     .join(' ')
     .trim();
@@ -165,15 +213,42 @@ export function intentSignature(text: string, keep = 4): string {
   return content.slice(0, keep).sort().join(' ');
 }
 
-/** The countable shape of a run of tools. Bash keeps its program, so `Bash(npm)` ≠ `Bash(git)`. */
+/**
+ * What a Bash step *is*, for a sequence.
+ *
+ * `cd somewhere && the-real-command` is the idiom this had to learn: taking the
+ * first two tokens of it gave `cd &&`, so four of the twelve top-ranked rows on
+ * real sessions described changing directory rather than the work done there.
+ * A leading directory change is a prefix, not the step.
+ */
+function bashFamily(command: string): string {
+  const parts = commandSignature(command).split(' ').filter(Boolean);
+  while (parts.length > 1 && (parts[0] === 'cd' || parts[0] === '&&' ||
+      /^<(?:path|str|n|sha|v)>$/.test(parts[0] as string))) {
+    parts.shift();
+  }
+  return parts.slice(0, 2).join(' ');
+}
+
+/** The countable shape of a run of tools. Bash keeps its program, so `Bash(npm)` != `Bash(git)`. */
 export function sequenceSignature(steps: ReadonlyArray<{ tool: string; command?: string }>): string {
   return steps
-    .map((step) => {
-      if (step.tool !== 'Bash' || !step.command) return step.tool;
-      const program = commandSignature(step.command).split(' ').slice(0, 2).join(' ');
-      return `Bash(${program})`;
-    })
+    .map((step) => (step.tool === 'Bash' && step.command ? `Bash(${bashFamily(step.command)})` : step.tool))
     .join(' → ');
+}
+
+/**
+ * Whether a run of tools says anything about how work is done.
+ *
+ * Three of the same step is not a workflow — `Read -> Read -> Read` and
+ * `Edit -> Edit -> Edit` were two of the twelve top-ranked rows on real sessions,
+ * and no skill helps with either. A genuine repeat of one command is already the
+ * `command` kind's business.
+ */
+export function isSequenceWorthKeeping(steps: ReadonlyArray<{ tool: string; command?: string }>): boolean {
+  if (steps.length < 2) return false;
+  const first = sequenceSignature([steps[0] as { tool: string; command?: string }]);
+  return steps.some((step) => sequenceSignature([step]) !== first);
 }
 
 /**

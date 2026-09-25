@@ -35,6 +35,7 @@ import {
   commandSignature,
   intentSignature,
   isCorrection,
+  isSequenceWorthKeeping,
   redact,
   sequenceSignature,
 } from '../src/signals.js';
@@ -126,22 +127,44 @@ export function bump(
 }
 
 /**
- * Bounds the store.
+ * Bounds the store, without letting one kind eat it.
  *
- * ponytail: keep the most-repeated rows and forget the rest — a shape seen once
- * is exactly what this feature has no use for. Shard by day only if someone
- * reaches the 4 MiB cap with rows that matter.
+ * ponytail: keep the most-repeated rows of each kind and forget the rest — a
+ * shape seen once is exactly what this feature has no use for.
+ *
+ * The round-robin is not decoration. Pruning by count alone, measured on 40 real
+ * sessions, filled all 2,000 rows with commands and sequences and cut `orient`
+ * from five shapes to one: the kinds that are rare by nature — a correction, the
+ * way a session starts — are precisely the ones a global sort starves, and they
+ * are the most valuable rows here. So each kind is sorted by its own counts and
+ * they take turns.
  */
 export function prune(rows: Aggregate, max: number = MAX_ROWS): Aggregate {
   const keys = Object.keys(rows);
   if (keys.length <= max) return rows;
-  keys.sort((a, b) => {
-    const left = rows[a] as Row;
-    const right = rows[b] as Row;
-    return right.n - left.n || right.lastSeen - left.lastSeen;
-  });
+  const byKind = new Map<SignalKind, string[]>();
+  for (const key of keys) {
+    const kind = (rows[key] as Row).kind;
+    byKind.set(kind, [...(byKind.get(kind) ?? []), key]);
+  }
+  for (const group of byKind.values()) {
+    group.sort((a, b) => {
+      const left = rows[a] as Row;
+      const right = rows[b] as Row;
+      return right.n - left.n || right.lastSeen - left.lastSeen;
+    });
+  }
+  const queues = [...byKind.values()];
   const kept: Aggregate = {};
-  for (const key of keys.slice(0, max)) kept[key] = rows[key] as Row;
+  let taken = 0;
+  while (taken < max && queues.some((queue) => queue.length > 0)) {
+    for (const queue of queues) {
+      const key = queue.shift();
+      if (key === undefined) continue;
+      kept[key] = rows[key] as Row;
+      if (++taken >= max) break;
+    }
+  }
   return kept;
 }
 
@@ -189,6 +212,8 @@ export const register: Register = (on: On, options: PluginOptions) => {
   // first batch of one session.
   let batches = 0;
   let lastSequence = '';
+  /** The last three tool steps, across batches. See the note at the 3-gram below. */
+  const recent: Array<{ tool: string; command?: string }> = [];
   const awaitingFix = new Set<string>();
   let unflushed = false;
 
@@ -216,8 +241,15 @@ export const register: Register = (on: On, options: PluginOptions) => {
       }
 
       const sequence = sequenceSignature(steps);
-      // One call is not a sequence; its signature is already the command row.
-      if (steps.length > 1) bump(rows, 'sequence', sequence, '', session, steps.length, 0, at);
+      // A run of tools has to be counted across batches, not inside one. Measured
+      // on 2,145 calls of real sessions, a batch is almost always a single call,
+      // so keying on the batch produced exactly zero sequences — the thing this
+      // kind exists to find. Three consecutive steps, sliding.
+      recent.push(...steps);
+      while (recent.length > 3) recent.shift();
+      if (recent.length === 3 && isSequenceWorthKeeping(recent)) {
+        bump(rows, 'sequence', sequenceSignature(recent), '', session, 3, 0, at);
+      }
       // The first batch of a session is context being rebuilt from nothing,
       // which is the largest repeated cost in agentic work.
       if (batches === 0 && steps.length > 0) bump(rows, 'orient', sequence, '', session, steps.length, 0, at);

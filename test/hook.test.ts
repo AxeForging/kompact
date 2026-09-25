@@ -62,8 +62,13 @@ describe('resolveHookConfig', () => {
       sample[key] = spec.type === 'number' ? 0.42 : spec.default;
     }
     const config = resolveHookConfig(sample as never) as unknown as Record<string, unknown>;
+    // Two modules read options now, so the invariant is "no option is offered and
+    // then ignored" rather than "resolveHookConfig returns everything": the
+    // recorder reads `recordSignals` directly, and never goes near this config.
+    const signalsModule = readFileSync(new URL('../hooks/laya-signals.ts', import.meta.url), 'utf8');
     for (const key of Object.keys(manifest.userConfig)) {
-      expect(config[key], `${key} is offered in plugin.json but never read`).toBeDefined();
+      const read = config[key] !== undefined || signalsModule.includes(`'${key}'`);
+      expect(read, `${key} is offered in plugin.json but no hook module reads it`).toBe(true);
     }
   });
 

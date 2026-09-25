@@ -7,3 +7,6 @@ vendor/
 # tool output (file contents, commands). Regenerate with eval/extract-labels.ts.
 eval/labels.jsonl
 eval/scores.json
+
+# Drafted skill proposals: the developer's own data, never committed.
+.laya/

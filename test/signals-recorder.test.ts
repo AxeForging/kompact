@@ -189,6 +189,26 @@ describe('the store stays inside its cap', () => {
     expect(kept['command::c0'], 'a row seen once survived the cap').toBeUndefined();
   });
 
+  it('does not let one kind eat the whole cap', () => {
+    // Pruning by count alone filled all 2,000 rows with commands and sequences
+    // on real sessions, cutting `orient` from five shapes to one. The rare kinds
+    // are the valuable ones, so each kind is pruned against itself.
+    const rows = Object.fromEntries([
+      ...Array.from({ length: 40 }, (_, i) => [
+        `command::c${i}`,
+        { kind: 'command' as const, n: 50 + i, calls: 1, chars: 0, sessions: [], samples: [], lastSeen: i },
+      ]),
+      ...Array.from({ length: 4 }, (_, i) => [
+        `correction::x${i}`,
+        { kind: 'correction' as const, n: 2, calls: 0, chars: 0, sessions: [], samples: [], lastSeen: i },
+      ]),
+    ]);
+    const kept = prune(rows, 10);
+    expect(Object.keys(kept)).toHaveLength(10);
+    const corrections = Object.values(kept).filter((row) => row.kind === 'correction');
+    expect(corrections.length, 'every low-count correction was starved out').toBeGreaterThan(0);
+  });
+
   it('starts over on a corrupt stored value rather than throwing', () => {
     expect(asAggregate('not an object')).toEqual({});
     expect(asAggregate({ 'command::x': { kind: 'command' } })).toEqual({});

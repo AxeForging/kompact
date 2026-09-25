@@ -86,6 +86,12 @@
       "title": "Min yield chars",
       "description": "Fewest characters a drop must actually free to be worth making. Default 200. Below this the context saved cannot repay the chance of losing content the session still needs.",
       "default": 200
+    },
+    "recordSignals": {
+      "type": "boolean",
+      "title": "Record what you repeat",
+      "description": "Counts the shapes of the commands, requests and tool sequences you repeat, locally, so `npm run propose` can rank them and draft skills for the top ones. Signatures plus up to three redacted examples, kept in the plugin's own store and mirrored to ~/.claude/laya-signals.json. Nothing leaves the machine and no raw output is stored. Set to false to record nothing at all.",
+      "default": true
     }
   }
 }

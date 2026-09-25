@@ -69,11 +69,41 @@ describe('command signatures keep different work apart', () => {
     differ('gh run view --log', 'gh run view --log | tail -20');
   });
 
+  it('keeps the program of a wrapped command, not just the wrapper', () => {
+    // `timeout 300 bun x.ts | tail -5` used to sign as `timeout <n>`, throwing
+    // away the only interesting word in it.
+    expect(commandSignature('timeout 300 bun eval/render-check.ts | tail -5')).toContain('bun');
+  });
+
   // A normaliser that returned '' would pass every collapse test above.
   it('does not collapse everything to nothing', () => {
     for (const command of ['npm test', 'git status', 'ls -la /tmp']) {
       expect(commandSignature(command).length, command).toBeGreaterThan(2);
     }
+  });
+});
+
+describe('command signatures ignore what is not the work', () => {
+  const same = (a: string, b: string): void => {
+    expect(commandSignature(a), `${a}\n  ${b}`).toBe(commandSignature(b));
+  };
+
+  it('ignores redirections', () => {
+    // `2>/dev/null` normalised to `<n>><path>` and split one shape into two.
+    same('cat src/state.ts 2>/dev/null', 'cat docs/index.html');
+    same('bun eval/a.ts 2>&1 | tail -20', 'bun eval/b.ts | tail -5');
+  });
+
+  it('does not strand a tilde outside a home path', () => {
+    const sig = commandSignature('cat ~/.claude/settings.json');
+    expect(sig).toBe('cat <path>');
+    expect(sig, 'the tilde was left outside the placeholder').not.toContain('~');
+  });
+
+  it('collapses two different ad-hoc pipelines that do the same thing', () => {
+    // 94% of shapes on real sessions were seen exactly once, because every stage
+    // kept its own argument shape. A pipeline now keeps only what each stage is.
+    same('grep -n foo src/a.ts | head -20', 'grep -n bar docs/b.html | head -5');
   });
 });
 
