@@ -75,6 +75,17 @@ const closest = /range ([\d.]+) to [\d.]+/.exec(results)?.[1];
 // The figure an installer actually gets. It was quoted in six places and bound
 // in none, because eval/RESULTS.md had no block for it until eval/fit.ts got one.
 const loso = /result_needed: LOSO AUC ([\d.]+)\s+ECE ([\d.]+)/.exec(results);
+/**
+ * The figure an installer actually gets from the shipped defaults.
+ *
+ * Bound late, and the gap showed: the page carried 22.2% in three places while
+ * `eval/policy.ts` had started reporting 33.7%, because the sweep had gained a
+ * cap and lost a bug — it had been counting a truncated result as entirely
+ * freed when it keeps a 300-character head. Changing all three by hand failed
+ * nothing, which is how a generated page ends up with a hand-typed number.
+ */
+const shippedPath = /shipped code path[^\n]*\n\s*([\d.]+)% freed, ([\d.]+)% of reused outputs kept/
+  .exec(results);
 
 describe('published figures match eval/RESULTS.md', () => {
   const quoting: Array<[string, string[]]> = [
@@ -450,6 +461,34 @@ describe('published figures match eval/RESULTS.md', () => {
       expect(claim[1], `the page says "${claim[0]}", but the fixture has ${commands}`)
         .toBe(String(commands));
     }
+  });
+
+  it('quotes the shipped defaults the sweep actually reports', () => {
+    expect(shippedPath, 'eval/RESULTS.md has no shipped-code-path line to bind to').not.toBeNull();
+    const [, freed, kept] = shippedPath!;
+    const page = read('docs/index.html');
+    expect(page.match(new RegExp(`${freed!.replace('.', '\\.')}% freed`)),
+      `the page should quote ${freed}% freed`).not.toBeNull();
+    for (const stale of ['22.2% freed', '22.2% and 77.7%']) {
+      expect(page, `docs/index.html still quotes ${stale}`).not.toContain(stale);
+    }
+    expect(page).toContain(`${kept}%`);
+  });
+
+  /**
+   * The glossary says how many terms it holds, in a summary a reader opens to
+   * count them. Adding the cap made it thirteen and the summary still said
+   * twelve, which is the smallest possible version of the error this whole file
+   * exists to prevent.
+   */
+  it('counts its own glossary correctly', () => {
+    const page = read('docs/index.html');
+    const terms = [...page.matchAll(/<dt id="g-/g)].length;
+    expect(terms, 'no glossary terms found, so this test proves nothing').toBeGreaterThan(5);
+    const words = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen'];
+    const said = /The (\w+) terms this page uses/.exec(page);
+    expect(said, 'the glossary no longer says how many terms it has').not.toBeNull();
+    expect(said![1], `the glossary holds ${terms} terms`).toBe(words[terms - 10]);
   });
 
   // These do mean something — as history. Retracted claims may be named by the

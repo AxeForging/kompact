@@ -887,7 +887,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </p>
   </div>
   <div class="colophon reveal" style="--d:170ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>202</b> tests</span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>204</b> tests</span>
     <span><b>0</b> network calls by default</span><span><b>4</b> claims <a href="#checked">not verified</a></span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
 </div>
@@ -1849,7 +1849,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p class="gloss-back" hidden><button type="button" id="gloss-back">&#8592; Back to where you were</button></p>
 
     <details class="more">
-    <summary><h3>The twelve terms this page uses for its own machinery</h3></summary>
+    <summary><h3>The thirteen terms this page uses for its own machinery</h3></summary>
 <dl class="glossary">
     <dt id="g-auc">AUC</dt>
     <dd>How often the scorer ranks a call that turned out to be needed above one that did not, over
@@ -1880,6 +1880,13 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <dt id="g-the-floor">The floor</dt>
     <dd><code>keepThreshold</code>, 0.2 by default. At or above it nothing is dropped, whatever the
       budget still wants. It is the guard the budget cannot argue with.</dd>
+    <dt id="g-the-cap">The cap</dt>
+    <dd><code>maxKeptChars</code>, 24,000 by default; 0 turns it off. The floor and the budget
+      decide <em>which</em> results to drop. The cap decides how much of the ones they keep is
+      worth carrying, which is a different question: half of all tool output lives in about 3%
+      of calls. Measured, reuse falls evenly through an output rather than at its head, so this
+      is close to sampling it — 24,000 is the largest setting that frees more while leaving the
+      worst session exactly where it was.</dd>
     <dt id="g-the-budget">The budget</dt>
     <dd><code>targetReduction</code>, 0.5 by default. The fraction of droppable characters to free.
       Calls are dropped lowest-score-first until it is met, and then dropping stops — so a session
