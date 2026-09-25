@@ -128,6 +128,10 @@ a:hover{ color: var(--accent); }
 /* What it measured and what it costs, above the fold, because the page asks
    its reader to decide in about a minute and the first figure used to be a
    scroll away. Typographic, on the flood, no card. */
+/* The caveat is accurate and has to be somewhere; at full weight in the middle
+   of the opening sentence it cost more clarity than the precision earned, since
+   "Laya" has not been introduced yet. */
+.standfirst__note{ color: var(--on-flood-2); }
 .upfront{
   display:grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
   gap: var(--space-sm) var(--space-xl);
@@ -668,17 +672,23 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <div class="masthead__rule reveal" style="--d:0ms"></div>
   <h1 class="wordmark reveal" style="--d:40ms">laya&#8209;<em>compact</em></h1>
   <p class="standfirst reveal" style="--d:110ms">
-    Claude Code compacts by asking a model to summarise your session. This scores every
-    tool call instead and deletes only what is no longer needed <strong>verbatim</strong>,
-    on your machine, with no API key, no GPU and no network call. The optional Laya <a href="#glossary">sidecar</a> is
-    the one path that uses either.
+    Claude Code compacts by asking a model to summarise your session, and the exact wording
+    goes with it. This scores every tool call instead and <strong>keeps what survives
+    verbatim</strong>, dropping only what is no longer needed &#8212; so a file you read is
+    still the file, not a description of it. On your machine: no API key, no GPU, no network
+    call. <span class="standfirst__note">The optional Laya <a href="#glossary">sidecar</a> is
+    the one path that uses either.</span>
   </p>
   <div class="upfront reveal" style="--d:150ms">
     <p><b>0.905 &#177; 0.078</b><span>ranking quality, 10 grouped splits of 18 sessions; worst split 0.684.
-      <b>0.789</b> leave&#8209;one&#8209;out over all 41.</span></p>
+      <b>0.789</b> leave&#8209;one&#8209;out over all 41. Beat the 322M&#8209;parameter model it was
+      built on, 10 of 10 paired splits.</span></p>
     <p><b>3.6&#8211;32.6%</b><span>of tokens freed per session, keeping 77.3% of the outputs
       that were reused later.</span></p>
-    <p><b>190&#8239;ms</b><span>to score 1,762 calls. No key, no GPU, no request.</span></p>
+    <p><b>190&#8239;ms</b><span>to score 1,762 calls, against 122&#215; that for the neural
+      sidecar it replaced, on an RTX&#160;4060 Laptop.</span></p>
+    <p><b>Never</b><span>drops an <code>Edit</code>, <code>Write</code>, <code>MultiEdit</code> or
+      <code>NotebookEdit</code> call, whatever it scores. Only their output can be trimmed.</span></p>
     <p class="upfront__do">
       <a href="#install">Install it</a> &#8212; or run <code>npm&#160;run&#160;dry&#8209;run</code>
       first and see what it frees on your own sessions, installing nothing
@@ -686,8 +696,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </p>
   </div>
   <div class="colophon reveal" style="--d:170ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>200</b> tests</span>
-    <span><b>0</b> network calls by default</span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>201</b> tests</span>
+    <span><b>0</b> network calls by default</span><span><b>6</b> claims <a href="#checked">not verified</a></span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
 </div>
 </header>
@@ -1421,7 +1431,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <div class="faq__item">
   <details class="more">
     <summary><h3>Isn't this just a heuristic with extra steps?</h3></summary>
-      <p>It is a heuristic with error bars, which is the difference. Twelve coefficients fitted
+      <p>It is a heuristic with error bars, which is the difference. Thirteen coefficients &#8212; twelve features and an intercept &#8212; fitted
         on labelled data, evaluated on sessions held out whole, calibrated well enough that the
         threshold means a probability — expected calibration error 0.035 leave-one-session-out on the
         18-session corpus and 0.051 on all 41 — the 0.044 in <a href="#result">section 01, Evidence</a> is the same quantity

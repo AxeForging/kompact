@@ -224,6 +224,19 @@ describe('published figures match eval/RESULTS.md', () => {
     }
   });
 
+  // The masthead claims a number of unverified claims. That is the page's most
+  // unusual asset stated as a fact, so it has to stay true as the ledger changes —
+  // and a hand-typed count beside a hand-maintained list is the oldest way for a
+  // page to start lying slowly.
+  it('counts its own unverified claims correctly', () => {
+    const page = read('docs/index.html');
+    const open = (page.match(/ledger__row--open/g) ?? []).length;
+    expect(open, 'no unverified claims found, so this proves nothing').toBeGreaterThan(0);
+    const claimed = /<b>(\d+)<\/b> claims <a href="#checked">not verified<\/a>/.exec(page)?.[1];
+    expect(claimed, 'the masthead no longer states an unverified-claim count').toBeDefined();
+    expect(Number(claimed), `the ledger holds ${open} unverified claims`).toBe(open);
+  });
+
   // Three separate tag breakages in one editing pass — a summary with a closing
   // heading and no opening one, two headings never closed, and a stray bracket
   // left where a slice cut through a tag. None of them failed a test and the
