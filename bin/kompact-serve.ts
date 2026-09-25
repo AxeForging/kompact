@@ -2,7 +2,7 @@
 /**
  * Serves the built-in scorer on Jev's wire protocol, for hosts that speak it.
  *
- *   bun bin/laya-compact-serve.ts --port 8770
+ *   bun bin/kompact-serve.ts --port 8770
  *
  * Then point any Jev client at it. For Codex CLI, in
  * `~/.codex/fast-jev-compaction.json`:
@@ -17,7 +17,7 @@ const value = (flag: string): string | undefined => {
 };
 
 if (args.includes('--help') || args.includes('-h')) {
-  console.log(`laya-compact-serve — the built-in scorer on Jev's System One wire protocol.
+  console.log(`kompact-serve — the built-in scorer on Jev's System One wire protocol.
 
   --port <n>       default ${DEFAULT_PORT}, or LAYA_COMPACT_PORT
   --host <addr>    default 127.0.0.1, or LAYA_COMPACT_HOST
@@ -39,7 +39,7 @@ const apiKey = value('--api-key') ?? process.env.LAYA_COMPACT_API_KEY;
 
 serve({ port, host, apiKey })
   .then(() => {
-    console.log(`laya-compact scorer on http://${host}:${port}/v1/systemone (no model, no GPU)`);
+    console.log(`kompact scorer on http://${host}:${port}/v1/systemone (no model, no GPU)`);
     if (!apiKey && host !== '127.0.0.1') console.warn('warning: bound beyond localhost with no --api-key');
   })
   .catch((error: unknown) => {

@@ -1,5 +1,5 @@
 {
-  "name": "laya-compact",
+  "name": "kompact",
   "description": "Local, offline context compaction for coding agents \u2014 scores every tool call and keeps only what is still needed verbatim.",
   "owner": {
     "name": "AxeForging",
@@ -8,7 +8,7 @@
   "plugins": [
     {
       "source": "./",
-      "name": "laya-compact"
+      "name": "kompact"
     }
   ]
 }

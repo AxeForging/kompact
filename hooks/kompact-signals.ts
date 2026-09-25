@@ -60,7 +60,7 @@ export type Row = {
 export type Aggregate = Record<string, Row>;
 
 export const STORE_KEY = 'signals';
-export const SIGNALS_FILE = '.claude/laya-signals.json';
+export const SIGNALS_FILE = '.claude/kompact-signals.json';
 
 const MAX_ROWS = 2000;
 const MAX_SAMPLES = 3;

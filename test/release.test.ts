@@ -1,8 +1,8 @@
 /**
  * The parts of a release that only fail after you have published.
  *
- * `package.json`'s `bin` pointed at `dist/bin/laya-compact-serve.js` while
- * `tsc` compiled only `src/`, so `npx laya-compact-serve` would have failed for
+ * `package.json`'s `bin` pointed at `dist/bin/kompact-serve.js` while
+ * `tsc` compiled only `src/`, so `npx kompact-serve` would have failed for
  * every installer and nothing here would have noticed. The version lives in
  * three files and drifted silently. The LICENSE said upstream notices were
  * "preserved below" and they were not.
@@ -62,7 +62,7 @@ describe('release mechanics', () => {
     const workflow = read('.github/workflows/pages.yml');
     expect(workflow).toContain('actions/deploy-pages');
     expect(workflow).toContain('path: docs');
-    expect(read('README.md')).toContain('axeforging.github.io/laya-compact');
+    expect(read('README.md')).toContain('axeforging.github.io/kompact');
   });
 
   // Both are generated from the shipped code, and a stale copy on a public page

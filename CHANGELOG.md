@@ -44,7 +44,7 @@ TypeSafe's hosted Jev model.
   ~5.0 GB of VRAM, and 23.1 s to score the sessions the built-in scorer scores in
   190 ms.
 - **Local calibration.** `npm run calibrate` refits on your own transcripts and
-  emits `LAYA_COMPACT_WEIGHTS`; the shipped coefficients come from one person's
+  emits `KOMPACT_WEIGHTS`; the shipped coefficients come from one person's
   sessions and should not be assumed to transfer.
 - **A System One server** (`npm run serve`) so existing clients — `jev-compact`
   for Codex CLI among them — work by repointing one URL.

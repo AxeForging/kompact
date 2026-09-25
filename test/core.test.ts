@@ -267,7 +267,7 @@ describe('applyDecisions', () => {
   it('caps a result no decision mentions', () => {
     const text = capped(60_000, 24_000);
     expect(text.length).toBeLessThan(60_000);
-    expect(text).toContain('laya-compact truncated');
+    expect(text).toContain('kompact truncated');
     expect(text.startsWith('y'.repeat(24_000))).toBe(true);
   });
 

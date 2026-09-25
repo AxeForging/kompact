@@ -2,9 +2,9 @@
  * What you keep doing, ranked, and drafts for the ones worth a skill.
  *
  *   npm run propose                   the report; writes nothing
- *   npm run propose -- --write 1,3    drafts those rows into .laya/proposals/
+ *   npm run propose -- --write 1,3    drafts those rows into .kompact/proposals/
  *
- * The recorder (`hooks/laya-signals.ts`) has already classified everything as it
+ * The recorder (`hooks/kompact-signals.ts`) has already classified everything as it
  * happened, so there are no detectors here — only ranking, rendering, and the
  * draft. That is the whole reason the recorder assigns a `kind` at record time
  * rather than storing raw events for something later to interpret.
@@ -20,7 +20,7 @@
  *      highest-value signal at the bottom of a table sorted by a unit that does
  *      not apply to it would be a presentation bug dressed as arithmetic.
  *
- * Drafts land in `.laya/proposals/`, which is not a directory Claude Code scans.
+ * Drafts land in `.kompact/proposals/`, which is not a directory Claude Code scans.
  * Promotion into a skills directory stays a human `mv`, deliberately: nothing
  * here has measured whether the skills it drafts are any good.
  */
@@ -59,13 +59,13 @@ const num = (name: string, fallback: number): number => {
   return value === undefined ? fallback : Number(value);
 };
 
-const FILE = flag('--file') ?? join(homedir(), '.claude', 'laya-signals.json');
+const FILE = flag('--file') ?? join(homedir(), '.claude', 'kompact-signals.json');
 /** Three times, in two sessions, is the lowest bar that reads as a habit. */
 const MIN_TIMES = num('--min', 3);
 const MIN_SESSIONS = num('--min-sessions', 2);
 const TOP = num('--top', 12);
 const WRITE = flag('--write');
-const PROPOSALS_DIR = resolve('.laya/proposals');
+const PROPOSALS_DIR = resolve('.kompact/proposals');
 
 /** What the kinds mean in the report, and which of them rank on saved work. */
 const KINDS: Record<Kind, { label: string; ranked: boolean }> = {
@@ -243,7 +243,7 @@ function main(): void {
 
   if (!WRITE) {
     console.log(`\nNothing written. \`npm run propose -- --write 1${work.length > 2 ? ',3' : ''}\` ` +
-      'drafts those rows into .laya/proposals/.');
+      'drafts those rows into .kompact/proposals/.');
     return;
   }
 
@@ -269,7 +269,7 @@ function main(): void {
     writeFileSync(path, draft(row));
     console.log(`wrote ${path}`);
   }
-  console.log('\nDrafts only, and inert: .laya/proposals/ is not a directory Claude Code reads.');
+  console.log('\nDrafts only, and inert: .kompact/proposals/ is not a directory Claude Code reads.');
   console.log('Write the steps, then move one into ~/.claude/skills/ if you agree with it.');
 }
 

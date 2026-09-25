@@ -250,7 +250,7 @@ export function rowTokens(used: number, questionCount: number): number {
 }
 
 /** The marker a truncated result carries, so a later pass can recognise its own work. */
-export const TRUNCATION_MARK = '[laya-compact truncated ';
+export const TRUNCATION_MARK = '[kompact truncated ';
 
 function truncatedResultText(text: string, isError: boolean, headChars: number): string {
   if (text.length <= headChars + 120) return text;

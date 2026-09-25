@@ -1,9 +1,9 @@
-# laya-compact
+# kompact
 
 Context compaction that scores every tool call before it compacts, keeps what is
 still needed verbatim, and drops the rest. Local, offline, no API key.
 
-**[The measurements, presented →](https://axeforging.github.io/laya-compact/)**
+**[The measurements, presented →](https://axeforging.github.io/kompact/)**
 
 A fork of [tamaratran/fast-jev-compaction][up1] (Claude Code) and
 [fatelei/jev-compact][up2] (Codex CLI), which do the same thing with TypeSafe's
@@ -97,7 +97,7 @@ below are the mean over **10 grouped splits**, each holding out 30% of sessions,
 with every scorer judged on the same split so the comparison is paired
 (`eval/repeat.ts`). Every figure below is transcribed from `eval/RESULTS.md`,
 which `npm run eval:results` regenerates and
-[the evaluation page](https://axeforging.github.io/laya-compact/eval.html) publishes:
+[the evaluation page](https://axeforging.github.io/kompact/eval.html) publishes:
 
 | scorer | AUC (mean ± sd) | worst split | chars freed at 90% safety |
 |---|---|---|---|
@@ -154,8 +154,8 @@ Function hooks are early access and must be enabled:
 ```sh
 export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
 
-claude plugin marketplace add AxeForging/laya-compact
-claude plugin install laya-compact@laya-compact
+claude plugin marketplace add AxeForging/kompact
+claude plugin install kompact@kompact
 ```
 
 For local development, point at a checkout instead:
@@ -164,7 +164,7 @@ For local development, point at a checkout instead:
 CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude --plugin-dir .
 ```
 
-The plugin ships one skill, `laya-compact`, covering how to read its decision
+The plugin ships one skill, `kompact`, covering how to read its decision
 log, choose a threshold, calibrate, and diagnose a compaction that kept or
 dropped the wrong thing. What it costs every session is its 80-word
 description; the 6 KB body loads only when the skill is invoked.
@@ -373,13 +373,13 @@ collapsed, a run of three tools, a request in your own words — and ranks them.
 
 ```sh
 npm run propose                 # the report; writes nothing
-npm run propose -- --write 2    # drafts row 2 into .laya/proposals/
+npm run propose -- --write 2    # drafts row 2 into .kompact/proposals/
 ```
 
 Recording is local, on by default, and off with `recordSignals: false`. It keeps
 signatures plus up to three redacted examples in the plugin's own store, mirrored
-to `~/.claude/laya-signals.json` so the CLI can read it. No raw output is stored,
-nothing is sent anywhere, and drafts land in `.laya/proposals/`, which Claude Code
+to `~/.claude/kompact-signals.json` so the CLI can read it. No raw output is stored,
+nothing is sent anywhere, and drafts land in `.kompact/proposals/`, which Claude Code
 does not read — promoting one is a `mv` you do yourself.
 
 **This part is new and its usefulness is not established.** Replaying 2,417 tool
@@ -411,7 +411,7 @@ bun eval/calibrate.ts --write
 
 It labels your own `~/.claude/projects` transcripts behaviourally — nothing is
 sent anywhere — reports shipped against refit held out by session, and emits a
-`LAYA_COMPACT_WEIGHTS` value for the `env` block of `~/.claude/settings.json`.
+`KOMPACT_WEIGHTS` value for the `env` block of `~/.claude/settings.json`.
 It refuses to fit on fewer than 3 sessions or 20 positives, which is too thin to
 mean anything.
 
@@ -433,7 +433,7 @@ Two scripts need a live Laya sidecar and so are not part of `npm test`:
 and `npm run ckpt` compares checkpoints on one transcript. Neither ran under any
 script until now, which is how `eval/score.ts` came to default to the wrong port.
 
-`npx laya-compact-serve --help` lists the rest: `--port`, `--host`, `--api-key`,
+`npx kompact-serve --help` lists the rest: `--port`, `--host`, `--api-key`,
 or `LAYA_COMPACT_PORT` / `LAYA_COMPACT_HOST` / `LAYA_COMPACT_API_KEY`. It also
 answers `GET /health`, and rejects a body over 1 MB with `413`. Binding beyond
 `127.0.0.1` without a key warns, because the endpoint takes arbitrary text.

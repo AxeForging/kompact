@@ -86,8 +86,8 @@ const page = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>laya-compact — the full evaluation</title>
-<meta name="description" content="Every number laya-compact publishes, with the script that produced it: ranking quality over ten grouped splits, the decision-policy sweep, what a wrong drop costs, and what the optional sidecar costs to run.">
+<title>kompact — the full evaluation</title>
+<meta name="description" content="Every number kompact publishes, with the script that produced it: ranking quality over ten grouped splits, the decision-policy sweep, what a wrong drop costs, and what the optional sidecar costs to run.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,700&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap" rel="stylesheet">
@@ -199,7 +199,7 @@ footer p{ max-width: 68ch; }
 <header>
   <div class="wrap">
     ${blocks[0] ?? '<h1>Evaluation results</h1>'}
-    <nav class="contents" aria-label="Contents"><a class="back" href="./">← laya-compact</a>${nav}</nav>
+    <nav class="contents" aria-label="Contents"><a class="back" href="./">← kompact</a>${nav}</nav>
   </div>
 </header>
 <main>

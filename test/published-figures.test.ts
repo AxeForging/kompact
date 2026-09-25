@@ -133,7 +133,7 @@ describe('published figures match eval/RESULTS.md', () => {
       [/scorer scores in\s+(\d+) ms/g, sessions!.ms, 'built-in scoring time'],
       [/against (\d+) ms for the built-in/g, sessions!.ms, 'built-in scoring time'],
     ];
-    for (const path of ['README.md', 'docs/index.html', 'CHANGELOG.md', 'skills/laya-compact/SKILL.md']) {
+    for (const path of ['README.md', 'docs/index.html', 'CHANGELOG.md', 'skills/kompact/SKILL.md']) {
       const text = read(path);
       for (const [pattern, want, what] of claims) {
         for (const match of text.matchAll(pattern)) {
@@ -209,8 +209,8 @@ describe('published figures match eval/RESULTS.md', () => {
   // A figure that was corrected once tends to survive somewhere.
   const published = [
     'README.md', 'CONTRIBUTING.md', 'CHANGELOG.md', 'DESIGN-BRIEF.md', '.impeccable.md',
-    'docs/index.html', '.claude-plugin/plugin.json', 'skills/laya-compact/SKILL.md',
-    'src/features.ts', 'src/compact.ts', 'src/types.ts', 'hooks/laya-compact.ts',
+    'docs/index.html', '.claude-plugin/plugin.json', 'skills/kompact/SKILL.md',
+    'src/features.ts', 'src/compact.ts', 'src/types.ts', 'hooks/kompact.ts',
   ];
 
   // These never meant anything: each is a value some earlier run produced for a

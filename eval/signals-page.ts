@@ -159,7 +159,7 @@ writeFileSync(join(dir, '..', 'docs', 'signals-data.js'),
     // the file sat next to each other saying nothing about each other; a reader
     // could watch the whole run and not see that one becomes the other.
     top: ranked[0]?.sig ?? '',
-    path: `.laya/proposals/${slugFor('command', ranked[0]?.sig ?? '')}/SKILL.md`,
+    path: `.kompact/proposals/${slugFor('command', ranked[0]?.sig ?? '')}/SKILL.md`,
     shapes: fixture.meta.shapes,
     repeated: fixture.meta.repeated,
   })};\n`);

@@ -166,7 +166,7 @@ export interface Weights {
  * sessions, as JSON. `eval/calibrate.ts` produces its value. Hooks have no
  * filesystem, so this is the channel rather than a file path.
  */
-export const WEIGHTS_ENV = 'LAYA_COMPACT_WEIGHTS';
+export const WEIGHTS_ENV = 'KOMPACT_WEIGHTS';
 
 /**
  * Validates a weights file. Shipped defaults are fitted on one person's

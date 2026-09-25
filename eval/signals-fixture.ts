@@ -11,7 +11,7 @@
  *   bun eval/signals-fixture.ts                  # report only
  *   bun eval/signals-fixture.ts --out <path>     # write a signals file
  *
- * Two things this is not. It is not the product: laya-compact does not mine your
+ * Two things this is not. It is not the product: kompact does not mine your
  * transcripts, and this is not shipped as a hook. And it is not evidence that the
  * proposals are *good* — only that the repetition is real and gets found.
  * Whether a drafted skill is worth having is unmeasured, and the page says so.
@@ -25,7 +25,7 @@ import { existsSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-import { type Aggregate, bump, prune } from '../hooks/laya-signals.js';
+import { type Aggregate, bump, prune } from '../hooks/kompact-signals.js';
 import {
   commandSignature,
   intentSignature,

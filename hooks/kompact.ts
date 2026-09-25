@@ -8,7 +8,7 @@ import type {
   TurnCompleteInput,
 } from 'claude-code';
 
-import { registerSignals } from './laya-signals.js';
+import { registerSignals } from './kompact-signals.js';
 import { compact, reductionRatio } from '../src/compact.js';
 import { FeatureAsker, WEIGHTS_ENV, parseWeights, type Weights } from '../src/features.js';
 import type {
@@ -139,7 +139,7 @@ export function askerFor(weights?: Weights): Asker {
  * Read from the environment, then from `settings.json`'s `env` block. Not from a
  * file, though `$.fs.read` does exist and this comment used to claim otherwise:
  * a path would have to be configured somewhere anyway, and the JSON in
- * `LAYA_COMPACT_WEIGHTS` is the thing `npm run calibrate` already prints.
+ * `KOMPACT_WEIGHTS` is the thing `npm run calibrate` already prints.
  *
  * This matters because the shipped defaults are fitted on one person's 18
  * sessions. Another operator's tool mix differs, so a local fit should win. A
@@ -162,7 +162,7 @@ export async function readLocalWeights(
   try {
     // The literal name, not `WEIGHTS_ENV`: the validator lists the variables a
     // module reads, and cannot do that through an identifier.
-    raw = await $.env.get('LAYA_COMPACT_WEIGHTS');
+    raw = await $.env.get('KOMPACT_WEIGHTS');
   } catch {
     raw = undefined;
   }

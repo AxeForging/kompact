@@ -33,7 +33,7 @@ console.log(`corpus: ${rows.length} calls, ${positives} needed verbatim, ${sessi
 if (sessions.size < 3 || positives < 20) {
   console.error(
     `too thin to calibrate on (want >= 3 sessions and >= 20 positives). Keep working with\n` +
-    `laya-compact installed and re-run extract-labels later; the shipped weights hold meanwhile.`,
+    `kompact installed and re-run extract-labels later; the shipped weights hold meanwhile.`,
   );
   process.exit(1);
 }

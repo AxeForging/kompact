@@ -1,5 +1,5 @@
 {
-  "name": "laya-compact",
+  "name": "kompact",
   "version": "0.1.0",
   "description": "Local, offline context compaction: scores every tool call and keeps only what is still needed verbatim. No API key, no GPU, no network call. The built-in logistic scorer measures AUC 0.905 \u00b1 0.078 over ten grouped splits of 1063 labelled calls, against 0.719 \u00b1 0.026 for the best zero-shot Laya checkpoint it replaced, which it beat on 10 of 10 paired splits.",
   "author": {
@@ -7,7 +7,7 @@
     "url": "https://github.com/AxeForging"
   },
   "license": "MIT",
-  "homepage": "https://github.com/AxeForging/laya-compact",
+  "homepage": "https://github.com/AxeForging/kompact",
   "userConfig": {
     "keepThreshold": {
       "type": "number",
@@ -54,7 +54,7 @@
     "recordSignals": {
       "type": "boolean",
       "title": "Record what you repeat",
-      "description": "Counts the shapes of the commands, requests and tool sequences you repeat, locally, so `npm run propose` can rank them and draft skills for the top ones. Signatures plus up to three redacted examples, kept in the plugin's own store and mirrored to ~/.claude/laya-signals.json. Nothing leaves the machine and no raw output is stored. Set to false to record nothing at all.",
+      "description": "Counts the shapes of the commands, requests and tool sequences you repeat, locally, so `npm run propose` can rank them and draft skills for the top ones. Signatures plus up to three redacted examples, kept in the plugin's own store and mirrored to ~/.claude/kompact-signals.json. Nothing leaves the machine and no raw output is stored. Set to false to record nothing at all.",
       "default": true
     },
     "maxKeptChars": {

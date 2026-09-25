@@ -1,5 +1,5 @@
 {
-  "name": "laya-compact",
+  "name": "kompact",
   "version": "0.1.0",
   "description": "Laya-scored context compaction for coding agents. Local, offline, no API key.",
   "type": "module",
@@ -24,7 +24,7 @@
     "test": "vitest run",
     "eval": "bun eval/extract-labels.ts && bun eval/baseline.ts",
     "validate": "claude plugin validate .claude-plugin/plugin.json",
-    "serve": "bun bin/laya-compact-serve.ts",
+    "serve": "bun bin/kompact-serve.ts",
     "calibrate": "bun eval/extract-labels.ts && bun eval/calibrate.ts",
     "dry-run": "bun eval/sessions.ts",
     "eval:results": "bun eval/results.ts",
@@ -51,17 +51,17 @@
     "vitest": "^2.1.8"
   },
   "bin": {
-    "laya-compact-serve": "./dist/bin/laya-compact-serve.js"
+    "kompact-serve": "./dist/bin/kompact-serve.js"
   },
   "author": "AxeForging",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AxeForging/laya-compact.git"
+    "url": "git+https://github.com/AxeForging/kompact.git"
   },
   "bugs": {
-    "url": "https://github.com/AxeForging/laya-compact/issues"
+    "url": "https://github.com/AxeForging/kompact/issues"
   },
-  "homepage": "https://github.com/AxeForging/laya-compact#readme",
+  "homepage": "https://github.com/AxeForging/kompact#readme",
   "keywords": [
     "claude-code",
     "codex",

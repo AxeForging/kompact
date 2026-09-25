@@ -20,7 +20,7 @@ import { readdirSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { register } from '../hooks/laya-compact.js';
+import { register } from '../hooks/kompact.js';
 import { readTranscript } from '../eval/transcript.js';
 import { collectToolCalls } from '../src/state.js';
 import type { Message } from '../src/index.js';

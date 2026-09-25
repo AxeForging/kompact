@@ -1,9 +1,9 @@
 ---
-name: laya-compact
-description: Use when working with laya-compact — the local context-compaction plugin that scores tool calls and drops what is no longer needed verbatim. Covers reading its decision log, choosing keepThreshold, calibrating the scorer on your own sessions, switching to a Laya sidecar, and diagnosing a compaction that kept or dropped the wrong thing. Also use when someone asks why compaction removed a tool result, how to make compaction more or less aggressive, or how to re-run the evaluation, or how to see what they keep repeating and turn it into a skill.
+name: kompact
+description: Use when working with kompact — the local context-compaction plugin that scores tool calls and drops what is no longer needed verbatim. Covers reading its decision log, choosing keepThreshold, calibrating the scorer on your own sessions, switching to a Laya sidecar, and diagnosing a compaction that kept or dropped the wrong thing. Also use when someone asks why compaction removed a tool result, how to make compaction more or less aggressive, or how to re-run the evaluation, or how to see what they keep repeating and turn it into a skill.
 ---
 
-# Operating laya-compact
+# Operating kompact
 
 It scores every tool call before a compaction and keeps what is still needed
 verbatim. Two `noul` probabilities per call, three outcomes:
@@ -44,7 +44,7 @@ so its result went, while `call=0.88` kept the call itself.
 Read the state it was scored on by rebuilding it:
 
 ```ts
-import { buildCallState, callContexts, collectToolCalls } from 'laya-compact';
+import { buildCallState, callContexts, collectToolCalls } from 'kompact';
 ```
 
 The scorer sees only: the tool, what it acted on, output size as words, how far
@@ -129,7 +129,7 @@ measures — that mistake is recorded in the README, having been made here.
 
 `npm run propose` ranks the shapes the plugin has been counting and writes
 nothing. `npm run propose -- --write 2,5` drafts those rows as `SKILL.md` files
-into `.laya/proposals/`, which Claude Code does not read — moving one into
+into `.kompact/proposals/`, which Claude Code does not read — moving one into
 `~/.claude/skills/` is deliberate and manual.
 
 Recording starts when the plugin is installed and never looks at transcripts from

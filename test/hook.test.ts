@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   askerFor, compactSession, decisionLogLines, readLocalWeights, register, resolveHookConfig, summarize, toSessionMessages,
-} from '../hooks/laya-compact.js';
+} from '../hooks/kompact.js';
 import { FeatureAsker, parseWeights } from '../src/features.js';
 import type { CompactResult, Message } from '../src/index.js';
 
@@ -68,7 +68,7 @@ describe('resolveHookConfig', () => {
     // Two modules read options now, so the invariant is "no option is offered and
     // then ignored" rather than "resolveHookConfig returns everything": the
     // recorder reads `recordSignals` directly, and never goes near this config.
-    const signalsModule = readFileSync(new URL('../hooks/laya-signals.ts', import.meta.url), 'utf8');
+    const signalsModule = readFileSync(new URL('../hooks/kompact-signals.ts', import.meta.url), 'utf8');
     for (const key of Object.keys(manifest.userConfig)) {
       const read = config[key] !== undefined || signalsModule.includes(`'${key}'`);
       expect(read, `${key} is offered in plugin.json but no hook module reads it`).toBe(true);
@@ -292,7 +292,7 @@ describe('locally calibrated weights', () => {
     );
     expect(fromEnv?.keepResult[0]).toBe(0.1);
     const fromSettings = await readLocalWeights(
-      { env: { get: async () => undefined }, settings: { read: async () => ({ env: { LAYA_COMPACT_WEIGHTS: valid } }) } },
+      { env: { get: async () => undefined }, settings: { read: async () => ({ env: { KOMPACT_WEIGHTS: valid } }) } },
       (t) => logs.push(t),
     );
     expect(fromSettings?.keepResult[0]).toBe(0.1);
@@ -307,7 +307,7 @@ describe('locally calibrated weights', () => {
       (t) => logs.push(t),
     );
     expect(weights).toBeUndefined();
-    expect(logs.join(' ')).toContain('ignoring LAYA_COMPACT_WEIGHTS');
+    expect(logs.join(' ')).toContain('ignoring KOMPACT_WEIGHTS');
   });
 
   it('survives a host that offers neither channel', async () => {

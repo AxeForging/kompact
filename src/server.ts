@@ -35,7 +35,7 @@ export function createScorerServer(options: ServeOptions = {}): Server {
   const asker = new FeatureAsker();
   return createServer((request, response) => {
     if (request.method === 'GET' && request.url === '/health') {
-      return send(response, 200, { status: 'ok', scorer: 'features', model: 'laya-compact-logistic' });
+      return send(response, 200, { status: 'ok', scorer: 'features', model: 'kompact-logistic' });
     }
     if (request.method !== 'POST' || !request.url?.startsWith('/v1/systemone')) {
       return send(response, 404, { error: 'not found' });
@@ -69,7 +69,7 @@ export function createScorerServer(options: ServeOptions = {}): Server {
       const state = typeof parsed.state === 'string' ? parsed.state : JSON.stringify(parsed.state ?? '');
       asker
         .ask(state, questions as SystemOneQuestions)
-        .then((result) => send(response, 200, { model: 'laya-compact-logistic', ...result }))
+        .then((result) => send(response, 200, { model: 'kompact-logistic', ...result }))
         .catch((error: unknown) => send(response, 500, { error: String(error) }));
     });
   });

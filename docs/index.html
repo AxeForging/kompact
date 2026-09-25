@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>laya-compact — context compaction you can check</title>
+<title>kompact — context compaction you can check</title>
 <meta name="description" content="A Claude Code plugin that scores every tool call before compaction and keeps only what is still needed verbatim. Local, no API key, no GPU. AUC 0.905 ± 0.078, worst split 0.684, over 10 grouped splits of 1063 paired calls; 0.789 leave-one-out over all 41 sessions.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1273,7 +1273,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
   <p class="caption">
     Nothing recorded leaves the machine, and nothing is written into a skills directory: drafts land
-    in <code>.laya/proposals/</code>, which Claude Code does not read. Set
+    in <code>.kompact/proposals/</code>, which Claude Code does not read. Set
     <code>recordSignals</code> to false to record nothing at all.
   </p>
   </details>
@@ -1742,7 +1742,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
      <a href="#checked">verification ledger</a> for what is and is not established.</p>
   <p>
     <strong>Or don’t install it yet.</strong> Clone
-    <a rel="noopener" href="https://github.com/AxeForging/laya-compact">the repository</a> and run
+    <a rel="noopener" href="https://github.com/AxeForging/kompact">the repository</a> and run
     <code>npm&nbsp;run&nbsp;dry-run</code>: it scores your own transcripts with the same code the
     hook calls and prints what it would have freed, writing nothing and installing nothing.
     Needs <code>git</code> and Node 18 or later, and it reads the sessions already in <code>~/.claude/projects</code> — with
@@ -1755,7 +1755,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <button class="copy" type="button" data-copy hidden aria-label="Copy the commands that try it without installing">Copy</button>
       <p class="visually-hidden" role="status" aria-live="polite"></p>
     </div>
-    <pre tabindex="0" data-label="Shell commands to try it without installing"><code><span class="cmd__line">git clone https://github.com/AxeForging/laya-compact</span><span class="cmd__line">cd laya-compact</span><span class="cmd__line">npm install</span><span class="cmd__line">npm run dry-run</span></code></pre>
+    <pre tabindex="0" data-label="Shell commands to try it without installing"><code><span class="cmd__line">git clone https://github.com/AxeForging/kompact</span><span class="cmd__line">cd kompact</span><span class="cmd__line">npm install</span><span class="cmd__line">npm run dry-run</span></code></pre>
   </div>
   <div class="cmd">
     <div class="cmd__head">
@@ -1763,7 +1763,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <button class="copy" type="button" data-copy hidden aria-label="Copy the commands that install it">Copy</button>
       <p class="visually-hidden" role="status" aria-live="polite"></p>
     </div>
-    <pre tabindex="0" data-label="Shell commands to install it"><code><span class="cmd__line">export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1</span><span class="cmd__gap"></span><span class="cmd__line">claude plugin marketplace add AxeForging/laya-compact</span><span class="cmd__line">claude plugin install laya-compact@laya-compact</span></code></pre>
+    <pre tabindex="0" data-label="Shell commands to install it"><code><span class="cmd__line">export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1</span><span class="cmd__gap"></span><span class="cmd__line">claude plugin marketplace add AxeForging/kompact</span><span class="cmd__line">claude plugin install kompact@kompact</span></code></pre>
   </div>
   <p class="caption">
     It replaces compaction rather than repairing it: Claude Code’s <code>session.compact</code>
@@ -1803,7 +1803,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       Code starts, so typing <code>export</code> into a session that is already running changes
       nothing for that session — and nothing for the next terminal either, unless the line is in
       your shell's startup file.</li>
-    <li><code>claude&nbsp;plugin&nbsp;list</code> must show <code>laya-compact</code>. If it does,
+    <li><code>claude&nbsp;plugin&nbsp;list</code> must show <code>kompact</code>. If it does,
       the variable is <code>1</code>, and no notice ever appears, the build is older than function
       hooks: see the version rule in <a href="#install">section 08, Install</a>.</li>
   </ul>
@@ -1819,7 +1819,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <code>MultiEdit</code>, <code>NotebookEdit</code> — is <b>never dropped</b>, whatever it scores.</li>
     <li>Nothing on disk changes. Compaction rewrites what is sent to the model for the rest of
       the session; the transcript in <code>~/.claude/projects</code> is untouched.</li>
-    <li>Remove it with <code>claude plugin uninstall laya-compact</code>, or unset
+    <li>Remove it with <code>claude plugin uninstall kompact</code>, or unset
       <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> to turn every function hook off. Either way
       the next compaction is Claude Code’s own summary again.</li>
   </ul>
@@ -1889,7 +1889,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     and <a rel="noopener" href="https://github.com/fatelei/jev-compact">fatelei/jev-compact</a>, both MIT, which do this
     with TypeSafe’s hosted Jev model. Laya is Apache-2.0. This is MIT, by
     <a rel="noopener" href="https://github.com/AxeForging">AxeForging</a>:
-    <a rel="noopener" href="https://github.com/AxeForging/laya-compact">the source</a> and <a href="eval.html">the full evaluation</a>.
+    <a rel="noopener" href="https://github.com/AxeForging/kompact">the source</a> and <a href="eval.html">the full evaluation</a>.
   </p>
 </div>
 </footer>
@@ -1912,7 +1912,7 @@ for (const block of document.querySelectorAll('.cmd')) {
   button.hidden = false;
   // Each command is its own element now, so the newlines that used to separate
   // them are gone from the markup: `textContent` would hand the clipboard
-  // `...laya-compactcd laya-compactnpm install`, which pastes as one broken
+  // `...kompactcd kompactnpm install`, which pastes as one broken
   // command. Read the lines and put the newlines back.
   const commandText = () => {
     const rows = command.querySelectorAll('.cmd__line, .cmd__gap');

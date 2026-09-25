@@ -1,4 +1,4 @@
-# Design brief — laya-compact landing page
+# Design brief — kompact landing page
 
 Written from the Design Context in `.impeccable.md` and the measured results in
 `README.md`. The discovery interview was skipped because its inputs — audience,

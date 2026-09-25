@@ -13,7 +13,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { SIGNALS_FILE, STORE_KEY, asAggregate, prune, registerSignals } from '../hooks/laya-signals.js';
+import { SIGNALS_FILE, STORE_KEY, asAggregate, prune, registerSignals } from '../hooks/kompact-signals.js';
 
 /** Assembled, not written out: see the note in `test/signals.test.ts`. */
 const FAKE = {
