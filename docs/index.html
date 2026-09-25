@@ -255,13 +255,20 @@ ul.plain li::marker{ color: var(--ink-3); }
    reading was a 0.035 lightness change. WCAG 1.4.1, on the one control whose
    whole job is answering "where am I" in a 17,000px document. */
 .contents-bar .contents a[aria-current]{ border-bottom-color: currentColor; font-weight:700; }
-.contents__all{
-  margin-left: auto; flex: 0 0 auto; font: inherit; font-weight:500; color: var(--ink-3);
-  background:none; border:0; border-bottom:1px solid transparent; padding-block:6px; cursor:pointer;
+.contents-bar__row{ display:flex; align-items:center; gap: var(--space-md); }
+/* min-width:0 or the links refuse to shrink and push the controls off the edge. */
+.contents-bar__row .contents{ flex: 1 1 auto; min-width: 0; }
+.contents__tools{ flex: 0 0 auto; display:flex; gap: var(--space-md); align-items:center; margin:0; }
+/* A button inherits from the row, not from the links beside it, so the font is
+   spelled out: it rendered in the body serif at the wrong size otherwise. */
+.contents__all, .contents__top{
+  font-family: var(--sans); font-size: var(--text-sm); font-weight:500; color: var(--ink-3);
+  background:none; border:0; border-bottom:1px solid transparent; padding-block:6px;
+  text-decoration:none; white-space:nowrap;
 }
-.contents__all:hover{ color: var(--accent-ink); }
+.contents__all{ cursor:pointer; }
+.contents__all:hover, .contents__top:hover{ color: var(--accent-ink); }
 .contents__all[aria-pressed="true"]{ color: var(--accent-ink); border-bottom-color: currentColor; }
-.contents__top{ color: var(--ink-3) !important; margin-left: var(--space-md); }
 .contents__top:hover{ color: var(--accent-ink) !important; }
 
 .contents a:hover{ color: var(--on-flood); border-bottom-color: var(--on-flood); }
@@ -726,8 +733,13 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </header>
 
 <nav class="contents-bar" aria-label="Contents">
-  <div class="contents wrap">
-    <a href="#result">Evidence</a><a href="#demo">Watch it decide</a><a href="#shape">The shape of it</a><a href="#signals">What you repeat</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#glossary">Glossary</a><a href="#install">Install</a><button class="contents__all" type="button" id="open-all" hidden>Open all</button><a class="contents__top" href="#top">Top &#8593;</a>
+  <div class="contents-bar__row wrap">
+    <div class="contents">
+    <a href="#result">Evidence</a><a href="#demo">Watch it decide</a><a href="#shape">The shape of it</a><a href="#signals">What you repeat</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#glossary">Glossary</a><a href="#install">Install</a></div>
+    <p class="contents__tools">
+      <button class="contents__all" type="button" id="open-all" hidden>Open all</button>
+      <a class="contents__top" href="#top">Top&nbsp;&#8593;</a>
+    </p>
   </div>
 </nav>
 
