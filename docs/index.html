@@ -122,6 +122,42 @@ a:hover{ color: var(--accent); }
 .standfirst{ max-width: var(--measure); font-size: var(--text-lg); line-height: 1.45; margin:0 0 var(--space-xl); color: var(--on-flood-2); }
 .standfirst strong{ color: var(--on-flood); font-weight: 500; }
 
+/* What it measured and what it costs, above the fold, because the page asks
+   its reader to decide in about a minute and the first figure used to be a
+   scroll away. Typographic, on the flood, no card. */
+.upfront{
+  display:grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--space-sm) var(--space-xl);
+  border-top:1px solid var(--flood-rule); padding-top: var(--space-md);
+  margin-bottom: var(--space-lg); font-family: var(--sans);
+}
+.upfront p{ margin:0; font-size: var(--text-sm); line-height:1.45; color: var(--on-flood-2); }
+.upfront b{
+  display:block; font-family: var(--display); font-optical-sizing: none;
+  font-size: 1.9rem; line-height:1.1; font-weight:700; color: var(--on-flood);
+  font-variant-numeric: tabular-nums; letter-spacing:0;
+}
+.upfront span b{ display:inline; font-size:inherit; font-family:inherit; font-weight:600; }
+.upfront__do{ grid-column: 1 / -1; font-size: var(--text-base); }
+.upfront__do a{ color: var(--on-flood); text-decoration-thickness:1px; text-underline-offset:3px; }
+.upfront__do code{ color: var(--on-flood); }
+
+.plate__scroll{ overflow-x:auto; overscroll-behavior-x: contain; }
+.plate__scroll img{ display:block; width:100%; height:auto; }
+@media (max-width: 760px){
+  .plate__scroll img{ width: 760px; max-width:none; }
+  .plate__scroll::before{
+    content: "drag the plot sideways for the rest of it";
+    display:block; font-family: var(--sans); font-size: var(--text-xs);
+    letter-spacing:0.06em; text-transform:uppercase; color: var(--on-flood-2);
+    position:sticky; left:0; padding-bottom: var(--space-xs);
+  }
+}
+
+ul.plain{ max-width: var(--measure); margin: var(--space-md) 0 0; padding-left: 1.1em; }
+ul.plain li{ margin-bottom: var(--space-xs); }
+ul.plain li::marker{ color: var(--ink-3); }
+
 .colophon{
   display:flex; flex-wrap:wrap; gap: var(--space-xs) var(--space-lg);
   font-family: var(--sans); font-size: var(--text-sm); letter-spacing:0.01em;
@@ -241,8 +277,8 @@ table.data thead th{ font-size: var(--text-xs); letter-spacing:0.01em;
   color: var(--ink-3); font-weight:600; border-bottom: 1px solid var(--rule-firm); }
 table.data td.n, table.data th.n{ text-align:right; }
 table.data tbody tr:last-child td{ border-bottom: 1px solid var(--rule-firm); }
-table.data tr.same td{ background: var(--accent-wash); }
-table.data tr.same td.mark{ color: var(--accent-ink); font-weight:700; }
+table.data tr.same td, table.data tr.same th{ background: var(--accent-wash); }
+table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink); font-weight:700; }
 .caption{ font-family: var(--sans); font-size: var(--text-xs); color: var(--ink-3);
   margin-top: var(--space-xs); max-width: 74ch; line-height:1.5; }
 
@@ -412,6 +448,18 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     on your machine, with no API key, no GPU and no network call. The optional Laya sidecar is
     the one path that uses either.
   </p>
+  <div class="upfront reveal" style="--d:150ms">
+    <p><b>0.905 &#177; 0.078</b><span>ranking quality, 10 grouped splits of 18 sessions; worst split 0.684.
+      <b>0.789</b> leave&#8209;one&#8209;out over all 41.</span></p>
+    <p><b>12.8&#8211;32.4%</b><span>of tokens freed per session, keeping 77.3% of the outputs
+      that were reused later.</span></p>
+    <p><b>164&#8239;ms</b><span>to score 1,543 calls. No key, no GPU, no request.</span></p>
+    <p class="upfront__do">
+      <a href="#install">Install it</a> &#8212; or run <code>npm&#160;run&#160;dry&#8209;run</code>
+      first and see what it frees on your own sessions, installing nothing
+      (<a href="#cost">section 04</a>).
+    </p>
+  </div>
   <div class="colophon reveal" style="--d:170ms">
     <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>126</b> tests</span>
     <span><b>0</b> network calls by default</span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
@@ -534,8 +582,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p class="caption">
     Every scorer judged on the same held-out sessions each split, so the comparison is paired.
     Splitting by session, not by row: calls inside one session are correlated and splitting on
-    rows would leak. Calibration error 0.019 against Laya’s 0.42–0.71, which is what makes the
-    keep-threshold mean anything.
+    rows would leak. On this corpus the calibration error is 0.019 against Laya’s 0.42–0.71,
+    which is what makes the keep-threshold mean anything — on all 41 sessions it is 0.051, and
+    section 07 says so.
   </p>
 </section>
 
@@ -549,11 +598,16 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     never were. A single AUC is a summary of this picture.
   </p>
   <figure class="plate">
+    <!-- Below ~760px the 1200-unit plate scales to a third and its 13px labels
+         render at ~4px. Rather than ship a second asset, it keeps its size and
+         drags, the same way the six tables on this page do. -->
+    <div class="plate__scroll" tabindex="0" role="region" aria-label="Plot: the score distribution — scrolls sideways">
     <img src="distribution.svg" width="1200" height="420" decoding="async"
          alt="A strip plot of 2,239 tool calls. The upper band holds the 247 whose output was reused
               verbatim later; the lower band the 1,992 that were not. Position is the model's
               keep-probability from 0 at the left to 1 at the right. The reused band leans right,
               and the two bands overlap heavily below 0.2, where the shipped floor is drawn.">
+    </div>
     <figcaption>
       The reused band leans right — that is the model working. The bands also overlap, heavily,
       and that overlap is why a <em>floor</em> decides what is kept rather than a cut: below 0.2
@@ -640,7 +694,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     Compaction stops being a model call and becomes arithmetic. These are whole session
     logs, so the totals span more than one context window, so the ratio is what transfers.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: the policy sweep — scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: per-session results on this machine — scrolls sideways">
     <table class="data">
       <thead><tr>
         <th scope="col">Session</th><th scope="col" class="n">Calls</th>
@@ -683,7 +737,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     The scorer produces a <em>ranking</em>, and the ranking holds up on sessions it has never
     seen. An absolute probability cut does not, because every session has its own mix of tools
     and so its own distribution: a Bash-heavy session scores low throughout, and a fixed cut
-    sweeps all of it. Barely 7% of tool outputs are ever reused verbatim, so a well-calibrated
+    sweeps all of it. Barely 11% of tool outputs are ever reused verbatim — 247 of 2,239 — so a well-calibrated
     scorer seldom passes 0.5 even for the ones that matter.
   </p>
   <p>
@@ -691,7 +745,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     the keep threshold acting as a floor that nothing is dropped above. Simulated per session on
     the labelled corpus, scored leave-one-session-out:
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: what a wrong drop costs — scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: the policy sweep — scrolls sideways">
     <table class="data">
       <thead><tr>
         <th scope="col">Policy</th><th scope="col" class="n">Output freed</th>
@@ -719,10 +773,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     what running it costs. One <code>laya-serve</code> process loads every checkpoint and routes
     per request, so memory and start-up belong to the router, not to the checkpoint you pick.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: how it would be recovered — scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: what the sidecar costs to run — scrolls sideways">
     <table class="data">
       <thead><tr>
-        <th scope="col">Scoring one session, 1,543 calls</th><th scope="col" class="n">Time</th>
+        <th scope="col">Scoring 1,543 calls, the four sessions above</th><th scope="col" class="n">Time</th>
         <th scope="col" class="n">Memory held</th><th scope="col" class="n">VRAM</th>
         <th scope="col" class="n">Cold start</th>
       </tr></thead>
@@ -747,7 +801,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     warning. Padding one decisive sentence with unrelated filler, the same question was asked
     of a 4,278-character state and a 21,078-character state:
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: which tool produced it — scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: the truncation test — scrolls sideways">
     <table class="data">
       <thead><tr>
         <th scope="col">State</th><th scope="col" class="n">Characters</th>
@@ -766,13 +820,13 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     send the whole conversation, up to 25,000 tokens, as one state.
   </p>
 
-  <h3>What the other 22.7% costs</h3>
+  <h3>What the other 22.3% costs</h3>
   <p>
     “77.3% of reused outputs kept” invites you to supply your own answer for the rest, so here
     it is, priced. Held-out scores, shipped policy, per session: <strong>55 of the 247 reused
     outputs are dropped</strong> — 1.34 a session, and only one of them kept a head.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: why the output was needed — scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: what a wrong drop costs — scrolls sideways">
     <table class="data">
       <thead><tr>
         <th scope="col">How it would be recovered</th><th scope="col" class="n">Outputs</th>
@@ -804,7 +858,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     actually compact — 60% of a session's tool output — decide only the calls present at that
     moment, then count the reuses that come <em>afterwards</em> whose source was dropped.
   </p>
-  <div class="scroller" tabindex="0" role="region" aria-label="Table: per-session results — scrolls sideways">
+  <div class="scroller" tabindex="0" role="region" aria-label="Table: what the work loses — scrolls sideways">
     <table class="data">
       <thead><tr>
         <th scope="col">Compacting at 60%, across 32 sessions</th><th scope="col" class="n">Count</th>
@@ -926,7 +980,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </div>
     <div class="next__item">
       <p class="next__when">Wanted</p>
-      <p class="next__what"><b>A fine-tuned Laya checkpoint that wins.</b> The bar is 0.895, not
+      <p class="next__what"><b>A fine-tuned Laya checkpoint that wins.</b> The bar is 0.905, not
         chance. <code>eval/</code> re-runs the whole comparison for anyone who tries, and the
         cost table above is the other half of that decision.</p>
     </div>
@@ -947,7 +1001,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <h3>Isn't this just a heuristic with extra steps?</h3>
       <p>It is a heuristic with error bars, which is the difference. Twelve coefficients fitted
         on labelled data, evaluated on sessions held out whole, calibrated well enough that the
-        threshold means a probability — expected calibration error 0.019. “Big outputs get reused”
+        threshold means a probability — expected calibration error 0.019 on the 18-session corpus,
+        0.051 on all 41. “Big outputs get reused”
         alone reaches 0.878, so most of the signal really is one feature; the other eleven earn
         their place on characters freed at a fixed safety level, not on ranking.</p>
     </div>
@@ -957,13 +1012,19 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         trained on this task. Laya's own documentation says the base checkpoints sit near chance on
         typed-decision workflows and should be treated as a fast base to specialise. That is what
         was measured, and the wording mattered more than the checkpoint: on
-        <code>typed-decisions</code>, asking what is <em>true</em> of the text scores 0.721 where
-        asking what to <em>do</em> scores 0.419.</p>
+        <code>typed-decisions</code>, asking what the assistant should <em>do</em> next scores
+        <span class="num val">0.719</span>, and asking what is <em>true</em> of the text scores
+        <span class="num val">0.416</span> — barely above the coin flip. That is the reverse of
+        what Laya's own documentation suggests, which is the finding rather than an
+        embarrassment: the checkpoint is better at a decision than at an entailment.</p>
     </div>
     <div class="faq__item">
       <h3>Will it delete something I need?</h3>
-      <p>Sometimes — 0.56 outputs a session, measured above, and nine of ten of those are command
-        output. A dropped result keeps its first 300 characters when the call survives, and a call
+      <p>Sometimes — <span class="num val">0.19</span> outputs a session where it would actually
+        cost you something, and 27 of 32 sessions lose nothing at all. Counting every reuse
+        anywhere later, including ones that had already happened before a real compaction could
+        fire, the upper bound is 1.34 a session. Both are in section 05, and 47 of the 55 are
+        command output. A dropped result keeps its first 300 characters when the call survives, and a call
         that recorded a change is never dropped at all. Every failure mode falls back to Claude
         Code's own summary rather than to a half-compacted transcript, and a single failed request
         keeps its call: a wrong keep costs context, a wrong drop costs work.</p>
@@ -994,10 +1055,17 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <h2 id="install-h">Function hooks are early access, so turn them on first.</h2>
   <p class="lede">Needs Claude Code 2.1.281 or newer, where function hooks exist. On an older
      build the plugin installs and silently never runs, so check <code>claude --version</code> first.</p>
+  <p>
+    <strong>Or don’t install it yet.</strong> Clone the repository and run
+    <code>npm&nbsp;run&nbsp;dry-run</code>: it scores your own transcripts with the same code the
+    hook calls and prints what it would have freed, writing nothing and installing nothing.
+    <a href="#cost">Section 04</a> has the range to expect.
+  </p>
   <div class="cmd">
     <div class="cmd__head">
       <p class="label">shell — three commands</p>
-      <button class="copy" type="button" data-copy aria-live="polite">Copy</button>
+      <button class="copy" type="button" data-copy hidden>Copy</button>
+      <p class="visually-hidden" id="copy-status" role="status" aria-live="polite"></p>
     </div>
     <pre><code id="cmd-text">export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
 
@@ -1009,6 +1077,21 @@ claude plugin install laya-compact@laya-compact</code></pre>
     hook returns a replacement message list. Any failure at all (scorer down, malformed
     response, or a saving below the minimum) falls back to the built-in summary.
   </p>
+
+  <h3>What it does to a session, in full</h3>
+  <ul class="plain">
+    <li>The <b>last six messages</b> are never touched, whatever they contain.</li>
+    <li>Your prose and the assistant’s is never touched. Only tool results and tool calls.</li>
+    <li>A shortened result <b>keeps its first 300 characters</b>, so the call is still legible
+      and the tool can be run again.</li>
+    <li>A call that recorded a change — <code>Edit</code>, <code>Write</code>,
+      <code>MultiEdit</code>, <code>NotebookEdit</code> — is <b>never dropped</b>, whatever it scores.</li>
+    <li>Nothing on disk changes. Compaction rewrites what is sent to the model for the rest of
+      the session; the transcript in <code>~/.claude/projects</code> is untouched.</li>
+    <li>Remove it with <code>claude plugin uninstall laya-compact</code>, or unset
+      <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> to turn every function hook off. Either way
+      the next compaction is Claude Code’s own summary again.</li>
+  </ul>
 </section>
 </main>
 
@@ -1025,14 +1108,22 @@ claude plugin install laya-compact@laya-compact</code></pre>
 <script src="demo-data.js"></script>
 <script>
 const command = document.getElementById('cmd-text');
+const copyStatus = document.getElementById('copy-status');
+// Revealed here for the same reason the Replay button is: with scripts blocked
+// the command is selectable text and a Copy button would be a control that
+// cannot act. The announcement lives in a sibling status, not on the button --
+// aria-live on a control makes its own accessible name the live region.
+const copyButton = document.querySelector('[data-copy]');
+if (copyButton) copyButton.hidden = false;
 
-document.querySelector('[data-copy]')?.addEventListener('click', async (event) => {
+copyButton?.addEventListener('click', async (event) => {
   const button = event.currentTarget;
   const restore = () => { button.textContent = 'Copy'; delete button.dataset.done; };
   try {
     await navigator.clipboard.writeText(command.textContent.trim());
     button.textContent = 'Copied';
     button.dataset.done = '1';
+    copyStatus.textContent = 'Three commands copied to the clipboard.';
     setTimeout(restore, 2000);
   } catch {
     // Clipboard refused (insecure origin, or permission denied). Select the
@@ -1044,6 +1135,7 @@ document.querySelector('[data-copy]')?.addEventListener('click', async (event) =
     selection.addRange(range);
     button.textContent = 'Selected — press Ctrl/⌘C';
     button.dataset.done = '1';
+    copyStatus.textContent = 'The clipboard refused. The commands are selected — press Ctrl or Cmd C.';
     setTimeout(restore, 4000);
   }
 });

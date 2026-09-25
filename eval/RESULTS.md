@@ -39,7 +39,7 @@ features: 13 (tool=Read, tool=Bash, tool=Edit|Write, ...)
 ## Decision policy — `eval/policy.ts`
 
 The scorer produces a ranking; this turns it into a decision. The shipped
-defaults are **budget 0.5, floor 0.10**.
+defaults are **budget 0.5, floor 0.20**.
 
 ```
 local labels: 2239 calls, 247 genuinely needed, 41 sessions
@@ -72,7 +72,7 @@ chars kept = share of needed CHARACTERS still present afterwards,
 
 ## What a wrong drop costs — `eval/recovery.ts`
 
-The policy above keeps 84.6% of the outputs that were reused later. This prices
+The policy above keeps 77.3% of the outputs that were reused later. This prices
 the rest. Read the script's own caveats first: it measures recovery cost, not
 task outcome, and it over-counts, because a reuse that had already happened by
 the time a real compaction fired costs nothing when the output is dropped now.
@@ -177,7 +177,7 @@ typed-decisions              8   1974 ms  2016 ms      246.7 ms        832
 input tok is usage.input_tokens, which is the per-question row count times the
 number of questions — not the size of the state.
 
-Scoring one session: 1543 calls, 2 questions a request, 8 in flight.
+Scoring 1543 calls, the sessions above: 2 questions a request, 8 in flight.
   fastest checkpoint: 21.5 s and 4958 MB resident held for the session
   built-in scorer:    0.16 s and no process at all
   ratio:              131x the time

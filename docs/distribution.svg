@@ -13,8 +13,10 @@ dozen distinct scores to give.</desc>
      cut in it. Values match the page's --flood / --on-flood tokens. */
   .bg{ fill: #7f0c00; }
   .kept{ fill: #fcf9f7; fill-opacity: .95; }
-  .not{ fill: #e1b1a1; fill-opacity: .38; }
-  .ax, .floor{ stroke: #e1b1a1; stroke-width: 1; stroke-opacity: .6; }
+  /* .38 composited to 1.87:1 on the flood — the half of the argument that
+     proves the overlap was, in practice, invisible. .62 clears 3:1. */
+  .not{ fill: #e1b1a1; fill-opacity: .62; }
+  .ax, .floor{ stroke: #e1b1a1; stroke-width: 1; stroke-opacity: 1; }
   .floor{ stroke-dasharray: 3 4; stroke-opacity: 1; }
   .tick, .lab{ fill: #e1b1a1; font: 500 13px/1 Archivo, ui-sans-serif, sans-serif; }
   .lab{ font-size: 14px; fill: #fcf9f7; }

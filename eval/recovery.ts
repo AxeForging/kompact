@@ -2,7 +2,7 @@
  * What a wrong drop actually costs.
  *
  * Every other metric here is a ranking or a character count. None of them says
- * what happens to the work when the scorer is wrong, and "84.6% of needed
+ * what happens to the work when the scorer is wrong, and "77.3% of needed
  * outputs kept" invites the reader to supply their own answer for the other
  * 15.4%. This prices it: for each output the shipped policy drops although it
  * was reused later, can the assistant get it back, and at what cost.

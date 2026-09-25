@@ -148,7 +148,9 @@ const fastest = await latency('multilingual', PER_REQUEST, 5).catch(() => undefi
 if (fastest) {
   const requests = Math.ceil(CALLS / PER_REQUEST);
   const wall = (requests / CONCURRENCY) * fastest.median;
-  console.log(`\nScoring one session: ${CALLS} calls, ${PER_REQUEST} questions a request, ` +
+  // Not "one session": CALLS is whatever sessions.ts just totalled, which is
+  // every session on the machine.
+  console.log(`\nScoring ${CALLS} calls, the sessions above: ${PER_REQUEST} questions a request, ` +
     `${CONCURRENCY} in flight.`);
   console.log(`  fastest checkpoint: ${(wall / 1000).toFixed(1)} s and ` +
     `${residentMb().replace(/ \(pid \d+\)/, '')} held for the session`);

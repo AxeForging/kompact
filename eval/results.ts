@@ -10,6 +10,7 @@ import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { DEFAULT_OPTIONS } from '../src/compact.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const run = (script: string, ...extra: string[]): string =>
@@ -29,6 +30,16 @@ const today = new Date().toISOString().slice(0, 10);
 // The sidecar comparison is against whatever `sessions.ts` just measured, not
 // against a constant typed into the benchmark months ago.
 const sessions = optional('sessions.ts');
+// Both of these were typed by hand and both went stale: the floor was quoted as
+// 0.10 after the refit moved it to 0.2, and the retention as 84.6% while the
+// table three lines below said 77.3%. They now come from the shipped options and
+// from the generated table itself, so neither can drift from what it describes.
+const policy = run('policy.ts');
+const shippedRow = new RegExp(
+  `^budget ${DEFAULT_OPTIONS.targetReduction.toFixed(1)}, floor ` +
+  `${DEFAULT_OPTIONS.keepThreshold.toFixed(2)}\\s+\\S+\\s+\\S+\\s+\\S+\\s+(\\S+)`, 'm',
+).exec(policy);
+const keptShare = shippedRow?.[1] ?? 'the share in the table below';
 const totals = /^total\s+(\d+)\s.*?(\d+)ms\s*$/m.exec(sessions);
 const benchArgs = totals ? ['--calls', totals[1]!, '--built-in-ms', totals[2]!] : [];
 const body = `# Evaluation results
@@ -50,15 +61,15 @@ ${run('repeat.ts')}
 ## Decision policy — \`eval/policy.ts\`
 
 The scorer produces a ranking; this turns it into a decision. The shipped
-defaults are **budget 0.5, floor 0.10**.
+defaults are **budget ${DEFAULT_OPTIONS.targetReduction.toFixed(1)}, floor ${DEFAULT_OPTIONS.keepThreshold.toFixed(2)}**.
 
 \`\`\`
-${run('policy.ts')}
+${policy}
 \`\`\`
 
 ## What a wrong drop costs — \`eval/recovery.ts\`
 
-The policy above keeps 84.6% of the outputs that were reused later. This prices
+The policy above keeps ${keptShare} of the outputs that were reused later. This prices
 the rest. Read the script's own caveats first: it measures recovery cost, not
 task outcome, and it over-counts, because a reuse that had already happened by
 the time a real compaction fired costs nothing when the output is dropped now.
