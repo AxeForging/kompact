@@ -86,7 +86,9 @@ const workflowPlace = workflow ? ranked.indexOf(workflow) + 1 : 0;
 const markup = `  <p class="caption caption--fig">${fixture.meta.repeated} shapes that repeated, of ` +
   `${fixture.meta.shapes.toLocaleString()} recorded over ${fixture.meta.sessions} sessions ` +
   `and ${fixture.meta.calls.toLocaleString()} tool calls</p>
-      <div class="scroller" data-label="Table: what repeated">
+      <details class="more">
+    <summary><h3>All ${fixture.meta.repeated} shapes that repeated, ranked</h3></summary>
+<div class="scroller" data-label="Table: what repeated">
   <table class="data">
     <thead><tr><th>Kind</th><th>Signature</th><th class="n">times</th>` +
   `<th class="n">sessions</th><th class="n">calls</th><th class="n">chars</th>` +
@@ -99,6 +101,8 @@ ${rows}
   <p class="caption">est. = total tool calls + total output characters / 1000, the ranking
     chosen for this. A model of effort, not a measurement of time; every input to it is on the row,
     so any row can be recomputed by hand. Greyed rows are generic shell verbs.</p>
+
+    </details>
 
   <div class="finding finding--loss reveal">
     <p>Of <span class="val">${fixture.meta.shapes.toLocaleString()}</span> shapes recorded,

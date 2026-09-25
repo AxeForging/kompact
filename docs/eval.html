@@ -82,6 +82,21 @@ pre{
   margin:0; padding:16px; font-family: var(--mono);
   font-size:0.8125rem; line-height:1.55; font-variant-ligatures:none; color: var(--ink);
 }
+/* Tables share the scroller with the fenced blocks, so they behave the same way
+   on a narrow screen: they keep their width and the region scrolls. */
+table.data{ border-collapse: collapse; width:100%; font-family: var(--sans); font-size:0.875rem; }
+table.data th, table.data td{
+  padding: 8px 14px; text-align:left; white-space:nowrap;
+  border-bottom:1px solid var(--rule);
+}
+table.data thead th{
+  font-size:0.75rem; letter-spacing:0.06em; text-transform:uppercase;
+  color: var(--ink-2); border-bottom:1px solid var(--ink-3);
+}
+table.data tbody th{ font-weight:400; color: var(--ink); }
+table.data tbody tr:last-child th, table.data tbody tr:last-child td{ border-bottom:0; }
+table.data td{ font-variant-numeric: tabular-nums; color: var(--ink-2); }
+
 footer{
   width:100%; max-width: var(--measure); margin: 64px auto 0;
   padding-inline: var(--gutter); padding-block:24px 64px;
@@ -116,7 +131,7 @@ footer p{ max-width: 68ch; }
 <header>
   <div class="wrap">
     <h1>Evaluation results</h1>
-    <nav class="contents" aria-label="Contents"><a class="back" href="./">← kompact</a><a href="#ranking-quality-eval-repeat-ts">Ranking quality</a><a href="#what-the-shipped-coefficients-generalise-to-eval-fit-ts">What the shipped coefficients generalise to</a><a href="#decision-policy-eval-policy-ts">Decision policy</a><a href="#what-a-wrong-drop-costs-eval-recovery-ts">What a wrong drop costs</a><a href="#whether-the-work-survives-eval-outcome-ts">Whether the work survives</a><a href="#what-it-frees-in-practice-eval-sessions-ts">What it frees in practice</a><a href="#where-the-sidecar-fails-quietly-eval-truncation-ts">Where the sidecar fails quietly</a><a href="#what-the-sidecar-costs-to-run-eval-sidecar-bench-ts">What the sidecar costs to run</a></nav>
+    <nav class="contents" aria-label="Contents"><a class="back" href="./">← kompact</a><a href="#ranking-quality-eval-repeat-ts">Ranking quality</a><a href="#what-the-shipped-coefficients-generalise-to-eval-fit-ts">What the shipped coefficients generalise to</a><a href="#decision-policy-eval-policy-ts">Decision policy</a><a href="#what-a-wrong-drop-costs-eval-recovery-ts">What a wrong drop costs</a><a href="#whether-the-work-survives-eval-outcome-ts">Whether the work survives</a><a href="#what-it-frees-in-practice-eval-sessions-ts">What it frees in practice</a><a href="#how-many-passes-before-the-summary-is-due-eval-passes-ts">How many passes before the summary is due</a><a href="#what-the-cap-costs-and-one-idea-that-did-not-work-eval-cap-ts">What the cap costs, and one idea that did not work</a><a href="#where-the-sidecar-fails-quietly-eval-truncation-ts">Where the sidecar fails quietly</a><a href="#what-the-sidecar-costs-to-run-eval-sidecar-bench-ts">What the sidecar costs to run</a></nav>
   </div>
 </header>
 <main>
@@ -177,6 +192,7 @@ budget 0.8, floor 0.20         35.7%      89      4     64.0%      87.3%
 
 shipped code path (src/compact.ts decideAll, the same defaults):
   33.7% freed, 77.7% of reused outputs kept, 0 of 220 mutating calls dropped
+  87.9% of reused CHARACTERS kept (12.1% lost, almost all of it to the 24,000-char cap)
   without that guard 15 of them would lose their call or output, so the rule saves 15, not 220
 
 wrong  = needed outputs that were dropped anyway
@@ -233,6 +249,37 @@ agent-a7606f063386      33      42,819     41,272     3.6%      2ms
 78d7d176-4c84-4936     335     391,638    341,578    12.8%     28ms
 -------------------------------------------------------------------
 total                 1762   1,534,095  1,161,392    24.3%    190ms</pre></div>
+<h2 id="how-many-passes-before-the-summary-is-due-eval-passes-ts">How many passes before the summary is due — <code>eval/passes.ts</code></h2>
+<p>The other scripts measure one compaction. Production is a loop: the engine asks at <code>compactAtPercent</code>, kompact answers, the session keeps growing, the engine asks again. This simulates that loop on real transcripts — each pass gets the compacted prefix <em>plus the real continuation</em>, not its own output, because feeding a pass its own output measures exhaustion and reports a decay that production never sees.</p>
+<p>Same caveat as <code>sessions.ts</code>: this machine's transcripts, which grow as you work, so it is a snapshot rather than a constant.</p>
+<div class="scroller" tabindex="0" role="region" aria-label="How many passes before the summary is due — measured output"><pre>window 200,000 tokens, compacting at 60%, floor 5 pp, ceiling 6 passes
+
+session       msgs  passes   pp reclaimed per pass          ms per pass
+-----------------------------------------------------------------------
+20628921      7085       6   11.2 10.8 10.6 10.3 8.9 8.4 4.6*  39 32 31 31 32 31 32
+25e65eab      1455       2   13.2 8.9 5.0*                     30 29 29
+78d7d176      1140       1   5.6 3.0*                          25 23
+agent-a2       294       1   5.6                               29
+agent-ad       201       1   5.3 3.7*                          24 25
+
+* = the pass that fell below the floor. That is the hand-over; it is not taken.</pre></div>
+<p><strong>11 engine summaries avoided across 5 sessions.</strong> Slowest single pass 39 ms.</p>
+<p>The decay is much flatter than compacting one transcript repeatedly suggests — 11.2, 10.8, 10.6, 10.3, 8.9, 8.4 percentage points on the largest session — because fresh tool output arrives between passes. What ends the loop is the floor, not exhaustion, and raising the ceiling past 6 changes nothing: at 8 and at 12 the same session still stops at 6, because the seventh pass reclaims 4.6 points and the floor refuses it. That is what makes the ceiling a backstop rather than the dial that decides anything.</p>
+<h3 id="which-bar-to-use">Which bar to use</h3>
+<p>Every pass above, scored by both candidate rules:</p>
+<div class="scroller" tabindex="0" role="region" aria-label="How many passes before the summary is due — table (2)"><table class="data"><thead><tr><th>bar</th><th>passes taken, of 15</th></tr></thead><tbody><tr><th scope="row"><code>minReductionRatio</code> 0.25 <em>(what shipped)</em></th><td><strong>0</strong></td></tr><tr><th scope="row"><code>minReductionRatio</code> 0.15</th><td>5</td></tr><tr><th scope="row"><code>minReductionRatio</code> 0.08</th><td>11</td></tr><tr><th scope="row"><code>minFreedPercent</code> 3</th><td>14</td></tr><tr><th scope="row"><strong><code>minFreedPercent</code> 5</strong> <em>(shipped now)</em></th><td><strong>11</strong></td></tr><tr><th scope="row"><code>minFreedPercent</code> 7</th><td>8</td></tr><tr><th scope="row"><code>minFreedPercent</code> 10</th><td>5</td></tr></tbody></table></div>
+<p><code>minReductionRatio: 0.25</code> took none of them. It asks whether a pass was a large <em>fraction of the transcript</em>; the passes above run 0.05 to 0.22 of theirs, so the bar was never cleared, and kompact handed every one of these compactions to the model summary while it could still free ten points of window in under 35 ms.</p>
+<p>The unit is the fix rather than the value. Percentage points of the context window are what runs out, are comparable between a large session and a small one, and are the same unit as <code>compactAtPercent</code> — which makes the yield rule a hysteresis band for free: a taken pass leaves the fill at least <code>minFreedPercent</code> below the trigger, so the session has to grow back through it before another compaction can be requested.</p>
+<p><strong>Not verified:</strong> whether deferring the engine's summary costs the assistant anything. <code>applyDecisions</code> never touches prose, so what kompact leaves behind is verbatim tool calls and the user's and assistant's own words — not a narrative. <code>maxPasses: 6</code> is the backstop for that, and it is a guess, not a measurement.</p>
+<h2 id="what-the-cap-costs-and-one-idea-that-did-not-work-eval-cap-ts">What the cap costs, and one idea that did not work — <code>eval/cap.ts</code></h2>
+<p>The cap (<code>maxKeptChars</code>) shortens outputs the <em>ranking kept</em>. It is a separate lever from the floor, and it composes: the ranking alone frees 23.1% of the corpus, the cap alone 10.8%, and both 25.6%.</p>
+<p>Retention here is the share of <strong>reused shingles</strong> still present — the only measure both levers share, since dropping loses whole outputs and capping loses the far end of one.</p>
+<div class="scroller" tabindex="0" role="region" aria-label="What the cap costs, and one idea that did not work — table"><table class="data"><thead><tr><th>policy</th><th>freed</th><th>reuse kept</th><th>sessions keeping under half</th></tr></thead><tbody><tr><th scope="row">ranking only</th><td>23.1%</td><td>81.8%</td><td>2</td></tr><tr><th scope="row">ranking + cap 32,000</th><td>24.6%</td><td>81.7%</td><td>2</td></tr><tr><th scope="row"><strong>ranking + cap 24,000</strong> <em>(shipped)</em></th><td><strong>25.6%</strong></td><td><strong>81.6%</strong></td><td><strong>2</strong></td></tr><tr><th scope="row">ranking + cap 16,000</th><td>29.5%</td><td>81.0%</td><td>3</td></tr><tr><th scope="row">ranking + cap 8,000</th><td>42.1%</td><td>77.9%</td><td>5</td></tr></tbody></table></div>
+<p>16,000 frees four more points of the corpus and takes the sessions that keep under half of what was quoted from them from 2 to 3. That is the reason the shipped cap is still 24,000 rather than 16,000: it is faster and it frees more, but it is not <em>more reliable</em>, and the condition was both.</p>
+<h3 id="dead-end-a-cap-graded-by-the-scorer-s-confidence">Dead end: a cap graded by the scorer's confidence</h3>
+<p>The cap cannot tell a 40,000-character output the scorer was confident about from one it merely did not drop. The ranking has that number already, so the obvious move is to spend the tight cap only on outputs the scorer was lukewarm about. Measured:</p>
+<div class="scroller" tabindex="0" role="region" aria-label="What the cap costs, and one idea that did not work — table (2)"><table class="data"><thead><tr><th>policy</th><th>freed</th><th>reuse kept</th><th>sessions keeping under half</th></tr></thead><tbody><tr><th scope="row">ranking + cap 24,000</th><td>25.6%</td><td>81.6%</td><td>2</td></tr><tr><th scope="row">graded ≥0.6 → 32,000, else 12,000</th><td>33.5%</td><td>80.1%</td><td>4</td></tr><tr><th scope="row">graded ≥0.6 → 24,000, else 8,000</th><td>41.4%</td><td>78.6%</td><td>5</td></tr><tr><th scope="row">graded ≥0.8 → 48,000, else 8,000</th><td>41.8%</td><td>78.4%</td><td>5</td></tr></tbody></table></div>
+<p>Every grading is worse in the tail than the flat cap that frees the same amount. <code>keepResult</code> is the probability an output is needed <em>at all</em>; it says nothing about where inside the output the reuse sits, and among the outputs that already survived the floor it has spent its information. Not shipped.</p>
 <h2 id="where-the-sidecar-fails-quietly-eval-truncation-ts">Where the sidecar fails quietly — <code>eval/truncation.ts</code></h2>
 <p>Needs a live <code>laya-serve</code>, so this section is empty on a machine without one. The claim it backs is the page's, and until this script existed the rows behind it were prose nobody could re-run.</p>
 <div class="scroller" tabindex="0" role="region" aria-label="Where the sidecar fails quietly — measured output"><pre>sidecar: http://127.0.0.1:8000/v1/systemone

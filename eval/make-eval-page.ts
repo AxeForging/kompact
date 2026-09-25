@@ -60,6 +60,33 @@ for (let i = 0; i < lines.length; i += 1) {
     );
     continue;
   }
+  /**
+   * Pipe tables. RESULTS.md set its tabular data in fenced blocks until the
+   * pass and cap sections wanted a table a reader could scan, and a `|`-soup
+   * paragraph on the published page is not a rendering choice — it is a broken
+   * one. Header row, separator, body; nothing else of the syntax.
+   */
+  if (line.trim().startsWith('|') && (lines[i + 1] ?? '').trim().startsWith('|--')) {
+    flush();
+    const cells = (row: string): string[] =>
+      row.trim().replace(/^\||\|$/g, '').split('|').map((cell) => cell.trim());
+    const head = cells(line);
+    const body: string[][] = [];
+    for (i += 2; i < lines.length && lines[i]!.trim().startsWith('|'); i += 1) body.push(cells(lines[i]!));
+    i -= 1;
+    const nth = (blockCount.get(section) ?? 0) + 1;
+    blockCount.set(section, nth);
+    blocks.push(
+      `<div class="scroller" tabindex="0" role="region" aria-label="${escape(`${section} — table${nth > 1 ? ` (${nth})` : ''}`)}">` +
+      '<table class="data"><thead><tr>' +
+      head.map((cell) => `<th>${inline(cell)}</th>`).join('') +
+      '</tr></thead><tbody>' +
+      body.map((row) => `<tr>${row.map((cell, index) =>
+        index === 0 ? `<th scope="row">${inline(cell)}</th>` : `<td>${inline(cell)}</td>`).join('')}</tr>`).join('') +
+      '</tbody></table></div>',
+    );
+    continue;
+  }
   const heading = /^(#{1,3})\s+(.*)$/.exec(line);
   if (heading) {
     flush();
@@ -165,6 +192,21 @@ pre{
   margin:0; padding:16px; font-family: var(--mono);
   font-size:0.8125rem; line-height:1.55; font-variant-ligatures:none; color: var(--ink);
 }
+/* Tables share the scroller with the fenced blocks, so they behave the same way
+   on a narrow screen: they keep their width and the region scrolls. */
+table.data{ border-collapse: collapse; width:100%; font-family: var(--sans); font-size:0.875rem; }
+table.data th, table.data td{
+  padding: 8px 14px; text-align:left; white-space:nowrap;
+  border-bottom:1px solid var(--rule);
+}
+table.data thead th{
+  font-size:0.75rem; letter-spacing:0.06em; text-transform:uppercase;
+  color: var(--ink-2); border-bottom:1px solid var(--ink-3);
+}
+table.data tbody th{ font-weight:400; color: var(--ink); }
+table.data tbody tr:last-child th, table.data tbody tr:last-child td{ border-bottom:0; }
+table.data td{ font-variant-numeric: tabular-nums; color: var(--ink-2); }
+
 footer{
   width:100%; max-width: var(--measure); margin: 64px auto 0;
   padding-inline: var(--gutter); padding-block:24px 64px;
