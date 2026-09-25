@@ -266,6 +266,14 @@ pays 0.33 to 0.67. That is not an argument for stopping at one — the alternati
 to pass two is the model summary, which keeps no tool output verbatim at all —
 but `maxPasses: 1` buys the cheap pass and nothing else.
 
+**The transcript does not fill with receipts.** Every dropped result leaves a
+note and notes are never removed, so a repeated loop could in principle end up
+referring to outputs that are only receipts. The share of surviving tool results
+that are a note rises for two passes and then stops — 2.9%, 6.3%, 8.3%, and flat
+at about seven after that — because fresh output arrives between passes at
+roughly the rate the loop creates stubs. Seven passes deep a transcript is still
+about 93% intact results, which is why there is no dial for it.
+
 **Not verified:** what deferring the summary costs. `applyDecisions` never
 touches prose, so what survives six passes is verbatim tool calls and the
 session's own words — which is a different thing from a narrative about them.

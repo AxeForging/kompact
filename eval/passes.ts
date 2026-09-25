@@ -26,7 +26,7 @@ import { readdirSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-import { compact, messageChars, tokensIn } from '../src/compact.js';
+import { TRUNCATION_MARK, compact, messageChars, tokensIn } from '../src/compact.js';
 import { FeatureAsker } from '../src/features.js';
 import { collectToolCalls } from '../src/state.js';
 import { readTranscript } from './transcript.js';
@@ -73,6 +73,34 @@ const messageTokens = (message: Message): number => tokensIn(messageChars(messag
 const tokensOf = (messages: readonly Message[]): number =>
   messages.reduce((sum, message) => sum + messageTokens(message), 0);
 
+/**
+ * How much of what survives is a receipt rather than a result.
+ *
+ * The one quality signal a repeated loop has that a single compaction does not.
+ * Stubs accumulate monotonically — `decideAll` refuses to drop the call of a
+ * result that already carries the mark, and `minYieldChars` refuses to
+ * re-truncate one — so after several passes the surviving prose can end up
+ * referring to outputs that are now notes saying the output was removed. This
+ * counts them; nothing acts on the number yet, which is why it is printed
+ * rather than turned into a default.
+ */
+function stubShare(messages: readonly Message[]): number {
+  let results = 0;
+  let stubs = 0;
+  for (const message of messages) {
+    for (const tool of message.toolUses) {
+      if (tool.text === undefined) continue;
+      results += 1;
+      if (tool.text.includes(TRUNCATION_MARK)) stubs += 1;
+    }
+    for (const result of message.toolResults ?? []) {
+      results += 1;
+      if (result.text.includes(TRUNCATION_MARK)) stubs += 1;
+    }
+  }
+  return results === 0 ? 0 : stubs / results;
+}
+
 const asker = FeatureAsker.fromWeights();
 const trigger = Math.round((WINDOW * AT) / 100);
 const floorTokens = Math.round((WINDOW * FLOOR) / 100);
@@ -81,6 +109,8 @@ type Pass = {
   pp: number; ms: number; tokensBefore: number; tokensAfter: number; taken: boolean;
   /** Why a refused pass was refused. The two are different findings. */
   why: 'taken' | 'floor' | 'ceiling';
+  /** Share of surviving tool results that are now a truncation stub. */
+  stubs: number;
 };
 
 /** What `minReductionRatio` sees: freed as a share of the live context. */
@@ -115,6 +145,7 @@ async function runSession(all: readonly Message[]): Promise<Pass[]> {
     const taken = why === 'taken';
     passes.push({
       pp: (100 * freed) / WINDOW, ms, tokensBefore: tokens, tokensAfter: after, taken, why,
+      stubs: stubShare(result.messages),
     });
     if (!taken) return passes;
     live = result.messages;
@@ -178,6 +209,27 @@ console.log(`slowest single pass ${Math.round(slowest)} ms.`);
 ppByPass.forEach((values, index) => {
   console.log(`  pass ${index + 1}: median ${median(values).toFixed(1)} pp over ${values.length} sessions`);
 });
+
+/**
+ * What the loop does to the record, which the pp column cannot show.
+ *
+ * Every dropped result leaves a note saying it was dropped, and those notes are
+ * never removed. Watching the share climb is the only way to see the cost of a
+ * repeated loop in the transcript itself.
+ */
+{
+  const byPass: number[][] = [];
+  for (const row of rows) {
+    row.passes.forEach((pass, index) => { (byPass[index] ??= []).push(pass.stubs); });
+  }
+  console.log('\nof the tool results that survive, how many are now a truncation note:');
+  byPass.forEach((values, index) => {
+    console.log(`  after pass ${index + 1}: ${(100 * median(values)).toFixed(1)}% ` +
+      `(worst ${(100 * Math.max(...values)).toFixed(1)}%)`);
+  });
+  console.log('  Nothing acts on this yet. It is the quality signal a single');
+  console.log('  compaction does not have, and it is here to be watched.');
+}
 
 /**
  * What the shipped default would have done with the same passes.
@@ -301,6 +353,15 @@ if (PUBLISH) {
       ${MAX_PASSES} is not where the loop runs out &#8212; it is where this hands over anyway,
       because <a href="#checked">what deferring the summary costs</a> is not measured, and a
       backstop whose value is a judgement should be the conservative one.
+    </p>
+    <p>
+      The worry a loop like this raises is that the transcript fills with receipts: every dropped
+      result leaves a note, and notes are never removed. Measured, it does not happen. The share
+      of surviving tool results that are a note rises for two passes and then stops &#8212;
+      <span class="num val">2.9%</span>, <span class="num val">6.3%</span>,
+      <span class="num val">8.3%</span>, and flat at about seven after that &#8212; because fresh
+      output arrives between passes at roughly the rate the loop creates stubs. A transcript
+      seven passes deep is still about 93% intact results, which is why there is no dial for it.
     </p>
   </details>`;
 

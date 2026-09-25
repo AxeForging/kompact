@@ -269,6 +269,31 @@ no tool output verbatim at all. What the table settles is that the extra passes
 are not free, and anyone who wants the cheap pass and nothing else can set
 `maxPasses: 1`.
 
+### Stub saturation, which does not happen
+
+Every dropped result leaves a note in its place, and those notes are never
+removed — `decideAll` refuses to drop the call of a result that already carries
+the mark, and `minYieldChars` refuses to re-truncate one. The worry a repeated
+loop raises is that the surviving prose ends up referring to outputs that are
+now only receipts. The share of surviving tool results that are a truncation
+note, measured after each pass:
+
+| after pass | median | worst session |
+|---:|---:|---:|
+| 1 | 2.9% | 7.6% |
+| 2 | 6.3% | 7.9% |
+| 3 | 8.3% | 8.3% |
+| 4 | 7.3% | 7.3% |
+| 5 | 7.3% | 7.3% |
+| 6 | 6.8% | 6.8% |
+| 7 | 7.0% | 7.0% |
+
+It rises for two passes and then stops, because fresh un-truncated output keeps
+arriving between passes at about the rate the loop creates stubs. A transcript
+seven passes deep is not mostly receipts; it is about 93% intact results. This
+is the one place the loop measures *better* than the worry it raised, and it is
+why no `maxStubShare` dial exists: there is nothing for it to catch.
+
 **Not verified:** whether deferring the engine's summary costs the assistant
 anything. `applyDecisions` never touches prose, so what kompact leaves behind is
 verbatim tool calls and the user's and assistant's own words — not a narrative.
