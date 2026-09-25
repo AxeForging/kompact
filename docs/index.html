@@ -467,6 +467,26 @@ details.more > *:not(summary):last-child{ margin-bottom: var(--space-md); }
   details.more::details-content{ content-visibility: visible !important; }
   details.more > *:not(summary){ content-visibility: visible !important; }
 }
+/* ── the stream ────────────────────────────────────────────────────────────
+   The recorder's whole job, played back on the calls it actually saw: each one
+   lands on a shape, and almost none of them lands on a shape anything else
+   shares. The six bars fill; the counter beside them runs away. That gap is the
+   finding, and it is easier to watch than to read. */
+.stream{ margin-top: var(--space-lg); border-top: 2px solid var(--ink); padding-top: var(--space-md); }
+.stream__bar{ display:flex; gap: var(--space-lg); align-items: baseline; flex-wrap: wrap;
+  margin-bottom: var(--space-md); }
+.stream__list{ list-style:none; margin:0; padding:0; }
+.stream__row{ display:grid; grid-template-columns: 22ch minmax(0,1fr) 5ch;
+  gap: var(--space-md); align-items:center; padding: var(--space-2xs) 0;
+  border-bottom:1px solid var(--rule); font-family: var(--sans); font-size: var(--text-xs); }
+.stream__row code{ font-size: 1em; }
+.stream__track{ height: 10px; background: var(--paper-sunk); position:relative; }
+.stream__fill{ position:absolute; inset:0 auto 0 0; width:0; background: var(--accent-ink); }
+.stream__n{ text-align:right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+@media (max-width: 560px){
+  .stream__row{ grid-template-columns: minmax(0,1fr) 5ch; }
+  .stream__track{ grid-column: 1 / -1; }
+}
 table.data{ width:100%; min-width: 30rem; border-collapse: collapse; font-family: var(--sans); font-size: var(--text-sm); }
 table.data th, table.data td{ text-align:left; padding: var(--space-xs) var(--space-md) var(--space-xs) 0;
   border-bottom: 1px solid var(--rule); font-variant-numeric: tabular-nums; }
@@ -1055,21 +1075,21 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
 
   <!-- signals:render -->
-  <p class="label">25 shapes that repeated, of 2,000 recorded over 40 sessions and 2,166 tool calls</p>
+  <p class="label">27 shapes that repeated, of 2,000 recorded over 40 sessions and 2,417 tool calls</p>
       <div class="scroller" data-label="Table: what repeated">
   <table class="data">
     <thead><tr><th>Kind</th><th>Signature</th><th class="n">times</th><th class="n">sessions</th><th class="n">calls</th><th class="n">chars</th><th class="n">est.</th></tr></thead>
     <tbody>
-      <tr class="dim"><td>the same command</td><td><code>sed -n</code></td><td class="n">85</td><td class="n">2</td><td class="n">85</td><td class="n">157,338</td><td class="n">242.3</td></tr>
-      <tr class="dim"><td>the same command</td><td><code>grep -n | head -&lt;n&gt;</code></td><td class="n">21</td><td class="n">2</td><td class="n">21</td><td class="n">29,787</td><td class="n">50.8</td></tr>
-      <tr class="dim"><td>the same command</td><td><code>python3 -c</code></td><td class="n">32</td><td class="n">2</td><td class="n">32</td><td class="n">16,227</td><td class="n">48.2</td></tr>
+      <tr class="dim"><td>the same command</td><td><code>sed -n</code></td><td class="n">95</td><td class="n">2</td><td class="n">95</td><td class="n">167,518</td><td class="n">262.5</td></tr>
+      <tr class="dim"><td>the same command</td><td><code>python3 -c</code></td><td class="n">55</td><td class="n">2</td><td class="n">55</td><td class="n">24,781</td><td class="n">79.8</td></tr>
+      <tr class="dim"><td>the same command</td><td><code>grep -n | head -&lt;n&gt;</code></td><td class="n">25</td><td class="n">2</td><td class="n">25</td><td class="n">32,212</td><td class="n">57.2</td></tr>
       <tr><td>the same run of tools</td><td><code>Read → Edit → Edit</code></td><td class="n">16</td><td class="n">2</td><td class="n">48</td><td class="n">&#8212;</td><td class="n">48.0</td></tr>
       <tr><td>the same run of tools</td><td><code>Read → Read → Edit</code></td><td class="n">14</td><td class="n">2</td><td class="n">42</td><td class="n">&#8212;</td><td class="n">42.0</td></tr>
       <tr class="dim"><td>the same command</td><td><code>cat &lt;path&gt;</code></td><td class="n">10</td><td class="n">2</td><td class="n">10</td><td class="n">29,901</td><td class="n">39.9</td></tr>
       <tr><td>the same run of tools</td><td><code>Read → Write → Write</code></td><td class="n">7</td><td class="n">2</td><td class="n">21</td><td class="n">&#8212;</td><td class="n">21.0</td></tr>
       <tr><td>the same run of tools</td><td><code>Read → Read → Write</code></td><td class="n">6</td><td class="n">2</td><td class="n">18</td><td class="n">&#8212;</td><td class="n">18.0</td></tr>
+      <tr class="dim"><td>the same command</td><td><code>grep -n</code></td><td class="n">10</td><td class="n">2</td><td class="n">10</td><td class="n">3,216</td><td class="n">13.2</td></tr>
       <tr class="dim"><td>the same command</td><td><code>cat | tail -&lt;n&gt;</code></td><td class="n">10</td><td class="n">2</td><td class="n">10</td><td class="n">2,916</td><td class="n">12.9</td></tr>
-      <tr class="dim"><td>the same command</td><td><code>grep -n</code></td><td class="n">9</td><td class="n">2</td><td class="n">9</td><td class="n">3,074</td><td class="n">12.1</td></tr>
     </tbody>
   </table>
   </div>
@@ -1079,8 +1099,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
   <div class="finding finding--loss reveal">
     <p>Of <span class="val">2,000</span> shapes recorded,
-      <span class="val">25</span> repeated enough to propose — and
-      <span class="val">9</span> of the 9 repeated command shapes are generic
+      <span class="val">27</span> repeated enough to propose — and
+      <span class="val">10</span> of the 10 repeated command shapes are generic
       shell verbs. The highest-ranked thing this found is
       <code>sed -n</code>.</p>
   </div>
@@ -1091,6 +1111,16 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       rewards total work and a generic verb runs more often than a workflow does.
   </p>
   <!-- /signals:render -->
+
+  <div class="stream" id="stream" hidden>
+    <div class="stream__bar">
+      <p class="demo__stat">Commands seen<b><span id="stream-seen">0</span></b></p>
+      <p class="demo__stat">On a shape nothing else shares<b><span id="stream-once">0</span></b></p>
+      <button class="demo__run" type="button" id="stream-run">Watch it count</button>
+    </div>
+    <ol class="stream__list" id="stream-list"></ol>
+    <p class="caption" id="stream-caption"></p>
+  </div>
 
   <details class="more">
     <summary>Why this is not established yet, and what it cost to find out</summary>
@@ -1727,6 +1757,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 </div>
 </footer>
 
+<script src="signals-data.js"></script>
 <script src="demo-data.js"></script>
 <script src="distribution-data.js"></script>
 <script src="timeline-data.js"></script>
@@ -1845,6 +1876,91 @@ const openToHash = () => {
 };
 addEventListener('hashchange', openToHash);
 openToHash();
+
+/* ── the stream ────────────────────────────────────────────────────────────
+   Replays the arrival order `eval/signals-fixture.ts` recorded: for each command
+   the recorder saw, which of the six most-repeated shapes it landed on, or none.
+   Indices only — no text travels in the data. */
+const streamBox = document.getElementById('stream');
+const streamData = window.SIGNALS;
+if (streamBox && streamData && streamData.stream.length) {
+  const list = document.getElementById('stream-list');
+  const seenEl = document.getElementById('stream-seen');
+  const onceEl = document.getElementById('stream-once');
+  const runEl = document.getElementById('stream-run');
+  const capEl = document.getElementById('stream-caption');
+  const fmt = new Intl.NumberFormat('en-GB');
+  const top = streamData.rows[0] ? streamData.rows[0].n : 1;
+
+  const fills = streamData.rows.map((row) => {
+    const item = document.createElement('li');
+    item.className = 'stream__row';
+    const name = document.createElement('code');
+    name.textContent = row.sig;
+    const track = document.createElement('span');
+    track.className = 'stream__track';
+    const fill = document.createElement('span');
+    fill.className = 'stream__fill';
+    track.append(fill);
+    const n = document.createElement('span');
+    n.className = 'stream__n';
+    n.textContent = '0';
+    item.append(name, track, n);
+    list.append(item);
+    return { fill, n };
+  });
+
+  capEl.textContent = `${fmt.format(streamData.commands)} commands, from the sessions in the table `
+    + `above. The bars are the six shapes that repeated most; the counter beside them is every `
+    + `command that landed on a shape nothing else shares — ${fmt.format(streamData.shapes)} shapes `
+    + `were recorded and ${streamData.repeated} of them repeated at all.`;
+
+  const paint = (upto) => {
+    const counts = streamData.rows.map(() => 0);
+    let once = 0;
+    for (let i = 0; i < upto; i += 1) {
+      const seat = streamData.stream[i];
+      if (seat >= 0) counts[seat] += 1; else once += 1;
+    }
+    counts.forEach((count, i) => {
+      fills[i].fill.style.width = `${(count / top) * 100}%`;
+      fills[i].n.textContent = fmt.format(count);
+    });
+    seenEl.textContent = fmt.format(upto);
+    onceEl.textContent = fmt.format(once);
+  };
+
+  const RUN_MS = 3200;
+  let playing = false;
+  const settle = () => { playing = false; paint(streamData.stream.length); label(); };
+  const label = () => { runEl.textContent = playing ? 'Stop' : 'Watch it count'; };
+  const play = () => {
+    if (playing) return;
+    playing = true;
+    label();
+    const started = performance.now();
+    const step = (now) => {
+      if (!playing) return;
+      const t = Math.min(1, (now - started) / RUN_MS);
+      paint(Math.round(t * streamData.stream.length));
+      if (t < 1) requestAnimationFrame(step); else settle();
+    };
+    requestAnimationFrame(step);
+    // Same guarantee the plate makes: a run that never gets its frames still
+    // lands on the real totals rather than freezing part-way.
+    setTimeout(() => { if (playing) settle(); }, RUN_MS + 250);
+  };
+
+  // Settled first, so with the script starved the numbers on screen are the true
+  // ones rather than a half-run.
+  paint(streamData.stream.length);
+  streamBox.hidden = false;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    runEl.hidden = true;
+  } else {
+    runEl.addEventListener('click', () => { if (playing) settle(); else play(); });
+  }
+}
 
 // Paper has no disclosure widgets. Every folded block opens for the print and
 // goes back to how the reader left it afterwards.

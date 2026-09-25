@@ -5,7 +5,7 @@ window.DEMO = {
   "outputChars": 116266,
   "charsBefore": 116984,
   "charsAfter": 108592,
-  "kept": 4,
+  "kept": 5,
   "resultsDropped": 1,
   "callsDropped": 1
  },

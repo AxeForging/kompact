@@ -358,6 +358,7 @@ describe('published figures match eval/RESULTS.md', () => {
       'id="sweep" hidden',
       'id="open-all" hidden',
       'class="gloss-back" hidden',
+      'id="stream" hidden',
     ]) {
       expect(noscript, `a control that cannot act is visible: ${control}`).toContain(control);
     }

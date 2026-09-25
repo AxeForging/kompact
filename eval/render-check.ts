@@ -151,6 +151,25 @@ const PROBE = String.raw`
         'copy keeps one line per command @' + w, label + ' -> ' + got.length + '/' + want.length);
   }
 
+  // The stream replays real arrival order, and it paints the settled totals before
+  // it is ever run — so whatever is on screen with the script starved is still
+  // true. Assert the settled numbers are the ones in the data, not a half-run.
+  const streamData = window.SIGNALS;
+  if (streamData) {
+    const seen = document.getElementById('stream-seen');
+    const once = document.getElementById('stream-once');
+    const num = (el) => Number((el ? el.textContent : '0').replace(/[^0-9]/g, ''));
+    const singles = streamData.stream.filter((x) => x < 0).length;
+    say(num(seen) === streamData.stream.length, 'the stream rests on its real total @' + w,
+        num(seen) + ' of ' + streamData.stream.length);
+    say(num(once) === singles, 'the stream rests on the real singleton count @' + w,
+        num(once) + ' of ' + singles);
+    const bars = [...document.querySelectorAll('.stream__n')].map((el) => num(el));
+    say(bars.length === streamData.rows.length &&
+        bars.every((n, i) => n === streamData.rows[i].n),
+        'every bar rests on its own count @' + w, bars.join(','));
+  }
+
   // Every in-page link, not just the nav: the glossary's twelve term anchors are
   // the ones a reader arrives at mid-argument, and nothing was checking them.
   const seenTarget = new Set();
