@@ -82,7 +82,7 @@ if (!top) throw new Error('the fixture has no rows');
 const workflow = ranked.find((row) => row.kind === 'sequence' && /Bash\(/.test(row.sig));
 const workflowPlace = workflow ? ranked.indexOf(workflow) + 1 : 0;
 
-const markup = `  <p class="label">${fixture.meta.repeated} shapes that repeated, of ` +
+const markup = `  <p class="caption caption--fig">${fixture.meta.repeated} shapes that repeated, of ` +
   `${fixture.meta.shapes.toLocaleString()} recorded over ${fixture.meta.sessions} sessions ` +
   `and ${fixture.meta.calls.toLocaleString()} tool calls</p>
       <div class="scroller" data-label="Table: what repeated">

@@ -276,6 +276,20 @@ ul.plain li::marker{ color: var(--ink-3); }
   text-decoration:none; white-space:nowrap;
 }
 .contents__all{ cursor:pointer; }
+/* The tools were taking 130px of a 390px screen, which left the bar showing two
+   of nine sections — a navigation bar hiding the navigation. Below 640px the
+   word goes and "Open all" goes with it: it is a convenience for reading the
+   whole argument at a desk, and the folds still open one at a time. */
+.contents__short{ display:none; }
+@media (max-width: 640px){
+  .contents__all{ display:none; }
+  .contents__word{ display:none; }
+  /* Short forms rather than truncation: nine sections you can see beats two you
+     can read in full. Written out as two spans so the wide label keeps its own
+     capitalisation instead of being transformed into it. */
+  .contents__long{ display:none; }
+  .contents__short{ display:inline; }
+}
 .contents__all:hover, .contents__top:hover{ color: var(--accent-ink); }
 .contents__all[aria-pressed="true"]{ color: var(--accent-ink); border-bottom-color: currentColor; }
 .contents__top:hover{ color: var(--accent-ink) !important; }
@@ -381,8 +395,23 @@ table.rows caption{ text-align:left; }
 }
 .chart__key span{ display:inline-flex; align-items:center; gap: var(--space-2xs); }
 .key::before{ content:""; flex: 0 0 auto; }
-.key--sd::before{ width:14px; height:2px; background: var(--ink-2); }
-.key--worst::before{ width:2px; height:12px; background: var(--accent-ink); }
+/* The swatches draw what the chart draws. The spread has 1.5px end-caps and the
+   worst tick is 19px with a triangular cap — the second, greyscale-legible
+   channel that was added on purpose and then left out of its own legend. */
+.key--sd::before{
+  width:14px; height:9px; align-self:center;
+  background:
+    linear-gradient(var(--ink-2), var(--ink-2)) center / 100% 1.5px no-repeat,
+    linear-gradient(var(--ink-2), var(--ink-2)) left / 1.5px 100% no-repeat,
+    linear-gradient(var(--ink-2), var(--ink-2)) right / 1.5px 100% no-repeat;
+}
+.key--worst::before{
+  width:6px; height:19px; align-self:center;
+  background:
+    linear-gradient(var(--accent-ink), var(--accent-ink)) center / 2px 100% no-repeat,
+    linear-gradient(var(--accent-ink), var(--accent-ink)) center top / 6px 3px no-repeat;
+  clip-path: polygon(0 0, 100% 0, 100% 16%, 66% 16%, 66% 100%, 33% 100%, 33% 16%, 0 16%);
+}
 
 /* ── data tables ──────────────────────────────────────────────────────── */
 .scroller{
@@ -499,6 +528,9 @@ table.data th, table.data td{ text-align:left; padding: var(--space-xs) var(--sp
 table.data thead th{ font-size: var(--text-xs); letter-spacing:0.01em;
   color: var(--ink-3); font-weight:600; border-bottom: 1px solid var(--rule-firm); }
 table.data td.n, table.data th.n{ text-align:right; }
+/* The last cell inherited the column gutter as padding, so every table's figures
+   sat 16px inside the rule beneath them. */
+table.data tr > *:last-child{ padding-right: 0; }
 /* Backstop. Two &nbsp;-joined runs put 201px of horizontal scroll on a 390px
    screen, and the worse part was that the render check could not see it: its
    mobile pass was laying out at 591px and reporting the page clean. */
@@ -510,6 +542,8 @@ table.data tr.dim code{ color: var(--ink-3); }
 table.data tbody tr:last-child > *{ border-bottom: 1px solid var(--rule-firm); }
 table.data tr.same td, table.data tr.same th{ background: var(--accent-wash); }
 table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink); font-weight:700; }
+/* A caption that labels a figure sits above it and keeps its distance. */
+.caption--fig{ margin: 0 0 var(--space-sm); caption-side: top; text-align: left; }
 .caption{ font-family: var(--sans); font-size: var(--text-xs); color: var(--ink-3);
   margin-top: var(--space-xs); max-width: 74ch; line-height:1.5; }
 
@@ -782,10 +816,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 <nav class="contents-bar" aria-label="Contents">
   <div class="contents-bar__row wrap">
     <div class="contents">
-    <a href="#result">Evidence</a><a href="#demo">Watch it decide</a><a href="#shape">The shape of it</a><a href="#signals">What you repeat</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#glossary">Glossary</a><a href="#install">Install</a></div>
+    <a href="#result"><span class="contents__long">Evidence</span><span class="contents__short">Evidence</span></a><a href="#demo"><span class="contents__long">Watch it decide</span><span class="contents__short">Watch</span></a><a href="#shape"><span class="contents__long">The shape of it</span><span class="contents__short">Shape</span></a><a href="#signals"><span class="contents__long">What you repeat</span><span class="contents__short">Repeats</span></a><a href="#cost">Cost</a><a href="#losses"><span class="contents__long">Where it loses</span><span class="contents__short">Losses</span></a><a href="#checked"><span class="contents__long">Verification</span><span class="contents__short">Verified</span></a><a href="#glossary">Glossary</a><a href="#install">Install</a></div>
     <p class="contents__tools">
       <button class="contents__all" type="button" id="open-all" hidden>Open all</button>
-      <a class="contents__top" href="#top">Top&nbsp;&#8593;</a>
+      <a class="contents__top" href="#top" aria-label="Back to top"><span class="contents__word">Top&nbsp;</span>&#8593;</a>
     </p>
   </div>
 </nav>
@@ -803,7 +837,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
   <div class="chart">
     <table class="rows">
-      <caption class="label" style="margin-bottom:var(--space-xs)">Area under ROC — the chance
+      <caption class="caption caption--fig" style="margin-bottom:var(--space-xs)">Area under ROC — the chance
         that a needed output outranks an unneeded one, picked at random</caption>
       <colgroup><col style="width:21ch"><col><col style="width:15ch"></colgroup>
       <tbody>
@@ -1081,7 +1115,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
 
   <!-- signals:render -->
-  <p class="label">27 shapes that repeated, of 2,000 recorded over 40 sessions and 2,417 tool calls</p>
+  <p class="caption caption--fig">27 shapes that repeated, of 2,000 recorded over 40 sessions and 2,417 tool calls</p>
       <div class="scroller" data-label="Table: what repeated">
   <table class="data">
     <thead><tr><th>Kind</th><th>Signature</th><th class="n">times</th><th class="n">sessions</th><th class="n">calls</th><th class="n">chars</th><th class="n">est.</th></tr></thead>

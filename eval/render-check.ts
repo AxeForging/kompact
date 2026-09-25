@@ -191,6 +191,22 @@ const PROBE = String.raw`
     }
   }
 
+  // A navigation bar that hides most of the navigation is not navigation. It
+  // scrolls, and the active item is scrolled into view, but a reader should be
+  // able to see that more sections exist.
+  const row = document.querySelector('.contents-bar .contents');
+  if (row) {
+    const box = row.getBoundingClientRect();
+    let visible = 0;
+    for (const link of row.querySelectorAll('a')) {
+      const at = link.getBoundingClientRect();
+      if (at.left >= box.left - 1 && at.right <= box.right + 1) visible += 1;
+    }
+    const total = row.querySelectorAll('a').length;
+    say(visible >= 3, 'the contents bar shows more than a couple of sections @' + w,
+        visible + ' of ' + total + ' links, row ' + Math.round(box.width) + 'px');
+  }
+
   // Every in-page link, not just the nav: the glossary's twelve term anchors are
   // the ones a reader arrives at mid-argument, and nothing was checking them.
   const seenTarget = new Set();
