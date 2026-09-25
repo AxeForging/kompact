@@ -27,7 +27,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      # enablement: true turns Pages on from the workflow, so the README's URL
+      # does not depend on someone remembering to flip a repository setting.
       - uses: actions/configure-pages@v5
+        with: { enablement: true }
       - uses: actions/upload-pages-artifact@v3
         with: { path: docs }
       - id: deployment

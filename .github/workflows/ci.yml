@@ -38,7 +38,10 @@ jobs:
       # breaks a session when it regresses had no pre-merge enforcement at all.
       - name: the transcript invariant must have run
         run: |
+          # vitest wraps the " > " between suite and test name in ANSI codes, so
+          # the separator has to be stripped before the name can be matched.
           bun x vitest run test/real-transcript.test.ts --reporter=verbose 2>&1 \
+            | sed -r 's/\x1b\[[0-9;]*m//g' \
             | grep -q "committed session fixture > compacts offline and leaves no orphaned"
 
       - run: bun run validate
