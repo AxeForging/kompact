@@ -224,6 +224,29 @@ describe('published figures match eval/RESULTS.md', () => {
     }
   });
 
+  // Renumbering has silently broken these twice. Moving the demo to the front of
+  // the page shifted Evidence from 01 to 02, and two references — one to a
+  // calibration figure, one to an outcome — went on naming the old number and
+  // pointing a reader at the wrong section. The page writes them as
+  // "section NN, Name", which is exactly enough to check by machine.
+  it('every cross-reference names the section it actually points at', () => {
+    const page = read('docs/index.html');
+    const numbers = new Map(
+      [...page.matchAll(/rubric__n">(\d\d)<\/span>([^<]+)/g)].map((m) => [
+        (m[2] ?? '').trim(), (m[1] ?? ''),
+      ]),
+    );
+    expect(numbers.size, 'no rubric numbers found, so this test proves nothing').toBeGreaterThan(4);
+    const refs = [...page.matchAll(/[Ss]ection (\d\d), ([^<]+?)</g)];
+    expect(refs.length, 'no named cross-references found').toBeGreaterThan(3);
+    for (const ref of refs) {
+      const [, number, name] = ref;
+      const actual = numbers.get((name ?? '').trim());
+      expect(actual, `"section ${number}, ${name}" names no section on the page`).toBeDefined();
+      expect(actual, `"${name}" is section ${actual}, but a reference calls it ${number}`).toBe(number);
+    }
+  });
+
   // These do mean something — as history. Retracted claims may be named by the
   // files that narrate the retraction, and nowhere else.
   it('states a retracted claim only where it is retracted', () => {

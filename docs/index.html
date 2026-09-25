@@ -662,7 +662,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </p>
   </div>
   <div class="colophon reveal" style="--d:170ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>197</b> tests</span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>198</b> tests</span>
     <span><b>0</b> network calls by default</span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
 </div>
@@ -670,13 +670,116 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 <nav class="contents-bar" aria-label="Contents">
   <div class="contents wrap">
-    <a href="#result">Evidence</a><a href="#shape">The shape of it</a><a href="#demo">Watch it decide</a><a href="#signals">What you repeat</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#glossary">Glossary</a><a href="#install">Install</a>
+    <a href="#demo">Watch it decide</a><a href="#result">Evidence</a><a href="#shape">The shape of it</a><a href="#signals">What you repeat</a><a href="#cost">Cost</a><a href="#losses">Where it loses</a><a href="#checked">Verification</a><a href="#glossary">Glossary</a><a href="#install">Install</a>
   </div>
 </nav>
 
 <main>
+<section class="wrap" id="demo" aria-labelledby="demo-h">
+  <p class="rubric"><span class="rubric__n">01</span>Watch it decide</p>
+  <h2 id="demo-h">Nine calls, two probabilities each, one ranking.</h2>
+  <p class="lede">
+    A session that finds a test failing only on CI, tracks it to a timezone in a fixture, and
+    fixes it. Below is what the shipped scorer did to it, every row written into this page when
+    the demonstration was generated, with nothing overridden. The five outcomes are defined in
+    <a href="#glossary">the glossary</a>; <em>Replay</em> re-runs the decisions in the order the
+    ranking spends in, lowest first.
+  </p>
+
+  <div class="demo">
+    <!-- demo:render -->
+    <div class="demo__bar">
+      <p class="demo__stat">Tool output<b>116,266 chars</b></p>
+      <p class="demo__stat demo__stat--freed">Freed<b><span id="d-freed">8,393</span> chars</b></p>
+      <p class="demo__stat">Decided<b><span id="d-count">9</span> of 9</b></p>
+      <button class="demo__run" type="button" id="d-run" hidden>Replay — 7% freed</button>
+    </div>
+    <p class="visually-hidden" id="d-status" role="status" aria-live="polite"></p>
+    <p class="demo__legend" aria-hidden="true">
+      <span>Tool</span><span>Output, and what survives of it</span>
+      <span>keep&#8209;result &#183; keep&#8209;call<br>size</span><span>Outcome</span>
+    </p>
+    <ol class="demo__list" id="d-list">
+      <li class="demo__call" data-state="head"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:38.3%"><span class="demo__fill" style="--keep:0.0543"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.158 · <span class="visually-hidden">keep-call </span>0.973<br>7,186 ch</span><span class="demo__outcome">head only</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:86.1%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.762 · <span class="visually-hidden">keep-call </span>0.946<br>36,341 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="small"><span class="demo__who"><b>Grep</b><span>JWT_SECRET</span></span><span class="demo__track"><span class="demo__was" style="--w:4.3%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.020 · <span class="visually-hidden">keep-call </span>0.037<br>89 ch</span><span class="demo__outcome">too small</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>src/config.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:53.5%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.282 · <span class="visually-hidden">keep-call </span>0.270<br>14,026 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="dropped"><span class="demo__who"><b>Bash</b><span>git log --oneline -20 -- src/auth.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:17.8%"><span class="demo__fill" style="--keep:0"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.081 · <span class="visually-hidden">keep-call </span>0.093<br>1,547 ch</span><span class="demo__outcome">dropped</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>.github/workflows/ci.yml</span></span><span class="demo__track"><span class="demo__was" style="--w:33.9%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.282 · <span class="visually-hidden">keep-call </span>0.270<br>5,615 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Bash</b><span>gh run view 4821 --log | tail -60</span></span><span class="demo__track"><span class="demo__was" style="--w:100%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.228 · <span class="visually-hidden">keep-call </span>0.305<br>49,001 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="pinned"><span class="demo__who"><b>Edit</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:2.4%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>1.000 · <span class="visually-hidden">keep-call </span>1.000<br>29 ch</span><span class="demo__outcome">pinned</span></li>
+      <li class="demo__call" data-state="pinned"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:22.3%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>1.000 · <span class="visually-hidden">keep-call </span>1.000<br>2,432 ch</span><span class="demo__outcome">pinned</span></li>
+    </ol>
+    <!-- /demo:render -->
+  </div>
+
+  <p class="caption">
+    <b>Two layers to every bar.</b> The outline is how big that result was against the largest in
+    the session; the filled part is how much of it survived the decision. So a <em>head only</em>
+    row keeps its outline and shrinks its fill to 300 characters, and a <em>dropped</em> row keeps
+    its outline with nothing in it.
+  </p>
+  <p class="caption">
+    <b>Freed is not a slice of tool output.</b> Dropping a call takes its input with it, so a
+    few of those characters were never in the column to its left. The <code>git&nbsp;log</code>
+    row above is the clearest case: 1,547 characters of output, 1,597 freed.
+  </p>
+  <p class="caption">
+    The transcript is constructed — every real session on this machine is someone's work and
+    this page is public. The decisions are not: the list is produced by running the shipped
+    scorer with the shipped defaults, and nothing in it was chosen by hand. Regenerate it with
+    <code>npm&nbsp;run&nbsp;docs:demo</code>.
+  </p>
+
+  <section class="sweep" id="sweep" hidden aria-labelledby="sweep-h">
+    <h3 id="sweep-h">What stops it: the floor, not the budget</h3>
+    <p>
+      A real session out of the committed corpus, at the moment compaction fires. Its calls are
+      lined up in the order the budget spends them — lowest score first — and the sweep takes
+      them one at a time until it is done. Watch where it stops.
+    </p>
+    <div class="sweep__plot">
+      <canvas id="sweep-canvas" width="1000" height="260" aria-hidden="true"></canvas>
+    </div>
+    <p class="sweep__say" id="sweep-say" role="status" aria-live="polite"></p>
+    <div class="sweep__bar">
+      <p class="demo__stat">Freed<b><span id="sweep-freed">0</span> chars</b></p>
+      <p class="demo__stat">Of a budget of<b><span id="sweep-budget">0</span> chars</b></p>
+      <button class="demo__run" type="button" id="sweep-run">Run the sweep</button>
+    </div>
+    <p class="caption" id="sweep-caption"></p>
+  </section>
+
+  <h3>The Edit it wanted to delete</h3>
+  <p>
+    The first time this ran, <strong>the scorer dropped the <code>Edit</code> that fixed the
+    bug</strong>. Both its scores were low and honestly so — “Applied 1 edit to src/auth.ts”
+    is worth nothing, and exactly 1 of the 220 mutating calls in the corpus had an output
+    that was ever needed verbatim. But the <em>input</em> is the only record that the change
+    happened, and unlike a read it cannot be recovered by running it again.
+  </p>
+  <p>
+    So a mutating call is no longer the scorer’s decision. <code>Edit</code>, <code>Write</code>,
+    <code>MultiEdit</code> and <code>NotebookEdit</code> keep their call whatever the
+    probabilities say; only their output can go. The rule covers
+    <span class="num val">220</span> calls in the corpus, and re-running the same decisions with
+    the guard removed shows what it actually saves: <span class="num val">15</span> of them
+    would otherwise lose their call or their output. It costs nothing — exactly one of the 220
+    had an output that was ever needed verbatim.
+  </p>
+  <p>
+    A second rule came from the same place. The <code>Grep</code> in the list above scored 0.020
+    and 0.037 — about as low as this scorer goes — and dropping it would have freed
+    <span class="num val">126 characters</span> — more than the 89 its result holds, because
+    dropping the call takes its input with it. Roughly thirty tokens, against a real chance of
+    losing something the session still needed. Below <code>minYieldChars</code> the ranking is
+    not worth acting on however confident it is, so that call reads <em>too small</em> rather
+    than <em>dropped</em>.
+  </p>
+</section>
+
 <section class="wrap" id="result" aria-labelledby="result-h">
-  <p class="rubric"><span class="rubric__n">01</span>Evidence</p>
+  <p class="rubric"><span class="rubric__n">02</span>Evidence</p>
   <h2 id="result-h">It replaces a neural model that it beat.</h2>
   <p class="lede">
     The plugin started as a port onto <a rel="noopener" href="https://github.com/NandhaKishorM/laya">Laya</a>,
@@ -803,7 +906,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 <section class="flooded" id="shape" aria-labelledby="shape-h">
   <div class="wrap">
-  <p class="rubric rubric--flood"><span class="rubric__n">02</span>The shape of it</p>
+  <p class="rubric rubric--flood"><span class="rubric__n">03</span>The shape of it</p>
   <h2 id="shape-h">Two thousand two hundred and thirty‑nine decisions.</h2>
   <p class="lede lede--flood">
     Every labelled call in the corpus, placed by the probability the shipped model gives it.
@@ -842,109 +945,6 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </figcaption>
   </figure>
   </div>
-</section>
-
-<section class="wrap" id="demo" aria-labelledby="demo-h">
-  <p class="rubric"><span class="rubric__n">03</span>Watch it decide</p>
-  <h2 id="demo-h">Nine calls, two probabilities each, one ranking.</h2>
-  <p class="lede">
-    A session that finds a test failing only on CI, tracks it to a timezone in a fixture, and
-    fixes it. Below is what the shipped scorer did to it, every row written into this page when
-    the demonstration was generated, with nothing overridden. The five outcomes are defined in
-    <a href="#glossary">the glossary</a>; <em>Replay</em> re-runs the decisions in the order the
-    ranking spends in, lowest first.
-  </p>
-
-  <div class="demo">
-    <!-- demo:render -->
-    <div class="demo__bar">
-      <p class="demo__stat">Tool output<b>116,266 chars</b></p>
-      <p class="demo__stat demo__stat--freed">Freed<b><span id="d-freed">8,393</span> chars</b></p>
-      <p class="demo__stat">Decided<b><span id="d-count">9</span> of 9</b></p>
-      <button class="demo__run" type="button" id="d-run" hidden>Replay — 7% freed</button>
-    </div>
-    <p class="visually-hidden" id="d-status" role="status" aria-live="polite"></p>
-    <p class="demo__legend" aria-hidden="true">
-      <span>Tool</span><span>Output, and what survives of it</span>
-      <span>keep&#8209;result &#183; keep&#8209;call<br>size</span><span>Outcome</span>
-    </p>
-    <ol class="demo__list" id="d-list">
-      <li class="demo__call" data-state="head"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:38.3%"><span class="demo__fill" style="--keep:0.0543"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.158 · <span class="visually-hidden">keep-call </span>0.973<br>7,186 ch</span><span class="demo__outcome">head only</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:86.1%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.762 · <span class="visually-hidden">keep-call </span>0.946<br>36,341 ch</span><span class="demo__outcome">kept</span></li>
-      <li class="demo__call" data-state="small"><span class="demo__who"><b>Grep</b><span>JWT_SECRET</span></span><span class="demo__track"><span class="demo__was" style="--w:4.3%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.020 · <span class="visually-hidden">keep-call </span>0.037<br>89 ch</span><span class="demo__outcome">too small</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>src/config.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:53.5%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.282 · <span class="visually-hidden">keep-call </span>0.270<br>14,026 ch</span><span class="demo__outcome">kept</span></li>
-      <li class="demo__call" data-state="dropped"><span class="demo__who"><b>Bash</b><span>git log --oneline -20 -- src/auth.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:17.8%"><span class="demo__fill" style="--keep:0"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.081 · <span class="visually-hidden">keep-call </span>0.093<br>1,547 ch</span><span class="demo__outcome">dropped</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>.github/workflows/ci.yml</span></span><span class="demo__track"><span class="demo__was" style="--w:33.9%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.282 · <span class="visually-hidden">keep-call </span>0.270<br>5,615 ch</span><span class="demo__outcome">kept</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Bash</b><span>gh run view 4821 --log | tail -60</span></span><span class="demo__track"><span class="demo__was" style="--w:100%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.228 · <span class="visually-hidden">keep-call </span>0.305<br>49,001 ch</span><span class="demo__outcome">kept</span></li>
-      <li class="demo__call" data-state="pinned"><span class="demo__who"><b>Edit</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:2.4%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>1.000 · <span class="visually-hidden">keep-call </span>1.000<br>29 ch</span><span class="demo__outcome">pinned</span></li>
-      <li class="demo__call" data-state="pinned"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:22.3%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>1.000 · <span class="visually-hidden">keep-call </span>1.000<br>2,432 ch</span><span class="demo__outcome">pinned</span></li>
-    </ol>
-    <!-- /demo:render -->
-  </div>
-
-  <p class="caption">
-    <b>Two layers to every bar.</b> The outline is how big that result was against the largest in
-    the session; the filled part is how much of it survived the decision. So a <em>head only</em>
-    row keeps its outline and shrinks its fill to 300 characters, and a <em>dropped</em> row keeps
-    its outline with nothing in it.
-  </p>
-  <p class="caption">
-    <b>Freed is not a slice of tool output.</b> Dropping a call takes its input with it, so a
-    few of those characters were never in the column to its left. The <code>git&nbsp;log</code>
-    row above is the clearest case: 1,547 characters of output, 1,597 freed.
-  </p>
-  <p class="caption">
-    The transcript is constructed — every real session on this machine is someone's work and
-    this page is public. The decisions are not: the list is produced by running the shipped
-    scorer with the shipped defaults, and nothing in it was chosen by hand. Regenerate it with
-    <code>npm&nbsp;run&nbsp;docs:demo</code>.
-  </p>
-
-  <section class="sweep" id="sweep" hidden aria-labelledby="sweep-h">
-    <h3 id="sweep-h">What stops it: the floor, not the budget</h3>
-    <p>
-      A real session out of the committed corpus, at the moment compaction fires. Its calls are
-      lined up in the order the budget spends them — lowest score first — and the sweep takes
-      them one at a time until it is done. Watch where it stops.
-    </p>
-    <div class="sweep__plot">
-      <canvas id="sweep-canvas" width="1000" height="260" aria-hidden="true"></canvas>
-    </div>
-    <p class="sweep__say" id="sweep-say" role="status" aria-live="polite"></p>
-    <div class="sweep__bar">
-      <p class="demo__stat">Freed<b><span id="sweep-freed">0</span> chars</b></p>
-      <p class="demo__stat">Of a budget of<b><span id="sweep-budget">0</span> chars</b></p>
-      <button class="demo__run" type="button" id="sweep-run">Run the sweep</button>
-    </div>
-    <p class="caption" id="sweep-caption"></p>
-  </section>
-
-  <h3>The Edit it wanted to delete</h3>
-  <p>
-    The first time this ran, <strong>the scorer dropped the <code>Edit</code> that fixed the
-    bug</strong>. Both its scores were low and honestly so — “Applied 1 edit to src/auth.ts”
-    is worth nothing, and exactly 1 of the 220 mutating calls in the corpus had an output
-    that was ever needed verbatim. But the <em>input</em> is the only record that the change
-    happened, and unlike a read it cannot be recovered by running it again.
-  </p>
-  <p>
-    So a mutating call is no longer the scorer’s decision. <code>Edit</code>, <code>Write</code>,
-    <code>MultiEdit</code> and <code>NotebookEdit</code> keep their call whatever the
-    probabilities say; only their output can go. The rule covers
-    <span class="num val">220</span> calls in the corpus, and re-running the same decisions with
-    the guard removed shows what it actually saves: <span class="num val">15</span> of them
-    would otherwise lose their call or their output. It costs nothing — exactly one of the 220
-    had an output that was ever needed verbatim.
-  </p>
-  <p>
-    A second rule came from the same place. The <code>Grep</code> in the list above scored 0.020
-    and 0.037 — about as low as this scorer goes — and dropping it would have freed
-    <span class="num val">126 characters</span> — more than the 89 its result holds, because
-    dropping the call takes its input with it. Roughly thirty tokens, against a real chance of
-    losing something the session still needed. Below <code>minYieldChars</code> the ranking is
-    not worth acting on however confident it is, so that call reads <em>too small</em> rather
-    than <em>dropped</em>.
-  </p>
 </section>
 
 <section class="wrap" id="signals" aria-labelledby="signals-h">
@@ -1403,7 +1403,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p>It is a heuristic with error bars, which is the difference. Twelve coefficients fitted
         on labelled data, evaluated on sessions held out whole, calibrated well enough that the
         threshold means a probability — expected calibration error 0.035 leave-one-session-out on the
-        18-session corpus and 0.051 on all 41 — the 0.044 in section 01 is the same quantity
+        18-session corpus and 0.051 on all 41 — the 0.044 in <a href="#result">section 02, Evidence</a> is the same quantity
         averaged over ten grouped splits instead. “Big outputs get reused”
         alone reaches 0.878, so most of the signal really is one feature — three coefficients of the
         twelve, since size is banded — and the other nine earn
@@ -1607,7 +1607,7 @@ claude plugin install laya-compact@laya-compact</code></pre>
       do, and it is lower than the grouped-split figure for exactly that reason.</dd>
     <dt><code>minYieldChars</code></dt>
     <dd>The smallest result worth dropping. Below it, dropping frees less than it risks, so
-      the call is refused outright — the <em>too small</em> outcome in section 03.</dd>
+      the call is refused outright — the <em>too small</em> outcome in <a href="#demo">section 01, Watch it decide</a>.</dd>
     <dt>The floor</dt>
     <dd><code>keepThreshold</code>, 0.2 by default. At or above it nothing is dropped, whatever the
       budget still wants. It is the guard the budget cannot argue with.</dd>
