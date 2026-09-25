@@ -251,6 +251,16 @@ place. Six is therefore not where the loop runs out — it is where this hands
 over anyway, because what deferring the summary costs is not measured and a
 backstop whose value is a judgement should be the conservative one.
 
+**The extra passes are not free**, and `bun eval/outcome.ts --passes 6` prices
+them. Replayed over 32 sessions, the loop drops 21 outputs a later step went
+back to, against 6 for a single pass — **3.5× the loss for 1.38× the
+characters**. The first pass is the efficient one and that is structural: it
+compacts the whole accumulated backlog at once, at 0.058 lost outputs per 10,000
+characters freed, where every pass after it works on fresh material only and
+pays 0.33 to 0.67. That is not an argument for stopping at one — the alternative
+to pass two is the model summary, which keeps no tool output verbatim at all —
+but `maxPasses: 1` buys the cheap pass and nothing else.
+
 **Not verified:** what deferring the summary costs. `applyDecisions` never
 touches prose, so what survives six passes is verbatim tool calls and the
 session's own words — which is a different thing from a narrative about them.
@@ -591,7 +601,7 @@ And a live Codex CLI, which needs >= 0.155 (this machine has 0.131).
 ```sh
 bun install
 npm run typecheck   # src + test + eval + hooks
-npm run test        # 216 tests
+npm run test        # 217 tests
 npm run validate    # plugin manifest
 ```
 

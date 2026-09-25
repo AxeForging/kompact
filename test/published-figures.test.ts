@@ -306,6 +306,24 @@ describe('published figures match eval/RESULTS.md', () => {
       .toContain(`>${words[terms]![0]!.toUpperCase()}${words[terms]!.slice(1)} shapes of session,`);
   });
 
+  /**
+   * The loop's own cost, bound to the table that measured it.
+   *
+   * These are the numbers that qualify the ladder rather than sell it, which is
+   * exactly the kind that goes stale quietly when the eval moves and the prose
+   * does not.
+   */
+  it('quotes the loop\'s cost as eval/RESULTS.md measured it', () => {
+    const results = read('eval/RESULTS.md');
+    const page = read('docs/index.html');
+    const row = /\*\*Whole loop: (\d+) outputs lost against (\d+) for a single pass — ([\d.]+)× the loss for\n([\d.]+)× the characters/.exec(results);
+    expect(row, 'eval/RESULTS.md no longer states the whole-loop cost').not.toBeNull();
+    const [, lost, single, lossX, charsX] = row!;
+    for (const figure of [lost!, single!, `${lossX!}&#215;`, `${charsX!}&#215;`]) {
+      expect(page, `the page no longer says ${figure}`).toContain(`<span class="val">${figure}</span>`);
+    }
+  });
+
   // A figure that was corrected once tends to survive somewhere.
   const published = [
     'README.md', 'CONTRIBUTING.md', 'CHANGELOG.md', 'DESIGN-BRIEF.md', '.impeccable.md',

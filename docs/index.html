@@ -994,7 +994,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </p>
   </div>
   <div class="colophon reveal" style="--d:170ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>216</b> tests</span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>217</b> tests</span>
     <span><b>0</b> network calls</span><span><b>5</b> claims <a href="#checked">not verified</a></span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
 </div>
@@ -1353,6 +1353,25 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </p>
   </details>
   <!-- /passes:render -->
+  <div class="finding finding--loss reveal">
+    <p>The extra passes are not free. Replayed over
+      <span class="val">32</span> sessions, the loop drops
+      <span class="val">21</span> outputs a later step went back to, against
+      <span class="val">6</span> for a single pass &#8212;
+      <span class="val">3.5&#215;</span> the loss for <span class="val">1.38&#215;</span>
+      the characters freed.</p>
+  </div>
+  <p>
+    The first pass is the efficient one and that is structural: it compacts the whole
+    accumulated backlog at once, where the cheap bulk is, at
+    <span class="num val">0.058</span> lost outputs per 10,000 characters freed. Every pass
+    after it works on fresh material only and pays <span class="num val">0.33</span> to
+    <span class="num val">0.67</span> &#8212; five to ten times as much. It is still not an
+    argument for stopping at one, because the alternative to pass two is not keeping
+    everything: it is the model summary, which keeps no tool output verbatim at all. But the
+    price is on the page rather than under it, and <code>maxPasses:&#160;1</code> buys the
+    cheap pass and nothing else.
+  </p>
 </section>
 
 <section class="flooded" id="shape" aria-labelledby="shape-h">

@@ -237,6 +237,38 @@ hysteresis band for free: a taken pass leaves the fill at least
 `minFreedPercent` below the trigger, so the session has to grow back through it
 before another compaction can be requested.
 
+### What the loop costs, which is not nothing — `eval/outcome.ts --passes 6`
+
+The premise of a ladder is that passes 2..N take *cheap* context rather than
+compounding loss. Asked properly — the loop replayed over 32 sessions, each pass
+charged only for outputs whose first reuse comes after the point it fired at —
+that premise does not hold:
+
+| pass | calls live | reused only after | lost | characters freed | lost per 10,000 freed |
+|---:|---:|---:|---:|---:|---:|
+| 1 | 1,038 | 68 | 6 | 1,027,454 | **0.058** |
+| 2 | 972 | 71 | 6 | 146,854 | 0.409 |
+| 3 | 1,018 | 64 | 4 | 122,916 | 0.325 |
+| 4 | 1,072 | 64 | 4 | 92,746 | 0.431 |
+| 5 | 762 | 52 | 1 | 14,883 | 0.672 |
+| 6 | 771 | 44 | 0 | 11,155 | 0.000 |
+
+**Whole loop: 21 outputs lost against 6 for a single pass — 3.5× the loss for
+1.38× the characters.** 0.66 lost outputs a session rather than 0.19.
+
+The reason is structural, not a defect in the later passes. The first pass
+compacts the whole accumulated backlog at once, which is where the cheap bulk
+is; every pass after it works on fresh material only, and pays five to ten times
+as much per character freed. A rate that climbs like that is exactly the
+condition that would make a ceiling too loose, so it belongs beside the claim
+rather than under it.
+
+It is still not an argument for handing over after one pass. The alternative to
+pass 2 is not "keep everything" — it is the engine's model summary, which keeps
+no tool output verbatim at all. What the table settles is that the extra passes
+are not free, and anyone who wants the cheap pass and nothing else can set
+`maxPasses: 1`.
+
 **Not verified:** whether deferring the engine's summary costs the assistant
 anything. `applyDecisions` never touches prose, so what kompact leaves behind is
 verbatim tool calls and the user's and assistant's own words — not a narrative.
