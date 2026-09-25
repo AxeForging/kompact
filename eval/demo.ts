@@ -140,12 +140,20 @@ const markup = [
   `  <button class="demo__run" type="button" id="d-run" hidden>Replay — ${Math.round((100 * freedTotal) / data.stats.outputChars)}% freed</button>`,
   '</div>',
   '<p class="visually-hidden" id="d-status" role="status" aria-live="polite"></p>',
+  // The two numbers on every row were unlabelled: a screen reader read
+  // "0.158 dot 0.973" and a sighted reader had only the lede's "two
+  // probabilities each" to go on. Same four columns as the rows below.
+  '<p class="demo__legend" aria-hidden="true">',
+  '  <span>Tool</span><span>Output, and what survives of it</span>',
+  '  <span>keep&#8209;result &#183; keep&#8209;call<br>size</span><span>Outcome</span>',
+  '</p>',
   '<ol class="demo__list" id="d-list">',
   ...shown.map((d) => '  ' + [
     `<li class="demo__call" data-state="${d.state}">`,
     `<span class="demo__who"><b>${esc(d.tool)}</b><span>${esc(d.target) || '—'}</span></span>`,
     `<span class="demo__track"><span class="demo__fill" style="--w:${d.share}%;--keep:${d.keep}"></span></span>`,
-    `<span class="demo__scores">${d.keepResult.toFixed(3)} · ${d.keepCall.toFixed(3)}<br>${num(d.chars)} ch</span>`,
+    `<span class="demo__scores"><span class="visually-hidden">keep-result </span>${d.keepResult.toFixed(3)} · `
+      + `<span class="visually-hidden">keep-call </span>${d.keepCall.toFixed(3)}<br>${num(d.chars)} ch</span>`,
     `<span class="demo__outcome">${d.outcome}</span>`,
     '</li>',
   ].join('')),

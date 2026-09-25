@@ -300,6 +300,19 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
    layout property. The bar's scaleX is the information: it ends at the fraction
    of the output that survived. */
 .demo{ margin-top: var(--space-lg); border-top: 2px solid var(--ink); }
+/* The two probabilities on each row used to be unlabelled: "0.158 · 0.973"
+   with no header anywhere, which a screen reader reads as "0.158 dot 0.973".
+   Same four columns as the rows, same widths, so it reads as their header. */
+.demo__legend{
+  display:grid; grid-template-columns: 13ch minmax(0,1fr) 11ch 12ch;
+  gap: var(--space-md); margin: var(--space-lg) 0 0; align-items:end;
+  max-width:none; font-family: var(--sans); font-size: var(--text-xs);
+  letter-spacing:0.02em; text-transform:uppercase; color: var(--ink-3); line-height:1.25;
+  border-bottom:1px solid var(--rule-firm); padding-bottom: var(--space-xs);
+}
+.demo__legend span:nth-child(3){ text-align:right; letter-spacing:0; }
+@media (max-width: 640px){ .demo__legend{ display:none; } }
+
 .demo__bar{
   display:flex; flex-wrap:wrap; align-items:center; gap: var(--space-sm) var(--space-lg);
   padding: var(--space-sm) 0; border-bottom:1px solid var(--rule-firm);
@@ -315,7 +328,6 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
   background: var(--ink); border:1px solid var(--ink); padding: 10px var(--space-md); cursor:pointer;
 }
 .demo__run:hover{ background: var(--accent-ink); border-color: var(--accent-ink); }
-.demo__run[disabled]{ background:none; color: var(--ink-3); border-color: var(--rule-firm); cursor:default; }
 
 .demo__list{ list-style:none; margin:0; padding:0; }
 .demo__call{
@@ -586,14 +598,14 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     leave-one-session-out across those 41 gives <span class="num val">0.789</span> with
     calibration error <span class="num val">0.051</span>: seven points and nearly three times the
     error, against the same measurement on 18 of them. That is the honest figure for a session
-    like this operator's, and section 07 has why.
+    like this operator's, and <a href="#next">section 07</a> has why.
   </p>
   <p class="caption">
     Every scorer judged on the same held-out sessions each split, so the comparison is paired.
     Splitting by session, not by row: calls inside one session are correlated and splitting on
     rows would leak. On this corpus the calibration error is 0.019 against Laya’s 0.42–0.71,
     which is what makes the keep-threshold mean anything — on all 41 sessions it is 0.051, and
-    section 07 says so.
+    <a href="#next">section 07</a> says so.
   </p>
 </section>
 
@@ -649,16 +661,20 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <button class="demo__run" type="button" id="d-run" hidden>Replay — 7% freed</button>
     </div>
     <p class="visually-hidden" id="d-status" role="status" aria-live="polite"></p>
+    <p class="demo__legend" aria-hidden="true">
+      <span>Tool</span><span>Output, and what survives of it</span>
+      <span>keep&#8209;result &#183; keep&#8209;call<br>size</span><span>Outcome</span>
+    </p>
     <ol class="demo__list" id="d-list">
-      <li class="demo__call" data-state="head"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:15%;--keep:0.0543"></span></span><span class="demo__scores">0.158 · 0.973<br>7,186 ch</span><span class="demo__outcome">head only</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:74%;--keep:1"></span></span><span class="demo__scores">0.762 · 0.946<br>36,341 ch</span><span class="demo__outcome">kept</span></li>
-      <li class="demo__call" data-state="small"><span class="demo__who"><b>Grep</b><span>JWT_SECRET</span></span><span class="demo__track"><span class="demo__fill" style="--w:3%;--keep:1"></span></span><span class="demo__scores">0.020 · 0.037<br>89 ch</span><span class="demo__outcome">too small</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>src/config.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:29%;--keep:1"></span></span><span class="demo__scores">0.282 · 0.270<br>14,026 ch</span><span class="demo__outcome">kept</span></li>
-      <li class="demo__call" data-state="dropped"><span class="demo__who"><b>Bash</b><span>git log --oneline -20 -- src/auth.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:3%;--keep:0"></span></span><span class="demo__scores">0.081 · 0.093<br>1,547 ch</span><span class="demo__outcome">dropped</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>.github/workflows/ci.yml</span></span><span class="demo__track"><span class="demo__fill" style="--w:11%;--keep:1"></span></span><span class="demo__scores">0.282 · 0.270<br>5,615 ch</span><span class="demo__outcome">kept</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Bash</b><span>gh run view 4821 --log | tail -60</span></span><span class="demo__track"><span class="demo__fill" style="--w:100%;--keep:1"></span></span><span class="demo__scores">0.228 · 0.305<br>49,001 ch</span><span class="demo__outcome">kept</span></li>
-      <li class="demo__call" data-state="small"><span class="demo__who"><b>Edit</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:3%;--keep:1"></span></span><span class="demo__scores">0.003 · 0.059<br>29 ch</span><span class="demo__outcome">too small</span></li>
-      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:5%;--keep:1"></span></span><span class="demo__scores">0.297 · 0.277<br>2,432 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="head"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:15%;--keep:0.0543"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.158 · <span class="visually-hidden">keep-call </span>0.973<br>7,186 ch</span><span class="demo__outcome">head only</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:74%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.762 · <span class="visually-hidden">keep-call </span>0.946<br>36,341 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="small"><span class="demo__who"><b>Grep</b><span>JWT_SECRET</span></span><span class="demo__track"><span class="demo__fill" style="--w:3%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.020 · <span class="visually-hidden">keep-call </span>0.037<br>89 ch</span><span class="demo__outcome">too small</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>src/config.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:29%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.282 · <span class="visually-hidden">keep-call </span>0.270<br>14,026 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="dropped"><span class="demo__who"><b>Bash</b><span>git log --oneline -20 -- src/auth.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:3%;--keep:0"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.081 · <span class="visually-hidden">keep-call </span>0.093<br>1,547 ch</span><span class="demo__outcome">dropped</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>.github/workflows/ci.yml</span></span><span class="demo__track"><span class="demo__fill" style="--w:11%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.282 · <span class="visually-hidden">keep-call </span>0.270<br>5,615 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Bash</b><span>gh run view 4821 --log | tail -60</span></span><span class="demo__track"><span class="demo__fill" style="--w:100%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.228 · <span class="visually-hidden">keep-call </span>0.305<br>49,001 ch</span><span class="demo__outcome">kept</span></li>
+      <li class="demo__call" data-state="small"><span class="demo__who"><b>Edit</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:3%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.003 · <span class="visually-hidden">keep-call </span>0.059<br>29 ch</span><span class="demo__outcome">too small</span></li>
+      <li class="demo__call" data-state="kept"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__fill" style="--w:5%;--keep:1"></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.297 · <span class="visually-hidden">keep-call </span>0.277<br>2,432 ch</span><span class="demo__outcome">kept</span></li>
     </ol>
     <!-- /demo:render -->
   </div>
@@ -968,7 +984,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <div class="next">
     <div class="next__item">
       <p class="next__when">Blocks a 1.0</p>
-      <p class="next__what"><b>A live A/B.</b> Task outcome is measured above as far as a
+      <p class="next__what"><b>A live A/B.</b> Task outcome is <a href="#checked">measured</a> as far as a
         transcript allows — how often the information would no longer be there. Whether that
         changes what an assistant does needs the same session replayed both ways, against a real
         model, and it has not been.</p>
@@ -997,7 +1013,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p class="next__when">Wanted</p>
       <p class="next__what"><b>A fine-tuned Laya checkpoint that wins.</b> The bar is 0.905, not
         chance. <code>eval/</code> re-runs the whole comparison for anyone who tries, and the
-        cost table above is the other half of that decision.</p>
+        <a href="#cost">cost table</a> is the other half of that decision.</p>
     </div>
     <div class="next__item">
       <p class="next__when">Structural</p>
@@ -1039,7 +1055,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p>Sometimes — <span class="num val">0.19</span> outputs a session where it would actually
         cost you something, and 27 of 32 sessions lose nothing at all. Counting every reuse
         anywhere later, including ones that had already happened before a real compaction could
-        fire, the upper bound is 1.34 a session. Both are in section 05, and 47 of the 55 are
+        fire, the upper bound is 1.34 a session. Both are in <a href="#checked">section 05</a>, and 47 of the 55 are
         command output. A dropped result keeps its first 300 characters when the call survives, and a call
         that recorded a change is never dropped at all. Every failure mode falls back to Claude
         Code's own summary rather than to a half-compacted transcript, and a single failed request
@@ -1215,7 +1231,7 @@ if (demo && list && list.children.length === demo.decisions.length) {
     countEl.textContent = String(demo.decisions.length);
     // Re-enabled here, not only at load: disabling it in `settleAll` meant the
     // first press killed the control for good and dropped focus to <body>.
-    run.disabled = false;
+    running = false;
     run.textContent = `Replay — ${Math.round((100 * freedTotal) / total)}% freed`;
     runs += 1;
     status.textContent = `Replay ${runs} finished. ${shortened} of ${demo.decisions.length} calls `
@@ -1243,8 +1259,12 @@ if (demo && list && list.children.length === demo.decisions.length) {
   run.hidden = false;
   run.textContent = `Replay — ${Math.round((100 * freedTotal) / total)}% freed`;
 
+  let running = false;
   run.addEventListener('click', () => {
-    run.disabled = true;
+    // Guarded rather than disabled: `run.disabled = true` while the button had
+    // focus blurred it to <body> and nothing ever gave it back.
+    if (running) return;
+    running = true;
     run.textContent = 'Scoring…';
     reset();
     let freed = 0;

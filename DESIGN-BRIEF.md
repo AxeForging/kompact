@@ -104,8 +104,18 @@ The old rule against counters ticking up still holds everywhere else. The test i
 whether stopping the animation halfway leaves a reader with a true partial
 picture. Here it does. For a hero statistic it would not.
 
-Without JavaScript the demonstration shows its end state, fully labelled. With
-`prefers-reduced-motion` it jumps there on the same press, no transitions.
+Without JavaScript the demonstration shows its end state, fully labelled — not
+as a fallback but as the shipped markup: `npm run docs:demo` writes the settled
+rows and totals into the page, and the script's only job is to reveal the replay
+control and replay what is already there.
+
+With `prefers-reduced-motion` every CSS transition is gone and the rows resolve
+at 120ms rather than 340ms. That is deliberate and it is a deviation from "jump
+straight there": what a reduced-motion reader asked to be spared is movement,
+and there is none — no bar slides, no row rises, nothing translates. What is
+left is nine pieces of text resolving in the ranking's own order, which is the
+content. A single instantaneous repaint would also announce nothing, because the
+end state is already on screen before the press.
 
 ## 7. Content requirements
 
