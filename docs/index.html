@@ -870,10 +870,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
 
   <section class="sweep" id="sweep" hidden aria-labelledby="sweep-h">
-    <h3 id="sweep-h">What stops it: the floor, not the budget</h3>
+    <h3 id="sweep-h">What stops it: <a href="#glossary">the floor</a>, not the budget</h3>
     <p>
       A real session out of the committed corpus, at the moment compaction fires. Its calls are
-      lined up in the order the budget spends them — lowest score first — and the sweep takes
+      lined up in the order <a href="#glossary">the budget</a> spends them — lowest score first — and the sweep takes
       them one at a time until it is done. Watch where it stops.
     </p>
     <div class="sweep__plot">
@@ -910,7 +910,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     and 0.037 — about as low as this scorer goes — and dropping it would have freed
     <span class="num val">126 characters</span> — more than the 89 its result holds, because
     dropping the call takes its input with it. Roughly thirty tokens, against a real chance of
-    losing something the session still needed. Below <code>minYieldChars</code> the ranking is
+    losing something the session still needed. Below <a href="#glossary"><code>minYieldChars</code></a> the ranking is
     not worth acting on however confident it is, so that call reads <em>too small</em> rather
     than <em>dropped</em>.
   </p>
@@ -1707,6 +1707,19 @@ const retune = () => {
 };
 retune();
 addEventListener('resize', retune, { passive: true });
+
+// A link into a folded block should open it. Chromium does this on its own for
+// fragment navigation; nothing else is obliged to, and the glossary link relied
+// on that behaviour until the glossary became its own section.
+const openToHash = () => {
+  const target = location.hash && document.querySelector(location.hash);
+  if (!target) return;
+  for (let block = target.closest('details'); block; block = block.parentElement?.closest('details')) {
+    block.open = true;
+  }
+};
+addEventListener('hashchange', openToHash);
+openToHash();
 
 // Paper has no disclosure widgets. Every folded block opens for the print and
 // goes back to how the reader left it afterwards.
