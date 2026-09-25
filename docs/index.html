@@ -50,7 +50,10 @@
   --text-base: 1.0625rem;
   --text-lg: clamp(1.25rem, 1.02rem + 1.1vw, 1.6rem);
   --text-xl: clamp(2.3rem, 1.4rem + 4.1vw, 4.1rem);
-  --text-display: clamp(3.4rem, 1.7rem + 7.6vw, 7rem);
+  /* The 3.4rem floor stopped the wordmark shrinking below ~356px viewport while
+     the column kept narrowing, so a 320px screen got 36px of horizontal scroll and
+     a clipped wordmark. 2.6rem clears it. */
+  --text-display: clamp(2.2rem, 1.4rem + 7.6vw, 7rem);
 
   --measure: 68ch;
 }
@@ -116,7 +119,7 @@ a:hover{ color: var(--accent); }
 .flooded a{ color: var(--on-flood); }
 .flooded a:hover{ color: var(--on-flood-2); }
 .flooded :focus-visible{ outline-color: var(--on-flood); }
-.wordmark{
+.wordmark{ white-space: nowrap;
   font-family: var(--display); font-weight: 700; font-size: var(--text-display);
   font-optical-sizing: none;
   line-height: 1.0; letter-spacing: -0.015em; margin: 0 0 var(--space-lg);
@@ -293,12 +296,19 @@ section.flooded{ border-top: none; padding-block: clamp(var(--space-2xl), 5.5vw,
 h2{
   font-family: var(--display); font-weight: 700; font-size: var(--text-xl);
   font-optical-sizing: none;
-  line-height: 1.06; letter-spacing:0; margin: 0 0 var(--space-md); max-width: 26ch;
+  line-height: 1.06; letter-spacing:0; margin: 0 0 var(--space-md);
+  /* 26ch of Bodoni computes to 1,124px against a 952px column, so it never bound
+     and the measure was always the column. Balance instead: four headings ended
+     on a single word at 1400px and six did at 390px, one of them "not." alone
+     under a twenty-six-character line at 65.6px. */
+  text-wrap: balance;
 }
 h3{ font-family: var(--display); font-weight:600; font-size: var(--text-lg); line-height:1.15;
+  text-wrap: balance;
   font-optical-sizing: none;
   letter-spacing:0.005em; margin: var(--space-2xl) 0 var(--space-xs); }
 p{ max-width: var(--measure); margin: 0 0 var(--space-md); }
+p, .lede, .caption, .glossary dd{ text-wrap: pretty; }
 .lede{ font-size: 1.15rem; color: var(--ink-2); max-width: var(--measure); }
 
 /* numbers set in the sans, always tabular */
@@ -711,7 +721,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 <header class="flooded" id="top">
 <div class="masthead wrap">
   <div class="masthead__rule reveal" style="--d:0ms"></div>
-  <h1 class="wordmark reveal" style="--d:40ms">laya&#8209;<em>compact</em></h1>
+  <h1 class="wordmark reveal" style="--d:40ms">laya-<em>compact</em></h1>
   <p class="standfirst reveal" style="--d:110ms">
     Claude Code compacts by asking a model to summarise your session, and the exact wording
     goes with it. This scores every tool call instead and <strong>keeps what survives

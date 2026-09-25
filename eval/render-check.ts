@@ -83,6 +83,30 @@ const PROBE = String.raw`
   }
   say(edges.size <= 1, 'rules share their edges @' + w, [...edges].join('  ') || 'none found');
 
+  // When it does, name the widest thing rather than leaving a number.
+  if (document.documentElement.scrollWidth > innerWidth + 1) {
+    const scrolled = (el) => {
+      for (let p = el; p && p !== document.body; p = p.parentElement) {
+        const x = getComputedStyle(p).overflowX;
+        if (x === 'auto' || x === 'scroll' || x === 'hidden') return true;
+      }
+      return false;
+    };
+    let worst = null;
+    for (const el of document.querySelectorAll('body *')) {
+      const box = el.getBoundingClientRect();
+      // The right edge is what pushes the page, not the width.
+      if (box.right <= innerWidth + 1) continue;
+      if (scrolled(el)) continue;
+      if (!worst || box.right > worst.w) worst = { w: Math.round(box.right), el };
+    }
+    if (worst) {
+      say(false, 'widest overflowing element @' + w,
+          worst.el.tagName + '.' + (worst.el.className || '?').toString().slice(0, 30) +
+          ' = ' + worst.w + 'px');
+    }
+  }
+
   // Nothing may push the page sideways.
   say(document.documentElement.scrollWidth <= innerWidth + 1, 'no horizontal page scroll @' + w,
       document.documentElement.scrollWidth + ' vs ' + innerWidth);
@@ -238,7 +262,7 @@ function connect(endpoint: string): {
 const cdp = connect(browserWs);
 let failed = 0;
 try {
-  for (const width of [1400, 390]) {
+  for (const width of [1400, 390, 320]) {
     const { targetId } = await cdp.send('Target.createTarget', { url: 'about:blank' });
     const { sessionId } = await cdp.send('Target.attachToTarget', { targetId, flatten: true });
     // `mobile: true` let the layout viewport widen to the content, so the "390px"
