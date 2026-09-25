@@ -1057,62 +1057,48 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p class="rubric"><span class="rubric__n">02</span>Who it is for</p>
   <h2 id="for-h">Four shapes of session, and what each one gets.</h2>
   <p class="lede">
-    The saving is not one number, it is a property of how you work. Every figure below is
-    somewhere else on this page; what is added here is which of them applies to you. Each
-    comes with the thing it costs, because for one of these shapes the answer is
-    <em>raise the floor</em>.
+    The saving is a property of how a session is shaped, not one number. Every figure here is
+    measured elsewhere on this page; what is added is which one applies. Each carries its cost,
+    because for one of these shapes the honest answer is <em>raise the floor</em>.
   </p>
 
   <dl class="cases">
-    <dt>Your session is mostly shell.</dt>
+    <dt>Mostly shell.</dt>
     <dd>
-      <code>gh</code>, <code>git log</code>, test runs, <code>kubectl</code>. This is the shape
-      with the most to free: the <span class="val">32.6%</span> session in
-      <a href="#cost">section 06, Cost</a> is mostly commands whose output is never quoted
-      afterwards. <strong>It is also the shape this scorer is worst at</strong> &#8212;
-      <span class="val">47</span> of the 55 outputs it wrongly dropped were command output that
-      a later tool input quoted verbatim. Both facts come from the same habit: most command
-      output is never referred to again, and the minority that is gets swept along with it.
+      Most to free &#8212; the <span class="val">32.6%</span> session is commands whose output
+      is never quoted again. Also the shape this scorer is <strong>worst</strong> at:
+      <span class="val">47</span> of the 55 outputs it wrongly dropped were command output.
+      Same habit causes both.
     </dd>
 
-    <dt>You read large files.</dt>
+    <dt>Large files.</dt>
     <dd>
-      Monorepo sources, lockfiles, generated clients, long logs. The ranking keeps these, which
-      is correct and is why the <a href="#g-the-cap">cap</a> sits beside it:
-      <span class="val">27</span> of the 2,239 calls are longer than 24,000 characters, and
-      shortening those 27 alone frees <span class="val">20.7%</span> of every character in the
-      corpus. On this shape most of the saving is the cap rather than the model. The cost is
-      that a cap cannot tell which end of a file you will want, because
-      <a href="#losses">reuse falls evenly through an output</a>.
+      The ranking keeps these, correctly, which is why the <a href="#g-the-cap">cap</a> exists:
+      <span class="val">27</span> calls of 2,239 run past 24,000 characters, and shortening
+      those 27 frees <span class="val">20.7%</span> of the corpus. Here most of the saving is
+      the cap, not the model.
     </dd>
 
-    <dt>You are hours into one bug.</dt>
+    <dt>One long bug.</dt>
     <dd>
-      The transcript holds the <code>Edit</code> that fixed it, and its output &#8212; "Applied
-      1 edit" &#8212; is worthless. Exactly <span class="val">1</span> of the 220 mutating calls
-      in this corpus had an output that was ever needed verbatim, so a scorer reading outputs
-      will drop it, and <a href="#demo">this page's own demonstration did</a>. The guard covers
-      all 220 and saves <span class="val">15</span> of them their call or their output. The
-      input is the only record that the change happened, and unlike a read it cannot be
-      recovered by running it again.
+      The <code>Edit</code> that fixed it has a worthless output &#8212; <span class="val">1</span>
+      of 220 mutating calls was ever needed verbatim &#8212; so a scorer reading outputs drops
+      it, and <a href="#demo">this page's own demonstration did</a>. The guard saves
+      <span class="val">15</span> of those 220. A read can be re-run; a change cannot.
     </dd>
 
     <dt>Nothing may leave the machine.</dt>
     <dd>
-      Compaction here is arithmetic over facts already computed: <span class="val">1,762</span>
-      calls scored in <span class="val">190&#8239;ms</span>, no process, no card, no key, no
-      request. That is not a setting you choose &#8212; the neural path that needed one was
-      removed after it lost. Uninstalling puts the next compaction back to Claude Code's own
-      summary, and nothing on disk changes either way.
+      <span class="val">1,762</span> calls scored in <span class="val">190&#8239;ms</span>: no
+      process, no card, no key, no request. Not a setting &#8212; the path that needed one was
+      removed after it lost.
     </dd>
 
-    <dt class="cases__against">And one shape to think twice about.</dt>
+    <dt class="cases__against">Sessions that ask the operator questions.</dt>
     <dd>
-      If your work asks the operator questions, a human answer is the one output no amount of
-      re-running brings back. Four of the 55 wrong drops are <code>AskUserQuestion</code>,
-      <span class="val">2,122</span> characters in total &#8212; small, and the only ones on
-      this page that cannot be restored. Raising <code>keepThreshold</code> keeps more and frees
-      less; the sweep in <a href="#cost">section 06</a> prices that trade.
+      Think twice. Four of the 55 wrong drops are <code>AskUserQuestion</code>,
+      <span class="val">2,122</span> characters &#8212; the only ones here no re-run restores.
+      Raise <code>keepThreshold</code>; <a href="#cost">section 06</a> prices the trade.
     </dd>
   </dl>
 </section>
@@ -1155,6 +1141,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <!-- /demo:render -->
   </div>
 
+  <details class="more">
+    <summary><h3>How to read the bars, and what is constructed here</h3></summary>
   <p class="caption">
     <b>Two layers to every bar.</b> The outline is how big that result was against the largest in
     the session; the filled part is how much of it survived the decision. So a <em>head only</em>
@@ -1172,6 +1160,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     scorer with the shipped defaults, and nothing in it was chosen by hand. Regenerate it with
     <code>npm&nbsp;run&nbsp;docs:demo</code>.
   </p>
+  </details>
 
   <section class="sweep" id="sweep" hidden aria-labelledby="sweep-h">
     <h3 id="sweep-h">What stops it: <a href="#g-the-floor">the floor</a>, not the budget</h3>
@@ -1229,7 +1218,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     Above the line, the ones whose output really was reused verbatim later; below, the ones that
     never were. A single AUC is a summary of this picture.
   </p>
-  <figure class="plate">
+  <details class="more plate-fold">
+    <summary><h3>Every one of the 2,239 decisions, plotted</h3></summary>
+<figure class="plate">
     <!-- Below ~760px the 1200-unit plate scales to a third and its 13px labels
          render at ~4px. Rather than ship a second asset, it keeps its size and
          drags, the same way the six tables on this page do. -->
@@ -1260,6 +1251,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       network asked the same question without being fine-tuned on it.
     </figcaption>
   </figure>
+  </details>
   </div>
 </section>
 
@@ -1279,7 +1271,9 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
   <!-- signals:render -->
   <p class="caption caption--fig">27 shapes that repeated, of 2,000 recorded over 40 sessions and 2,417 tool calls</p>
-      <div class="scroller" data-label="Table: what repeated">
+      <details class="more">
+    <summary><h3>All 27 shapes that repeated, ranked</h3></summary>
+<div class="scroller" data-label="Table: what repeated">
   <table class="data">
     <thead><tr><th>Kind</th><th>Signature</th><th class="n">times</th><th class="n">sessions</th><th class="n">calls</th><th class="n">chars</th><th class="n">est.</th></tr></thead>
     <tbody>
@@ -1300,6 +1294,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     chosen for this. A model of effort, not a measurement of time; every input to it is on the row,
     so any row can be recomputed by hand. Greyed rows are generic shell verbs.</p>
 
+    </details>
+
   <div class="finding finding--loss reveal">
     <p>Of <span class="val">2,000</span> shapes recorded,
       <span class="val">27</span> repeated enough to propose — and
@@ -1315,6 +1311,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
   <!-- /signals:render -->
 
+  <details class="more">
+    <summary><h3>Watch 1,843 commands land on the shapes they repeat</h3></summary>
   <div class="stream" id="stream" hidden>
     <div class="stream__bar">
       <p class="demo__stat">Commands seen<b><span id="stream-seen">0</span></b></p>
@@ -1328,6 +1326,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </div>
     <p class="caption" id="stream-caption"></p>
   </div>
+  </details>
 
   <details class="more">
     <summary>Why this is not established yet, and what it cost to find out</summary>
