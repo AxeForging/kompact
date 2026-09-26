@@ -506,13 +506,13 @@ committed corpus the page's figures come from, so the report can be read before
 deciding whether to install anything:
 
 ```
-27 shapes recorded; 27 seen 3+ times in 2+ sessions.
+31 shapes recorded; 31 seen 3+ times in 2+ sessions.
+
 What repeating costs you
     #  times sess  calls     chars    est.  what
-    1     95    2     95   167,518   262.5  the same command: sed -n
-    2     55    2     55    24,781    79.8  the same command: python3 -c
-    3     25    2     25    32,212    57.2  the same command: grep -n | head -<n>
-    4     16    2     48         0    48.0  the same run of tools: Read -> Edit -> Edit
+    1    239    2    239   438,423   677.4  the same command: sed -n
+    2     76    2     76    36,662   112.7  the same command: python3 -c
+    3     60    2     60    49,995   110.0  the same command: grep -n | head -<n>
 ```
 
 Which is also the negative finding the page leads with: the top rows are generic
@@ -524,9 +524,9 @@ to `~/.claude/kompact-signals.json` so the CLI can read it. No raw output is sto
 nothing is sent anywhere, and drafts land in `.kompact/proposals/`, which Claude Code
 does not read — promoting one is a `mv` you do yourself.
 
-**This part is new and its usefulness is not established.** Replaying 2,417 tool
-calls from 40 real sessions through the recorder's own functions, 27 of 2,000
-recorded shapes repeated at all — and all 10 of the repeated *command* shapes
+**This part is new and its usefulness is not established.** Replaying 4,013 tool
+calls from 40 real sessions through the recorder's own functions, 31 of 2,000
+recorded shapes repeated at all — and all 12 of the repeated *command* shapes
 were generic shell verbs (`sed -n`, `grep -n | head`, `cat`). The classifier
 works; whether what it proposes is worth writing is measured by nobody yet, and
 has its own row in the verification ledger. `bun eval/signals-fixture.ts` runs

@@ -74,6 +74,8 @@ const rows = ranked.slice(0, 10).map((row) => {
 
 const commandRows = ranked.filter((row) => row.kind === 'command');
 const genericRows = commandRows.filter((row) => GENERIC.test(row.sig));
+/** The command shapes `GENERIC` does not name, so the page can name them itself. */
+const rest = commandRows.filter((row) => !GENERIC.test(row.sig));
 const generic = genericRows.length;
 const commands = commandRows.length;
 const top = ranked[0];
@@ -114,8 +116,15 @@ ${rows}
       <code>${escape(top.sig)}</code>.</p>
   </div>
   <p>
-    ${generic === commands ? 'Every one of them' : `${generic} of the ${commands}`} is a verb like
-    <code>sed</code>, <code>grep</code> or <code>cat</code>. No skill helps with those.${workflow
+    ${generic === commands
+      ? 'Every one of them is a verb like'
+      : `${generic} of the ${commands} are verbs like`}
+    <code>sed</code>, <code>grep</code> or <code>cat</code>. No skill helps with those.${generic === commands
+      ? ''
+      : ` The ${commands - generic} that fall outside that list &#8212;
+      ${rest.map((row) => `<code>${escape(row.sig)}</code>`).join(' and ')} &#8212; are not
+      workflows either; they are simply verbs the list was not written to catch, and adding them
+      to it to keep a sentence tidy is the kind of tuning this page exists to avoid.`}${workflow
       ? ` The best row that reads like an actual workflow &#8212;
       <code>${escape(workflow.sig)}</code> &#8212; is ranked ${workflowPlace}th, because the ranking
       rewards total work and a generic verb runs more often than a workflow does.`
