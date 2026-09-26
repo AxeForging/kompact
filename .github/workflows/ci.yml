@@ -74,8 +74,25 @@ jobs:
 
       # The Laya comparison used to vanish on a clone: its cached answers were
       # gitignored, so the paired block never ran and 0.721 survived as text.
+      #
+      # This asserted the literal "logistic won 10/10 splits". The closest split
+      # is +0.018, so one split turning would have failed the build as a build
+      # error rather than reporting itself as a measurement — and it would have
+      # done that whether the cause was a regression or a better Laya. What has
+      # to hold is that the paired block RAN on the fixture and still wins
+      # clearly; the exact count is a result, and results belong in the report.
       - name: the fixture must reproduce the Laya comparison, not just ours
-        run: bun eval/repeat.ts --fixture | grep -q "logistic won 10/10 splits"
+        run: |
+          out=$(bun eval/repeat.ts --fixture)
+          echo "$out"
+          line=$(echo "$out" | grep -oE 'logistic won [0-9]+/[0-9]+ splits') \
+            || { echo "::error::the paired Laya block did not run on the fixture"; exit 1; }
+          won=${line#logistic won }; total=${won#*/}; total=${total% splits}; won=${won%%/*}
+          echo "paired result: $won of $total splits"
+          [ "$total" -ge 10 ] \
+            || { echo "::error::only $total paired splits; the fixture corpus shrank"; exit 1; }
+          [ "$((won * 10))" -ge "$((total * 8))" ] \
+            || { echo "::error::logistic won only $won of $total splits (need 8 in 10)"; exit 1; }
 
       # Twelve published figures went stale at once because the evidence file
       # mixed fixture measurements with ones read from the maintainer's own

@@ -10,13 +10,18 @@ import type { SystemOneAnswer, SystemOneQuestions, SystemOneResponse, SystemOneS
 export const LAYA_URL = 'http://127.0.0.1:8000/v1/systemone';
 
 /**
- * `multilingual`, not `english`, despite Laya's general advice for English
- * text. Measured on this workload (see plan, "Measured facts"): the English
- * checkpoint reads 512 tokens total, ~320 of them state, and silently discards
- * the rest — a 4k-char and a 21k-char state returned bit-identical
- * probabilities, and diluted it answered 0.41 for a fact the state stated
- * verbatim. `multilingual` answered 0.95 on the same input, has 768 tokens of
- * state budget, and is smaller (322M) and faster.
+ * `multilingual`, not `english`, despite Laya's general advice for English text.
+ *
+ * The English checkpoint reads 512 tokens in total, about 320 of them state, and
+ * discards the rest with HTTP 200 and no warning — `eval/truncation.ts` measures
+ * the cut, and its published figures are the ones to quote. `multilingual` has
+ * 768 tokens of state budget, is smaller (322M) and is faster.
+ *
+ * An earlier version of this comment also claimed the English checkpoint answered
+ * 0.41 for a fact its state stated verbatim. That pair of figures was retracted
+ * from every public text in `fd7b747` as unreproducible — with the decisive
+ * sentence at the front of the filler the answer does not degrade at all, because
+ * the sentence is inside the cut — and it should not have survived here.
  */
 export const DEFAULT_MODEL = 'multilingual';
 

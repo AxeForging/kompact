@@ -15,7 +15,13 @@
  *
  * Reads the transcripts on this machine. Aggregates only; writes nothing.
  *
- * Run: bun eval/inputs.ts
+ * With `--exclude <tool,…>` those tools leave the corpus entirely, which is the
+ * only way to ask what a rule would free on a STOCK install. It matters here:
+ * `SubagentHandback` is roughly three quarters of everything the non-mutating
+ * cap frees, over 26 inputs, and no stock install has that tool. A class rule
+ * that is mostly one operator's own tool is an operator-fitted default.
+ *
+ * Run: bun eval/inputs.ts [--exclude SubagentHandback,…]
  */
 import { readdirSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
@@ -23,6 +29,11 @@ import { join } from 'node:path';
 
 import { MUTATING } from '../src/state.js';
 import { readTranscript } from './transcript.js';
+
+const excludeArg = process.argv.indexOf('--exclude');
+const EXCLUDED: ReadonlySet<string> = new Set(
+  excludeArg < 0 ? [] : (process.argv[excludeArg + 1] ?? '').split(',').filter(Boolean),
+);
 
 const SHINGLE = 8;
 const MAX_SHINGLES = 2_000;
@@ -152,12 +163,25 @@ for (const path of walk(join(homedir(), '.claude', 'projects'))) {
   }
 }
 
+// ponytail: filtered after the walk rather than during it, so the shingle
+// ownership counts stay exactly what they are in the unfiltered run.
+const excluded = all.filter((use) => EXCLUDED.has(use.tool));
+const kept = all.filter((use) => !EXCLUDED.has(use.tool));
+all.length = 0;
+all.push(...kept);
+
 const corpus = all.reduce((sum, use) => sum + use.chars, 0);
 const reused = all.reduce((sum, use) => sum + use.hits.length, 0);
 
 console.log(`${sessions} sessions, ${all.length.toLocaleString()} tool inputs, ` +
   `${corpus.toLocaleString()} characters`);
-console.log(`reused shingles to protect: ${reused.toLocaleString()}\n`);
+console.log(`reused shingles to protect: ${reused.toLocaleString()}`);
+if (EXCLUDED.size > 0) {
+  const chars = excluded.reduce((sum, use) => sum + use.chars, 0);
+  console.log(`excluded ${[...EXCLUDED].join(', ')}: ` +
+    `${excluded.length} inputs, ${chars.toLocaleString()} characters left the corpus`);
+}
+console.log();
 
 const run = (cap: number, tools?: (use: Use) => boolean): { freed: number; kept: number } => {
   let keptChars = 0;

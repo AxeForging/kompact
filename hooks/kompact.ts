@@ -112,8 +112,14 @@ export function resolveHookConfig(options: PluginOptions): HookConfig {
  * the same way for both, over ten grouped splits of the same 1,063 labelled
  * calls: AUC 0.905 +/- 0.078 here against 0.719 +/- 0.026 for the best
  * checkpoint and wording, won on 10 of 10 paired splits. A sidecar that also
- * wants a GPU, ~1.7 GB of VRAM and a 7.6 s cold start has to win on quality to
- * be worth its dependency, and it did not.
+ * wants a GPU, several GB resident and a 6.5 s cold start has to win on quality
+ * to be worth its dependency, and it did not.
+ *
+ * Quality is the reason, and it is the only one stated here on purpose. The cost
+ * side of that argument is being re-measured: the benchmark behind the published
+ * figures ran against a sidecar pinned to LAYA_DEVICE=cpu while the card sat
+ * idle, so its latency numbers are not the cost of running Laya. Nothing about
+ * the ranking result depends on them.
  */
 export function askerFor(weights?: Weights): Asker {
   return FeatureAsker.fromWeights(weights);

@@ -186,25 +186,29 @@ The type declarations in `types/` were written by Claude Code 2.1.281.
 
 | Option | Default | Meaning |
 |---|---:|---|
-| `scorer` | `features` | `features` (offline, AUC 0.905) or `laya` (a sidecar) |
-| `layaUrl` | `http://127.0.0.1:8000/v1/systemone` | only read when `scorer` is `laya` |
 | `keepThreshold` | `0.2` | a **floor**: at or above this, never dropped |
 | `targetReduction` | `0.5` | fraction of droppable tool output to free |
 | `preserveRecentMessages` | `6` | newest messages pinned; the first is always kept |
 | `compactAtPercent` | `60` | context percentage that triggers compaction |
 | `minFreedPercent` | `5` | a pass is taken only if it reclaims this many percentage points of the context window; below it, the built-in summary runs |
-| `maxPasses` | `4` | compactions kompact answers on one transcript before handing over regardless |
+| `maxPasses` | `6` | compactions kompact answers on one transcript before handing over regardless |
 | `truncateHeadChars` | `300` | head kept of a dropped result |
-| `maxCallStateTokens` | `700` | `scorer=laya` only; must stay under the checkpoint's budget |
 | `minYieldChars` | `200` | fewest characters a drop must free to be worth making |
 | `maxKeptChars` | `24000` | longest a **kept** result may be; `0` disables |
-| `phrasing` | `reproducible` | `scorer=laya` only; `direct` or `entailment` |
-| `concurrency` | `8` | requests in flight; `scorer=laya` only in practice |
-| `requestTimeoutMs` | `30000` | deadline for one sidecar request |
+| `recordSignals` | `true` | record repeated command shapes for `npm run propose` |
 
-Two of these do nothing under the default scorer and say so in the manifest:
-`maxCallStateTokens` sizes a state only a model reads, and `phrasing` changes
-wording the built-in scorer never looks at.
+That table is the whole of `userConfig` in `.claude-plugin/plugin.json`, and it is
+the whole of what a plugin install can set. The list used to carry `scorer`,
+`layaUrl` and `requestTimeoutMs` as well; those selected the Laya sidecar, which
+was removed, and they are read by nothing. Keeping them in print contradicted the
+one claim this project leans on hardest — that there is no optional network path —
+so they are gone rather than deprecated.
+
+`compactSession()` used as a library takes three more that the plugin does not
+expose, because they only mean something to a model-backed `Asker`:
+`maxCallStateTokens` (700), `phrasing` and `concurrency` (8). The built-in scorer
+reads the first two for the same state and wording a model would have seen, and
+ignores the third.
 
 A call is also never dropped when doing so would free less than `minYieldChars`.
 Dropping an 89-character `Grep` result freed 126 characters — about thirty tokens
@@ -533,18 +537,16 @@ works against it by repointing one URL — no second plugin to write:
 npm run serve        # http://127.0.0.1:8770/v1/systemone, no model, no GPU
 ```
 
-Two scripts need a live Laya sidecar and so are not part of `npm test`:
-`npm run smoke` checks the sidecar answers in the direction the wording implies,
-and `npm run ckpt` compares checkpoints on one transcript. Neither ran under any
-script until now, which is how `eval/score.ts` came to default to the wrong port.
-
 `npx kompact-serve --help` lists the rest: `--port`, `--host`, `--api-key`,
 or `LAYA_COMPACT_PORT` / `LAYA_COMPACT_HOST` / `LAYA_COMPACT_API_KEY`. It also
 answers `GET /health`, and rejects a body over 1 MB with `413`. Binding beyond
 `127.0.0.1` without a key warns, because the endpoint takes arbitrary text.
 
-`LayaClient` — the path to a real Laya sidecar, not this server — reads
-`LAYA_URL` and `LAYA_API_KEY` from the environment when neither is passed.
+`LayaClient` — the path to a real Laya sidecar — lives in `eval/sidecar-client.ts`.
+It is evaluation code: `tsconfig.json` does not compile it, `files` does not ship
+it, and `src/index.ts` does not export it, so an installed copy of this package
+cannot reach a sidecar even deliberately. Only `eval/score.ts`,
+`eval/truncation.ts` and `eval/sidecar-bench.ts` use it.
 
 For Codex CLI, install [fatelei/jev-compact][up2] and put this in
 `~/.codex/fast-jev-compaction.json`:
