@@ -195,7 +195,7 @@ The type declarations in `types/` were written by Claude Code 2.1.281.
 | `truncateHeadChars` | `300` | head kept of a dropped result |
 | `minYieldChars` | `200` | fewest characters a drop must free to be worth making |
 | `maxKeptChars` | `24000` | longest a **kept** result may be; `0` disables |
-| `recordSignals` | `true` | record repeated command shapes for `npm run propose` |
+| `recordSignals` | `false` | opt in to recording repeated command shapes for `npm run propose` |
 
 That table is the whole of `userConfig` in `.claude-plugin/plugin.json`, and it is
 the whole of what a plugin install can set. The list used to carry `scorer`,
@@ -518,7 +518,7 @@ What repeating costs you
 Which is also the negative finding the page leads with: the top rows are generic
 shell verbs, not workflows anyone would write a skill for.
 
-Recording is local, on by default, and off with `recordSignals: false`. It keeps
+Recording is local, off by default, and on with `recordSignals: true`. It keeps
 signatures plus up to three redacted examples in the plugin's own store, mirrored
 to `~/.claude/kompact-signals.json` so the CLI can read it. No raw output is stored,
 nothing is sent anywhere, and drafts land in `.kompact/proposals/`, which Claude Code

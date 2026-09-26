@@ -555,9 +555,10 @@
   <p class="lede">
     <strong>Compaction changes nothing on disk.</strong> It rewrites what is sent to the model for
     the rest of the session; the transcript in <code>~/.claude/projects</code> is untouched, and
-    uninstalling puts the next compaction back to Claude Code’s own summary. The plugin does write
-    one file: the recorder keeps counts in <code>~/.claude/kompact&#8209;signals.json</code> unless
-    you set <code>recordSignals</code> to false. Everything below is the shipped behaviour, not a
+    uninstalling puts the next compaction back to Claude Code’s own summary. By default the plugin
+    writes nothing on disk at all; the optional recorder keeps counts in
+    <code>~/.claude/kompact&#8209;signals.json</code> only if you turn it on with
+    <code>recordSignals</code>. Everything below is the shipped behaviour, not a
     policy: each line is a default in <code>src/compact.ts</code> or a guard the scorer does not get
     a vote on.
   </p>
@@ -596,10 +597,9 @@
       five points of the context window. After that Claude Code's own summary runs.</li>
     <li>Compaction changes nothing on disk. It rewrites what is sent to the model for the rest of
       the session; the transcript in <code>~/.claude/projects</code> is untouched.</li>
-    <li>The one file the plugin writes is
-      <code>~/.claude/kompact&#8209;signals.json</code>, where the recorder keeps counts of the
-      shapes you repeat. It never leaves the machine, it is capped, and
-      <code>recordSignals: false</code> turns it off. Drafted proposals land in
+    <li>The plugin writes nothing on disk by default. Turn the recorder on with
+      <code>recordSignals: true</code> and it keeps counts of the shapes you repeat in
+      <code>~/.claude/kompact&#8209;signals.json</code> — capped, never leaving the machine. Drafted proposals land in
       <code>.kompact/proposals/</code>, which Claude Code does not read.</li>
     <li>Remove it with <code>claude plugin uninstall kompact</code>, or unset
       <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> to turn every function hook off. Either way

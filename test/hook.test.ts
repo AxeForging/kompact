@@ -354,9 +354,10 @@ function registered(options: Record<string, unknown> = {}) {
 describe('register', () => {
   it('registers compaction and recording from the one module the manifest allows', () => {
     // `hooks.json` names exactly one module per plugin, so this file registers the
-    // recorder's events too. Four, and no duplicate on `turn.complete`, which the
-    // validator refuses.
-    const handlers = registered();
+    // recorder's events too — but only when recording is on, which is now opt-in.
+    // With recordSignals: true it is four, and no duplicate on `turn.complete`,
+    // which the validator refuses.
+    const handlers = registered({ recordSignals: true });
     expect([...handlers.keys()].sort()).toEqual([
       'classic.PostToolBatch',
       'classic.UserPromptSubmit',

@@ -25,8 +25,8 @@
  *      one place to audit. The recorder test plants a credential through this
  *      module and asserts it reaches neither the store nor the file.
  *
- * Recording is local and never leaves the machine. Set `recordSignals` to false
- * in the plugin's settings to turn it off entirely.
+ * Recording is local and never leaves the machine, and is off by default: set
+ * `recordSignals` to true in the plugin's settings to turn it on.
  */
 import type { On, PluginOptions } from 'claude-code';
 
@@ -241,7 +241,7 @@ type SignalsEngine = {
  * A hooks module is instantiated once, so module scope is session scope. A hot
  * reload resets it, costing at most one batch.
  */
-let recording = true;
+let recording = false;
 let batches = 0;
 let lastSequence = '';
 /** The last three tool steps, across batches. See the note at the 3-gram below. */
@@ -271,7 +271,7 @@ export function registerSignals(on: On, options: PluginOptions): void {
   // registering twice has to start clean rather than inherit half a session. The
   // recorder tests found this by leaking `batches` from one case into the next and
   // silently recording no session opening at all.
-  recording = options['recordSignals'] !== false;
+  recording = options['recordSignals'] === true;
   batches = 0;
   lastSequence = '';
   recent.length = 0;

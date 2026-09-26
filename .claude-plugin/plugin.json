@@ -60,8 +60,8 @@
     "recordSignals": {
       "type": "boolean",
       "title": "Record what you repeat",
-      "description": "Counts the shapes of the commands, requests and tool sequences you repeat, locally, so `npm run propose` can rank them and draft skills for the top ones. Signatures plus up to three redacted examples, kept in the plugin's own store and mirrored to ~/.claude/kompact-signals.json. Nothing leaves the machine and no raw output is stored. Set to false to record nothing at all.",
-      "default": true
+      "description": "Counts the shapes of the commands, requests and tool sequences you repeat, locally, so `npm run propose` can rank them and draft skills for the top ones. Signatures plus up to three redacted examples, kept in the plugin's own store and mirrored to ~/.claude/kompact-signals.json. Nothing leaves the machine and no raw output is stored. Off by default; set to true to record.",
+      "default": false
     },
     "maxKeptChars": {
       "type": "number",

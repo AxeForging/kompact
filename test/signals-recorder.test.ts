@@ -28,7 +28,9 @@ type Handler = (dollar: unknown, event: unknown, next: (event: unknown) => unkno
 type On = Parameters<typeof registerSignals>[0];
 type PluginOptions = Parameters<typeof registerSignals>[1];
 
-function harness(options: Record<string, unknown> = {}) {
+function harness(options: Record<string, unknown> = { recordSignals: true }) {
+  // recordSignals now defaults to OFF (opt-in). These tests exercise the
+  // recording path, so the harness turns it on unless a case overrides it.
   const store = new Map<string, unknown>();
   const files = new Map<string, string>();
   let clock = 1_700_000_000_000;
