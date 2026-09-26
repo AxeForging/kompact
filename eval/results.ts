@@ -7,7 +7,7 @@
  * one file the only place a figure is written down by a human.
  */
 import { execFileSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { DEFAULT_OPTIONS } from '../src/compact.js';
@@ -82,6 +82,58 @@ const sessions = maybe('sessions.ts');
  */
 const passes = maybe('passes.ts', '--sweep', '--publish');
 const loop = run('outcome.ts', '--fixture', '--passes', '6');
+
+// Prose-narration study: reads its committed scrubbed fixture (no raw prose) so
+// the section is reproducible. RESULTS.md is generated; never hand-edit it.
+const prose = JSON.parse(
+  readFileSync(join(here, 'fixtures', 'prose-narration.json'), 'utf8'),
+) as {
+  sessions: number; windowTokens: number; medianOrphanPct: number; maxOrphanPct: number;
+  medianStandaloneProsePct: number; meanStandaloneProsePct: number; maxStandaloneProsePct: number;
+  medianToolPct: number; totalOrphanTokens: number; totalWindowTokens: number;
+};
+const proseSection = `
+## Whether prose can be compacted fast — \`eval/prose-narration.ts\`
+
+kompact's passes are mechanical and cost milliseconds; the model summary that
+runs when it hands over costs a median of two minutes (\`eval/summary-cost.ts\`).
+The obvious question is whether the prose — the assistant's and user's own words,
+which \`applyDecisions\` never touches — could be compacted the same cheap way.
+
+The safest possible prose drop needs no scorer: when kompact drops every tool
+call in a message, the text that introduced them ("Let me read X") is orphaned,
+and dropping it recovers nothing that a re-run cannot. Measured over ${prose.sessions} real
+sessions, its yield is zero:
+
+\`\`\`
+fixture: ${prose.sessions} sessions, window tail ~${Math.round(prose.windowTokens / 1000)}k tokens each
+co-located orphaned narration:  median ${prose.medianOrphanPct}%  (max ${prose.maxOrphanPct}%) of window
+standalone prose pool:          median ${prose.medianStandaloneProsePct}%  (mean ${prose.meanStandaloneProsePct}%, max ${prose.maxStandaloneProsePct}%)
+tool share of window:           median ${prose.medianToolPct}%
+pooled orphan:                  ${prose.totalOrphanTokens} / ${prose.totalWindowTokens.toLocaleString('en-US')} tokens
+\`\`\`
+
+The zero is structural, not a null measurement. In Claude Code's transcripts a
+tool call sits in its own message with no text of its own — narration lives in
+separate, text-only rows. So "clear the text on a message whose calls were all
+dropped" has nothing to clear: those messages are already textless
+(\`msgsWithCalls === calls\`, \`asstWithText === 0\` on every session checked). The
+Phase-1 drop was specified against a shape the data does not have; it is not
+shipped.
+
+The only real prose lever is the standalone pool — the text-only assistant rows,
+a median ${prose.medianStandaloneProsePct}% of the window. Reclaiming it is a different problem from dropping
+a tool result: a result is droppable *because* it can be re-run and keeps its
+first 300 characters, and a sentence has neither property. Attributing a
+standalone message to a call that was dropped is a judgement, not a fact, so this
+is the extractive-scorer problem, not the mechanical one.
+
+**Not built — research.** An extractive prose scorer (the same logistic machinery
+as \`eval/logistic.ts\`, keeping user instructions, decisions, file paths and final
+answers; dropping acknowledgements and restated context) would need a labelled
+prose corpus built the way the 1,063 labelled tool calls were, and its wrong
+drops are unrecoverable. At a ${prose.medianStandaloneProsePct}% median ceiling against a ${prose.medianToolPct}% tool share,
+the tool path is where the tokens are; the prose scorer is filed, not funded.`;
 const cap = maybe('cap.ts');
 const mass = maybe('mass.ts');
 const inputs = maybe('inputs.ts');
@@ -255,6 +307,7 @@ anything. \`applyDecisions\` never touches prose, so what kompact leaves behind 
 verbatim tool calls and the user's and assistant's own words — not a narrative.
 \`maxPasses\` is the backstop for that, and its value is a judgement: the floor
 would allow more.
+${proseSection}
 `;
 
 const snapshotBody = `# Snapshot — one machine's own transcripts
