@@ -1,7 +1,11 @@
 {
-  "count": 10,
+  "count": 11,
   "medianSec": 133,
   "minSec": 65,
   "maxSec": 224,
-  "medianReductionPct": 95
+  "medianReductionPct": 95,
+  "builtinMedianKept": 35106,
+  "kompactCount": 3,
+  "kompactMedianMs": 183,
+  "kompactMedianKept": 261711
 }

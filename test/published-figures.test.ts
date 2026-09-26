@@ -784,6 +784,7 @@ describe('published figures match eval/RESULTS.md', () => {
   it('states the summary-cost figures from its fixture', () => {
     const f = JSON.parse(read('eval/fixtures/summary-cost.json')) as {
       count: number; medianSec: number; minSec: number; maxSec: number; medianReductionPct: number;
+      builtinMedianKept: number; kompactCount: number; kompactMedianMs: number; kompactMedianKept: number;
     };
     const page = read('docs/evidence.html');
     expect(page, 'the count is not the fixture count').toContain(`<b>${f.count}</b> real`);
@@ -794,6 +795,13 @@ describe('published figures match eval/RESULTS.md', () => {
     // It must not claim the quality row is settled: this is produce-time only.
     expect(page, 'the produce-time fact must point at the still-unverified row')
       .toContain('stays not verified');
+    // The context-kept contrast, when this machine has kompact passes to show.
+    if (f.kompactCount > 0) {
+      const k = (n: number) => `${Math.round(n / 1000)}k`;
+      expect(page, 'built-in kept tokens not the fixture value').toContain(`<b>${k(f.builtinMedianKept)}</b>`);
+      expect(page, 'kompact kept tokens not the fixture value').toContain(`<b>${k(f.kompactMedianKept)}</b>`);
+      expect(page).toContain(`<b>${f.kompactCount}</b>, median <b>${f.kompactMedianMs}&#8239;ms</b>`);
+    }
   });
 
   it('quotes the shipped defaults the sweep actually reports', () => {

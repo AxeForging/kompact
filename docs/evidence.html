@@ -205,7 +205,7 @@
 
   <!-- summarycost:render -->
   <p class="fine">
-    What it replaces, timed. Over <b>10</b> real auto&#8209;compactions on this machine,
+    What it replaces, timed. Over <b>11</b> real auto&#8209;compactions on this machine,
     Claude Code&#8217;s own summariser took a median <b>133&#8239;s</b> to produce
     (65&#8239;s to 224&#8239;s), each cutting the transcript by about
     95%. kompact answers the same compaction with a pass measured in
@@ -213,6 +213,13 @@
     own <code>durationMs</code> &#8212; which times the whole compaction request, not only the pause
     on screen, on one machine. What the assistant loses by not getting that narrative is a different
     question and <a href="#checked">stays not verified</a>.</p>
+  <p class="fine">
+    And what each keeps alive. The built-in summary cut the window to a median
+    <b>35k</b> tokens; kompact&#8217;s own passes here
+    (<b>3</b>, median <b>183&#8239;ms</b>) left
+    <b>262k</b> &#8212; it fires earlier and compresses less, so more
+    of the transcript stays verbatim. It does not compact <em>less often</em>; each pass is
+    milliseconds, and the slow summary is left only for the residue kompact cannot drop.</p>
   <!-- /summarycost:render -->
 
   <details class="more">
