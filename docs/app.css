@@ -1,4 +1,6 @@
 :root{
+  /* Light only, on purpose: this is a print-broadsheet aesthetic (Bodoni + Literata
+     on warm paper), not an oversight. There is deliberately no dark palette. */
   color-scheme: light;
   /* Neutrals tinted toward the accent hue (iron oxide, 38) — AxeForging. */
   --paper:      oklch(0.983 0.004 45);

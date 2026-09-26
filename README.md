@@ -349,7 +349,7 @@ session on the labelled corpus (`eval/policy.ts`):
 | budget 0.7, floor 0.05 | 3.7% | 87.4% | 98.7% |
 
 Run through the shipped code rather than the simulation above, the same defaults
-give **33.7% freed, 77.7% of reused outputs kept and 87.9% of their characters** —
+give **33.6% freed, 79.4% of reused outputs kept and 88.1% of their characters** —
 the differences are the cap and the one rule the sweep has no notion of, below.
 
 Freeing nearly everything is easy and nearly worthless. This is why `calibrate`
