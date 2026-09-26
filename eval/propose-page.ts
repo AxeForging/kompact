@@ -61,12 +61,12 @@ const block = `<!-- propose:render -->
     which is nothing until the plugin has been installed a while.</p>
   <!-- /propose:render -->`;
 
-const pagePath = join(here, '..', 'docs', 'index.html');
+const pagePath = join(here, '..', 'docs', 'evidence.html');
 const page = readFileSync(pagePath, 'utf8');
 const start = page.indexOf('<!-- propose:render -->');
 const end = page.indexOf('<!-- /propose:render -->');
 if (start < 0 || end < 0) {
-  throw new Error('docs/index.html has no <!-- propose:render --> markers to splice between');
+  throw new Error('docs/evidence.html has no <!-- propose:render --> markers to splice between');
 }
 writeFileSync(pagePath, page.slice(0, start) + block + page.slice(end + '<!-- /propose:render -->'.length));
-console.log(`spliced ${lines.length} lines of propose output into docs/index.html`);
+console.log(`spliced ${lines.length} lines of propose output into docs/evidence.html`);

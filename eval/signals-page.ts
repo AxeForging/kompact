@@ -1,5 +1,5 @@
 /**
- * Renders the committed signals fixture into `docs/index.html`.
+ * Renders the committed signals fixture into `docs/evidence.html`.
  *
  * Same contract as `eval/demo.ts`: read a generated fixture, splice markup
  * between markers, and never let a number be typed into the page by hand. The
@@ -179,7 +179,7 @@ writeFileSync(join(dir, '..', 'docs', 'signals-data.js'),
 console.log(`wrote docs/signals-data.js: ${stream.length} arrivals, ` +
   `${stream.filter((x) => x >= 0).length} onto the ${shown.length} shapes shown`);
 
-const page = join(dir, '..', 'docs', 'index.html');
+const page = join(dir, '..', 'docs', 'evidence.html');
 const html = readFileSync(page, 'utf8');
 const open = '  <!-- signals:render -->\n';
 const close = '\n  <!-- /signals:render -->';
@@ -191,4 +191,4 @@ writeFileSync(page, html.slice(0, from + open.length) + markup + html.slice(to))
 console.log(`Run: ${fixture.meta.sessions} sessions, ${fixture.meta.calls.toLocaleString()} calls`);
 console.log(`${fixture.meta.repeated} of ${fixture.meta.shapes.toLocaleString()} shapes repeated; ` +
   `${generic} of ${commands} repeated command shapes are generic shell verbs.`);
-console.log(`wrote ${rows.split('\n').length} rows into docs/index.html`);
+console.log(`wrote ${rows.split('\n').length} rows into docs/evidence.html`);

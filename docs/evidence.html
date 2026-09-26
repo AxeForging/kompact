@@ -16,7 +16,8 @@
 <nav class="contents-bar" aria-label="Contents">
   <div class="contents-bar__row wrap">
     <div class="contents">
-    <a class="contents__out" href="./" aria-label="Back to kompact">&#8592;&#8239;<span class="contents__long">kompact</span><span class="contents__short">back</span></a><a href="#cost">Cost</a><a href="#losses"><span class="contents__long">Where it loses</span><span class="contents__short">Losses</span></a><a href="#checked"><span class="contents__long">Verification</span><span class="contents__short">Verified</span></a><a class="contents__out" href="eval.html">Full evaluation&#8239;&#8599;</a></div>
+    <a class="contents__out" href="./" aria-label="Back to kompact">&#8592;&#8239;<span class="contents__long">kompact</span><span class="contents__short">back</span></a><a href="#signals"><span class="contents__long">What you repeat</span><span class="contents__short">Repeats</span></a><a href="#cost">Cost</a><a href="#losses"><span class="contents__long">Where it loses</span><span class="contents__short">Losses</span></a><a href="#checked"><span class="contents__long">Verification</span><span class="contents__short">Verified</span></a><a class="contents__out" href="eval.html">Full evaluation&#8239;&#8599;</a></div>
+
     <p class="contents__tools">
       <button class="contents__all" type="button" id="open-all" hidden>Open all</button>
       <a class="contents__go" href="./#install">Install</a>
@@ -26,6 +27,150 @@
 </nav>
 
 <main id="top">
+<section class="wrap" id="signals" aria-labelledby="signals-h">
+  <p class="rubric"><span class="rubric__n">05</span>What you repeat</p>
+  <h2 id="signals-h">The same file, arriving again.</h2>
+  <p class="lede">
+    Deciding what to keep means reading every tool call. The same reading says what your sessions
+    spend on rediscovering things they already knew.
+  </p>
+
+  <!-- bill:render -->
+  <figure class="bill" id="bill">
+    <p class="bill__lead"><b>128</b> of the <b>602</b> files read
+      were read more than once. Between them: <b>1,088</b> reads and
+      <b>619k</b> tokens, <b>91.1%</b> of every token this
+      machine spent reading a file.</p>
+    <ol class="bill__list">
+      <li class="bill__row" style="--i:0"><span class="bill__what"><code>docs/index.html</code></span><span class="bill__track"><span class="bill__fill" style="--w:1.0000"></span></span><span class="bill__tok">217k</span><span class="bill__n">233 reads &#183; 5 sess</span></li>
+      <li class="bill__row" style="--i:1"><span class="bill__what"><code>waveshare7b_3D/build_7b_case.py</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.1449"></span></span><span class="bill__tok">31k</span><span class="bill__n">102 reads &#183; 1 sess</span></li>
+      <li class="bill__row" style="--i:2"><span class="bill__what"><code>eval/RESULTS.md</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.1431"></span></span><span class="bill__tok">31k</span><span class="bill__n">35 reads &#183; 5 sess</span></li>
+      <li class="bill__row" style="--i:3"><span class="bill__what"><code>test/published-figures.test.ts</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.1094"></span></span><span class="bill__tok">24k</span><span class="bill__n">43 reads &#183; 3 sess</span></li>
+      <li class="bill__row" style="--i:4"><span class="bill__what"><code>README.md</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0925"></span></span><span class="bill__tok">20k</span><span class="bill__n">40 reads &#183; 2 sess</span></li>
+      <li class="bill__row" style="--i:5"><span class="bill__what"><code>src/compact.ts</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0788"></span></span><span class="bill__tok">17k</span><span class="bill__n">36 reads &#183; 2 sess</span></li>
+      <li class="bill__row" style="--i:6"><span class="bill__what"><code>plans/curried-cooking-abelson.md</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0592"></span></span><span class="bill__tok">13k</span><span class="bill__n">47 reads &#183; 1 sess</span></li>
+      <li class="bill__row" style="--i:7"><span class="bill__what"><code>laya-compact/.impeccable.md</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0557"></span></span><span class="bill__tok">12k</span><span class="bill__n">3 reads &#183; 2 sess</span></li>
+      <li class="bill__row" style="--i:8"><span class="bill__what"><code>eval/render-check.ts</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0462"></span></span><span class="bill__tok">10k</span><span class="bill__n">19 reads &#183; 4 sess</span></li>
+      <li class="bill__row" style="--i:9"><span class="bill__what"><code>index.html</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0449"></span></span><span class="bill__tok">10k</span><span class="bill__n">5 reads &#183; 2 sess</span></li>
+      <li class="bill__row" style="--i:10"><span class="bill__what"><code>src/features.ts</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0438"></span></span><span class="bill__tok">10k</span><span class="bill__n">8 reads &#183; 4 sess</span></li>
+      <li class="bill__row" style="--i:11"><span class="bill__what"><code>.impeccable.md</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0430"></span></span><span class="bill__tok">9k</span><span class="bill__n">7 reads &#183; 3 sess</span></li>
+      <li class="bill__row" style="--i:12"><span class="bill__what"><code>types/claude-code.d.ts</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0417"></span></span><span class="bill__tok">9k</span><span class="bill__n">15 reads &#183; 1 sess</span></li>
+      <li class="bill__row" style="--i:13"><span class="bill__what"><code>hooks/laya-compact.ts</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0398"></span></span><span class="bill__tok">9k</span><span class="bill__n">17 reads &#183; 3 sess</span></li>
+    </ol>
+    <figcaption class="caption">The files rediscovered most, over 8 sessions and
+      4,659 tool calls on one machine. Each read is the file arriving in context again.
+      This is what the repetition <b>cost</b>, counted from the transcripts &#8212; not what
+      anything would save: nothing here has measured whether writing a skill, or a line in
+      <code>CLAUDE.md</code>, changes a single one of these reads, and a skill does not stop you
+      needing to read a file. One operator&#8217;s transcripts, and a large share of the top row is
+      this site being edited. <code>bun eval/repetition.ts</code> runs it on yours.</figcaption>
+  </figure>
+  <!-- /bill:render -->
+
+  <!-- clock:render -->
+  <p class="fine" id="clock">
+    Repetition is <b>41%</b> of the tokens and
+    <b>19%</b> of the time. The time is the
+    smaller half and the less fixable: of 374 min of waiting across those sessions,
+    327 min was a tool running (4,576 calls),
+    38 min was a person deciding (33 calls),
+    10 min was a subagent working (50 calls). Gaps longer than
+    120&#8239;s are counted as 120&#8239;s, because a result arriving an
+    hour later is a session left open rather than a tool that ran for an hour.
+  </p>
+  <!-- /clock:render -->
+
+  <h3 class="ladder__h3">What this was built to find, and did not</h3>
+  <p>
+    It was built to propose skills. The plugin counts the shapes it sees, on your machine, and
+    <code>npm&nbsp;run&nbsp;propose</code> ranks them and drafts a <code>SKILL.md</code> for any row
+    you pick. On this corpus that fails, and it fails in a way worth publishing: the shapes that
+    repeat are the verbs, and the verbs are not where the cost is.
+  </p>
+
+  <!-- signals:render -->
+  <p class="caption caption--fig">30 shapes that repeated, of 2,000 recorded over 40 sessions and 4,534 tool calls</p>
+      <h3 class="figure-title">The 10 costliest of the 30 shapes that repeated</h3>
+<div class="scroller" data-label="Table: what repeated">
+  <table class="data">
+    <thead><tr><th>Kind</th><th>Signature</th><th class="n">times</th><th class="n">sessions</th><th class="n">calls</th><th class="n">chars</th><th class="n">est.</th></tr></thead>
+    <tbody>
+      <tr class="dim"><td>the same command</td><td><code>sed -n</code></td><td class="n">297</td><td class="n">2</td><td class="n">297</td><td class="n">544,077</td><td class="n">841.1</td></tr>
+      <tr class="dim"><td>the same command</td><td><code>python3 -c</code></td><td class="n">105</td><td class="n">2</td><td class="n">105</td><td class="n">61,374</td><td class="n">166.4</td></tr>
+      <tr class="dim"><td>the same command</td><td><code>grep -n | head -&lt;n&gt;</code></td><td class="n">69</td><td class="n">2</td><td class="n">69</td><td class="n">55,292</td><td class="n">124.3</td></tr>
+      <tr class="dim"><td>the same command</td><td><code>cat &lt;path&gt;</code></td><td class="n">18</td><td class="n">2</td><td class="n">18</td><td class="n">62,292</td><td class="n">80.3</td></tr>
+      <tr><td>the same run of tools</td><td><code>Read → Edit → Edit</code></td><td class="n">19</td><td class="n">3</td><td class="n">57</td><td class="n">&#8212;</td><td class="n">57.0</td></tr>
+      <tr><td>the same run of tools</td><td><code>Read → Read → Edit</code></td><td class="n">14</td><td class="n">2</td><td class="n">42</td><td class="n">&#8212;</td><td class="n">42.0</td></tr>
+      <tr><td>the same run of tools</td><td><code>Bash(grep -n) → Bash(sed -n) → Bash(sed -n)</code></td><td class="n">11</td><td class="n">2</td><td class="n">33</td><td class="n">&#8212;</td><td class="n">33.0</td></tr>
+      <tr><td>the same run of tools</td><td><code>Read → Write → Write</code></td><td class="n">7</td><td class="n">2</td><td class="n">21</td><td class="n">&#8212;</td><td class="n">21.0</td></tr>
+      <tr><td>the same run of tools</td><td><code>Read → Bash(grep -n) → Bash(sed -n)</code></td><td class="n">7</td><td class="n">2</td><td class="n">21</td><td class="n">&#8212;</td><td class="n">21.0</td></tr>
+      <tr class="dim"><td>the same command</td><td><code>grep -n</code></td><td class="n">16</td><td class="n">2</td><td class="n">16</td><td class="n">4,294</td><td class="n">20.3</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="caption">est. = total tool calls + total output characters / 1000, the ranking
+    chosen for this. A model of effort, not a measurement of time; every input to it is on the row,
+    so any row can be recomputed by hand. Greyed rows are generic shell verbs.</p>
+
+    
+
+  <div class="finding finding--loss reveal">
+    <p>Of <span class="val">2,000</span> shapes recorded,
+      <span class="val">30</span> repeated enough to propose, and
+      <span class="val">10</span> of the 12 repeated command shapes are generic
+      shell verbs. The highest-ranked thing this found is
+      <code>sed -n</code>.</p>
+  </div>
+  <p>
+    10 of the 12 are verbs like
+    <code>sed</code>, <code>grep</code> or <code>cat</code>. No skill helps with those. The 2 that fall outside that list
+      (<code>git diff | head -&lt;n&gt;</code> and <code>git status --short</code>) are not
+      workflows either; they are simply verbs the list was not written to catch, and adding them
+      to it to keep a sentence tidy is the kind of tuning this page exists to avoid. The best row that reads like an actual workflow, <code>Bash(grep -n) → Bash(sed -n) → Bash(sed -n)</code>, is ranked 7th, because the ranking
+      rewards total work and a generic verb runs more often than a workflow does.
+  </p>
+  <!-- /signals:render -->
+
+  <!-- propose:render -->
+  <div class="cmd">
+    <div class="cmd__head">
+      <p class="label">shell &#183; the report, from the corpus above</p>
+      <button class="copy" type="button" data-copy hidden aria-label="Copy the command that prints this report">Copy</button>
+      <p class="visually-hidden" role="status" aria-live="polite"></p>
+    </div>
+    <pre tabindex="0" data-label="Shell command and the ranked report it prints"><code><span class="cmd__line">npm run propose:demo</span><span class="cmd__gap"></span><span class="cmd__line">Run: eval/fixtures/signals.json</span><span class="cmd__line">30 shapes recorded; 30 seen 3+ times in 2+ sessions.</span><span class="cmd__line">&#8203;</span><span class="cmd__line">What repeating costs you</span><span class="cmd__line">    #  times sess  calls     chars    est.  what</span><span class="cmd__line">    1    297    2    297   544,077   841.1  the same command: sed -n</span><span class="cmd__line">    2    105    2    105    61,374   166.4  the same command: python3 -c</span><span class="cmd__line">    3     69    2     69    55,292   124.3  the same command: grep -n | head -&lt;n&gt;</span><span class="cmd__line">    4     18    2     18    62,292    80.3  the same command: cat &lt;path&gt;</span><span class="cmd__line">    5     19    3     57         0    57.0  the same run of tools: Read → Edit → Edit</span><span class="cmd__line">    6     14    2     42         0    42.0  the same run of tools: Read → Read → Edit</span><span class="cmd__line">    7     11    2     33         0    33.0  the same run of tools: Bash(grep -n) → Bash(sed -n) → Bash(sed -n)</span><span class="cmd__line">    8      7    2     21         0    21.0  the same run of tools: Read → Write → Write</span><span class="cmd__line">    9      7    2     21         0    21.0  the same run of tools: Read → Bash(grep -n) → Bash(sed -n)</span><span class="cmd__line">   10     16    2     16     4,294    20.3  the same command: grep -n</span><span class="cmd__line">   11      5    2      5    13,813    18.8  the same command: git diff | head -&lt;n&gt;</span><span class="cmd__line">   12      6    2     18         0    18.0  the same run of tools: Read → Read → Write</span><span class="cmd__line">&#8203;</span><span class="cmd__line">  est. = total tool calls + total output characters / 1000. A model of effort,</span><span class="cmd__line">  not a measurement of time, and every input to it is on the row.</span><span class="cmd__line">&#8203;</span><span class="cmd__line">Nothing written. `npm run propose -- --write 1,3` drafts those rows into .kompact/proposals/.</span></code></pre>
+  </div>
+  <p class="caption">Real output, captured from <code>eval/propose.ts</code> when this page was
+    built, over the same committed corpus as the table above. Not a mock-up.
+    <code>npm run propose</code> is the same report over what the recorder saw on your machine,
+    which is nothing until the plugin has been installed a while.</p>
+  <!-- /propose:render -->
+
+  <h3 class="figure-title">Watch 3,228 commands land on the shapes they repeat</h3>
+  <div class="stream" id="stream" hidden>
+    <div class="stream__bar">
+      <p class="demo__stat">Commands seen<b><span id="stream-seen">0</span></b></p>
+      <p class="demo__stat">On a shape nothing else shares<b><span id="stream-once">0</span></b></p>
+      <button class="demo__run" type="button" id="stream-run">Watch it count</button>
+    </div>
+    <ol class="stream__list" id="stream-list"></ol>
+    <div class="stream__draft" id="stream-draft">
+      <p class="caption stream__says" id="stream-draft-label"></p>
+      <pre><code id="stream-draft-text"></code></pre>
+    </div>
+    <p class="caption" id="stream-caption"></p>
+  </div>
+  
+
+  <p class="fine">
+    The classifier works and the counts are real. What is <em>not</em> established is the premise
+    underneath: these sessions are an assistant&#8217;s tool use, and what an assistant repeats is
+    reading files, editing them, and reaching for the shell.
+    <a href="evidence.html#repeats">What that cost to find out, and what this table is not</a>,
+    is on the evidence page.
+  </p>
+</section>
+
 <section class="wrap" id="cost" aria-labelledby="cost-h">
   <p class="rubric"><span class="rubric__n">06</span>Cost</p>
   <h2 id="cost-h">281&nbsp;ms to score 3,591 tool calls.</h2>
@@ -558,6 +703,7 @@
 </div>
 </footer>
 
+<script src="signals-data.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

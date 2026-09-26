@@ -92,7 +92,7 @@ ${f.gates.map((gate) => `    ${mins(gate.seconds)} was ${label[gate.gate] ?? gat
     hour later is a session left open rather than a tool that ran for an hour.
   </p>`;
 
-const page = join(dir, '..', 'docs', 'index.html');
+const page = join(dir, '..', 'docs', 'evidence.html');
 let html = readFileSync(page, 'utf8');
 for (const [name, body] of [['bill', markup], ['clock', clock]] as const) {
   const open = `  <!-- ${name}:render -->\n`;
@@ -104,4 +104,4 @@ for (const [name, body] of [['bill', markup], ['clock', clock]] as const) {
 }
 writeFileSync(page, html);
 console.log(`spliced the context bill (${top.length} files, ${f.files.reread} reread) `
-  + `and the clock into docs/index.html`);
+  + `and the clock into docs/evidence.html`);

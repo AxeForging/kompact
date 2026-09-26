@@ -770,7 +770,8 @@ describe('published figures match eval/RESULTS.md', () => {
     // Tags out first: the generated half wraps its figure in `<span class="val">`,
     // so the raw file never reads as "10 repeated command shapes" the way a
     // reader sees it.
-    const page = read('docs/index.html').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+    // §05 "What you repeat" moved to the evidence page; the count lives there now.
+    const page = read('docs/evidence.html').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
     const claims = [...page.matchAll(/(\S+) repeated command shapes/g)];
     expect(claims.length, 'the page never counts the repeated command shapes')
       .toBeGreaterThan(0);
