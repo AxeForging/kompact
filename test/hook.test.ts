@@ -293,12 +293,28 @@ describe('decisionLogLines', () => {
   });
 
   it('splits a long log into numbered chunks', () => {
+    // Spaced ids so ranges do not collapse — a genuinely long list to chunk.
     const decisions = Array.from({ length: 200 }, (_, i) => ({
-      id: `t${i}`, tool: 'Read', action: 'keep' as const, reason: 'kept' as const, keepCall: 0.5, keepResult: 0.5,
+      id: `t${i * 2}`, tool: 'Bash', action: 'drop_call' as const,
+      reason: 'call_dropped' as const, keepCall: 0.1, keepResult: 0.1,
     }));
     const lines = decisionLogLines({ decisions } as unknown as CompactResult, 300);
     expect(lines.length).toBeGreaterThan(1);
     expect(lines[0]).toMatch(/^decisions \(1\/\d+\)/);
+  });
+
+  it('reports only what changed, as compact ranges', () => {
+    const d = (id: string, action: string) => ({
+      id, tool: 'Bash', action, reason: action === 'keep' ? 'kept' : 'call_dropped',
+      keepCall: 0.1, keepResult: 0.1,
+    });
+    const decisions = [
+      d('t1', 'drop_call'), d('t2', 'drop_call'), d('t3', 'drop_call'),
+      d('t5', 'drop_call'), d('t9', 'drop_result'), d('t10', 'keep'),
+    ];
+    const [line] = decisionLogLines({ decisions } as unknown as CompactResult);
+    // Kept is silent; drops collapse to a range; the result-only cut is "head-kept".
+    expect(line).toBe('decisions: dropped 4: t1\u2013t3, t5 \u00b7 head-kept 1: t9');
   });
 });
 

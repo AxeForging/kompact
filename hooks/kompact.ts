@@ -413,13 +413,35 @@ export function compactionNotice(input: {
 
 const UI_LOG_MAX_CHARS = 4096;
 
+/** Consecutive numeric ids collapse to a range: t1,t2,t3,t5 -> "t1\u2013t3, t5". */
+function idRanges(ids: readonly string[]): string {
+  const nums = ids.map((id) => Number(id.replace(/\D/g, '')))
+    .filter((n) => Number.isFinite(n)).sort((a, b) => a - b);
+  const out: string[] = [];
+  for (let i = 0; i < nums.length;) {
+    let j = i;
+    while (j + 1 < nums.length && nums[j + 1] === nums[j]! + 1) j += 1;
+    out.push(i === j ? `t${nums[i]}` : `t${nums[i]}\u2013t${nums[j]}`);
+    i = j + 1;
+  }
+  return out.join(', ');
+}
+
+/**
+ * What changed, compactly. The old log dumped every non-pinned decision with its
+ * two scores — hundreds of `tN:Bash:keep/call=…/result=…` filling four toast
+ * walls to say, mostly, "kept". A reader wants the exceptions: which calls were
+ * dropped and which results were cut to their head. Kept and pinned are already
+ * counts in the notice, so they stay silent here.
+ */
 export function decisionLog(result: CompactResult): string {
-  return result.decisions
-    // `unrepeatable` stays in the log: it is a decision the scorer did not make,
-    // which is exactly the kind a reader checking the log wants to see.
-    .filter((d) => d.reason !== 'pinned')
-    .map((d) => `${d.id}:${d.tool}:${d.action}/call=${d.keepCall.toFixed(2)}/result=${d.keepResult.toFixed(2)}`)
-    .join(' ');
+  if (!result.decisions?.length) return '';
+  const dropped = result.decisions.filter((d) => d.action === 'drop_call').map((d) => d.id);
+  const trimmed = result.decisions.filter((d) => d.action === 'drop_result').map((d) => d.id);
+  const parts: string[] = [];
+  if (dropped.length) parts.push(`dropped ${dropped.length}: ${idRanges(dropped)}`);
+  if (trimmed.length) parts.push(`head-kept ${trimmed.length}: ${idRanges(trimmed)}`);
+  return parts.length ? parts.join(' \u00b7 ') : 'nothing dropped';
 }
 
 export function decisionLogLines(result: CompactResult, maxChars: number = UI_LOG_MAX_CHARS): string[] {
