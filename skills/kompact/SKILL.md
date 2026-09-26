@@ -12,15 +12,20 @@ verbatim. Two `noul` probabilities per call, three outcomes:
 |---|---|---|
 | `keep` | P(result needed) >= `keepThreshold`, **or** the reduction target is already met | everything |
 | `drop_result` | only P(call needed) clears it, **or** the tool mutates something | the call, plus the first `truncateHeadChars` of its output |
+| `keep` (forced) | the tool is `AskUserQuestion` or `ExitPlanMode` | everything; nothing can produce that result again |
 | `drop_call` | neither clears it | nothing; the tool can be re-run |
 
-Two rules the scorer does not get a vote on:
+Three rules the scorer does not get a vote on:
 
 - **A mutating call is never dropped.** `Edit`, `Write`, `MultiEdit` and
   `NotebookEdit` keep their call whatever the probabilities say; only their
-  output can go. The output is worth nothing — 1 of 138 in the labelled corpus
+  output can go. The output is worth nothing — 1 of 220 in the labelled corpus
   was ever needed verbatim — but the input is the only record the change
   happened, and re-running an edit is not a way to recover it.
+- **A result nothing can produce again is never dropped.** `AskUserQuestion`
+  and `ExitPlanMode`: a person's answer and the plan they approved. Asking again
+  is a new question and planning again is a new plan. They are also the two
+  most-reused tools in the corpus, 47.1% and 83.3% against an 11.0% base.
 - **`keepThreshold` is a floor, not a cut.** Nothing at or above it is dropped,
   whatever the reduction target asks for.
 
@@ -96,8 +101,8 @@ There is no option that turns it back on. `scorer` and `layaUrl` are read and
 ignored, and nothing shipped imports a client, so a settings file left over from
 an older version is not an error. It lost on quality — over 10 grouped splits
 the built-in scorer averaged AUC 0.905 against 0.719 for the best checkpoint and
-wording — and on cost: 7.6 s to start, ~4.9 GB resident, ~1.4 GB of VRAM, and
-41.0 s to score the calls the built-in scorer scores in 190 ms.
+wording — and on cost: 6.5 s to start, ~4.9 GB resident, ~5.0 GB of VRAM for the
+router, and 90.8 s to score the calls the built-in scorer scores in 275 ms.
 
 `eval/` still measures all of it against a live sidecar. `phrasing` is the one
 setting that outlived it, because the built-in scorer reads each question's

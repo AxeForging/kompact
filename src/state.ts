@@ -108,6 +108,23 @@ export function goalFromMessages(messages: readonly Message[]): string {
  *  copy of this list is a bug this repo has already had. */
 export const MUTATING: ReadonlySet<string> = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 
+/**
+ * Tools whose *result* cannot be produced again by running the same call.
+ *
+ * The mutating guard protects the record that a change happened. This protects
+ * the record of what a person decided: an `AskUserQuestion` result is somebody's
+ * answer, and an `ExitPlanMode` result is the plan they approved. Re-running
+ * either does not recover it — it asks again, or produces a different plan — so
+ * a wrong drop here is not a re-run, it is a loss.
+ *
+ * Both are also the two tools the corpus says are reused most: 47.1% of
+ * `AskUserQuestion` outputs and 83.3% of `ExitPlanMode` outputs are quoted
+ * verbatim later, against an 11.0% base rate across 2,239 calls. Between them
+ * they are 1.67% of every character, so never dropping them costs almost
+ * nothing and removes every unrecoverable wrong drop the corpus contains.
+ */
+export const UNREPEATABLE: ReadonlySet<string> = new Set(['AskUserQuestion', 'ExitPlanMode']);
+
 /** Input keys that name what a call acted on, most specific first. */
 const TARGET_KEYS = [
   'file_path',
@@ -184,25 +201,38 @@ export function callContexts(
   calls: readonly ToolCall[],
   messageCount: number,
 ): Map<string, CallContext> {
+  /**
+   * One backward pass, not a scan per call.
+   *
+   * This used to ask, for every call, what every later call did to the same
+   * target — with a `calls.slice(index + 1)` allocating the tail each time and
+   * `targetOf` recomputed for every pair. Quadratic in time and in garbage, and
+   * it showed: the same corpus took 0.14 ms a call at 473 calls and 0.43 ms at
+   * 2,649. The hook never sees a set that large, because it is handed one
+   * context window, but `eval/sessions.ts` compacts whole multi-window
+   * transcripts and wore it.
+   *
+   * Walking from the end means the maps already hold exactly what happened
+   * *after* the call being described, so each call is one lookup.
+   */
   const contexts = new Map<string, CallContext>();
-  calls.forEach((call, index) => {
+  const mutatedAfter = new Set<string>();
+  const toolsAfter = new Map<string, Set<string>>();
+  for (let index = calls.length - 1; index >= 0; index -= 1) {
+    const call = calls[index] as ToolCall;
     const target = targetOf(call);
-    let targetTouchedAfter = false;
-    let rerunLater = false;
-    if (target !== undefined) {
-      for (const later of calls.slice(index + 1)) {
-        if (targetOf(later) !== target) continue;
-        if (MUTATING.has(later.tool)) targetTouchedAfter = true;
-        if (later.tool === call.tool) rerunLater = true;
-      }
-    }
     contexts.set(call.id, {
       age: describeAge(call.callIndex, messageCount),
       size: describeSize(call.resultChars),
-      targetTouchedAfter,
-      rerunLater,
+      targetTouchedAfter: target !== undefined && mutatedAfter.has(target),
+      rerunLater: target !== undefined && (toolsAfter.get(target)?.has(call.tool) ?? false),
     });
-  });
+    if (target === undefined) continue;
+    if (MUTATING.has(call.tool)) mutatedAfter.add(target);
+    const tools = toolsAfter.get(target);
+    if (tools) tools.add(call.tool);
+    else toolsAfter.set(target, new Set([call.tool]));
+  }
   return contexts;
 }
 

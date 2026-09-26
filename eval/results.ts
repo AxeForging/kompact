@@ -40,6 +40,16 @@ const shippedRow = new RegExp(
   `${DEFAULT_OPTIONS.keepThreshold.toFixed(2)}\\s+\\S+\\s+\\S+\\s+\\S+\\s+(\\S+)`, 'm',
 ).exec(policy);
 const keptShare = shippedRow?.[1] ?? 'the share in the table below';
+// The loop, the cap and the mass survey all read this machine's transcripts, so
+// they are optional the same way the sidecar sections are. The loop's own cost
+// runs on the committed fixture and is not.
+const passes = optional('passes.ts', '--sweep');
+const loop = run('outcome.ts', '--fixture', '--passes', '6');
+const cap = optional('cap.ts');
+const mass = optional('mass.ts');
+const inputs = optional('inputs.ts');
+const oldBar = /minReductionRatio\s+0\.25\s+takes\s+(\d+) of (\d+)/.exec(passes);
+const oldBarTakes = oldBar ? `${oldBar[1]} of the ${oldBar[2]} passes measured` : 'none of them';
 const totals = /^total\s+(\d+)\s.*?(\d+)ms\s*$/m.exec(sessions);
 const benchArgs = totals ? ['--calls', totals[1]!, '--built-in-ms', totals[2]!] : [];
 const body = `# Evaluation results
@@ -60,7 +70,7 @@ ${run('repeat.ts')}
 
 ## What the shipped coefficients generalise to — \`eval/fit.ts\`
 
-The figure above holds out 30% of the eighteen sessions every Laya config was
+The figure above holds out 30% of the eighteen sessions the neural model was
 scored against. These are the coefficients that actually ship, fitted on all
 2,239 calls and held out one session at a time. It is the lower number, and it
 is the one to plan around.
@@ -108,6 +118,105 @@ holds, and those transcripts grow as you work. Treat the total as a snapshot of
 one corpus, and the per-session column as the range that matters.
 
 ${sessions}
+
+## How many passes before the summary is due — \`eval/passes.ts\`
+
+The other scripts measure one compaction. Production is a loop: the engine asks
+at \`compactAtPercent\`, kompact answers, the session keeps growing, the engine
+asks again. This simulates that loop on real transcripts — each pass gets the
+compacted prefix *plus the real continuation*, not its own output, because
+feeding a pass its own output measures exhaustion and reports a decay that
+production never sees.
+
+Same caveat as \`sessions.ts\`: this machine's transcripts, which grow as you
+work, so it is a snapshot rather than a constant.
+
+${passes}
+
+\`minReductionRatio: 0.25\` — the bar that shipped before \`minFreedPercent\` —
+takes **${oldBarTakes}** of them. It asks whether a pass was a large *fraction of
+the transcript*, and the passes above are 0.06 to 0.20 of theirs, so it was never
+cleared: kompact handed every one of these compactions to the model summary while
+it could still free nine points of window in under 20 ms.
+
+The unit is the fix rather than the value. Percentage points of the context
+window are what runs out, are comparable between a large session and a small one,
+and are the same unit as \`compactAtPercent\` — which makes the yield rule a
+hysteresis band for free: a taken pass leaves the fill at least
+\`minFreedPercent\` below the trigger, so the session has to grow back through it
+before another compaction can be requested.
+
+The stub column is the one quality signal a repeated loop has and a single
+compaction does not. It rises for two passes and then stops, because fresh
+un-truncated output arrives between passes at about the rate the loop creates
+stubs — which is why no \`maxStubShare\` dial exists: there is nothing for it to
+catch.
+
+## What the loop costs — \`eval/outcome.ts --passes\`
+
+The premise of a ladder is that passes 2..N take *cheap* context rather than
+compounding loss. Asked properly — the loop replayed over the labelled corpus,
+each pass charged only for outputs whose first reuse comes after the point it
+fired at — that premise does not hold.
+
+\`\`\`
+${loop}
+\`\`\`
+
+The reason is structural, not a defect in the later passes: the first pass
+compacts the whole accumulated backlog at once, which is where the cheap bulk is,
+and every pass after it works on fresh material only. It is still not an argument
+for handing over after one pass — the alternative to pass two is not "keep
+everything", it is the engine's model summary, which keeps no tool output
+verbatim at all. What the table settles is that the extra passes are not free,
+and anyone who wants the cheap pass and nothing else can set \`maxPasses: 1\`.
+
+**Not verified:** whether deferring the engine's summary costs the assistant
+anything. \`applyDecisions\` never touches prose, so what kompact leaves behind is
+verbatim tool calls and the user's and assistant's own words — not a narrative.
+\`maxPasses\` is the backstop for that, and its value is a judgement: the floor
+would allow more.
+
+## What the cap costs, and one idea that did not work — \`eval/cap.ts\`
+
+The cap (\`maxKeptChars\`) shortens outputs the *ranking kept*. It is a separate
+lever from the floor and it composes with it. Retention here is the share of
+**reused shingles** still present — the only measure both levers share, since
+dropping loses whole outputs and capping loses the far end of one.
+
+The graded rows are a dead end, recorded rather than hidden: the cap cannot tell
+a 40,000-character output the scorer was confident about from one it merely did
+not drop, and the ranking has that number already, so the obvious move is to
+spend the tight cap only on the lukewarm outputs. Every grading frees more than
+the flat cap that matches it and costs more in the tail. \`keepResult\` is the
+probability an output is needed *at all*; it says nothing about where inside the
+output the reuse sits, and among outputs that survived the floor it has spent its
+information.
+
+${cap}
+
+## The half nothing touches — \`eval/mass.ts\`, \`eval/inputs.ts\`
+
+Every lever in this repository acts on tool **output**. The first script asks
+whether that is where the characters are; the second prices capping the other
+half the way \`cap.ts\` prices the output cap.
+
+An input cap is **not shipped**. Against the output cap — 20.7% of the corpus for
+6.2% of reused characters — it is a far worse exchange rate at every setting, and
+the knee arrives early. The reason is the one that killed head-and-tail
+truncation: reuse inside an input is spread through it rather than gathered at
+the front, so a head cap samples it and loses reuse in proportion to what it
+frees.
+
+The per-tool table names the one exception, and it is recorded rather than
+shipped for two reasons worth stating. It is a couple of dozen inputs on one
+machine, which is not a sample. And the tool it names is not one a stock Claude
+Code install has, so a default built on it would be a default fitted to this
+operator — the thing every other number here is arranged to avoid.
+
+${mass}
+
+${inputs}
 
 ## Where the sidecar fails quietly — \`eval/truncation.ts\`
 

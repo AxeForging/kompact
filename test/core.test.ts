@@ -172,6 +172,25 @@ describe('decisions', () => {
     expect(decision.action).toBe('keep');
     expect(decision.reason).toBe('pinned');
   });
+
+  /**
+   * The mutating guard protects the record that a change happened. This one
+   * protects the record of what a person decided, which re-running does not
+   * recover: asking again is a new question, and planning again is a new plan.
+   * In the corpus 17 of the 23 such outputs score below the floor, so without
+   * this the scorer drops three quarters of them — and they are the two tools
+   * with the highest reuse rate of any, 47.1% and 83.3% against an 11.0% base.
+   */
+  it('never drops a result nothing can produce again', () => {
+    for (const tool of ['AskUserQuestion', 'ExitPlanMode']) {
+      const decision = decideCall({ id: 'u1', tool, pinned: false },
+        { keepCall: 0, keepResult: 0 }, { keepThreshold: 0.5 });
+      expect(decision.action, `${tool} was dropped`).toBe('keep');
+    }
+    // And the guard is about those tools, not about scoring low in general.
+    expect(decideCall({ id: 'u2', tool: 'WebFetch', pinned: false },
+      { keepCall: 0, keepResult: 0 }, { keepThreshold: 0.5 }).action).toBe('drop_call');
+  });
 });
 
 describe('compact', () => {

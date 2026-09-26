@@ -316,11 +316,24 @@ describe('published figures match eval/RESULTS.md', () => {
   it('quotes the loop\'s cost as eval/RESULTS.md measured it', () => {
     const results = read('eval/RESULTS.md');
     const page = read('docs/index.html');
-    const row = /\*\*Whole loop: (\d+) outputs lost against (\d+) for a single pass — ([\d.]+)× the loss for\n([\d.]+)× the characters/.exec(results);
-    expect(row, 'eval/RESULTS.md no longer states the whole-loop cost').not.toBeNull();
-    const [, lost, single, lossX, charsX] = row!;
-    for (const figure of [lost!, single!, `${lossX!}&#215;`, `${charsX!}&#215;`]) {
-      expect(page, `the page no longer says ${figure}`).toContain(`<span class="val">${figure}</span>`);
+    const whole = /whole loop: (\d+) outputs lost[\s\S]*?([\d.]+)x the characters, ([\d.]+)x the loss/
+      .exec(results);
+    expect(whole, 'eval/RESULTS.md no longer states the whole-loop cost').not.toBeNull();
+    // The first pass's own loss, which is what the loop is compared against.
+    const firstPass = /\n\s+1\s+\d+\s+\d+\s+(\d+)\s/.exec(
+      results.slice(results.indexOf('the loop, up to')));
+    expect(firstPass, 'the per-pass table no longer has a first row').not.toBeNull();
+    // Compared as numbers: the script prints 3.17x and the page sets 3.17×,
+    // but a trailing zero on either side is not a drift.
+    const quoted = [...page.matchAll(/<span class="val">([\d.]+)(?:&#215;)?<\/span>/g)]
+      .map((match) => Number(match[1]));
+    for (const [what, figure] of [
+      ['outputs lost by the loop', Number(whole![1])],
+      ['outputs lost by one pass', Number(firstPass![1])],
+      ['the characters multiple', Number(whole![2])],
+      ['the loss multiple', Number(whole![3])],
+    ] as [string, number][]) {
+      expect(quoted, `the page no longer quotes ${what} (${figure})`).toContain(figure);
     }
   });
 

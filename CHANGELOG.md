@@ -18,8 +18,8 @@ TypeSafe's hosted Jev model.
   1063 calls from 18 sessions every checkpoint was scored against, AUC
   0.905 ± 0.078 against 0.719 ± 0.026 for the best neural checkpoint and
   wording, winning 10 of 10 paired splits. With the shipped defaults the shipped
-  code frees 33.7% of tool output and 3.6–32.6% of a real session's tokens,
-  scoring 1,762 calls in 190 ms.
+  code frees 33.6% of tool output and 8.7–32.7% of a real session's tokens,
+  scoring 3,278 calls in 275 ms.
 - **Fitted on 2239 calls from 41 sessions, and that is worse than it sounds.**
   Leave-one-session-out AUC is 0.789 with ECE 0.051, against 0.879 and 0.035 on
   18 of those same sessions. Widening the corpus within one person's own work
@@ -38,15 +38,23 @@ TypeSafe's hosted Jev model.
   their output can go. The rule applies to 220 mutating calls in the corpus and
   re-running the same decisions without it shows what it saves: 15 of them would
   otherwise lose their call or their output, against the single output in those
-  220 that was ever needed verbatim. Retention stands at 77.7%.
+  220 that was ever needed verbatim.
+
+- **A result nothing can produce again is never dropped.** The mirror of the
+  rule above: an `AskUserQuestion` result is somebody's answer and an
+  `ExitPlanMode` result is the plan they approved, and re-running recovers
+  neither. They are the two most-reused tools in the corpus — 47.1% and 83.3%
+  of their outputs quoted verbatim later against an 11.0% base — and the scorer
+  scores 17 of the 23 of them below the floor. The guard costs 0.1 of a point of
+  freeing and takes retention from 77.7% to 79.4%.
 - **The neural sidecar is gone from the product**, and stays in the evaluation.
   There is no option that turns it on; `scorer` and `layaUrl` are read and
-  ignored. What it cost is why: `eval/sidecar-bench.ts` reports 7.6 s to start,
-  ~4.9 GB resident, ~1.4 GB of VRAM and 41.0 s to score the sessions the
-  built-in scorer scores in 190 ms — 216× the time for a lower AUC. Two of those
-  figures are corrections: the table read 23.1 s and ~5.0 GB until the
-  projection was checked against an end-to-end run and the VRAM was found to
-  have been read off a router started in CPU mode.
+  ignored. What it cost is why: `eval/sidecar-bench.ts` reports 6.5 s to start,
+  ~4.9 GB resident, ~5.0 GB of VRAM for the router and 90.8 s to score the
+  sessions the built-in scorer scores in 275 ms — 330× the time for a lower AUC.
+  The ratio is a correction: the table read 23.1 s and 122× until the projection
+  was checked against an end-to-end run, and it halved itself by dividing
+  requests by the questions in one.
 
 - **Compaction defers the model summary instead of replacing it once.**
   `minReductionRatio` is gone. A pass is taken when it reclaims at least

@@ -2,6 +2,7 @@ import { CONTEXT_LENGTH, DEFAULT_MODEL, inputTokens, noulAnswer, routedModel } f
 import { DEFAULT_PHRASING, questionsFor } from './questions.js';
 import {
   MUTATING,
+  UNREPEATABLE,
   buildCallState,
   callContexts,
   collectToolCalls,
@@ -111,6 +112,8 @@ export function decideCall(
 ): CallDecision {
   const base = { id: call.id, tool: call.tool, ...answer };
   if (call.pinned) return { ...base, action: 'keep', reason: 'pinned' };
+  // A result nothing can produce again is not the scorer's to trade away.
+  if (UNREPEATABLE.has(call.tool)) return { ...base, action: 'keep', reason: 'pinned' };
   if (answer.keepResult >= options.keepThreshold) {
     return { ...base, action: 'keep', reason: 'kept' };
   }

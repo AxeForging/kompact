@@ -10,7 +10,7 @@
  *
  * Run: bun eval/policy.ts
  */
-import { MUTATING } from '../src/state.js';
+import { MUTATING, UNREPEATABLE } from '../src/state.js';
 import { loadCorpus, rowKey } from './corpus.js';
 import { DEFAULT_OPTIONS, decideAll } from '../src/compact.js';
 import type { CallAnswer, ToolCall } from '../src/index.js';
@@ -111,6 +111,8 @@ for (const target of [0.5, 0.6, 0.7, 0.8]) {
   let kept = 0;
   let mutatingDropped = 0;
   let mutatingRescued = 0;
+  let unrepeatableRescued = 0;
+  let unrepeatableChars = 0;
   let neededChars = 0;
   let neededCharsKept = 0;
   for (const session of sessions) {
@@ -154,6 +156,12 @@ for (const target of [0.5, 0.6, 0.7, 0.8]) {
       freed += row.output_chars - prefix;
       if (MUTATING.has(row.tool) && action === 'drop_call') mutatingDropped += 1;
       if (MUTATING.has(row.tool) && unguarded.get(rowKey(row)) !== 'keep') mutatingRescued += 1;
+      if (UNREPEATABLE.has(row.tool)) {
+        unrepeatableChars += row.output_chars;
+        // What the scorer would have done with it, which is the only way to say
+        // what the guard is worth rather than what it applies to.
+        if ((score.get(rowKey(row)) ?? 0) < DEFAULT_OPTIONS.keepThreshold) unrepeatableRescued += 1;
+      }
       if (!row.result_needed) continue;
       needed += 1;
       if (action === 'keep') kept += 1;
@@ -179,6 +187,10 @@ for (const target of [0.5, 0.6, 0.7, 0.8]) {
     `(${capLost.toFixed(1)}% lost, almost all of it to the ${DEFAULT_OPTIONS.maxKeptChars.toLocaleString()}-char cap)`);
   console.log(`  without that guard ${mutatingRescued} of them would lose their call or output, ` +
     `so the rule saves ${mutatingRescued}, not ${rows.filter((r) => MUTATING.has(r.tool)).length}`);
+  const unrepeatable = rows.filter((r) => UNREPEATABLE.has(r.tool));
+  console.log(`  a result nothing can produce again is also never dropped: ` +
+    `${unrepeatableRescued} of ${unrepeatable.length} ${[...UNREPEATABLE].join('/')} outputs ` +
+    `scored below the floor, and they are ${((100 * unrepeatableChars) / total).toFixed(2)}% of the corpus`);
 }
 
 console.log('\nwrong  = needed outputs that were dropped anyway');

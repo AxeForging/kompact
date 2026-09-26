@@ -372,7 +372,7 @@ h2{
   font-family: var(--display); font-weight: 700; font-size: var(--text-xl);
   /* Same reason as `.upfront b`, found later and in a worse place: at this size
      Bodoni's optical axis strips the serifs from the figure one and thins the
-     thousands comma to nothing, so "190 ms to score 1,762 tool calls" set itself
+     thousands comma to nothing, so "275 ms to score 3,278 tool calls" set itself
      as "I90 ms to score I.762" — and on a page where every other number is a
      three-decimal probability, "I.762" reads as a score rather than a count. */
   font-optical-sizing: none;
@@ -979,12 +979,12 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       322M&#8209;parameter model it was built on &#8212; un&#8209;fine&#8209;tuned, on a call it
       was never trained to make &#8212; 10 of 10 paired splits.</span></p>
     <p><b>3.6<span class="op">&#8211;</span>32.6%</b><span>of tokens freed, per session, on four real ones. Over the whole
-      corpus the shipped code frees 33.7%, keeps 77.7% of the outputs that were reused later and
-      87.9% of their characters &#8212; the missing <a href="#losses">12.1%</a> is mostly the cap.</span></p>
-    <p><b>190&#8239;ms</b><span>to score 1,762 calls, against 216&#215; that for the neural
+      corpus the shipped code frees 33.6%, keeps 79.4% of the outputs that were reused later and
+      88.1% of their characters &#8212; the missing <a href="#losses">11.9%</a> is mostly the cap.</span></p>
+    <p><b>275&#8239;ms</b><span>to score 3,278 calls, against 330&#215; that for the neural
       sidecar it replaced, on an RTX&#160;4060 Laptop.</span></p>
-    <p><b>6 passes</b><span>before the model summary runs &#8212; each about 8&#8239;ms, each
-      handing back nine points of context window, so
+    <p><b>6 passes</b><span>before the model summary runs &#8212; each about 9&#8239;ms, each
+      handing back eight points of context window, so
       <a href="#demo">the summary is deferred, not replaced</a>.</span></p>
     <p><b>Never</b><span>drops an <code>Edit</code>, <code>Write</code>, <code>MultiEdit</code> or
       <code>NotebookEdit</code> call, whatever it scores. Only their output can be trimmed.</span></p>
@@ -995,7 +995,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </p>
   </div>
   <div class="colophon reveal" style="--d:170ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>221</b> tests</span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>222</b> tests</span>
     <span><b>0</b> network calls</span><span><b>5</b> claims <a href="#checked">not verified</a></span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
 </div>
@@ -1146,7 +1146,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 <section class="wrap" id="for" aria-labelledby="for-h">
   <p class="rubric"><span class="rubric__n">02</span>Who it is for</p>
-  <h2 id="for-h">Five shapes of session, and what each one gets.</h2>
+  <h2 id="for-h">Six shapes of session, and what each one gets.</h2>
   <p class="lede">
     The saving is a property of how a session is shaped, not one number. Every figure here is
     measured elsewhere on this page; what is added is which one applies. Each carries its cost,
@@ -1158,7 +1158,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <dd>
       Most to free &#8212; the <span class="val">32.6%</span> session is commands whose output
       is never quoted again. Also the shape this scorer is <strong>worst</strong> at:
-      <span class="val">47</span> of the 55 outputs it wrongly dropped were command output.
+      <span class="val">47</span> of the 51 outputs it wrongly dropped were command output.
       Same habit causes both.
     </dd>
 
@@ -1180,16 +1180,29 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
     <dt>Nothing may leave the machine.</dt>
     <dd>
-      <span class="val">1,762</span> calls scored in <span class="val">190&#8239;ms</span>: no
+      <span class="val">3,278</span> calls scored in <span class="val">275&#8239;ms</span>: no
       process, no card, no key, no request. Not a setting &#8212; the path that needed one was
       removed after it lost.
     </dd>
 
-    <dt class="cases__against">Sessions that ask the operator questions.</dt>
+    <dt>Sessions that ask the operator questions.</dt>
     <dd>
-      Think twice. Four of the 55 wrong drops are <code>AskUserQuestion</code>,
-      <span class="val">2,122</span> characters &#8212; the only ones here no re-run restores.
-      Raise <code>keepThreshold</code>; <a href="#cost">section 06</a> prices the trade.
+      Answered by a rule rather than by advice. An <code>AskUserQuestion</code> result is
+      somebody's answer and an <code>ExitPlanMode</code> result is the plan they approved;
+      asking again is a new question and planning again is a new plan, so neither is ever
+      dropped. They are also the two most-reused tools in the corpus &#8212;
+      <span class="val">47.1%</span> and <span class="val">83.3%</span> against an
+      <span class="val">11.0%</span> base &#8212; and <span class="val">1.67%</span> of its
+      characters, so the rule costs <span class="val">0.1</span> of a point of freeing.
+    </dd>
+
+    <dt class="cases__against">Commands you cannot safely re-run.</dt>
+    <dd>
+      Think twice. <span class="val">47</span> of the <span class="val">51</span> outputs this
+      wrongly drops are <code>Bash</code>, and the recovery is &#8220;run it again&#8221; &#8212;
+      which is free for a <code>git&#160;log</code> and is not free for a migration or a deploy.
+      Nothing here knows which is which. Raise <code>keepThreshold</code>;
+      <a href="#cost">section 06</a> prices the trade.
     </dd>
   </dl>
 </section>
@@ -1307,20 +1320,20 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     One compaction is not the product; the loop is. The engine asks at 60% of the window, this
     answers, you keep working, and it asks again. Each answer costs about
     <span class="num val">9&#8239;ms</span> and hands back
-    <span class="num val">9 points</span> of window &#8212; so the model
+    <span class="num val">8 points</span> of window &#8212; so the model
     summary, which is a model call and rewrites your session into prose, runs after the
     sixth of them rather than the first.
   </p>
   <ol class="ladder" id="ladder">
-      <li class="ladder__row"><span class="ladder__label">pass 1</span><span class="visually-hidden">held 51.7% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:51.7%"></span><span class="ladder__back" style="--l:51.7%;--w:9.0%"></span></span><span class="ladder__num">&#8722;9.0<span class="ladder__unit">pts</span></span><span class="ladder__ms">15&#8239;ms</span></li>
-      <li class="ladder__row"><span class="ladder__label">pass 2</span><span class="visually-hidden">held 50.7% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:50.7%"></span><span class="ladder__back" style="--l:50.7%;--w:9.4%"></span></span><span class="ladder__num">&#8722;9.4<span class="ladder__unit">pts</span></span><span class="ladder__ms">10&#8239;ms</span></li>
-      <li class="ladder__row"><span class="ladder__label">pass 3</span><span class="visually-hidden">held 51.7% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:51.7%"></span><span class="ladder__back" style="--l:51.7%;--w:8.6%"></span></span><span class="ladder__num">&#8722;8.6<span class="ladder__unit">pts</span></span><span class="ladder__ms">9&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 1</span><span class="visually-hidden">held 52.0% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:52.0%"></span><span class="ladder__back" style="--l:52.0%;--w:8.7%"></span></span><span class="ladder__num">&#8722;8.7<span class="ladder__unit">pts</span></span><span class="ladder__ms">14&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 2</span><span class="visually-hidden">held 50.1% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:50.1%"></span><span class="ladder__back" style="--l:50.1%;--w:9.9%"></span></span><span class="ladder__num">&#8722;9.9<span class="ladder__unit">pts</span></span><span class="ladder__ms">10&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 3</span><span class="visually-hidden">held 51.7% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:51.7%"></span><span class="ladder__back" style="--l:51.7%;--w:8.4%"></span></span><span class="ladder__num">&#8722;8.4<span class="ladder__unit">pts</span></span><span class="ladder__ms">9&#8239;ms</span></li>
       <li class="ladder__row"><span class="ladder__label">pass 4</span><span class="visually-hidden">held 52.0% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:52.0%"></span><span class="ladder__back" style="--l:52.0%;--w:8.3%"></span></span><span class="ladder__num">&#8722;8.3<span class="ladder__unit">pts</span></span><span class="ladder__ms">8&#8239;ms</span></li>
-      <li class="ladder__row"><span class="ladder__label">pass 5</span><span class="visually-hidden">held 52.5% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:52.5%"></span><span class="ladder__back" style="--l:52.5%;--w:7.5%"></span></span><span class="ladder__num">&#8722;7.5<span class="ladder__unit">pts</span></span><span class="ladder__ms">9&#8239;ms</span></li>
-      <li class="ladder__row"><span class="ladder__label">pass 6</span><span class="visually-hidden">held 53.7% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:53.7%"></span><span class="ladder__back" style="--l:53.7%;--w:6.6%"></span></span><span class="ladder__num">&#8722;6.6<span class="ladder__unit">pts</span></span><span class="ladder__ms">8&#8239;ms</span></li>
-      <li class="ladder__row ladder__row--over"><span class="ladder__label">hand over</span><span class="visually-hidden">held 53.3% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:53.3%"></span><span class="ladder__back" style="--l:53.3%;--w:6.7%"></span></span><span class="ladder__num ladder__num--under">&#8722;6.7<span class="ladder__unit">pts</span></span><span class="ladder__ms">6 passes is the ceiling</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 5</span><span class="visually-hidden">held 52.8% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:52.8%"></span><span class="ladder__back" style="--l:52.8%;--w:7.2%"></span></span><span class="ladder__num">&#8722;7.2<span class="ladder__unit">pts</span></span><span class="ladder__ms">8&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 6</span><span class="visually-hidden">held 54.1% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:54.1%"></span><span class="ladder__back" style="--l:54.1%;--w:6.6%"></span></span><span class="ladder__num">&#8722;6.6<span class="ladder__unit">pts</span></span><span class="ladder__ms">8&#8239;ms</span></li>
+      <li class="ladder__row ladder__row--over"><span class="ladder__label">hand over</span><span class="visually-hidden">held 54.3% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:54.3%"></span><span class="ladder__back" style="--l:54.3%;--w:5.8%"></span></span><span class="ladder__num ladder__num--under">&#8722;5.8<span class="ladder__unit">pts</span></span><span class="ladder__ms">6 passes is the ceiling</span></li>
   </ol>
-  <p class="caption">One real session of 7,681 messages, replayed against a
+  <p class="caption">One real session of 7,853 messages, replayed against a
     200k&#8209;token window. The dark part of each bar is what the session was still
     holding; the red part is what that pass handed back. Of 5 sessions measured on this
     machine, 3 looped at all, and between them the loop answered <b>9</b>
@@ -1333,10 +1346,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       removed a quarter of the transcript. Replaying the loop on real sessions, that bar took
       <span class="num val">0</span> of <span class="num val">14</span>
       passes &#8212; every one went to the model summary while this could still free
-      9 points of window in under 15&#8239;ms.
+      8 points of window in under 14&#8239;ms.
     </p>
     <p>
-      The unit was the mistake. A quarter of a 7,681-message session and
+      The unit was the mistake. A quarter of a 7,853-message session and
       a quarter of a 200-message one are not the same amount of room to keep working in, and room is
       what runs out. Points of the context window are comparable between them, and they are the same
       unit as the 60% trigger &#8212; which makes the rule its own guard: a pass that is taken
@@ -1366,17 +1379,17 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <div class="finding finding--loss reveal">
     <p>The extra passes are not free. Replayed over
       <span class="val">32</span> sessions, the loop drops
-      <span class="val">21</span> outputs a later step went back to, against
+      <span class="val">19</span> outputs a later step went back to, against
       <span class="val">6</span> for a single pass &#8212;
-      <span class="val">3.5&#215;</span> the loss for <span class="val">1.38&#215;</span>
+      <span class="val">3.17&#215;</span> the loss for <span class="val">1.38&#215;</span>
       the characters freed.</p>
   </div>
   <p>
     The first pass is the efficient one and that is structural: it compacts the whole
     accumulated backlog at once, where the cheap bulk is, at
     <span class="num val">0.058</span> lost outputs per 10,000 characters freed. Every pass
-    after it works on fresh material only and pays <span class="num val">0.33</span> to
-    <span class="num val">0.67</span> &#8212; five to ten times as much. It is still not an
+    after it works on fresh material only and pays <span class="num val">0.25</span> to
+    <span class="num val">0.71</span> &#8212; four to twelve times as much. It is still not an
     argument for stopping at one, because the alternative to pass two is not keeping
     everything: it is the model summary, which keeps no tool output verbatim at all. But the
     price is on the page rather than under it, and <code>maxPasses:&#160;1</code> buys the
@@ -1538,7 +1551,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 <section class="wrap" id="cost" aria-labelledby="cost-h">
   <p class="rubric"><span class="rubric__n">06</span>Cost</p>
-  <h2 id="cost-h">190&nbsp;ms to score 1,762 tool calls.</h2>
+  <h2 id="cost-h">275&nbsp;ms to score 3,278 tool calls.</h2>
   <p class="lede">
     Compaction stops being a model call and becomes arithmetic. These are whole session
     logs, so the totals span more than one context window, so the ratio is what transfers.
@@ -1552,11 +1565,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         <th scope="col" class="n">Freed</th><th scope="col" class="n">Scoring</th>
       </tr></thead>
       <tbody>
-        <tr><th scope="row">25e65eab</th><td class="n">473</td><td class="n">273,749</td><td class="n">222,052</td><td class="n val">18.9%</td><td class="n">49 ms</td></tr>
-        <tr><th scope="row">20628921</th><td class="n">921</td><td class="n">825,889</td><td class="n">556,490</td><td class="n val">32.6%</td><td class="n">110 ms</td></tr>
-        <tr><th scope="row">78d7d176</th><td class="n">335</td><td class="n">391,638</td><td class="n">341,578</td><td class="n val">12.8%</td><td class="n">28 ms</td></tr>
-        <tr><th scope="row">agent-a7606f</th><td class="n">33</td><td class="n">42,819</td><td class="n">41,272</td><td class="n val">3.6%</td><td class="n">2 ms</td></tr>
-        <tr><th scope="row">Total</th><td class="n">1,762</td><td class="n">1,534,095</td><td class="n">1,161,392</td><td class="n val">24.3%</td><td class="n">190 ms</td></tr>
+        <tr><th scope="row">20628921</th><td class="n">2,690</td><td class="n">1,861,235</td><td class="n">1,252,356</td><td class="n val">32.7%</td><td class="n">239 ms</td></tr>
+        <tr><th scope="row">25e65eab</th><td class="n">473</td><td class="n">273,749</td><td class="n">224,484</td><td class="n val">18.0%</td><td class="n">28 ms</td></tr>
+        <tr><th scope="row">agent-ab4cc5</th><td class="n">49</td><td class="n">43,400</td><td class="n">39,451</td><td class="n val">9.1%</td><td class="n">3 ms</td></tr>
+        <tr><th scope="row">agent-afa3fd</th><td class="n">66</td><td class="n">83,022</td><td class="n">75,768</td><td class="n val">8.7%</td><td class="n">6 ms</td></tr>
+        <tr><th scope="row">Total</th><td class="n">3,278</td><td class="n">2,261,406</td><td class="n">1,592,059</td><td class="n val">29.6%</td><td class="n">275 ms</td></tr>
       </tbody>
     </table>
   </div>
@@ -1619,18 +1632,18 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     </table>
   </div>
   <p class="caption">
-    <strong>What the cap costs, priced.</strong> The <span class="val">33.7%</span> above
+    <strong>What the cap costs, priced.</strong> The <span class="val">33.6%</span> above
     includes it; so does this. Of the 247 outputs that were genuinely reused later,
     <span class="val">5</span> are longer than the cap, and shortening them removes
     <span class="val">76,466</span> characters those later steps had quoted &#8212;
     <span class="val">6.2%</span> of every reused character. Counting the wrong drops beside it,
-    <span class="val">87.9%</span> of reused characters survive the shipped defaults and
-    <span class="val">12.1%</span> do not. The gain and the loss are measured the same way,
+    <span class="val">88.1%</span> of reused characters survive the shipped defaults and
+    <span class="val">11.9%</span> do not. The gain and the loss are measured the same way,
     because for a while only the gain was.
   </p>
   <p class="caption">
     Freeing nearly everything is easy and nearly worthless. Run through the shipped code rather
-    than this simulation, the same defaults give <strong>33.7% freed and 77.7% kept</strong>. The
+    than this simulation, the same defaults give <strong>33.6% freed and 79.4% kept</strong>. The
     sweep has no notion of two shipped rules: a call recording a change is never dropped, and a
     kept result is capped at <a href="#g-the-cap">24,000 characters</a>. The cap is most of the
     gap &#8212; <span class="val">27</span> of the 2,239 calls are longer than it, and shortening
@@ -1651,19 +1664,21 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <table class="data">
       <caption class="visually-hidden">what the sidecar would have cost to run</caption>
       <thead><tr>
-        <th scope="col">Scoring 1,762 calls, the four sessions above</th><th scope="col" class="n">Time</th>
+        <th scope="col">Scoring 3,278 calls, the four sessions above</th><th scope="col" class="n">Time</th>
         <th scope="col" class="n">Memory held</th><th scope="col" class="n">VRAM</th>
         <th scope="col" class="n">Cold start</th>
       </tr></thead>
       <tbody>
-        <tr class="same"><th scope="row">Built-in scorer</th><td class="n mark">190 ms</td><td class="n">none</td><td class="n">none</td><td class="n">none</td></tr>
-        <tr><th scope="row">Neural sidecar, fastest checkpoint, on a GPU</th><td class="n">41 s</td><td class="n">4.9 GB</td><td class="n">1.4 GB</td><td class="n">7.6 s</td></tr>
+        <tr class="same"><th scope="row">Built-in scorer</th><td class="n mark">275 ms</td><td class="n">none</td><td class="n">none</td><td class="n">none</td></tr>
+        <tr><th scope="row">Neural sidecar, fastest checkpoint, on a GPU</th><td class="n">90.8 s</td><td class="n">4.9 GB</td><td class="n">5.0 GB</td><td class="n">6.5 s</td></tr>
       </tbody>
     </table>
   </div>
   <p class="caption">
-    <strong>216&#215; the time, for a lower AUC</strong>, on an RTX 4060 Laptop. Per request the
-    fastest checkpoint answers eight questions in 573 ms and the slowest in 1,906 ms.
+    <strong>330&#215; the time, for a lower AUC</strong>, on an RTX 4060 Laptop. Per request the
+    fastest checkpoint answers eight questions in 641 ms and the slowest in 1,892 ms. The VRAM is
+    the router with all three checkpoints resident, which is what the benchmark starts; one
+    checkpoint alone is about 1.4 GB.
     Fine-tuning moves the AUC; it does not move this table.
   </p>
   <p class="caption">
@@ -1724,13 +1739,15 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
 
   <details class="more">
-    <summary><h3>What the other 22.3% costs</h3></summary>
+    <summary><h3>What the other 20.6% costs</h3></summary>
     <p>
-    “77.3% of reused outputs kept” invites you to supply your own answer for the rest, so here
-    it is, priced. (77.3 and 22.3 sum to 99.6, not 100: the two figures come from
-    <code>eval/policy.ts</code> and <code>eval/recovery.ts</code>, which disagree by one output
-    on where a partial head counts. Neither is rounded to hide it. Both are the simulation; run through the shipped code the same defaults give 33.7% and 77.7%, which is the pair the masthead quotes.) Held-out scores, shipped policy, per session: <strong>55 of the 247 reused
-    outputs are dropped</strong> — 1.34 a session, and only one of them kept a head.
+    “79.4% of reused outputs kept” invites you to supply your own answer for the rest, so here
+    it is, priced. (The sweep above says 77.3% and this says 20.6%, which sum to 97.9 rather
+    than 100. The gap is the two rules the sweep has no notion of: a call recording a change is
+    never dropped, and neither is a result nothing can produce again. Run through the shipped
+    code the same defaults give <strong>33.6% freed and 79.4% kept</strong>, which is the pair
+    the masthead quotes.) Held-out scores, shipped policy, per session: <strong>51 of the 247
+    reused outputs are dropped</strong> — 1.24 a session, and only one of them kept a head.
   </p>
   <div class="scroller" tabindex="0" data-label="Table: what a wrong drop costs">
     <table class="data">
@@ -1742,16 +1759,18 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <tbody>
         <tr class="same"><th scope="row">Re-run the command, side effects unknown</th><td class="n mark">47</td><td class="n">42,389</td><td>Bash</td></tr>
         <tr><th scope="row">Read the file again</th><td class="n">4</td><td class="n">53,680</td><td>Read</td></tr>
-        <tr><th scope="row">Not repeatable at all</th><td class="n">4</td><td class="n">2,122</td><td>AskUserQuestion</td></tr>
+        <tr><th scope="row">Not repeatable at all</th><td class="n mark">0</td><td class="n">0</td><td>&#8212;</td></tr>
       </tbody>
     </table>
   </div>
   <p class="caption">
-    Only one of the 55 kept a head, because when a result scores below the floor the call
+    Only one of the 51 kept a head, because when a result scores below the floor the call
     usually does too. Forty-seven are command output that a later tool input quoted verbatim —
     the shape this scorer is worst at, since most command output is never referred to again and
-    the minority that is gets swept along with it. Four are <code>AskUserQuestion</code>: a
-    human answer, which no amount of re-running brings back.
+    the minority that is gets swept along with it. The bottom row used to read
+    <span class="val">4</span> <code>AskUserQuestion</code> results &#8212; a human's answer,
+    which no amount of re-running brings back. It reads zero because
+    <a href="#for">a result nothing can produce again</a> is no longer the scorer's to drop.
     <strong>This is recovery cost, and it over-counts</strong> — it includes reuses that had
     already happened when a real compaction fired. The next section measures what is actually
     at risk.
@@ -1998,7 +2017,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p>Sometimes — <span class="num val">0.19</span> outputs a session where it would actually
         cost you something, and 27 of 32 sessions lose nothing at all. Counting every reuse
         anywhere later, including ones that had already happened before a real compaction could
-        fire, the upper bound is 1.34 a session. Both are in <a href="#losses">section 07, Where it loses</a>, and 47 of the 55 are
+        fire, the upper bound is 1.24 a session. Both are in <a href="#losses">section 07, Where it loses</a>, and 47 of the 55 are
         command output. A dropped result keeps its first 300 characters when the call survives, and a call
         that recorded a change is never dropped at all. Every failure mode falls back to Claude
         Code's own summary rather than to a half-compacted transcript, and a single failed request
@@ -2098,7 +2117,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     same line, plus one per decision, to the session log. The pass number says where in
     <a href="#demo">the ladder</a> you are, the parts sum to what was scored, and the time is
     the whole compaction — collecting the calls, scoring them, deciding, and rebuilding the
-    transcript — for the 71 calls in that one, not the 1,762 in
+    transcript — for the 71 calls in that one, not the 3,278 in
     <a href="#cost">section 06, Cost</a>. If anything at all goes wrong you get
     the other notice instead, naming the reason:
     <code>fallback to built-in summary (…)</code>. Silence at a compaction is

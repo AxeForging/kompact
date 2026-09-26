@@ -4,7 +4,7 @@ Context compaction that scores every tool call before it compacts, keeps what is
 still needed verbatim, and drops the rest. Local, offline, no API key.
 
 It answers up to **six compactions** before Claude Code's own model summary
-runs — about 8 ms each, each handing back nine points of your context window —
+runs — about 9 ms each, each handing back eight points of your context window —
 so the summary is deferred rather than replaced, and the file you read is still
 the file rather than a description of it.
 
@@ -257,12 +257,12 @@ over anyway, because what deferring the summary costs is not measured and a
 backstop whose value is a judgement should be the conservative one.
 
 **The extra passes are not free**, and `bun eval/outcome.ts --passes 6` prices
-them. Replayed over 32 sessions, the loop drops 21 outputs a later step went
-back to, against 6 for a single pass — **3.5× the loss for 1.38× the
+them. Replayed over 32 sessions, the loop drops 19 outputs a later step went
+back to, against 6 for a single pass — **3.17× the loss for 1.38× the
 characters**. The first pass is the efficient one and that is structural: it
 compacts the whole accumulated backlog at once, at 0.058 lost outputs per 10,000
 characters freed, where every pass after it works on fresh material only and
-pays 0.33 to 0.67. That is not an argument for stopping at one — the alternative
+pays 0.25 to 0.71. That is not an argument for stopping at one — the alternative
 to pass two is the model summary, which keeps no tool output verbatim at all —
 but `maxPasses: 1` buys the cheap pass and nothing else.
 
@@ -352,7 +352,7 @@ Freeing nearly everything is easy and nearly worthless. This is why `calibrate`
 is an accuracy upgrade rather than a prerequisite: the policy adapts to your
 distribution without it.
 
-### One rule the scorer does not get a vote on
+### Two rules the scorer does not get a vote on
 
 An `Edit`, `Write`, `MultiEdit` or `NotebookEdit` call is never dropped. Its
 *result* can be — "Applied 1 edit to src/auth.ts" is worth nothing, and exactly
@@ -367,6 +367,16 @@ corpus the rule applies to 220 such calls, and re-running the same decisions wit
 the guard removed shows what it actually saves: **15 of them** would otherwise
 lose their call or their output, against the single output in those 220 that was
 ever needed verbatim.
+
+The second rule is the mirror of it. Where that one protects the record that a
+change happened, this one protects **the record of what a person decided**: an
+`AskUserQuestion` result is somebody's answer and an `ExitPlanMode` result is the
+plan they approved, and re-running neither recovers it — asking again is a new
+question, planning again is a new plan. They are also the two most-reused tools
+in the corpus, **47.1%** and **83.3%** of their outputs quoted verbatim later
+against an 11.0% base rate, and the scorer scores **17 of the 23** of them below
+the floor. Never dropping them costs 0.1 of a point of freeing — 33.7% to 33.6% —
+and takes reused-output retention from 77.7% to **79.4%**.
 
 ### What the other 22.3% costs
 
@@ -427,34 +437,33 @@ Measured on one machine, RTX 4060 Laptop, one `laya-serve` process
 
 | | |
 |---|---|
-| cold start to first answer | **7.6 s** |
+| cold start to first answer | **6.5 s** |
 | resident memory | **3.1 GB** at first answer, **4.9 GB** warm |
-| VRAM | **~1.4 GB** for the one checkpoint measured resident on the card |
-| latency, `multilingual`, 8 questions | **573 ms** median |
-| latency, `english` / `typed-decisions`, 8 questions | 1,704 ms / 1,906 ms |
+| VRAM | **~5.0 GB** for the router with all three checkpoints; ~1.4 GB for one alone |
+| latency, `multilingual`, 8 questions | **641 ms** median |
+| latency, `typed-decisions` / `english`, 8 questions | 1,857 ms / 1,892 ms |
 
-`laya-serve` loads every checkpoint at startup and routes per request, so memory
-and start-up are properties of the router, not of any one checkpoint. Only
+`laya-serve` loads every checkpoint at startup and routes per request, so memory,
+start-up and VRAM are properties of the router, not of any one checkpoint. Only
 latency is per checkpoint.
 
-Scoring this machine's sessions — 1,762 calls, two questions a request, eight in
-flight — takes **41.0 s on the fastest checkpoint against 190 ms for the built-in
-scorer**, holding ~4.9 GB of RAM and about 1.4 GB of VRAM the whole time. That is
-216x the time for a lower AUC, which is the arithmetic behind the default.
+Scoring this machine's sessions — 3,278 calls, two questions a request, eight in
+flight — takes **90.8 s on the fastest checkpoint against 275 ms for the built-in
+scorer**, holding ~4.9 GB of RAM and about 5.0 GB of VRAM the whole time. That is
+330x the time for a lower AUC, which is the arithmetic behind the default.
 Fine-tuning changes the AUC; it does not change this table.
 
-Both of those figures are corrections. The block read 23.1 s and 122x until the
+That ratio is a correction twice over. It read 23.1 s and 122x until the
 projection was checked: it divided the request count by the questions in a
 request, and a request carries one call's two questions, so there is one request
-per call and it halved itself. The VRAM said ~5 GB and had been read off a router
-started with `LAYA_DEVICE=cpu`, which puts almost nothing on the card — the same
-report shows 227 MiB of GPU memory in use beside it, and nobody read the two
-lines together. 1.4 GB is the measured delta on the card when one checkpoint is
-loaded with `LAYA_DEVICE=cuda`: 148 MiB before, 1,519 MiB after. Checked
-end to end rather than re-derived: 159 calls through a CUDA sidecar took 3,960 ms
-at concurrency 8, where the corrected arithmetic predicts 3,696 ms. Concurrency
-buys nothing — 928 ms a call at one in flight, 1,002 ms at eight, because the GPU
-serialises.
+per call and it halved itself. The VRAM figure is a correction in the other
+direction — an earlier ~5 GB had been read off a router started with
+`LAYA_DEVICE=cpu`, which puts almost nothing on the card, and the 1.4 GB that
+replaced it was one checkpoint on CUDA. Both are true of what they measured; the
+number that belongs in the table is what the benchmark actually starts, which is
+the router with all three loaded: 148 MiB on the card before, 5,145 MiB after.
+Concurrency buys nothing — 928 ms a call at one in flight, 1,002 ms at eight,
+because the GPU serialises.
 
 ## What you repeat, and skills for it
 
@@ -584,7 +593,7 @@ Being precise about this, because "it compiles" is not evidence.
 | The Codex plugin works against the server | `jev-compact`'s own parser, pairing, scorer and HTTP client, driven over its recorded Codex rollout fixture, produce discriminating scores |
 | The plugin loads in a real engine | `claude --plugin-dir .` with function hooks on |
 | `turn.complete` fires and requests compaction | verified live: the hook was invoked in a real session, `$.session.usage()` returned a real percentage, and `$.session.compact()` was called |
-| The loop takes several passes before handing over | the production loop replayed on real transcripts — compacted prefix plus real continuation, not a pass fed its own output: 9 passes taken across 3 sessions, none slower than 20 ms (`eval/passes.ts`). The hook's own side of it — counter, ceiling, cleared record — is driven over a real transcript from disk in `test/real-transcript.test.ts` |
+| The loop takes several passes before handing over | the production loop replayed on real transcripts — compacted prefix plus real continuation, not a pass fed its own output: several passes a session, none slower than 25 ms (`eval/passes.ts`). The hook's own side of it — counter, ceiling, cleared record — is driven over a real transcript from disk in `test/real-transcript.test.ts` |
 
 **Not verified:** the engine invoking `session.compact` *in a live session* and
 accepting the replacement message list. Forcing it needs genuine context
@@ -616,7 +625,7 @@ And a live Codex CLI, which needs >= 0.155 (this machine has 0.131).
 ```sh
 bun install
 npm run typecheck   # src + test + eval + hooks
-npm run test        # 221 tests
+npm run test        # 222 tests
 npm run validate    # plugin manifest
 ```
 
