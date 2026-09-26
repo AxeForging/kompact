@@ -16,7 +16,7 @@
 <nav class="contents-bar" aria-label="Contents">
   <div class="contents-bar__row wrap">
     <div class="contents">
-    <a class="contents__out" href="./" aria-label="Back to kompact">&#8592;&#8239;<span class="contents__long">kompact</span><span class="contents__short">back</span></a><a class="contents__out" href="evidence.html"><span class="contents__long">Cost, losses, verification</span><span class="contents__short">Evidence</span>&#8239;&#8599;</a><a class="contents__out" href="trigger.html"><span class="contents__long">The settings study</span><span class="contents__short">Study</span>&#8239;&#8599;</a><a class="contents__out" href="eval.html"><span class="contents__long">Full evaluation</span><span class="contents__short">Eval</span>&#8239;&#8599;</a></div>
+    <a class="contents__out" href="./" aria-label="Back to kompact">&#8592;&#8239;<span class="contents__long">kompact</span><span class="contents__short">back</span></a><a href="#glossary"><span class="contents__long">Glossary</span><span class="contents__short">Terms</span></a><a href="#config">Config</a><a class="contents__out" href="evidence.html"><span class="contents__long">Cost, losses, verification</span><span class="contents__short">Evidence</span>&#8239;&#8599;</a><a class="contents__out" href="trigger.html"><span class="contents__long">The settings study</span><span class="contents__short">Study</span>&#8239;&#8599;</a><a class="contents__out" href="eval.html"><span class="contents__long">Full evaluation</span><span class="contents__short">Eval</span>&#8239;&#8599;</a></div>
     <p class="contents__tools">
       <a class="contents__go" href="./#install">Install</a>
       <a class="contents__top" href="#top" aria-label="Back to top"><span class="contents__word">Top&nbsp;</span>&#8593;</a>
@@ -94,6 +94,31 @@
       writes nothing, installs nothing, and needs no plugin.</dd>
   </dl>
   </details>
+</section>
+
+<section class="wrap" id="config" aria-labelledby="config-h">
+  <p class="rubric rubric--appendix">Configuration</p>
+  <h2 id="config-h">Every setting, and its default.</h2>
+  <p class="lede">The whole of <code>userConfig</code> in the plugin manifest. Each value is a
+    default in <code>src/compact.ts</code>; leave them and the shipped numbers apply.</p>
+  <div class="scroller" tabindex="0" data-label="Table: configuration options and their defaults">
+    <table class="data">
+      <caption class="visually-hidden">kompact configuration options and defaults</caption>
+      <thead><tr><th scope="col">Option</th><th scope="col" class="n">Default</th><th scope="col">Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>keepThreshold</code></td><td class="n">0.2</td><td>a floor: at or above this a result is never dropped</td></tr>
+        <tr><td><code>targetReduction</code></td><td class="n">0.5</td><td>fraction of droppable tool output a pass tries to free</td></tr>
+        <tr><td><code>preserveRecentMessages</code></td><td class="n">6</td><td>newest messages pinned; the first is always kept</td></tr>
+        <tr><td><code>compactAtPercent</code></td><td class="n">62</td><td>context percentage that triggers compaction, under Claude Code’s own 70% so kompact answers first</td></tr>
+        <tr><td><code>minFreedPercent</code></td><td class="n">5</td><td>a pass is taken only if it reclaims this many points of the window; below it the built-in summary runs</td></tr>
+        <tr><td><code>maxPasses</code></td><td class="n">6</td><td>compactions kompact answers on one transcript before handing over regardless</td></tr>
+        <tr><td><code>truncateHeadChars</code></td><td class="n">300</td><td>head kept of a dropped result</td></tr>
+        <tr><td><code>minYieldChars</code></td><td class="n">200</td><td>fewest characters a drop must free to be worth making</td></tr>
+        <tr><td><code>maxKeptChars</code></td><td class="n">24000</td><td>longest a kept result may be; 0 disables the cap</td></tr>
+        <tr><td><code>recordSignals</code></td><td class="n">false</td><td>opt in to recording repeated command shapes for npm run propose</td></tr>
+      </tbody>
+    </table>
+  </div>
 </section>
 </main>
 

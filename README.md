@@ -189,7 +189,7 @@ The type declarations in `types/` were written by Claude Code 2.1.281.
 | `keepThreshold` | `0.2` | a **floor**: at or above this, never dropped |
 | `targetReduction` | `0.5` | fraction of droppable tool output to free |
 | `preserveRecentMessages` | `6` | newest messages pinned; the first is always kept |
-| `compactAtPercent` | `60` | context percentage that triggers compaction |
+| `compactAtPercent` | `62` | context percentage that triggers compaction (under Claude Code’s own 70% so kompact answers first) |
 | `minFreedPercent` | `5` | a pass is taken only if it reclaims this many percentage points of the context window; below it, the built-in summary runs |
 | `maxPasses` | `6` | compactions kompact answers on one transcript before handing over regardless |
 | `truncateHeadChars` | `300` | head kept of a dropped result |

@@ -31,7 +31,7 @@
       "type": "number",
       "title": "Compaction percentage",
       "description": "Context percentage at which turn.complete requests compaction.",
-      "default": 60
+      "default": 62
     },
     "minFreedPercent": {
       "type": "number",
