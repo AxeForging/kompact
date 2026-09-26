@@ -312,6 +312,29 @@ it were prose nobody could re-run.
 
 ${maybe('truncation.ts')}
 
+### And what it costs, which is less than it sounds
+
+The corpus was built at one state budget, 700 tokens, and handed to every
+checkpoint. The English checkpoint's own budget is 320, so the server had been
+cutting **700 of 2,239** English rows — nearly a third — at HTTP 200 with no
+warning, and three published AUCs carried no footnote saying so.
+
+The obvious conclusion was that those three numbers were unfair to the
+checkpoint. They are not. Giving it a state it can read whole makes it *worse*,
+at every wording, monotonically:
+
+${maybe('score.ts', '--only', 'english', '--budget-sweep')}
+
+\`buildCallState\` front-loads on purpose — task first, derived facts second, raw
+output excerpt last — so the server's cut lands on the part that was already the
+most expendable, while an honest trim to a smaller budget removes that part and
+then some. The silent cut was the problem, not the damage; the fix is the
+\`trunc\` column travelling as far as the AUC does, which it now does.
+
+It also shows \`STATE_BUDGET.english\` is pessimistic. It reserves 192 tokens for
+the option head, and two \`noul\` questions with short criteria are nothing like
+that: at a 450-token state only about 150 rows of 2,239 are cut at all.
+
 ## What the sidecar costs to run — \`eval/sidecar-bench.ts\`
 
 Needs a live \`laya-serve\`, so this section is empty on a machine without one.

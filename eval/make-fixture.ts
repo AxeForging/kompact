@@ -124,15 +124,21 @@ writeFileSync(path, serialised);
 const scoresPath = join(here, 'scores.json');
 if (existsSync(scoresPath)) {
   const raw = JSON.parse(readFileSync(scoresPath, 'utf8')) as
-    Record<string, Record<string, { result?: number; call?: number }>>;
-  const out2: Record<string, Record<string, { result: number; call: number }>> = {};
+    Record<string, Record<string, { result?: number; call?: number; truncated?: boolean }>>;
+  // `truncated` travels now. It was dropped here, and `eval/repeat.ts` does not
+  // read it either, so the published table reported three English AUCs without
+  // saying that the server had cut a quarter of their inputs.
+  type Answer = { result: number; call: number; truncated?: boolean };
+  const out2: Record<string, Record<string, Answer>> = {};
   let missing = 0;
   for (const [config, byId] of Object.entries(raw)) {
-    const mapped: Record<string, { result: number; call: number }> = {};
+    const mapped: Record<string, Answer> = {};
     rows.forEach((row, index) => {
       const found = byId[row.tool_use_id];
       if (found?.result === undefined || found.call === undefined) { missing += 1; return; }
-      mapped[rowKey(out[index]!)] = { result: found.result, call: found.call };
+      mapped[rowKey(out[index]!)] = found.truncated === undefined
+        ? { result: found.result, call: found.call }
+        : { result: found.result, call: found.call, truncated: found.truncated };
     });
     out2[config] = mapped;
   }
