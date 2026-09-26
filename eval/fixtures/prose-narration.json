@@ -1,0 +1,12 @@
+{
+  "sessions": 35,
+  "windowTokens": 700000,
+  "medianOrphanPct": 0,
+  "maxOrphanPct": 0,
+  "medianStandaloneProsePct": 3.92,
+  "meanStandaloneProsePct": 4.53,
+  "maxStandaloneProsePct": 15,
+  "medianToolPct": 93.5,
+  "totalOrphanTokens": 0,
+  "totalWindowTokens": 3546015
+}

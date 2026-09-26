@@ -312,3 +312,45 @@ anything. `applyDecisions` never touches prose, so what kompact leaves behind is
 verbatim tool calls and the user's and assistant's own words — not a narrative.
 `maxPasses` is the backstop for that, and its value is a judgement: the floor
 would allow more.
+
+## Whether prose can be compacted fast — `eval/prose-narration.ts`
+
+kompact's passes are mechanical and cost milliseconds; the model summary that
+runs when it hands over costs a median of two minutes (`eval/summary-cost.ts`).
+The obvious question is whether the prose — the assistant's and user's own words,
+which `applyDecisions` never touches — could be compacted the same cheap way.
+
+The safest possible prose drop needs no scorer: when kompact drops every tool
+call in a message, the text that introduced them ("Let me read X") is orphaned,
+and dropping it recovers nothing that a re-run cannot. Measured over 35 real
+sessions, its yield is zero:
+
+```
+fixture: 35 sessions, window tail ~700k tokens each
+co-located orphaned narration:  median 0%  (max 0%) of window
+standalone prose pool:          median 3.92%  (mean 4.53%, max 15%)
+tool share of window:           median 93.5%
+pooled orphan:                  0 / 3,546,015 tokens
+```
+
+The zero is structural, not a null measurement. In Claude Code's transcripts a
+tool call sits in its own message with no text of its own — narration lives in
+separate, text-only rows. So "clear the text on a message whose calls were all
+dropped" has nothing to clear: those messages are already textless
+(`msgsWithCalls === calls`, `asstWithText === 0` on every session checked). The
+Phase-1 drop was specified against a shape the data does not have; it is not
+shipped.
+
+The only real prose lever is the standalone pool — the text-only assistant rows,
+a median 3.92% of the window. Reclaiming it is a different problem from dropping
+a tool result: a result is droppable *because* it can be re-run and keeps its
+first 300 characters, and a sentence has neither property. Attributing a
+standalone message to a call that was dropped is a judgement, not a fact, so this
+is the extractive-scorer problem, not the mechanical one.
+
+**Not built — research.** An extractive prose scorer (the same logistic machinery
+as `eval/logistic.ts`, keeping user instructions, decisions, file paths and final
+answers; dropping acknowledgements and restated context) would need a labelled
+prose corpus built the way the 1,063 labelled tool calls were, and its wrong
+drops are unrecoverable. At a 3.92% median ceiling against a 93.5% tool share,
+the tool path is where the tokens are; the prose scorer is filed, not funded.
