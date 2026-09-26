@@ -457,17 +457,30 @@ scorer**, holding ~3.2 GB of RAM and about 5.8 GB of VRAM the whole time. That i
 17x the time for a lower AUC, which is the arithmetic behind the default.
 Fine-tuning changes the AUC; it does not change this table.
 
-That ratio is a correction twice over. It read 23.1 s and 122x until the
-projection was checked: it divided the request count by the questions in a
-request, and a request carries one call's two questions, so there is one request
-per call and it halved itself. The VRAM figure is a correction in the other
-direction — an earlier ~5 GB had been read off a router started with
-`LAYA_DEVICE=cpu`, which puts almost nothing on the card, and the 1.4 GB that
-replaced it was one checkpoint on CUDA. Both are true of what they measured; the
-number that belongs in the table is what the benchmark actually starts, which is
-the router with all three loaded: 148 MiB on the card before, 5,145 MiB after.
-Concurrency buys nothing — 928 ms a call at one in flight, 1,002 ms at eight,
-because the GPU serialises.
+That ratio is a correction twice over, and the second correction is the one
+worth reading. It read 23.1 s and 122x until the projection was checked: it
+divided the request count by the questions in a request, and a request carries
+one call's two questions, so there is one request per call and it halved itself.
+
+Then it read 90.7 s and **319x** for weeks. That figure was measured against a
+sidecar started with `LAYA_DEVICE=cpu` while the card sat idle — and
+`eval/sidecar-bench.ts` printed the idle card two lines above its own table, as
+`gpu: ... 148 MiB`. The warning was in this file already: CPU mode "puts almost
+nothing on the card and every figure below flatters it". On the GPU the same
+work takes 4.9 s, so the magnitude was wrong by a factor of eighteen while the
+conclusion it supported was not. The script now reads the sidecar's own
+`/health`, which reports the device in one field, and refuses to print
+publishable rows from a CPU one unless `--allow-cpu` labels them.
+
+One number was never the cost of running Laya; it was the cost of one deployment
+of it. `laya-serve` routes `/health` and `/v1/systemone` and nothing else, so
+over HTTP every call is one state in one forward pass in one round trip — the
+slowest thing the model can do — while `Agent.predict_batch` packs many states
+into shared passes. `bun eval/sidecar-bench.ts --inprocess` prints the whole
+ladder: on this card the wire costs about 0.3 ms of the round trip, and batching
+roughly halves what is left. The sidecar still loses, at every rung, which is
+why the ladder is published instead of the single number that happened to
+flatter the conclusion.
 
 ## What you repeat, and skills for it
 
