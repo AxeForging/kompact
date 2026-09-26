@@ -91,7 +91,7 @@ const markup = `  <p>
     <p>
       The ceiling is <code>maxPasses: ${f.maxPasses}</code>, and on the session drawn above it is
       what stops the loop rather than the floor. That is deliberate: what
-      <a href="#checked">deferring the summary costs</a> is not measured, and a backstop whose value
+      <a href="evidence.html#checked">deferring the summary costs</a> is not measured, and a backstop whose value
       is a judgement should be the conservative one.
     </p>
     <p>

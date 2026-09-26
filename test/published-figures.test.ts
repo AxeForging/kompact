@@ -16,6 +16,16 @@ import { dirname, join } from 'node:path';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (path: string): string => readFileSync(join(root, path), 'utf8');
+/**
+ * Every page a reader can reach, as one string.
+ *
+ * The landing page was 17,000px until cost, losses and verification moved to
+ * `docs/evidence.html`, and the stylesheet and script left with them into
+ * `app.css` and `app.js`. Assertions that mean "the site publishes this figure"
+ * read this; assertions that mean "the LANDING page says this" keep naming
+ * `docs/index.html`, because that distinction is the whole point of the split.
+ */
+const site = (): string => read('docs/index.html') + read('docs/evidence.html');
 const results = read('eval/RESULTS.md');
 /**
  * The machine-local half, split out of `RESULTS.md` because mixing the two is
@@ -120,7 +130,13 @@ describe('published figures match eval/RESULTS.md', () => {
     // The page bound the spread but not the mean beside it, so a typo in 0.905
     // would have survived on the one file a reader actually looks at.
     ['docs/index.html', [`${logistic.mean} <span`, `± ${logistic.sd}`,
-      `worst split ${logistic.min}`, `+${closest}`, `${sizeOnly.mean} with an`,
+      `worst split ${logistic.min}`, `+${closest}`]],
+    // Cost, losses and verification moved to their own page when the landing
+    // page reached 17,000px. The figures did not change; their address did, and
+    // twenty-one assertions failed loudly rather than silently, which is what
+    // naming the file buys.
+    ['docs/evidence.html', [
+      `${sizeOnly.mean} with an`,
       // Every row of the policy table, not only the one the product ships.
       // `>x<` rather than a bare match, so it has to be a cell and not prose.
       ...[rejected, shipped, ...alsoSwept].flatMap(
@@ -168,7 +184,7 @@ describe('published figures match eval/RESULTS.md', () => {
   // even though neither measurement can be taken there.
   it('quotes the measured session totals, not an older corpus', () => {
     expect(sessions, 'eval/SNAPSHOT.md has no sessions block').toBeDefined();
-    const page = read('docs/index.html');
+    const page = site();
     expect(page, 'the page quotes a call count from an older corpus')
       .toContain(Number(sessions!.calls).toLocaleString('en-GB'));
     expect(page).toContain(`${sessions!.freed}`);
@@ -276,7 +292,7 @@ describe('published figures match eval/RESULTS.md', () => {
     // A control that cannot do anything is worse than no control.
     it('hides the replay button until the script that drives it runs', () => {
       expect(page).toMatch(/id="d-run" hidden/);
-      expect(read('docs/index.html')).toContain('run.hidden = false;');
+      expect(read('docs/app.js')).toContain('run.hidden = false;');
     });
   });
 
@@ -323,7 +339,7 @@ describe('published figures match eval/RESULTS.md', () => {
    * arithmetic cannot miscount its own open claims.
    */
   it('says how many claims are open and how many are checked', () => {
-    const page = read('docs/index.html');
+    const page = site();
     const body = page.slice(page.indexOf('<main>'));
     const rows = [...body.matchAll(/<div class="ledger__row( ledger__row--open)?">/g)];
     const open = rows.filter((row) => row[1]).length;
@@ -431,7 +447,7 @@ describe('published figures match eval/RESULTS.md', () => {
   // of the FAQ. Every figure in it comes from one table.
   it('binds the checkpoint comparison to the results table', () => {
     const readme = read('README.md');
-    const page = read('docs/index.html');
+    const page = site();
     for (const [config, where] of [
       ['laya english/direct', 'english on the wording that works'],
       ['laya multilingual/direct', 'multilingual on the same wording'],
@@ -473,10 +489,10 @@ describe('published figures match eval/RESULTS.md', () => {
     // recur from that direction. Kept rather than deleted: it costs nothing, and
     // an inline block could come back for critical CSS without anyone thinking
     // to restore it.
-    const page = read('docs/index.html').replace(/<style[^>]*>[\s\S]*?<\/style>/g, '');
+    const page = site().replace(/<style[^>]*>[\s\S]*?<\/style>/g, '');
     const open = (page.match(/ledger__row--open/g) ?? []).length;
     expect(open, 'no unverified claims found, so this proves nothing').toBeGreaterThan(0);
-    const claimed = /<b>(\d+)<\/b> claims <a href="#checked">not verified<\/a>/.exec(page)?.[1];
+    const claimed = /<b>(\d+)<\/b> claims <a href="[^"]*#checked">not verified<\/a>/.exec(page)?.[1];
     expect(claimed, 'the masthead no longer states an unverified-claim count').toBeDefined();
     expect(Number(claimed), `the ledger holds ${open} unverified claims`).toBe(open);
   });
@@ -518,7 +534,9 @@ describe('published figures match eval/RESULTS.md', () => {
   // content is still there and every control that cannot act without one ships
   // hidden. A button that does nothing is worse than no button.
   it('is complete with scripts blocked, and ships no dead controls', () => {
-    const page = read('docs/index.html');
+    // Both pages, because the guarantee is about what a reader with scripts off
+    // gets from the site, and half the folded blocks moved to the evidence page.
+    const page = site();
     // Styles go too: a CSS comment on this page mentions `<details>` by name, and
     // a tag counter cannot tell prose about markup from markup.
     const noscript = page
@@ -565,7 +583,10 @@ describe('published figures match eval/RESULTS.md', () => {
   // pointing a reader at the wrong section. The page writes them as
   // "section NN, Name", which is exactly enough to check by machine.
   it('every cross-reference names the section it actually points at', () => {
-    const page = read('docs/index.html');
+    // Both pages: a reference like "section 06, Cost" is written on the landing
+    // page and numbered on the evidence page now, so checking one file alone
+    // would call every cross-page reference a dangling one.
+    const page = site();
     const numbers = new Map(
       [...page.matchAll(/rubric__n">(\d\d)<\/span>([^<]+)/g)].map((m) => [
         (m[2] ?? '').trim(), (m[1] ?? ''),
@@ -639,7 +660,7 @@ describe('published figures match eval/RESULTS.md', () => {
   it('quotes the shipped defaults the sweep actually reports', () => {
     expect(shippedPath, 'eval/RESULTS.md has no shipped-code-path line to bind to').not.toBeNull();
     const [, freed, kept] = shippedPath!;
-    const page = read('docs/index.html');
+    const page = site();
     expect(page.match(new RegExp(`${freed!.replace('.', '\\.')}% freed`)),
       `the page should quote ${freed}% freed`).not.toBeNull();
     for (const stale of ['22.2% freed', '22.2% and 77.7%']) {
