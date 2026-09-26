@@ -545,7 +545,6 @@ describe('published figures match eval/RESULTS.md', () => {
     for (const control of [
       'class="copy" type="button" data-copy hidden',
       'id="d-run" hidden',
-      'id="sweep" hidden',
       'id="open-all" hidden',
       'class="gloss-back" hidden',
       'id="stream" hidden',

@@ -224,19 +224,6 @@ a:hover{ color: var(--accent); }
   }
 }
 
-.sweep{ margin-top: var(--space-2xl); border-top: 2px solid var(--ink); padding-top: var(--space-lg); }
-.sweep__plot{ margin-top: var(--space-md); background: var(--paper-sunk); }
-.sweep__plot canvas{ display:block; width:100%; height:auto; }
-.sweep__say{
-  font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-2);
-  margin: var(--space-sm) 0 0; min-height: 2.8em; max-width: 62ch;
-}
-.sweep__say b{ color: var(--ink); font-variant-numeric: tabular-nums; }
-.sweep__bar{
-  display:flex; flex-wrap:wrap; align-items:center; gap: var(--space-sm) var(--space-lg);
-  padding: var(--space-sm) 0; border-bottom:1px solid var(--rule-firm); margin-top: var(--space-sm);
-}
-
 ul.plain{ max-width: var(--measure); margin: var(--space-md) 0 0; padding-left: 1.1em; }
 ul.plain li{ margin-bottom: var(--space-xs); }
 ul.plain li::marker{ color: var(--ink-3); }
@@ -1282,24 +1269,6 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
   </details>
 
-  <section class="sweep" id="sweep" hidden aria-labelledby="sweep-h">
-    <h3 id="sweep-h">What stops it: <a href="#g-the-floor">the floor</a>, not the budget</h3>
-    <p>
-      A real session out of the committed corpus, at the moment compaction fires. Its calls are
-      lined up in the order <a href="#g-the-budget">the budget</a> spends them — lowest score first — and the sweep takes
-      them one at a time until it is done. Watch where it stops.
-    </p>
-    <div class="sweep__plot">
-      <canvas id="sweep-canvas" width="1000" height="260" aria-hidden="true"></canvas>
-    </div>
-    <p class="sweep__say" id="sweep-say" role="status" aria-live="polite"></p>
-    <div class="sweep__bar">
-      <p class="demo__stat">Freed<b><span id="sweep-freed">0</span> chars</b></p>
-      <p class="demo__stat">Of a budget of<b><span id="sweep-budget">0</span> chars</b></p>
-      <button class="demo__run" type="button" id="sweep-run">Run the sweep</button>
-    </div>
-    <p class="caption" id="sweep-caption"></p>
-  </section>
 
   <details class="more">
     <summary><h3>The Edit it wanted to delete, and the two rules that came out of it</h3></summary>
@@ -2284,7 +2253,6 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 <script src="signals-data.js"></script>
 <script src="demo-data.js"></script>
 <script src="distribution-data.js"></script>
-<script src="timeline-data.js"></script>
 <script>
 // Buttons are revealed here for the same reason the Replay button is: with
 // scripts blocked the commands are selectable text and a Copy button would be a
@@ -2669,163 +2637,6 @@ if (plot && stack && plateCanvas && plateAnim && plateCanvas.getContext && !slow
     }, { threshold: 0.35 });
     watch.observe(stack);
   } else play();
-}
-
-/* ── the sweep ─────────────────────────────────────────────────────────────
-   The policy is four things — rank by score, spend lowest-first, stop at the
-   budget, never cross the floor — and the page has only ever described them.
-   This plays them on one real session out of the committed corpus, emitted by
-   eval/timeline.ts. The session is the median-length one, not a chosen one, and
-   it happens to be the clearest possible case: three calls go, the fourth is
-   above the floor, and the sweep stops with the budget almost untouched. That
-   is the argument the prose makes, finally shown.
-
-   The whole section ships `hidden` and is revealed here, the same way the
-   replay and copy controls are: with scripts blocked there is no half-drawn
-   canvas, and the prose around it already states the policy in full. */
-const tl = window.TIMELINE;
-const sweepCanvas = document.getElementById('sweep-canvas');
-const sweepSection = document.getElementById('sweep');
-
-if (tl && sweepCanvas && sweepSection && sweepCanvas.getContext) {
-  const g = sweepCanvas.getContext('2d');
-  const W = sweepCanvas.width;
-  const H = sweepCanvas.height;
-  const say = document.getElementById('sweep-say');
-  const freedEl = document.getElementById('sweep-freed');
-  const budgetEl = document.getElementById('sweep-budget');
-  const runBtn = document.getElementById('sweep-run');
-  const caption = document.getElementById('sweep-caption');
-  const fmt = new Intl.NumberFormat('en-GB');
-
-  // Only the calls that exist when compaction fires are candidates, in the order
-  // the budget spends them.
-  const order = tl.steps.filter((x) => x.decided).slice().sort((a, b) => a.keep - b.keep);
-  const budget = Math.round(tl.charsAtCompaction * tl.budget);
-  const pad = { l: 48, r: 16, t: 26, b: 42 };
-  const plotW = W - pad.l - pad.r;
-  const plotH = H - pad.t - pad.b;
-  const slot = plotW / order.length;
-  // sqrt, so a 214-character call and a 33,897-character one are both visible.
-  const tallest = Math.sqrt(Math.max(...order.map((x) => x.chars)));
-  const barH = (chars) => Math.max(3, (Math.sqrt(chars) / tallest) * plotH);
-  const gone = new Set();
-  let cursor = -1;
-
-  const draw = () => {
-    g.clearRect(0, 0, W, H);
-    g.font = '500 11px Archivo, ui-sans-serif, sans-serif';
-    g.textAlign = 'center';
-    order.forEach((step, i) => {
-      const x = pad.l + i * slot;
-      const h = gone.has(i) ? Math.max(2, barH(step.chars) * 0.08) : barH(step.chars);
-      const y = pad.t + plotH - h;
-      const below = step.keep < tl.floor;
-      g.fillStyle = gone.has(i) ? '#b72500' : below ? 'rgba(122,110,105,0.55)' : '#3d3733';
-      g.fillRect(x + slot * 0.18, y, slot * 0.64, h);
-      if (i === cursor) {
-        g.strokeStyle = '#b72500';
-        g.lineWidth = 2;
-        g.strokeRect(x + slot * 0.1, pad.t - 6, slot * 0.8, plotH + 12);
-      }
-      g.fillStyle = '#7a6e69';
-      g.fillText(step.keep.toFixed(2), x + slot / 2, H - pad.b + 16);
-    });
-    // The floor: the first call at or above it is where the sweep has to stop.
-    const stop = order.findIndex((x) => x.keep >= tl.floor);
-    if (stop > 0) {
-      const x = pad.l + stop * slot;
-      g.strokeStyle = '#b72500';
-      g.lineWidth = 1;
-      g.setLineDash([4, 4]);
-      g.beginPath(); g.moveTo(x, pad.t - 10); g.lineTo(x, pad.t + plotH + 6); g.stroke();
-      g.setLineDash([]);
-      g.fillStyle = '#b72500';
-      g.textAlign = 'left';
-      g.fillText(`floor ${tl.floor}`, x + 6, pad.t - 14);
-    }
-    g.textAlign = 'left';
-    g.fillStyle = '#7a6e69';
-    g.fillText('output size', 6, pad.t - 14);
-    g.textAlign = 'center';
-    g.fillText('keep-result score, lowest first', pad.l + plotW / 2, H - 8);
-  };
-
-  const reset = () => {
-    gone.clear();
-    cursor = -1;
-    freedEl.textContent = '0';
-    draw();
-    say.textContent = '';
-  };
-
-  budgetEl.textContent = fmt.format(budget);
-  caption.textContent = `${tl.presentAtCompaction} of this session's ${tl.calls} calls exist when `
-    + `compaction fires at ${tl.at}% of the window. Generated by eval/timeline.ts from the `
-    + `committed corpus — tool names, sizes and decisions only, no transcript text.`;
-  reset();
-
-  let running = false;
-  const run = () => {
-    if (running) { running = false; return; }
-    running = true;
-    runBtn.textContent = 'Stop';
-    reset();
-    let i = 0;
-    let freed = 0;
-    const tick = () => {
-      if (!running || i >= order.length) { finish(freed); return; }
-      const step = order[i];
-      cursor = i;
-      if (step.keep < tl.floor) {
-        gone.add(i);
-        freed += step.freed;
-        freedEl.textContent = fmt.format(freed);
-        say.innerHTML = `<b>${step.keep.toFixed(3)}</b> — below the floor. `
-          + `${step.tool}, ${fmt.format(step.chars)} chars, dropped. `
-          + `Freed <b>${fmt.format(freed)}</b> of a <b>${fmt.format(budget)}</b> budget.`;
-        draw();
-        i += 1;
-        setTimeout(tick, 620);
-      } else {
-        draw();
-        finish(freed, step);
-      }
-    };
-    setTimeout(tick, 350);
-  };
-
-  const finish = (freed, stoppedAt) => {
-    running = false;
-    runBtn.textContent = 'Run it again';
-    if (stoppedAt) {
-      say.innerHTML = `<b>${stoppedAt.keep.toFixed(3)}</b> is at or above the floor, so the sweep `
-        + `stops — with <b>${fmt.format(freed)}</b> freed against a budget of `
-        + `<b>${fmt.format(budget)}</b>. The budget is nowhere near spent. `
-        + `<b>The floor is what stopped it</b>, which is the whole policy: a ranking says what `
-        + `to drop first, and the floor says when to stop dropping.`;
-    } else {
-      say.innerHTML = `Every candidate scored below the floor. Freed <b>${fmt.format(freed)}</b>.`;
-    }
-  };
-
-  runBtn.addEventListener('click', run);
-  sweepSection.hidden = false;
-
-  const still = matchMedia('(prefers-reduced-motion: reduce)');
-  if (!still.matches && 'IntersectionObserver' in window) {
-    const watch = new IntersectionObserver((entries) => {
-      for (const e of entries) if (e.isIntersecting) { run(); watch.disconnect(); }
-    }, { threshold: 0.4 });
-    watch.observe(sweepSection);
-  } else {
-    // Reduced motion: show the answer rather than stepping to it.
-    order.forEach((step, i) => { if (step.keep < tl.floor) gone.add(i); });
-    const freed = order.filter((x) => x.keep < tl.floor).reduce((sum, x) => sum + x.freed, 0);
-    freedEl.textContent = fmt.format(freed);
-    draw();
-    finish(freed, order.find((x) => x.keep >= tl.floor));
-  }
 }
 
 /* ── the ladder ────────────────────────────────────────────────────────────
