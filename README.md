@@ -524,13 +524,18 @@ to `~/.claude/kompact-signals.json` so the CLI can read it. No raw output is sto
 nothing is sent anywhere, and drafts land in `.kompact/proposals/`, which Claude Code
 does not read — promoting one is a `mv` you do yourself.
 
-**This part is new and its usefulness is not established.** Replaying 4,013 tool
-calls from 40 real sessions through the recorder's own functions, 31 of 2,000
+**This part is new and its usefulness is not established.** Replaying 4,534 tool
+calls from 40 real sessions through the recorder's own functions, 30 of 2,000
 recorded shapes repeated at all — and all 12 of the repeated *command* shapes
 were generic shell verbs (`sed -n`, `grep -n | head`, `cat`). The classifier
 works; whether what it proposes is worth writing is measured by nobody yet, and
 has its own row in the verification ledger. `bun eval/signals-fixture.ts` runs
 that replay on your own transcripts.
+
+Not one *intent* — a request phrased by a person rather than a command run by the
+assistant — recurred across two sessions in that corpus. An earlier fixture showed
+one that did; it was an injected charter that the replay let through and the live
+recorder would never have seen, and filtering it out left the kind empty.
 
 ## Calibrate it on your own sessions
 

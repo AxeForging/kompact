@@ -60,7 +60,9 @@ const ranked = Object.entries(fixture.rows)
 const escape = (text: string): string =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-const rows = ranked.slice(0, 10).map((row) => {
+const SHOWN = 10;
+const drawn = ranked.slice(0, SHOWN);
+const rows = drawn.map((row) => {
   const isGeneric = row.kind === 'command' && GENERIC.test(row.sig);
   return `      <tr${isGeneric ? ' class="dim"' : ''}>` +
     `<td>${escape(LABELS[row.kind] ?? row.kind)}</td>` +
@@ -88,7 +90,7 @@ const workflowPlace = workflow ? ranked.indexOf(workflow) + 1 : 0;
 const markup = `  <p class="caption caption--fig">${fixture.meta.repeated} shapes that repeated, of ` +
   `${fixture.meta.shapes.toLocaleString()} recorded over ${fixture.meta.sessions} sessions ` +
   `and ${fixture.meta.calls.toLocaleString()} tool calls</p>
-      <h3 class="figure-title">All ${fixture.meta.repeated} shapes that repeated, ranked</h3>
+      <h3 class="figure-title">The ${drawn.length} costliest of the ${fixture.meta.repeated} shapes that repeated</h3>
 <div class="scroller" data-label="Table: what repeated">
   <table class="data">
     <thead><tr><th>Kind</th><th>Signature</th><th class="n">times</th>` +

@@ -123,6 +123,18 @@ const HARNESS = [
   '<local-command-stdout>',
   '[Request interrupted',
   'Your task is to create a detailed summary of the conversation so far',
+  // Six more classes, found when the corpus's single most-repeated "intent"
+  // turned out to be an injected charter recurring exactly once per session.
+  // The live recorder never sees any of these — it returns early unless
+  // `event.source === 'user'` with no `agent_id` — so every one of them is a
+  // divergence between the replay and the thing it is standing in for, which
+  // is precisely what this list exists to stop.
+  'CHARTER:',
+  '[Image:',
+  '<task-notification>',
+  'Another Claude session sent a message:',
+  'A session-scoped Stop hook is now active',
+  'Stop hook feedback:',
 ];
 
 function harnessWrote(text: string): boolean {
@@ -271,6 +283,21 @@ console.log(`\n  scrub: clean against ${checks.length} ${PUBLISH ? 'credential a
   `(${(text.length / 1024).toFixed(0)} KiB of signatures scanned)`);
 
 if (OUT) {
+  /**
+   * `--publish` is what filters to repeated rows and strips the samples, and
+   * `--out eval/fixtures/...` is the path that gets committed. Passing the
+   * second without the first wrote 97 intent signatures — four of the
+   * operator's own words apiece, including their name — to a file bound for a
+   * public repository. The credential scrub above cannot catch that, because
+   * a person's own phrasing is not credential-shaped. So the path decides the
+   * policy rather than a flag anyone can forget.
+   */
+  if (/fixtures[\\/]/.test(OUT) && !PUBLISH) {
+    console.error(`REFUSING TO WRITE: ${OUT} is a published fixture and --publish was not passed.`);
+    console.error('Without it the rows keep their samples and every one-off shape, including');
+    console.error('intent signatures built from the operator\'s own words.');
+    process.exit(1);
+  }
   writeFileSync(OUT, `${text}\n`);
   console.log(`\nwrote ${OUT}`);
 } else {
