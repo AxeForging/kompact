@@ -9,7 +9,14 @@
  * emphasis, inline code and links — because that is all RESULTS.md contains and a
  * dependency for the rest would be a dependency for nothing.
  *
- * Run: bun eval/make-eval-page.ts
+ * With `--from a.md,b.md --out name.html --title "..."` it renders any other
+ * generated Markdown the same way. That exists so a long study can leave the
+ * landing page for its own page without a second page generator: the nav, the
+ * print styles, the back-link and the Markdown subset are all here already, and
+ * a copy of them would be the thing that drifts.
+ *
+ * Run: bun eval/make-eval-page.ts [--from RESULTS.md,SNAPSHOT.md]
+ *                                 [--out eval.html] [--title "..."]
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -25,10 +32,18 @@ const here = dirname(fileURLToPath(import.meta.url));
  * reader following "the full evaluation" wants all of it, so the page carries
  * both with the snapshot's own header saying which is which.
  */
-const markdown = [
-  readFileSync(join(here, 'RESULTS.md'), 'utf8'),
-  readFileSync(join(here, 'SNAPSHOT.md'), 'utf8').replace(/^# /, '# '),
-].join('\n\n');
+const argv = process.argv.slice(2);
+const option = (name: string, fallback: string): string => {
+  const index = argv.indexOf(name);
+  return index >= 0 ? argv[index + 1] ?? fallback : fallback;
+};
+const sources = option('--from', 'RESULTS.md,SNAPSHOT.md').split(',').filter(Boolean);
+const outFile = option('--out', 'eval.html');
+const pageTitle = option('--title', 'kompact — the full evaluation');
+
+const markdown = sources
+  .map((name) => readFileSync(join(here, name), 'utf8'))
+  .join('\n\n');
 
 const escape = (text: string): string =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -125,7 +140,7 @@ const page = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>kompact — the full evaluation</title>
+<title>${escape(pageTitle)}</title>
 <meta name="description" content="Every number kompact publishes, with the script that produced it: ranking quality over ten grouped splits, the decision-policy sweep, what a wrong drop costs, and what the optional sidecar costs to run.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -260,13 +275,13 @@ footer p{ max-width: 68ch; }
 ${blocks.slice(1).join('\n')}
 </main>
 <footer>
-  <p>Generated from <code>eval/RESULTS.md</code>, which <code>npm run eval:results</code> writes by
-  running the scripts. Nothing on this page was typed by hand.</p>
+  <p>Generated from <code>${sources.map((n) => `eval/${n}`).join('</code>, <code>')}</code>.
+  Nothing on this page was typed by hand.</p>
 </footer>
 </body>
 </html>
 `;
 
-const out = join(here, '..', 'docs', 'eval.html');
+const out = join(here, '..', 'docs', outFile);
 writeFileSync(out, page);
 console.log(`wrote ${out}: ${contents.length} sections, ${(page.length / 1024).toFixed(0)} KB`);
