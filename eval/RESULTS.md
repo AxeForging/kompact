@@ -473,3 +473,30 @@ cross-operator regularity that 4 same-context sessions do not contain. The hones
 step for skill proposals is **a second operator's corpus**, not a cleverer algorithm — and
 then a SkillOpt-style held-out check for whether a proposed skill actually saves time, which
 no amount of mining answers.
+## Do proposed flows recur on held-out sessions? — `eval/skill-payoff.ts`
+
+SkillOpt keeps a skill only if it improves *held-out* performance. A live A/B is not
+possible here (nothing can replay a past session with a skill injected), so this tests the
+prerequisite a real payoff needs: split the sessions by time, propose the reliable flows
+from the earlier half, and see whether they recur in the later, unseen half.
+
+```
+114 parent sessions split by time (propose 57 → held-out 57)
+sessions carrying flows:       propose 2, held-out 10  (activity is time-skewed to recent days)
+gated proposals (≥ 2 sess + actionable): 8 → recurred in held-out: 3   (38% predictive)
+ungated (any actionable flow):           745 → 5% predictive
+held-out flow occurrences covered:       10 / 6,574  (0%)
+```
+
+Two honest signals and one honest limit. The gate helps: gated proposals recur on held-out
+data far more than ungated ones (38% vs 5%), so "recurs across ≥ 2 sessions and does
+something" is directionally the right filter. But the propose half carries only
+2 sessions with flows — the corpus is time-skewed, with almost all substantial work in
+the last three days — so 38% over 8 proposals is not trustworthy, and the proposals
+cover about 0% of held-out activity.
+
+The held-out test is sound; the data is too thin to run it. And even fully powered it would
+measure only predictive validity — the floor under any payoff. Realized time saved needs a
+live A/B and is bounded small: a skill does not stop you running the tools. That A/B and a
+second operator's corpus are the real next steps; no retrospective mining substitutes for
+either.

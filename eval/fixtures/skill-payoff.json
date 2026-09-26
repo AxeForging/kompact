@@ -1,0 +1,15 @@
+{
+  "parentSessions": 114,
+  "earlyParents": 57,
+  "lateParents": 57,
+  "proposeSideDistinctSessions": 2,
+  "heldOutSideDistinctSessions": 10,
+  "gatedProposals": 8,
+  "gatedRecurredInHeldOut": 3,
+  "gatedPredictivePrecisionPct": 38,
+  "ungatedProposals": 745,
+  "ungatedPredictivePrecisionPct": 5,
+  "heldOutFlowOccurrences": 6574,
+  "occurrencesAddressedByProposals": 10,
+  "coveragePct": 0
+}

@@ -79,7 +79,7 @@ function sessionFiles(root: string, limit: number): string[] {
 
 /** Session identity = the PARENT session, so many subagents of one session do not
  *  fake cross-session recurrence. A subagent path is <parent>/subagents/agent-*.jsonl. */
-function parentSession(path: string): string {
+export function parentSession(path: string): string {
   const m = /([^/]+)\/subagents\/[^/]+\.jsonl$/.exec(path);
   if (m) return m[1]!.slice(0, 8);
   return path.split('/').pop()!.replace(/\.jsonl$/, '').slice(0, 8);
@@ -244,7 +244,10 @@ function curve() {
   console.log(`skill-worthy flows; if it flattened, the useful set is already found.`);
 }
 
-selfCheck();
-if (args.includes('--self-check')) console.log('self-check ok');
-else if (args.includes('--curve')) curve();
-else main();
+// import.meta.main: run as a script; stay silent (just exports) when imported.
+if (import.meta.main) {
+  selfCheck();
+  if (args.includes('--self-check')) console.log('self-check ok');
+  else if (args.includes('--curve')) curve();
+  else main();
+}

@@ -278,6 +278,45 @@ cross-operator regularity that ${fd.substantialSessions} same-context sessions d
 step for skill proposals is **a second operator's corpus**, not a cleverer algorithm — and
 then a SkillOpt-style held-out check for whether a proposed skill actually saves time, which
 no amount of mining answers.`;
+
+// Study 6 (held-out payoff prerequisite): reads its committed fixture.
+const sp = JSON.parse(
+  readFileSync(join(here, 'fixtures', 'skill-payoff.json'), 'utf8'),
+) as {
+  parentSessions: number; earlyParents: number; lateParents: number;
+  proposeSideDistinctSessions: number; heldOutSideDistinctSessions: number;
+  gatedProposals: number; gatedRecurredInHeldOut: number; gatedPredictivePrecisionPct: number;
+  ungatedProposals: number; ungatedPredictivePrecisionPct: number;
+  occurrencesAddressedByProposals: number; heldOutFlowOccurrences: number; coveragePct: number;
+};
+const skillPayoffSection = `
+## Do proposed flows recur on held-out sessions? — \`eval/skill-payoff.ts\`
+
+SkillOpt keeps a skill only if it improves *held-out* performance. A live A/B is not
+possible here (nothing can replay a past session with a skill injected), so this tests the
+prerequisite a real payoff needs: split the sessions by time, propose the reliable flows
+from the earlier half, and see whether they recur in the later, unseen half.
+
+\`\`\`
+${sp.parentSessions} parent sessions split by time (propose ${sp.earlyParents} → held-out ${sp.lateParents})
+sessions carrying flows:       propose ${sp.proposeSideDistinctSessions}, held-out ${sp.heldOutSideDistinctSessions}  (activity is time-skewed to recent days)
+gated proposals (≥ 2 sess + actionable): ${sp.gatedProposals} → recurred in held-out: ${sp.gatedRecurredInHeldOut}   (${sp.gatedPredictivePrecisionPct}% predictive)
+ungated (any actionable flow):           ${sp.ungatedProposals} → ${sp.ungatedPredictivePrecisionPct}% predictive
+held-out flow occurrences covered:       ${sp.occurrencesAddressedByProposals} / ${sp.heldOutFlowOccurrences.toLocaleString('en-US')}  (${sp.coveragePct}%)
+\`\`\`
+
+Two honest signals and one honest limit. The gate helps: gated proposals recur on held-out
+data far more than ungated ones (${sp.gatedPredictivePrecisionPct}% vs ${sp.ungatedPredictivePrecisionPct}%), so "recurs across ≥ 2 sessions and does
+something" is directionally the right filter. But the propose half carries only
+${sp.proposeSideDistinctSessions} sessions with flows — the corpus is time-skewed, with almost all substantial work in
+the last three days — so ${sp.gatedPredictivePrecisionPct}% over ${sp.gatedProposals} proposals is not trustworthy, and the proposals
+cover about ${sp.coveragePct}% of held-out activity.
+
+The held-out test is sound; the data is too thin to run it. And even fully powered it would
+measure only predictive validity — the floor under any payoff. Realized time saved needs a
+live A/B and is bounded small: a skill does not stop you running the tools. That A/B and a
+second operator's corpus are the real next steps; no retrospective mining substitutes for
+either.`;
 const cap = maybe('cap.ts');
 const mass = maybe('mass.ts');
 const inputs = maybe('inputs.ts');
@@ -451,7 +490,7 @@ anything. \`applyDecisions\` never touches prose, so what kompact leaves behind 
 verbatim tool calls and the user's and assistant's own words — not a narrative.
 \`maxPasses\` is the backstop for that, and its value is a judgement: the floor
 would allow more.
-${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}
+${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}${skillPayoffSection}
 `;
 
 const snapshotBody = `# Snapshot — one machine's own transcripts
