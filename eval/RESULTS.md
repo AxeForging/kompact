@@ -46,6 +46,50 @@ paired vs best laya (typed-decisions/direct):
 features: 13 (tool=Read, tool=Bash, tool=Edit|Write, ...)
 ```
 
+## Does the neural model know anything the coefficients do not? — `eval/teacher.ts`
+
+The table above asks which scorer ranks better and answers: this one. That is the
+right question for *which one ships* and the wrong one for *was the sidecar worth
+building* — a model can lose outright and still carry signal the winner lacks,
+and signal like that is worth having even when the model is not, because it can
+be distilled into the coefficients offline and shipped as floats.
+
+So: the same logistic, the same ten splits, fitted once on the 13 features and
+once on those features plus the neural model's two probabilities for the same
+call. The gate was written down before the run — a mean paired gain above
+**+0.018**, the closest margin the comparison above already tolerates, on at
+least 8 of 10 splits.
+
+```
+corpus (fixture, 1063 of 2239 rows scored by every config), laya answers (fixture): 1063 calls, 75 positives, 18 sessions
+10 grouped splits, 30% of sessions held out each time
+the 13 features alone: AUC 0.905 (sd 0.078)
+
+13 features + laya                     AUC    gain      sd   wins  verdict
+--------------------------------------------------------------------------
+english/reproducible                 0.906  +0.000   0.001   6/10        -
+english/entailment                   0.906  +0.000   0.001   6/10        -
+english/direct                       0.905  -0.000   0.000   4/10        -
+typed-decisions/reproducible         0.905  -0.000   0.001   2/10        -
+typed-decisions/direct               0.905  -0.001   0.001   1/10        -
+typed-decisions/entailment           0.905  -0.001   0.001   2/10        -
+multilingual/direct                  0.905  -0.001   0.009   7/10        -
+multilingual/entailment              0.904  -0.002   0.004   2/10        -
+multilingual/reproducible            0.904  -0.002   0.006   5/10        -
+
+Gate A: gain > +0.018 and at least 8 of 10 splits won.
+  FAILED. Best is english/reproducible at +0.000 over 6/10 splits.
+  -> Laya adds nothing the same state already gives the features. It is a slower
+     way to compute what src/features.ts computes, and that is the finding.
+```
+
+The features are read back out of the same state prose the model is given
+(`src/features.ts`), deliberately, so that neither side sees anything the other
+does not. This is what that choice buys: the result is not "a small model lost to
+a big one", it is "an encoder reading this prose extracts nothing from it that
+thirteen regexes miss". A negative result about our own idea, and the reason the
+fine-tune behind it was not run.
+
 ## What the shipped coefficients generalise to — `eval/fit.ts`
 
 The figure above holds out 30% of the 18 sessions the neural model

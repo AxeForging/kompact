@@ -32,6 +32,7 @@ const today = new Date().toISOString().slice(0, 10);
 // table three lines below said 77.3%. They now come from the shipped options and
 // from the generated table itself, so neither can drift from what it describes.
 const repeat = run('repeat.ts', '--fixture');
+const teacher = run('teacher.ts', '--fixture');
 const policy = run('policy.ts', '--fixture');
 const shippedRow = new RegExp(
   `^budget ${DEFAULT_OPTIONS.targetReduction.toFixed(1)}, floor ` +
@@ -113,6 +114,31 @@ nowhere near its centre.
 \`\`\`
 ${repeat}
 \`\`\`
+
+## Does the neural model know anything the coefficients do not? — \`eval/teacher.ts\`
+
+The table above asks which scorer ranks better and answers: this one. That is the
+right question for *which one ships* and the wrong one for *was the sidecar worth
+building* — a model can lose outright and still carry signal the winner lacks,
+and signal like that is worth having even when the model is not, because it can
+be distilled into the coefficients offline and shipped as floats.
+
+So: the same logistic, the same ten splits, fitted once on the 13 features and
+once on those features plus the neural model's two probabilities for the same
+call. The gate was written down before the run — a mean paired gain above
+**+0.018**, the closest margin the comparison above already tolerates, on at
+least 8 of 10 splits.
+
+\`\`\`
+${teacher}
+\`\`\`
+
+The features are read back out of the same state prose the model is given
+(\`src/features.ts\`), deliberately, so that neither side sees anything the other
+does not. This is what that choice buys: the result is not "a small model lost to
+a big one", it is "an encoder reading this prose extracts nothing from it that
+thirteen regexes miss". A negative result about our own idea, and the reason the
+fine-tune behind it was not run.
 
 ## What the shipped coefficients generalise to — \`eval/fit.ts\`
 

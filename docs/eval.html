@@ -131,7 +131,7 @@ footer p{ max-width: 68ch; }
 <header>
   <div class="wrap">
     <h1>Evaluation results</h1>
-    <nav class="contents" aria-label="Contents"><a class="back" href="./">← kompact</a><a href="#ranking-quality-eval-repeat-ts">Ranking quality</a><a href="#what-the-shipped-coefficients-generalise-to-eval-fit-ts">What the shipped coefficients generalise to</a><a href="#decision-policy-eval-policy-ts">Decision policy</a><a href="#what-a-wrong-drop-costs-eval-recovery-ts">What a wrong drop costs</a><a href="#whether-the-work-survives-eval-outcome-ts">Whether the work survives</a><a href="#what-the-loop-costs-eval-outcome-ts-passes">What the loop costs</a><a href="#what-it-frees-in-practice-eval-sessions-ts">What it frees in practice</a><a href="#how-many-passes-before-the-summary-is-due-eval-passes-ts">How many passes before the summary is due</a><a href="#what-the-cap-costs-and-one-idea-that-did-not-work-eval-cap-ts">What the cap costs, and one idea that did not work</a><a href="#the-half-nothing-touches-eval-mass-ts-eval-inputs-ts">The half nothing touches</a><a href="#where-the-sidecar-fails-quietly-eval-truncation-ts">Where the sidecar fails quietly</a><a href="#what-the-sidecar-costs-to-run-eval-sidecar-bench-ts">What the sidecar costs to run</a></nav>
+    <nav class="contents" aria-label="Contents"><a class="back" href="./">← kompact</a><a href="#ranking-quality-eval-repeat-ts">Ranking quality</a><a href="#does-the-neural-model-know-anything-the-coefficients-do-not-eval-teacher-ts">Does the neural model know anything the coefficients do not?</a><a href="#what-the-shipped-coefficients-generalise-to-eval-fit-ts">What the shipped coefficients generalise to</a><a href="#decision-policy-eval-policy-ts">Decision policy</a><a href="#what-a-wrong-drop-costs-eval-recovery-ts">What a wrong drop costs</a><a href="#whether-the-work-survives-eval-outcome-ts">Whether the work survives</a><a href="#what-the-loop-costs-eval-outcome-ts-passes">What the loop costs</a><a href="#what-it-frees-in-practice-eval-sessions-ts">What it frees in practice</a><a href="#how-many-passes-before-the-summary-is-due-eval-passes-ts">How many passes before the summary is due</a><a href="#what-the-cap-costs-and-one-idea-that-did-not-work-eval-cap-ts">What the cap costs, and one idea that did not work</a><a href="#the-half-nothing-touches-eval-mass-ts-eval-inputs-ts">The half nothing touches</a><a href="#where-the-sidecar-fails-quietly-eval-truncation-ts">Where the sidecar fails quietly</a><a href="#what-the-sidecar-costs-to-run-eval-sidecar-bench-ts">What the sidecar costs to run</a></nav>
   </div>
 </header>
 <main>
@@ -163,6 +163,30 @@ paired vs best laya (typed-decisions/direct):
   -&gt; the free scorer wins on every split; the sidecar is not justified for this task.
 
 features: 13 (tool=Read, tool=Bash, tool=Edit|Write, ...)</pre></div>
+<h2 id="does-the-neural-model-know-anything-the-coefficients-do-not-eval-teacher-ts">Does the neural model know anything the coefficients do not? — <code>eval/teacher.ts</code></h2>
+<p>The table above asks which scorer ranks better and answers: this one. That is the right question for <em>which one ships</em> and the wrong one for <em>was the sidecar worth building</em> — a model can lose outright and still carry signal the winner lacks, and signal like that is worth having even when the model is not, because it can be distilled into the coefficients offline and shipped as floats.</p>
+<p>So: the same logistic, the same ten splits, fitted once on the 13 features and once on those features plus the neural model's two probabilities for the same call. The gate was written down before the run — a mean paired gain above <strong>+0.018</strong>, the closest margin the comparison above already tolerates, on at least 8 of 10 splits.</p>
+<div class="scroller" tabindex="0" role="region" aria-label="Does the neural model know anything the coefficients do not? — measured output"><pre>corpus (fixture, 1063 of 2239 rows scored by every config), laya answers (fixture): 1063 calls, 75 positives, 18 sessions
+10 grouped splits, 30% of sessions held out each time
+the 13 features alone: AUC 0.905 (sd 0.078)
+
+13 features + laya                     AUC    gain      sd   wins  verdict
+--------------------------------------------------------------------------
+english/reproducible                 0.906  +0.000   0.001   6/10        -
+english/entailment                   0.906  +0.000   0.001   6/10        -
+english/direct                       0.905  -0.000   0.000   4/10        -
+typed-decisions/reproducible         0.905  -0.000   0.001   2/10        -
+typed-decisions/direct               0.905  -0.001   0.001   1/10        -
+typed-decisions/entailment           0.905  -0.001   0.001   2/10        -
+multilingual/direct                  0.905  -0.001   0.009   7/10        -
+multilingual/entailment              0.904  -0.002   0.004   2/10        -
+multilingual/reproducible            0.904  -0.002   0.006   5/10        -
+
+Gate A: gain &gt; +0.018 and at least 8 of 10 splits won.
+  FAILED. Best is english/reproducible at +0.000 over 6/10 splits.
+  -&gt; Laya adds nothing the same state already gives the features. It is a slower
+     way to compute what src/features.ts computes, and that is the finding.</pre></div>
+<p>The features are read back out of the same state prose the model is given (<code>src/features.ts</code>), deliberately, so that neither side sees anything the other does not. This is what that choice buys: the result is not "a small model lost to a big one", it is "an encoder reading this prose extracts nothing from it that thirteen regexes miss". A negative result about our own idea, and the reason the fine-tune behind it was not run.</p>
 <h2 id="what-the-shipped-coefficients-generalise-to-eval-fit-ts">What the shipped coefficients generalise to — <code>eval/fit.ts</code></h2>
 <p>The figure above holds out 30% of the 18 sessions the neural model was scored against. These are the coefficients that actually ship, fitted on all 2239 calls and held out one session at a time. It is the lower number, and it is the one to plan around.</p>
 <div class="scroller" tabindex="0" role="region" aria-label="What the shipped coefficients generalise to — measured output"><pre>corpus (fixture): 2239 calls, 41 sessions
