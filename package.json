@@ -41,7 +41,7 @@
     "prepack": "npm run build",
     "docs:demo": "bun eval/demo.ts",
     "docs:eval": "bun eval/make-eval-page.ts",
-    "docs": "bun eval/demo.ts && bun eval/distribution.ts && bun eval/signals-page.ts && bun eval/propose-page.ts && bun eval/passes-page.ts && bun eval/sessions-page.ts && bun eval/trigger-page.ts && bun eval/repetition-page.ts && bun eval/make-eval-page.ts",
+    "docs": "bun eval/demo.ts && bun eval/distribution.ts && bun eval/signals-page.ts && bun eval/propose-page.ts && bun eval/passes-page.ts && bun eval/sessions-page.ts && bun eval/trigger-page.ts && bun eval/repetition-page.ts && bun eval/summary-cost.ts && bun eval/make-eval-page.ts",
     "eval:fit": "bun eval/fit.ts",
     "eval:score": "bun eval/score.ts",
     "eval:truncation": "bun eval/truncation.ts",

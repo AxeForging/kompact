@@ -781,6 +781,21 @@ describe('published figures match eval/RESULTS.md', () => {
     }
   });
 
+  it('states the summary-cost figures from its fixture', () => {
+    const f = JSON.parse(read('eval/fixtures/summary-cost.json')) as {
+      count: number; medianSec: number; minSec: number; maxSec: number; medianReductionPct: number;
+    };
+    const page = read('docs/evidence.html');
+    expect(page, 'the count is not the fixture count').toContain(`<b>${f.count}</b> real`);
+    expect(page, 'the median is not the fixture median').toContain(`<b>${f.medianSec}&#8239;s</b>`);
+    expect(page).toContain(`${f.minSec}&#8239;s to ${f.maxSec}&#8239;s`);
+    expect(page).toContain(`about
+    ${f.medianReductionPct}%`);
+    // It must not claim the quality row is settled: this is produce-time only.
+    expect(page, 'the produce-time fact must point at the still-unverified row')
+      .toContain('stays not verified');
+  });
+
   it('quotes the shipped defaults the sweep actually reports', () => {
     expect(shippedPath, 'eval/RESULTS.md has no shipped-code-path line to bind to').not.toBeNull();
     const [, freed, kept] = shippedPath!;
