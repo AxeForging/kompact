@@ -60,7 +60,7 @@
 <nav class="contents-bar" aria-label="Contents">
   <div class="contents-bar__row wrap">
     <div class="contents">
-    <a href="#result"><span class="contents__long">Evidence</span><span class="contents__short">Evidence</span></a><a href="#for"><span class="contents__long">Who it is for</span><span class="contents__short">Who for</span></a><a href="#demo"><span class="contents__long">Watch it decide</span><span class="contents__short">Watch</span></a><a href="#shape"><span class="contents__long">The shape of it</span><span class="contents__short">Shape</span></a><a href="#signals"><span class="contents__long">What you repeat</span><span class="contents__short">Repeats</span></a><a href="evidence.html#cost">Cost</a><a href="evidence.html#losses"><span class="contents__long">Where it loses</span><span class="contents__short">Losses</span></a><a href="evidence.html#checked"><span class="contents__long">Verification</span><span class="contents__short">Verified</span></a><a href="#glossary">Glossary</a><a class="contents__out" href="eval.html">Evidence&#8239;&#8599;</a></div>
+    <a href="#result"><span class="contents__long">Evidence</span><span class="contents__short">Evidence</span></a><a href="#for"><span class="contents__long">Who it is for</span><span class="contents__short">Who for</span></a><a href="#demo"><span class="contents__long">Watch it decide</span><span class="contents__short">Watch</span></a><a href="#shape"><span class="contents__long">The shape of it</span><span class="contents__short">Shape</span></a><a href="#signals"><span class="contents__long">What you repeat</span><span class="contents__short">Repeats</span></a><a href="evidence.html#cost">Cost</a><a href="evidence.html#losses"><span class="contents__long">Where it loses</span><span class="contents__short">Losses</span></a><a href="evidence.html#checked"><span class="contents__long">Verification</span><span class="contents__short">Verified</span></a><a href="#glossary">Glossary</a><a class="contents__out" href="evidence.html">Cost, losses, verification&#8239;&#8599;</a></div>
     <p class="contents__tools">
       <button class="contents__all" type="button" id="open-all" hidden>Open all</button>
       <a class="contents__go" href="#install">Install</a>
@@ -74,11 +74,13 @@
   <p class="rubric"><span class="rubric__n">01</span>Evidence</p>
   <h2 id="result-h">It replaces a neural model that it beat.</h2>
   <p class="lede">
-    The plugin started as a port onto
-    <a rel="noopener" href="https://github.com/NandhaKishorM/laya">a 322M&#8209;parameter neural
-    decision model</a> that runs locally. Measured against 1,063 tool calls labelled from 18 real
-    sessions, a thirteen-coefficient logistic regression over facts already computed for free beat
-    every checkpoint and question wording it was asked.
+    Measured against <span class="num">1,063</span> tool calls labelled from 18 real sessions:
+    thirteen coefficients over facts already computed for free, against a neural model that runs
+    locally.
+  </p>
+  <p class="fine">
+    The plugin started as a port onto a 322M&#8209;parameter decision model. The logistic beat every
+    checkpoint and question wording it was asked.
   </p>
 
   <div class="chart">
@@ -204,9 +206,11 @@
   <p class="rubric"><span class="rubric__n">02</span>Who it is for</p>
   <h2 id="for-h">Six shapes of session, and what each one gets.</h2>
   <p class="lede">
-    The saving is a property of how a session is shaped, not one number. Every figure here is
-    measured elsewhere on this page; what is added is which one applies. Each carries its cost,
-    because for one of these shapes the honest answer is <em>raise the floor</em>.
+    The saving is a property of how a session is shaped, not one number. Each shape carries its
+    cost, because for one of them the honest answer is to raise the floor.
+  </p>
+  <p class="fine">
+    Every figure here is measured elsewhere on this page; what is added is which one applies.
   </p>
 
   <dl class="cases">
@@ -267,11 +271,13 @@
   <p class="rubric"><span class="rubric__n">03</span>Watch it decide</p>
   <h2 id="demo-h">Nine calls, two probabilities each, one ranking.</h2>
   <p class="lede">
-    A session that finds a test failing only on CI, tracks it to a timezone in a fixture, and
-    fixes it. Below is what the shipped scorer did to it, every row written into this page when
-    the demonstration was generated, with nothing overridden. The five outcomes are defined in
-    <a href="#glossary">the glossary</a>; <em>Replay</em> re-runs the decisions in the order the
-    ranking spends in, lowest first.
+    A real session: a test that fails only on CI, traced to a timezone in a fixture, then fixed.
+    Below is what the shipped scorer did to it.
+  </p>
+  <p class="fine">
+    Every row was written into this page when the demonstration was generated, with nothing
+    overridden. The five outcomes are defined in <a href="#glossary">the glossary</a>, and
+    <b>Replay</b> re-runs the decisions in the order the ranking spends them, lowest first.
   </p>
 
   <div class="demo">
@@ -442,8 +448,7 @@
     Above the line, the ones whose output really was reused verbatim later; below, the ones that
     never were. A single AUC is a summary of this picture.
   </p>
-  <details class="more plate-fold">
-    <summary><h3>Every one of the 2,239 decisions, plotted</h3></summary>
+  <h3 class="figure-title">Every one of the 2,239 decisions, plotted</h3>
 <figure class="plate">
     <!-- Below ~760px the 1200-unit plate scales to a third and its 13px labels
          render at ~4px. Rather than ship a second asset, it keeps its size and
@@ -475,7 +480,7 @@
       network asked the same question without being fine-tuned on it.
     </figcaption>
   </figure>
-  </details>
+  
   </div>
 </section>
 
@@ -483,14 +488,14 @@
   <p class="rubric"><span class="rubric__n">05</span>What you repeat</p>
   <h2 id="signals-h">The same reading of every call answers a second question.</h2>
   <p class="lede">
-    Deciding what to keep means looking at every tool call in a session. That same
-    observation says what this person does over and over — and a thing done over and over is a
-    skill nobody writes, because noticing it is the hard part. So the plugin counts the
-    <em>shapes</em> it sees, on your machine, and <code>npm&nbsp;run&nbsp;propose</code> ranks them
-    and drafts a <code>SKILL.md</code> for any row you pick. <b>This capability is new and whether
-    its proposals are any good is not established</b> — it has its own row in
-    <a href="evidence.html#checked">the ledger</a>. Below is what it found, including the part that does not
-    flatter it.
+    Deciding what to keep means reading every tool call. The same reading says what you do over and
+    over, which is a skill nobody writes because noticing it is the hard part.
+  </p>
+  <p class="fine">
+    The plugin counts the shapes it sees, on your machine, and <code>npm&nbsp;run&nbsp;propose</code>
+    ranks them and drafts a <code>SKILL.md</code> for any row you pick. Whether those proposals are
+    any good is <a href="evidence.html#checked">not established</a>, and below is what it found
+    including the part that does not flatter it.
   </p>
 
   <!-- signals:render -->
@@ -553,8 +558,7 @@
     which is nothing until the plugin has been installed a while.</p>
   <!-- /propose:render -->
 
-  <details class="more">
-    <summary><h3>Watch 3,228 commands land on the shapes they repeat</h3></summary>
+  <h3 class="figure-title">Watch 3,228 commands land on the shapes they repeat</h3>
   <div class="stream" id="stream" hidden>
     <div class="stream__bar">
       <p class="demo__stat">Commands seen<b><span id="stream-seen">0</span></b></p>
@@ -568,7 +572,7 @@
     </div>
     <p class="caption" id="stream-caption"></p>
   </div>
-  </details>
+  
 
   <details class="more">
     <summary>Why this is not established yet, and what it cost to find out</summary>
@@ -610,15 +614,32 @@
 
 
 
+<section class="wrap" id="elsewhere" aria-labelledby="elsewhere-h">
+  <p class="rubric"><span class="rubric__n">06&#8211;08</span>On the evidence page</p>
+  <h2 id="elsewhere-h">Cost, where it loses, and what is not verified.</h2>
+  <p class="lede">
+    Three sections, <a href="evidence.html">on their own page</a>: what it costs to run, the
+    outputs it dropped that were needed, and the claims this project has not established.
+  </p>
+  <p class="fine">
+    They left this page when it reached seventeen thousand pixels. Nothing was cut &#8212; the
+    numbering runs straight through, and a reader who wants the arithmetic rather than the
+    argument should start there.
+  </p>
+</section>
+
 <section class="wrap" id="install" aria-labelledby="install-h">
   <p class="rubric"><span class="rubric__n">09</span>Install</p>
   <h2 id="install-h">Function hooks are early access, so turn them on first.</h2>
-  <p class="lede">Tested on Claude Code 2.1.281, which has function hooks. So the rule is
-     <b>2.1.281 or later works; below it is unknown rather than broken</b> — which release first
-     shipped them is <em>not established here</em>, and on a build without them the plugin
-     installs and silently never runs. Check <code>claude&nbsp;--version</code>, then
-     <a href="#session">what it touches</a> below for the notice that proves it fired, and the
-     <a href="evidence.html#checked">verification ledger</a> for what is and is not established.</p>
+  <p class="lede">
+    Tested on Claude Code 2.1.281, which has function hooks. So 2.1.281 or later works, and below
+    that is unknown rather than broken.
+  </p>
+  <p class="fine">
+    Which release first shipped them is <a href="evidence.html#checked">not established here</a>, and
+    on a build without them the plugin installs and silently never runs. Check
+    <code>claude&nbsp;--version</code> first.
+  </p>
   <p>
     <strong>Or don’t install it yet.</strong> Clone
     <a rel="noopener" href="https://github.com/AxeForging/kompact">the repository</a> and run

@@ -212,7 +212,10 @@ a:hover{ color: var(--accent); }
   .plate__scroll::before{
     content: "drag the plot sideways for the rest of it";
     display:block; font-family: var(--sans); font-size: var(--text-xs);
-    letter-spacing:0.06em; text-transform:uppercase; color: var(--on-flood-2);
+    /* Not uppercase. This is an instruction to the reader, not a column
+       header, and tracked capitals are the one setting that makes a short
+       sentence slower to read rather than faster. */
+    letter-spacing:0.02em; color: var(--on-flood-2);
     position:sticky; left:0; padding-bottom: var(--space-xs);
   }
 }
@@ -366,22 +369,72 @@ h2{
      as "I90 ms to score I.762" — and on a page where every other number is a
      three-decimal probability, "I.762" reads as a score rather than a count. */
   font-optical-sizing: none;
-  line-height: 1.06; letter-spacing:0; margin: 0 0 var(--space-md);
+  /* Was 1.06, which was right for 66px and wrong the moment --text-xl became
+     40. Display leading scales inversely with size: the smaller the type, the
+     more leading it wants, and two-line headings on a Bodoni with real
+     descenders were sitting at 42px of leading. */
+  line-height: 1.12; letter-spacing:0; margin: 0 0 var(--space-md);
   /* 26ch of Bodoni computes to 1,124px against a 952px column, so it never bound
      and the measure was always the column. Balance instead: four headings ended
      on a single word at 1400px and six did at 390px, one of them "not." alone
      under a twenty-six-character line at 65.6px. */
   text-wrap: balance;
 }
-h3{ font-family: var(--display); font-weight:600; font-size: var(--text-lg); line-height:1.15;
+h3{ font-family: var(--display); font-weight:600; font-size: var(--text-lg); line-height:1.24;
   text-wrap: balance;
   /* Same as h2: `auto` at 25px already takes the thin strokes to about a pixel,
      and an h3 is a label a reader scans rather than reads. */
   font-optical-sizing: none;
   letter-spacing:0.005em; margin: var(--space-2xl) 0 var(--space-xs); }
 p{ max-width: var(--measure); margin: 0 0 var(--space-md); }
-p, .lede, .caption, .glossary dd{ text-wrap: pretty; }
 .lede{ font-size: 1.15rem; color: var(--ink-2); max-width: var(--measure); }
+/* The line under a lead that a reader can skip and lose nothing load-bearing:
+   how a figure was generated, which release was tested, what is not yet
+   established. It used to be inside the lead, which is why the leads ran to 44,
+   48, 66, 74 and 105 words against the 25 the gutter layout above can set
+   beside a heading without growing the row. */
+/* The heading a figure used to hide behind.
+   Two of this site's four animations shipped inside `<details>` — the
+   2,239-mark plate and the command stream — while the prose standing in for
+   them sat open above them. A reader who did not click got the description and
+   never the thing it described. */
+.figure-title{
+  font-family: var(--display); font-weight:600; font-size: var(--text-lg);
+  line-height:1.15; font-optical-sizing: none; letter-spacing:0.005em;
+  margin: var(--space-xl) 0 var(--space-sm);
+}
+.fine{
+  font-family: var(--sans); font-size: var(--text-sm); line-height:1.5;
+  color: var(--ink-3); max-width: var(--measure); margin: 0 0 var(--space-md);
+}
+@media (min-width: 900px){
+  section.wrap > h2 + .lede + .fine{ grid-column: 8 / span 5; max-width: none; }
+}
+p, .lede, .caption, li, dd, dt{ text-wrap: pretty; }
+
+/* ── heading and lead side by side ────────────────────────────────────────
+   Every section opened with its heading on a full-width line and its lead on
+   the next one, which spent a whole line's height restating the heading's
+   width and left a 378px gutter empty down the right of a 952px column for
+   all seventeen thousand pixels of the page.
+   A grid on the section itself rather than a wrapper around the two, so no
+   section's markup has to change to get it: everything spans the full twelve
+   by default and only the heading and the lead that follows it are placed.
+   `section.wrap::before` is absolutely positioned, so the rule above each
+   section is not a grid item and does not take a row.
+   Below 900px it goes back to stacking: at that width seven columns is 38
+   characters, which sets a Bodoni heading as a column of single words. */
+@media (min-width: 900px){
+  section.wrap{
+    display: grid; grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--space-lg); align-content: start;
+  }
+  section.wrap > *{ grid-column: 1 / -1; }
+  section.wrap > h2{ grid-column: 1 / span 7; align-self: end; }
+  section.wrap > h2 + .lede{
+    grid-column: 8 / span 5; align-self: end; max-width: none; margin-bottom: var(--space-md);
+  }
+}
 
 /* numbers set in the sans, always tabular */
 .num{ font-family: var(--sans); font-variant-numeric: tabular-nums; font-feature-settings:"tnum" 1; }
@@ -484,7 +537,7 @@ table.rows caption{ text-align:left; }
   .scroller::before, .cmd pre::before{
     content: "drag the table sideways for the rest of it";
     display:block; font-family: var(--sans); font-size: var(--text-xs);
-    letter-spacing:0.06em; text-transform:uppercase; color: var(--ink-3);
+    letter-spacing:0.02em; color: var(--ink-3);
     position:sticky; left:0; padding-bottom: var(--space-xs);
   }
   /* Commands wrap here rather than scroll, so nothing a reader is asked to type
@@ -699,7 +752,7 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
   display:grid; grid-template-columns: 25ch minmax(0,1fr) 11ch 12ch;
   gap: var(--space-md); margin: var(--space-lg) 0 0; align-items:end;
   max-width:none; font-family: var(--sans); font-size: var(--text-xs);
-  letter-spacing:0.02em; text-transform:uppercase; color: var(--ink-3); line-height:1.25;
+  letter-spacing:0.02em; text-transform:uppercase; color: var(--ink-3); line-height:1.4;
   border-bottom:1px solid var(--rule-firm); padding-bottom: var(--space-xs);
 }
 .demo__legend span:nth-child(3){ text-align:right; letter-spacing:0; }
@@ -868,7 +921,11 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 /* ── quote / finding ──────────────────────────────────────────────────── */
 .finding{ margin: var(--space-xl) 0 0; padding: var(--space-lg) 0; border-top: 2px solid var(--ink); border-bottom:1px solid var(--rule); }
 .finding--loss{ border-top-color: var(--ink-3); }
-.finding p{ font-size: var(--text-lg); line-height:1.35; margin:0; max-width: 40ch; font-weight:500; }
+/* 1.45, not 1.35: this is the pull-quote, the one sentence per section a
+   sceptic is most likely to actually read, and it is used for all three
+   negative results as well as the wins. It was the tightest multi-line
+   *reading* text on the page. */
+.finding p{ font-size: var(--text-lg); line-height:1.45; margin:0; max-width: 40ch; font-weight:500; }
 .finding p .val{ white-space:nowrap; }
 
 /* ── ledger ───────────────────────────────────────────────────────────── */
