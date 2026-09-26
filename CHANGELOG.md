@@ -18,8 +18,8 @@ TypeSafe's hosted Jev model.
   1063 calls from 18 sessions every checkpoint was scored against, AUC
   0.905 ± 0.078 against 0.719 ± 0.026 for the best neural checkpoint and
   wording, winning 10 of 10 paired splits. With the shipped defaults the shipped
-  code frees 33.6% of tool output and 8.7–32.7% of a real session's tokens,
-  scoring 3,278 calls in 275 ms.
+  code frees 33.6% of tool output and 8.7–32.4% of a real session's tokens,
+  scoring 3,403 calls in 284 ms.
 - **Fitted on 2239 calls from 41 sessions, and that is worse than it sounds.**
   Leave-one-session-out AUC is 0.789 with ECE 0.051, against 0.879 and 0.035 on
   18 of those same sessions. Widening the corpus within one person's own work
@@ -50,8 +50,8 @@ TypeSafe's hosted Jev model.
 - **The neural sidecar is gone from the product**, and stays in the evaluation.
   There is no option that turns it on; `scorer` and `layaUrl` are read and
   ignored. What it cost is why: `eval/sidecar-bench.ts` reports 6.5 s to start,
-  ~4.9 GB resident, ~5.0 GB of VRAM for the router and 90.8 s to score the
-  sessions the built-in scorer scores in 275 ms — 330× the time for a lower AUC.
+  ~4.4 GB resident, ~5.0 GB of VRAM for the router and 90.7 s to score the
+  sessions the built-in scorer scores in 284 ms — 319× the time for a lower AUC.
   The ratio is a correction: the table read 23.1 s and 122× until the projection
   was checked against an end-to-end run, and it halved itself by dividing
   requests by the questions in one.

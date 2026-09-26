@@ -371,7 +371,7 @@ h2{
   font-family: var(--display); font-weight: 700; font-size: var(--text-xl);
   /* Same reason as `.upfront b`, found later and in a worse place: at this size
      Bodoni's optical axis strips the serifs from the figure one and thins the
-     thousands comma to nothing, so "275 ms to score 3,278 tool calls" set itself
+     thousands comma to nothing, so "284 ms to score 3,403 tool calls" set itself
      as "I90 ms to score I.762" — and on a page where every other number is a
      three-decimal probability, "I.762" reads as a score rather than a count. */
   font-optical-sizing: none;
@@ -997,7 +997,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <p><b>3.6<span class="op">&#8211;</span>32.6%</b><span>of tokens freed, per session, on four real ones. Over the whole
       corpus the shipped code frees 33.6%, keeps 79.4% of the outputs that were reused later and
       88.1% of their characters &#8212; the missing <a href="#losses">11.9%</a> is mostly the cap.</span></p>
-    <p><b>275&#8239;ms</b><span>to score 3,278 calls, against 330&#215; that for the neural
+    <p><b>284&#8239;ms</b><span>to score 3,403 calls, against 319&#215; that for the neural
       sidecar it replaced, on an RTX&#160;4060 Laptop.</span></p>
     <p><b>6 passes</b><span>before the model summary runs &#8212; each about 9&#8239;ms, each
       handing back eight points of context window, so
@@ -1196,7 +1196,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
     <dt>Nothing may leave the machine.</dt>
     <dd>
-      <span class="val">3,278</span> calls scored in <span class="val">275&#8239;ms</span>: no
+      <span class="val">3,403</span> calls scored in <span class="val">284&#8239;ms</span>: no
       process, no card, no key, no request. Not a setting &#8212; the path that needed one was
       removed after it lost.
     </dd>
@@ -1567,7 +1567,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 <section class="wrap" id="cost" aria-labelledby="cost-h">
   <p class="rubric"><span class="rubric__n">06</span>Cost</p>
-  <h2 id="cost-h">275&nbsp;ms to score 3,278 tool calls.</h2>
+  <h2 id="cost-h">284&nbsp;ms to score 3,403 tool calls.</h2>
   <p class="lede">
     Compaction stops being a model call and becomes arithmetic. These are whole session
     logs, so the totals span more than one context window, so the ratio is what transfers.
@@ -1581,11 +1581,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         <th scope="col" class="n">Freed</th><th scope="col" class="n">Scoring</th>
       </tr></thead>
       <tbody>
-        <tr><th scope="row">20628921</th><td class="n">2,690</td><td class="n">1,861,235</td><td class="n">1,252,356</td><td class="n val">32.7%</td><td class="n">239 ms</td></tr>
+        <tr><th scope="row">20628921</th><td class="n">2,815</td><td class="n">1,960,761</td><td class="n">1,326,140</td><td class="n val">32.4%</td><td class="n">247 ms</td></tr>
         <tr><th scope="row">25e65eab</th><td class="n">473</td><td class="n">273,749</td><td class="n">224,484</td><td class="n val">18.0%</td><td class="n">28 ms</td></tr>
         <tr><th scope="row">agent-ab4cc5</th><td class="n">49</td><td class="n">43,400</td><td class="n">39,451</td><td class="n val">9.1%</td><td class="n">3 ms</td></tr>
         <tr><th scope="row">agent-afa3fd</th><td class="n">66</td><td class="n">83,022</td><td class="n">75,768</td><td class="n val">8.7%</td><td class="n">6 ms</td></tr>
-        <tr><th scope="row">Total</th><td class="n">3,278</td><td class="n">2,261,406</td><td class="n">1,592,059</td><td class="n val">29.6%</td><td class="n">275 ms</td></tr>
+        <tr><th scope="row">Total</th><td class="n">3,403</td><td class="n">2,360,932</td><td class="n">1,665,843</td><td class="n val">29.4%</td><td class="n">284 ms</td></tr>
       </tbody>
     </table>
   </div>
@@ -1680,19 +1680,19 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <table class="data">
       <caption class="visually-hidden">what the sidecar would have cost to run</caption>
       <thead><tr>
-        <th scope="col">Scoring 3,278 calls, the four sessions above</th><th scope="col" class="n">Time</th>
+        <th scope="col">Scoring 3,403 calls, the four sessions above</th><th scope="col" class="n">Time</th>
         <th scope="col" class="n">Memory held</th><th scope="col" class="n">VRAM</th>
         <th scope="col" class="n">Cold start</th>
       </tr></thead>
       <tbody>
-        <tr class="same"><th scope="row">Built-in scorer</th><td class="n mark">275 ms</td><td class="n">none</td><td class="n">none</td><td class="n">none</td></tr>
-        <tr><th scope="row">Neural sidecar, fastest checkpoint, on a GPU</th><td class="n">90.8 s</td><td class="n">4.9 GB</td><td class="n">5.0 GB</td><td class="n">6.5 s</td></tr>
+        <tr class="same"><th scope="row">Built-in scorer</th><td class="n mark">284 ms</td><td class="n">none</td><td class="n">none</td><td class="n">none</td></tr>
+        <tr><th scope="row">Neural sidecar, fastest checkpoint, on a GPU</th><td class="n">90.7 s</td><td class="n">4.4 GB</td><td class="n">5.0 GB</td><td class="n">6.5 s</td></tr>
       </tbody>
     </table>
   </div>
   <p class="caption">
-    <strong>330&#215; the time, for a lower AUC</strong>, on an RTX 4060 Laptop. Per request the
-    fastest checkpoint answers eight questions in 641 ms and the slowest in 1,892 ms. The VRAM is
+    <strong>319&#215; the time, for a lower AUC</strong>, on an RTX 4060 Laptop. Per request the
+    fastest checkpoint answers eight questions in 653 ms and the slowest in 1,889 ms. The VRAM is
     the router with all three checkpoints resident, which is what the benchmark starts; one
     checkpoint alone is about 1.4 GB.
     Fine-tuning moves the AUC; it does not move this table.
@@ -2133,7 +2133,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     same line, plus one per decision, to the session log. The pass number says where in
     <a href="#demo">the ladder</a> you are, the parts sum to what was scored, and the time is
     the whole compaction — collecting the calls, scoring them, deciding, and rebuilding the
-    transcript — for the 71 calls in that one, not the 3,278 in
+    transcript — for the 71 calls in that one, not the 3,403 in
     <a href="#cost">section 06, Cost</a>. If anything at all goes wrong you get
     the other notice instead, naming the reason:
     <code>fallback to built-in summary (…)</code>. Silence at a compaction is

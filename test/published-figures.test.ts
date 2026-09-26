@@ -17,6 +17,17 @@ import { dirname, join } from 'node:path';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (path: string): string => readFileSync(join(root, path), 'utf8');
 const results = read('eval/RESULTS.md');
+/**
+ * The machine-local half, split out of `RESULTS.md` because mixing the two is
+ * what let twelve figures go stale at once: regenerating moved figures the page
+ * quoted, for reasons that had nothing to do with any change to the code.
+ *
+ * Still bound, deliberately — unbound is how they went stale. What the split
+ * changes is that regenerating `SNAPSHOT.md` is an explicit act, and these
+ * failing is the correct signal to update the page in the same commit rather
+ * than a surprise on an unrelated one.
+ */
+const snapshot = read('eval/SNAPSHOT.md');
 
 /** `logistic (features)   0.905  0.078  0.684  0.944  0.044   35.4%` */
 function scorerRow(name: string): { mean: string; sd: string; min: string; ece: string; drop: string } {
@@ -36,7 +47,7 @@ function policyRow(name: string): { freed: string; kept: string; charsKept: stri
 
 /** `total   1282   1,131,093   882,442   22.0%   104ms` — the sessions block. */
 function sessionsTotal(): { calls: string; freed: string; ms: string } | undefined {
-  const line = results.split('\n').find((l) => /^total\s+\d/.test(l));
+  const line = snapshot.split('\n').find((l) => /^total\s+\d/.test(l));
   if (!line) return undefined;
   const [, calls, , , freed, ms] = line.trim().split(/\s+/);
   return { calls: calls!, freed: freed!, ms: ms!.replace('ms', '') };
@@ -44,10 +55,12 @@ function sessionsTotal(): { calls: string; freed: string; ms: string } | undefin
 
 /** `multilingual   8   700 ms   773 ms   87.5 ms   792` — one latency cell. */
 function latency(checkpoint: string, questions: number): string | undefined {
-  return new RegExp(`^${checkpoint}\\s+${questions}\\s+(\\d+) ms`, 'm').exec(results)?.[1];
+  return new RegExp(`^${checkpoint}\\s+${questions}\\s+(\\d+) ms`, 'm').exec(snapshot)?.[1];
 }
 
-const scalar = (re: RegExp): string | undefined => re.exec(results)?.[1];
+// The sidecar benchmark is a snapshot: it reads whatever session corpus
+// `sessions.ts` just measured, on whatever card is in the machine.
+const scalar = (re: RegExp): string | undefined => re.exec(snapshot)?.[1];
 
 const sessions = sessionsTotal();
 const bench = {
@@ -120,7 +133,7 @@ describe('published figures match eval/RESULTS.md', () => {
   // generated into eval/RESULTS.md, which is committed, so this runs on a runner
   // even though neither measurement can be taken there.
   it('quotes the measured session totals, not an older corpus', () => {
-    expect(sessions, 'eval/RESULTS.md has no sessions block').toBeDefined();
+    expect(sessions, 'eval/SNAPSHOT.md has no sessions block').toBeDefined();
     const page = read('docs/index.html');
     expect(page, 'the page quotes a call count from an older corpus')
       .toContain(Number(sessions!.calls).toLocaleString('en-GB'));
@@ -132,7 +145,7 @@ describe('published figures match eval/RESULTS.md', () => {
   // only some. This fires where a file *does* make the claim and the value has
   // gone stale, which is exactly how the last four drifted.
   it('quotes no stale sidecar figure anywhere', () => {
-    expect(bench.coldStart, 'eval/RESULTS.md has no sidecar block').toBeDefined();
+    expect(bench.coldStart, 'eval/SNAPSHOT.md has no sidecar block').toBeDefined();
     const claims: Array<[RegExp, string, string]> = [
       [/(\d+)x the time/g, bench.ratio!, 'ratio'],
       [/(\d+)\u00d7 the time/g, bench.ratio!, 'ratio'],
@@ -361,9 +374,10 @@ describe('published figures match eval/RESULTS.md', () => {
   it('binds the claims a later copy pass put in the masthead', () => {
     const page = read('docs/index.html');
 
-    // `  ratio:              122x the time`
-    const ratio = /ratio:\s+(\d+)x the time/.exec(results)?.[1];
-    expect(ratio, 'eval/RESULTS.md no longer reports a latency ratio').toBeDefined();
+    // `  ratio:              122x the time` — a snapshot: it compares against
+    // whatever session corpus `sessions.ts` measured in the same report.
+    const ratio = /ratio:\s+(\d+)x the time/.exec(snapshot)?.[1];
+    expect(ratio, 'eval/SNAPSHOT.md no longer reports a latency ratio').toBeDefined();
     expect(page, `the report says ${ratio}x`).toContain(`${ratio}&#215;`);
 
     // `  logistic won 10/10 splits`

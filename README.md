@@ -438,19 +438,19 @@ Measured on one machine, RTX 4060 Laptop, one `laya-serve` process
 | | |
 |---|---|
 | cold start to first answer | **6.5 s** |
-| resident memory | **3.1 GB** at first answer, **4.9 GB** warm |
+| resident memory | **3.1 GB** at first answer, **4.4 GB** warm |
 | VRAM | **~5.0 GB** for the router with all three checkpoints; ~1.4 GB for one alone |
-| latency, `multilingual`, 8 questions | **641 ms** median |
-| latency, `typed-decisions` / `english`, 8 questions | 1,857 ms / 1,892 ms |
+| latency, `multilingual`, 8 questions | **653 ms** median |
+| latency, `english` / `typed-decisions`, 8 questions | 1,871 ms / 1,889 ms |
 
 `laya-serve` loads every checkpoint at startup and routes per request, so memory,
 start-up and VRAM are properties of the router, not of any one checkpoint. Only
 latency is per checkpoint.
 
-Scoring this machine's sessions — 3,278 calls, two questions a request, eight in
-flight — takes **90.8 s on the fastest checkpoint against 275 ms for the built-in
-scorer**, holding ~4.9 GB of RAM and about 5.0 GB of VRAM the whole time. That is
-330x the time for a lower AUC, which is the arithmetic behind the default.
+Scoring this machine's sessions — 3,403 calls, two questions a request, eight in
+flight — takes **90.7 s on the fastest checkpoint against 284 ms for the built-in
+scorer**, holding ~4.4 GB of RAM and about 5.0 GB of VRAM the whole time. That is
+319x the time for a lower AUC, which is the arithmetic behind the default.
 Fine-tuning changes the AUC; it does not change this table.
 
 That ratio is a correction twice over. It read 23.1 s and 122x until the

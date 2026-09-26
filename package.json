@@ -33,6 +33,7 @@
     "eval:inputs": "bun eval/inputs.ts",
     "docs:passes": "bun eval/passes.ts --publish",
     "eval:results": "bun eval/results.ts",
+    "eval:snapshot": "bun eval/results.ts --snapshot",
     "eval:ci": "bun eval/fit.ts --fixture && bun eval/repeat.ts --fixture && bun eval/policy.ts --fixture && bun eval/recovery.ts --fixture && bun eval/outcome.ts --fixture",
     "eval:fixtures": "bun eval/make-fixture.ts && bun eval/make-session-fixture.ts",
     "prepack": "npm run build",

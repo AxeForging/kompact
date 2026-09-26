@@ -113,6 +113,20 @@ for (const target of [0.5, 0.6, 0.7, 0.8]) {
   let mutatingRescued = 0;
   let unrepeatableRescued = 0;
   let unrepeatableChars = 0;
+  /**
+   * The cap on its own, which the page quoted four ways and no script printed.
+   *
+   * "27 of 2,239 calls run past 24,000 characters", "shortening those 27 frees
+   * 20.7% of the corpus", "5 of the 247 reused outputs are longer than the cap"
+   * and "76,466 characters those later steps had quoted" were all real once and
+   * none of them was generated, so a fact-check could not tell a stale one from
+   * a live one. They are computed here now, from the same rows everything else
+   * on this line uses.
+   */
+  let overCap = 0;
+  let overCapChars = 0;
+  let overCapNeeded = 0;
+  let overCapNeededChars = 0;
   let neededChars = 0;
   let neededCharsKept = 0;
   for (const session of sessions) {
@@ -162,6 +176,15 @@ for (const target of [0.5, 0.6, 0.7, 0.8]) {
         // what the guard is worth rather than what it applies to.
         if ((score.get(rowKey(row)) ?? 0) < DEFAULT_OPTIONS.keepThreshold) unrepeatableRescued += 1;
       }
+      const cap = DEFAULT_OPTIONS.maxKeptChars;
+      if (cap > 0 && row.output_chars > cap) {
+        overCap += 1;
+        overCapChars += row.output_chars - cap;
+        if (row.result_needed) {
+          overCapNeeded += 1;
+          overCapNeededChars += row.output_chars - cap;
+        }
+      }
       if (!row.result_needed) continue;
       needed += 1;
       if (action === 'keep') kept += 1;
@@ -187,6 +210,12 @@ for (const target of [0.5, 0.6, 0.7, 0.8]) {
     `(${capLost.toFixed(1)}% lost, almost all of it to the ${DEFAULT_OPTIONS.maxKeptChars.toLocaleString()}-char cap)`);
   console.log(`  without that guard ${mutatingRescued} of them would lose their call or output, ` +
     `so the rule saves ${mutatingRescued}, not ${rows.filter((r) => MUTATING.has(r.tool)).length}`);
+  console.log(`  the ${DEFAULT_OPTIONS.maxKeptChars.toLocaleString()}-char cap alone: ` +
+    `${overCap} of ${rows.length} calls run past it, and shortening those ${overCap} ` +
+    `frees ${((100 * overCapChars) / total).toFixed(1)}% of every character in the corpus`);
+  console.log(`  it costs ${overCapNeeded} of the ${needed} reused outputs ` +
+    `${overCapNeededChars.toLocaleString()} characters later steps had quoted, ` +
+    `${((100 * overCapNeededChars) / neededChars).toFixed(1)}% of every reused character`);
   const unrepeatable = rows.filter((r) => UNREPEATABLE.has(r.tool));
   console.log(`  a result nothing can produce again is also never dropped: ` +
     `${unrepeatableRescued} of ${unrepeatable.length} ${[...UNREPEATABLE].join('/')} outputs ` +
