@@ -27,6 +27,7 @@
     "serve": "bun bin/kompact-serve.ts",
     "calibrate": "bun eval/extract-labels.ts && bun eval/calibrate.ts",
     "dry-run": "bun eval/sessions.ts && bun eval/passes.ts",
+    "doctor": "bun bin/kompact-doctor.ts",
     "eval:passes": "bun eval/passes.ts --sweep",
     "eval:loop": "bun eval/outcome.ts --fixture --passes 6",
     "eval:mass": "bun eval/mass.ts",
@@ -56,7 +57,8 @@
     "vitest": "^2.1.8"
   },
   "bin": {
-    "kompact-serve": "./dist/bin/kompact-serve.js"
+    "kompact-serve": "./dist/bin/kompact-serve.js",
+    "kompact-doctor": "./dist/bin/kompact-doctor.js"
   },
   "author": "AxeForging",
   "repository": {

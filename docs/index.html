@@ -24,8 +24,8 @@
   </p>
   <div class="cta reveal" style="--d:140ms">
     <a class="btn btn--solid" href="#install">Install it</a>
+    <a class="btn" href="#try">Try it, nothing installed</a>
     <a class="btn" href="#demo">Watch it decide</a>
-    <a class="btn" href="#install">Try it, nothing installed</a>
   </div>
   <div class="upfront reveal" style="--d:170ms">
     <p><b>29.3%</b><span>of tokens freed</span></p>
@@ -655,26 +655,18 @@
 
 <section class="wrap" id="install" aria-labelledby="install-h">
   <p class="rubric"><span class="rubric__n">09</span>Install</p>
-  <h2 id="install-h">Function hooks are early access, so turn them on first.</h2>
+  <h2 id="install-h">See your own number first, then install.</h2>
   <p class="lede">
-    Tested on Claude Code 2.1.281, which has function hooks. So 2.1.281 or later works, and below
-    that is unknown rather than broken.
+    Before installing anything, run it against your own sessions. It scores the transcripts already
+    in <code>~/.claude/projects</code> with the same code the hook calls, prints what one compaction
+    would free and how many passes the loop would take before handing over &#8212; and writes
+    nothing, installs nothing, sends nothing.
   </p>
   <p class="fine">
-    Which release first shipped them is <a href="evidence.html#checked">not established here</a>, and
-    on a build without them the plugin installs and silently never runs. Check
-    <code>claude&nbsp;--version</code> first.
+    Needs <code>git</code> and Node 18 or later; with no sessions there it has nothing to score and
+    says so. <a href="evidence.html#cost">Section 06, Cost</a> has the range to expect.
   </p>
-  <p>
-    <strong>Or don’t install it yet.</strong> Clone
-    <a rel="noopener" href="https://github.com/AxeForging/kompact">the repository</a> and run
-    <code>npm&nbsp;run&nbsp;dry-run</code>: it scores your own transcripts with the same code the
-    hook calls and prints both what one compaction would free and how many passes the loop
-    would take before handing over, writing nothing and installing nothing.
-    Needs <code>git</code> and Node 18 or later, and it reads the sessions already in <code>~/.claude/projects</code>. With none there it has nothing to score and says so.
-    <a href="evidence.html#cost">Section 06, Cost</a> has the range to expect.
-  </p>
-  <div class="cmd">
+  <div class="cmd" id="try">
     <div class="cmd__head">
       <p class="label">shell &#183; nothing installed</p>
       <button class="copy" type="button" data-copy hidden aria-label="Copy the commands that try it without installing">Copy</button>
@@ -682,6 +674,13 @@
     </div>
     <pre tabindex="0" data-label="Shell commands to try it without installing"><code><span class="cmd__line">git clone https://github.com/AxeForging/kompact</span><span class="cmd__line">cd kompact</span><span class="cmd__line">npm install</span><span class="cmd__line">npm run dry-run</span></code></pre>
   </div>
+  <p>
+    <strong>Then install it.</strong> Function hooks are early access: tested on Claude Code 2.1.281,
+    so that or later works and below it is unknown rather than broken;
+    <a href="evidence.html#checked">which release first shipped them</a> is not established here. The
+    variable must be exported <em>before</em> Claude Code starts &#8212; put it in your shell startup
+    file, or the plugin installs and silently never runs.
+  </p>
   <div class="cmd">
     <div class="cmd__head">
       <p class="label">shell &#183; then install it</p>
@@ -690,6 +689,12 @@
     </div>
     <pre tabindex="0" data-label="Shell commands to install it"><code><span class="cmd__line">export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1</span><span class="cmd__gap"></span><span class="cmd__line">claude plugin marketplace add AxeForging/kompact</span><span class="cmd__line">claude plugin install kompact@kompact</span></code></pre>
   </div>
+  <p class="fine">
+    Did it fire? The next compaction prints <code>kept N/M messages, no summary (&#8230;)</code>;
+    silence means it never ran. <code>npm&nbsp;run&nbsp;doctor</code> checks the variable, your Claude
+    Code version, and that the plugin is installed and firing &#8212; all at once &#8212; and the
+    checks are spelled out below.
+  </p>
   <p class="caption">
     It replaces compaction rather than repairing it: Claude Code’s <code>session.compact</code>
     hook returns a replacement message list. Any failure at all (scorer down, malformed
@@ -716,8 +721,9 @@
     71&nbsp;scored;&nbsp;compacted&nbsp;in&nbsp;16ms)</code>, and writes the same line, plus
     one per decision, to the session log. If anything goes wrong you get
     <code>fallback to built-in summary (&#8230;)</code> instead, naming the reason. Silence is a
-    different thing: the hook never ran, which is a setup answer rather than a bad decision. Two
-    checks, in this order:
+    different thing: the hook never ran, which is a setup answer rather than a bad decision.
+    <code>npm&nbsp;run&nbsp;doctor</code> runs the two checks below plus the version and whether it
+    has fired, and prints the fix for each. By hand, in this order:
   </p>
   <ul class="plain">
     <li><code>echo $CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> must print <code>1</code>. Empty is
