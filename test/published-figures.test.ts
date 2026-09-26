@@ -467,6 +467,12 @@ describe('published figures match eval/RESULTS.md', () => {
     // colophon said six: two of the six matches were the CSS rules that style the
     // row, so the guard counted the stylesheet and confirmed a wrong number
     // against itself. A check that can agree with the bug is worse than none.
+    //
+    // The stylesheet moved to `docs/app.css` when the page gained siblings, so
+    // this strip is now a no-op and the class of bug it guards against cannot
+    // recur from that direction. Kept rather than deleted: it costs nothing, and
+    // an inline block could come back for critical CSS without anyone thinking
+    // to restore it.
     const page = read('docs/index.html').replace(/<style[^>]*>[\s\S]*?<\/style>/g, '');
     const open = (page.match(/ledger__row--open/g) ?? []).length;
     expect(open, 'no unverified claims found, so this proves nothing').toBeGreaterThan(0);

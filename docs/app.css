@@ -1,0 +1,968 @@
+:root{
+  color-scheme: light;
+  /* Neutrals tinted toward the accent hue (iron oxide, 38) — AxeForging. */
+  --paper:      oklch(0.983 0.004 45);
+  /* 0.957 put the chart’s 0.50–1.00 reference track at 1.08:1 on paper — the
+     frame every bar is read against, all but invisible. */
+  --paper-sunk: oklch(0.935 0.010 45);
+  --rule:       oklch(0.885 0.008 45);
+  --rule-firm:  oklch(0.760 0.010 45);
+  --ink:        oklch(0.245 0.012 45);
+  /* Three tiers only work if a reader can see three. At 0.430 and 0.470 these two
+     sat 1.19:1 apart — one grey under two names, across 55 declarations. Darkening
+     the secondary tier rather than lightening the quiet one opens the gap to
+     1.47:1 and takes secondary prose from 7.7:1 to 9.6:1 on paper, which is the
+     direction a reader who called the page hard to read wants. */
+  --ink-2:      oklch(0.380 0.011 45);
+  --ink-3:      oklch(0.470 0.010 45);
+  /* The one accent. Measured values and honesty markers only. Chroma raised
+     from 0.168: on a wide-gamut display it reads at full strength, and sRGB
+     clamps both to nearly the same red, so nothing is lost where it cannot. */
+  --accent:     oklch(0.505 0.190 38);
+  /* The flooded ground. The accent stops being 10% of the page and becomes the
+     field the masthead sits in, inverting to paper below — Hermes's move, in
+     AxeForging's hue. Paper on it is 10.2:1. */
+  --flood:      oklch(0.380 0.150 34);
+  --on-flood:   oklch(0.983 0.004 45);
+  --on-flood-2: oklch(0.800 0.060 40);
+  --flood-rule: oklch(0.550 0.100 38);
+  --accent-ink: oklch(0.395 0.140 38);
+  --accent-wash:oklch(0.945 0.030 38);
+
+  --space-2xs: 4px; --space-xs: 8px; --space-sm: 12px; --space-md: 16px;
+  --space-lg: 24px; --space-xl: 32px; --space-2xl: 48px; --space-3xl: 64px;
+  --space-4xl: 96px;
+
+  --sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --serif: 'Literata', Georgia, 'Times New Roman', serif;
+  /* A Didone: the highest-contrast thing a printed page offers, and the letter
+     shape of an engraved plate — which is what the one image on this page is. */
+  --display: 'Bodoni Moda', 'Bodoni 72', Didot, 'Times New Roman', serif;
+
+  /* Raised after a reader said the page was hard to read. 12px was carrying 15
+     roles including two figure captions and every table cell; 13px and 15px cost
+     a little height and buy back the small type, which is most of this page. The
+     body moves 17 to 18: Literata's x-height is modest and it was set a step
+     below where this measure wants it. */
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-base: 1.125rem;
+  --text-lg: clamp(1.25rem, 1.02rem + 1.1vw, 1.6rem);
+  /* Was clamp(2.3rem, 1.4rem + 4.1vw, 4.1rem) — 66px at 1400px, which is why
+     `#signals-h` and `#losses-h` each ran to three Bodoni lines and 209px. Two
+     lines is the point of a display face here; three is a poster. */
+  --text-xl: clamp(1.7rem, 1.1rem + 2.4vw, 2.5rem);
+  /* Was clamp(2.2rem, 1.4rem + 7.6vw, 7rem) — 112px, and the owner's word for it
+     was "too fucking big". The floor is what matters to keep: below ~2rem the
+     wordmark stopped shrinking while the column kept narrowing, so a 320px screen
+     got 36px of horizontal scroll and a clipped wordmark. 2rem still clears it. */
+  --text-display: clamp(2rem, 1.2rem + 3.2vw, 3.5rem);
+
+  /* Measured per character, this rendered 84 on the median full line — half again
+     the comfortable band, and the answer to a reader who said the page was hard
+     to read.
+
+     A previous comment here claimed 68ch rendered 67 characters and said a review
+     reporting 88 was therefore wrong. The review was right. The 67 came from
+     eval/render-check.ts dividing a paragraph's characters by its number of line
+     tops, which averages in the ragged last line and any short fragment that
+     starts one: 401 characters over lines of [87, 4, 88, 86, 84, 60] reports 67.
+     That check now buckets characters by line top, drops each block's last line
+     and asserts the median. */
+  --measure: 55ch;
+}
+
+*,*::before,*::after{ box-sizing: border-box; }
+html{ -webkit-text-size-adjust: 100%; }
+body{
+  margin:0; background: var(--paper); color: var(--ink);
+  font-family: var(--serif); font-size: var(--text-base); line-height: 1.62;
+  font-kerning: normal; -webkit-font-smoothing: antialiased;
+  padding: env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0);
+}
+img{ max-width:100%; } [hidden]{ display:none !important; }
+
+.wrap{ width:100%; max-width: 1080px; margin-inline:auto; padding-inline: clamp(20px, 5vw, 64px); }
+
+a{ color: var(--accent-ink); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+a:hover{ color: var(--accent); }
+:focus-visible{ outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+.skip{ position:absolute; left:-9999px; }
+.skip + .skip:focus{ top: calc(var(--space-md) + 2.4rem); }
+.skip:focus{ left: var(--space-md); top: var(--space-md); z-index:9; background: var(--paper);
+  padding: var(--space-xs) var(--space-sm); border:1px solid var(--rule-firm); font-family: var(--sans); }
+
+.visually-hidden{
+  position:absolute; width:1px; height:1px; margin:-1px; padding:0;
+  overflow:hidden; clip-path: inset(50%); white-space:nowrap; border:0;
+}
+/* A scroller is focusable so it can be scrolled from the keyboard; the ring
+   sits inside it rather than around the whole band. */
+.scroller:focus-visible{ outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* ── document label: the small caps used throughout ───────────────────── */
+.label{
+  font-family: var(--sans); font-size: var(--text-xs); font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3);
+  margin: 0 0 var(--space-sm);
+}
+/* A label may contain a command, and a command is case-sensitive: uppercasing it
+   put `NPM RUN PROPOSE -- --WRITE 1` on the page, which does not run. */
+.label code{ text-transform: none; letter-spacing: 0; font-size: 0.95em; }
+
+/* A numbered running head, as a standards paper sets one — not the tracked-caps
+   chip that sits above every AI hero. The number does the signalling, so the
+   words stay in sentence case. */
+.rubric{
+  display:flex; align-items:baseline; gap: var(--space-sm);
+  font-family: var(--sans); font-size: var(--text-sm); font-weight:600;
+  letter-spacing:0.01em; color: var(--ink-2);
+  margin: 0 0 var(--space-sm); padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--rule); max-width: none;
+}
+.rubric__n{
+  font-variant-numeric: tabular-nums; font-weight:700; color: var(--ink-3);
+  font-size: var(--text-xs); letter-spacing:0.08em;
+}
+.rubric--accent{ color: var(--accent-ink); }
+.rubric--accent .rubric__n{ color: var(--accent); }
+/* The glossary was a numbered peer of Evidence and Install holding one folded
+   list, and it sat between the argument and the install command. It is an
+   appendix: no number, and after the thing a convinced reader came for. */
+.rubric--appendix{ color: var(--ink-3); }
+
+/* ── masthead ─────────────────────────────────────────────────────────── */
+.flooded{ background: var(--flood); color: var(--on-flood); }
+.masthead{ padding-block: clamp(var(--space-2xl), 6vw, var(--space-4xl)) var(--space-xl); }
+.masthead__rule{ height:0; border-top: 1px solid var(--flood-rule); margin-bottom: var(--space-md); }
+.flooded a{ color: var(--on-flood); }
+.flooded a:hover{ color: var(--on-flood-2); }
+.flooded :focus-visible{ outline-color: var(--on-flood); }
+.wordmark{ white-space: nowrap;
+  /* `auto` here for the same reason it is off everywhere else: Bodoni's optical
+     axis thins horizontal strokes as size grows, and at 112px the wordmark's
+     own hairlines were measured at well under a pixel on the flood, where they
+     have the least contrast to spend. Pinned to the family's 11-opsz master. */
+  font-family: var(--display); font-weight: 700; font-size: var(--text-display);
+  font-optical-sizing: none;
+  /* No negative tracking: it was compensating for the sidebearings of an
+     11-opsz master rendered at 112px, and the optical axis handles that now. */
+  line-height: 1.0; margin: 0 0 var(--space-lg);
+}
+.wordmark em{ font-style: italic; font-weight: 400; }
+.standfirst{ max-width: var(--measure); font-size: var(--text-lg); line-height: 1.45; margin:0 0 var(--space-xl); color: var(--on-flood-2); }
+.standfirst strong{ color: var(--on-flood); font-weight: 500; }
+
+/* What it measured and what it costs, above the fold, because the page asks
+   its reader to decide in about a minute and the first figure used to be a
+   scroll away. Typographic, on the flood, no card. */
+/* The caveat is accurate and has to be somewhere; at full weight in the middle
+   of the opening sentence it cost more clarity than the precision earned, since
+   the sidecar has not been introduced yet. */
+.standfirst__note{ color: var(--on-flood-2); }
+.upfront{
+  display:grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--space-sm) var(--space-xl);
+  border-top:1px solid var(--flood-rule); padding-top: var(--space-md);
+  margin-bottom: var(--space-lg); font-family: var(--sans);
+}
+.upfront p{ margin:0; font-size: var(--text-sm); line-height:1.45; color: var(--on-flood-2); }
+.upfront b{
+  /* `auto` puts this on Bodoni's opsz 30 drawing, where the hairlines are thin
+     by design and disappear on the flood: the figure one lost both serifs and
+     read as a bare stem, `I90 ms`. `none` pins the family default, opsz 11 — the
+     text-size drawing, which keeps the Didone contrast but at a weight that
+     survives light-on-dark at 30px. */
+  display:block; font-family: var(--display); font-optical-sizing: none;
+  font-size: 1.9rem; line-height:1.1; font-weight:700; color: var(--on-flood);
+  font-variant-numeric: tabular-nums; letter-spacing:0;
+}
+.upfront span b{ display:inline; font-size:inherit; font-family:inherit; font-weight:600; }
+/* The two operators the headline numbers cannot lose, set in the text face.
+   Bodoni Moda is a Didone and its optical-size axis thins horizontal strokes as
+   the size grows: measured on the shipped woff2, the en dash is 38 units of the
+   em at opsz 11 and 13 at opsz 30, which at this 1.9rem is 0.40px. It rendered
+   as nothing, so `8.7–32.0%` read as two unrelated numbers, and ± kept only the
+   vertical stem of its plus. Literata draws both solid. */
+.upfront p > b .op{ font-family: var(--serif); font-weight:600; font-size:0.86em; }
+.upfront__do{ grid-column: 1 / -1; font-size: var(--text-base); }
+.upfront__do a{ color: var(--on-flood); text-decoration-thickness:1px; text-underline-offset:3px; }
+.upfront__do code{ color: var(--on-flood); }
+
+.plate__scroll{ overflow-x:auto; overscroll-behavior-x: contain; }
+.plate__scroll img{ display:block; width:100%; height:auto; }
+/* The static plate stays in the DOM whatever happens — it carries the alt text
+   and it is what a reader gets with scripts blocked or motion turned down. When
+   the canvas takes over it fades to nothing rather than being removed, so the
+   description stays in the accessibility tree. */
+.plate__stack{ position:relative; }
+.plate__stack[data-animating] > img{ opacity:0; }
+.plate__anim{ position:absolute; inset:0; }
+.plate__anim img, .plate__anim canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+.plate__replay{
+  margin-top: var(--space-sm); font-family: var(--sans); font-size: var(--text-xs);
+  letter-spacing:0.06em; text-transform:uppercase; font-weight:600;
+  color: var(--on-flood); background:none; border:1px solid var(--flood-rule);
+  padding: 6px var(--space-sm); cursor:pointer;
+}
+.plate__replay:hover{ border-color: var(--on-flood); }
+@media (max-width: 760px){
+  .plate__scroll img{ width: 760px; max-width:none; }
+  .plate__scroll::before{
+    content: "drag the plot sideways for the rest of it";
+    display:block; font-family: var(--sans); font-size: var(--text-xs);
+    letter-spacing:0.06em; text-transform:uppercase; color: var(--on-flood-2);
+    position:sticky; left:0; padding-bottom: var(--space-xs);
+  }
+}
+
+ul.plain{ max-width: var(--measure); margin: var(--space-md) 0 0; padding-left: 1.1em; }
+ul.plain li{ margin-bottom: var(--space-xs); }
+ul.plain li::marker{ color: var(--ink-3); }
+
+.colophon{
+  display:flex; flex-wrap:wrap; gap: var(--space-xs) var(--space-lg);
+  font-family: var(--sans); font-size: var(--text-sm); letter-spacing:0.01em;
+  color: var(--ink-3);
+  border-top:1px solid var(--flood-rule); padding-top: var(--space-sm);
+  color: var(--on-flood-2);
+}
+.colophon b{ color: var(--on-flood); font-weight:600; }
+
+.contents{ display:flex; flex-wrap:wrap; gap: var(--space-xs) var(--space-lg); margin-top: var(--space-sm); }
+.contents a{
+  font-family: var(--sans); font-size: var(--text-sm); font-weight:500; color: var(--on-flood-2);
+  text-decoration:none; padding-block: 6px; border-bottom: 1px solid transparent;
+}
+.contents-bar{
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: var(--paper); border-bottom:1px solid var(--rule-firm);
+}
+/* How far through are you. A scroll-driven animation needs no script, so this
+   works in the scripts-blocked case like everything else here, and simply does
+   not draw on an engine without it. */
+@supports (animation-timeline: scroll()){
+  .contents-bar{ position: sticky; }
+  .contents-bar::after{
+    content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px;
+    background: var(--accent); transform: scaleX(0); transform-origin: 0 50%;
+    animation: read-progress linear both; animation-timeline: scroll(root block);
+  }
+  @keyframes read-progress{ to{ transform: scaleX(1); } }
+}
+@media (prefers-reduced-motion: reduce){ .contents-bar::after{ animation: none; } }
+/* margin-block only: margin:0 here killed the wrap's auto centring and the bar
+   sat 180px left of every other thing on the page. */
+.contents-bar .contents{ margin-block:0; padding-block: var(--space-xs); gap: var(--space-xs) var(--space-md); }
+/* One row that scrolls, at every width, and not only on a phone.
+   Wrapped, this bar measured 140px of an 844px phone screen and held it for the
+   whole 23,000px scroll — a sixth of every screen, for a bar that then could not
+   even say where you were. Adding two sections then wrapped it to 96px on a
+   1400px laptop too, which is the same bug arriving from the other direction: any
+   rule that depends on the labels fitting breaks the next time a section is
+   added. One scrolling row is about 48px whatever the width and however many
+   sections there are. */
+.contents-bar .contents{
+  flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity; scrollbar-width: thin;
+  /* The same two-layer treatment every other scroller gets: a paper mask that
+     retreats as you scroll, over a shadow that says there is more this way. */
+  background:
+    linear-gradient(to right, var(--paper) 60%, transparent) left / 40px 100% no-repeat local,
+    linear-gradient(to left,  var(--paper) 60%, transparent) right / 40px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, oklch(0.245 0.012 45 / 0.28), transparent) left / 18px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, oklch(0.245 0.012 45 / 0.28), transparent) right / 18px 100% no-repeat scroll;
+}
+.contents-bar .contents a{ flex: 0 0 auto; scroll-snap-align: start; }
+/* --on-flood-2 is 5.63:1 on the flood and about 2:1 on paper. */
+.contents-bar .contents a{ color: var(--ink-2); }
+.contents-bar .contents a:hover, .contents-bar .contents a[aria-current]{ color: var(--accent-ink); }
+/* Colour alone, and it failed: the generic rule below paints the underline
+   --on-flood, which is paper on this bar, so the only signal of where you were
+   reading was a 0.035 lightness change. WCAG 1.4.1, on the one control whose
+   whole job is answering "where am I" in a 17,000px document. */
+.contents-bar .contents a[aria-current]{ border-bottom-color: currentColor; font-weight:700; }
+.contents-bar__row{ display:flex; align-items:center; gap: var(--space-md); }
+/* min-width:0 or the links refuse to shrink and push the controls off the edge. */
+.contents-bar__row .contents{ flex: 1 1 auto; min-width: 0; }
+.contents__tools{ flex: 0 0 auto; display:flex; gap: var(--space-md); align-items:center; margin:0; }
+/* A button inherits from the row, not from the links beside it, so the font is
+   spelled out: it rendered in the body serif at the wrong size otherwise. */
+.contents__all, .contents__top{
+  font-family: var(--sans); font-size: var(--text-sm); font-weight:500; color: var(--ink-3);
+  background:none; border:0; border-bottom:1px solid transparent; padding-block:6px;
+  text-decoration:none; white-space:nowrap;
+}
+.contents__all{ cursor:pointer; }
+/* The one action in the bar, and the only bordered thing in it. Install was the
+   ninth of nine links in the scrolling row, indistinguishable from a contents
+   entry, and on a phone it sat off the right edge: across 15,000px a reader who
+   had decided had nothing to press. It leaves the row and becomes a control. */
+.contents__go{
+  font-family: var(--sans); font-size: var(--text-sm); font-weight:600;
+  color: var(--accent-ink); text-decoration:none; white-space:nowrap;
+  border:1px solid var(--accent); padding: 5px var(--space-sm);
+}
+.contents__go:hover{ color: var(--paper); background: var(--accent-ink); border-color: var(--accent-ink); }
+.contents__go:focus-visible{ outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+/* Every other link in the row points at this page. The full evaluation was
+   reachable only from two links buried mid-paragraph at 65% and 86% of the
+   scroll, so a reader who wanted the numbers had to find them by reading the
+   thing they were trying to skip.
+   It sits in the scrolling row rather than beside Install on purpose: the tools
+   group is fixed width, and adding a third to it dropped the bar to 2 of 9
+   sections at 390px and 1 at 320px — a navigation bar hiding the navigation.
+   In the row it costs nothing fixed and survives at every width, and the arrow
+   is what says it leaves. */
+.contents__out{ color: var(--ink-2); }
+.contents__out::after{ content:none; }
+/* The tools were taking 130px of a 390px screen, which left the bar showing two
+   of nine sections — a navigation bar hiding the navigation. Below 640px the
+   word goes and "Open all" goes with it: it is a convenience for reading the
+   whole argument at a desk, and the folds still open one at a time. */
+.contents__short{ display:none; }
+@media (max-width: 640px){
+  .contents__all{ display:none; }
+  .contents__word{ display:none; }
+  /* The action stays at every width — it is the point of the bar — but it pays
+     for its place: at 320px the full-size chip left only two sections visible. */
+  .contents__go{ font-size: var(--text-xs); padding: 4px var(--space-xs); }
+  .contents__tools{ gap: var(--space-sm); }
+  /* Short forms rather than truncation: nine sections you can see beats two you
+     can read in full. Written out as two spans so the wide label keeps its own
+     capitalisation instead of being transformed into it. */
+  .contents__long{ display:none; }
+  .contents__short{ display:inline; }
+}
+.contents__all:hover, .contents__top:hover{ color: var(--accent-ink); }
+.contents__all[aria-pressed="true"]{ color: var(--accent-ink); border-bottom-color: currentColor; }
+.contents__top:hover{ color: var(--accent-ink) !important; }
+
+.contents a:hover{ color: var(--on-flood); border-bottom-color: var(--on-flood); }
+.contents a[aria-current="true"]{ color: var(--on-flood); border-bottom-color: var(--on-flood); }
+
+/* ── sections ─────────────────────────────────────────────────────────── */
+/* The rule sits on an inner pseudo-element rather than on the section box: on
+   the box it spanned the padding too, so every section divider ran 64px wider
+   each side than the rubric underline directly beneath it. */
+/* Every anchor used to land behind the sticky contents bar: 29px on a laptop
+   and 116px on a phone, where the heading and the first fact were invisible.
+   --nav-h is set from the bar’s measured height in retune(). */
+section, [id]{ scroll-margin-top: calc(var(--nav-h, 56px) + var(--space-sm)); }
+section{ padding-block: clamp(var(--space-xl), 4.5vw, var(--space-3xl)); position:relative; }
+section.wrap::before{
+  content:""; position:absolute; top:0;
+  left: clamp(20px, 5vw, 64px); right: clamp(20px, 5vw, 64px);
+  border-top: 1px solid var(--rule);
+}
+section.flooded{ border-top: none; padding-block: clamp(var(--space-2xl), 5.5vw, var(--space-4xl)); }
+.masthead.flooded{ max-width: none; }
+h2{
+  font-family: var(--display); font-weight: 700; font-size: var(--text-xl);
+  /* Same reason as `.upfront b`, found later and in a worse place: at this size
+     Bodoni's optical axis strips the serifs from the figure one and thins the
+     thousands comma to nothing, so "281 ms to score 3,591 tool calls" set itself
+     as "I90 ms to score I.762" — and on a page where every other number is a
+     three-decimal probability, "I.762" reads as a score rather than a count. */
+  font-optical-sizing: none;
+  line-height: 1.06; letter-spacing:0; margin: 0 0 var(--space-md);
+  /* 26ch of Bodoni computes to 1,124px against a 952px column, so it never bound
+     and the measure was always the column. Balance instead: four headings ended
+     on a single word at 1400px and six did at 390px, one of them "not." alone
+     under a twenty-six-character line at 65.6px. */
+  text-wrap: balance;
+}
+h3{ font-family: var(--display); font-weight:600; font-size: var(--text-lg); line-height:1.15;
+  text-wrap: balance;
+  /* Same as h2: `auto` at 25px already takes the thin strokes to about a pixel,
+     and an h3 is a label a reader scans rather than reads. */
+  font-optical-sizing: none;
+  letter-spacing:0.005em; margin: var(--space-2xl) 0 var(--space-xs); }
+p{ max-width: var(--measure); margin: 0 0 var(--space-md); }
+p, .lede, .caption, .glossary dd{ text-wrap: pretty; }
+.lede{ font-size: 1.15rem; color: var(--ink-2); max-width: var(--measure); }
+
+/* numbers set in the sans, always tabular */
+.num{ font-family: var(--sans); font-variant-numeric: tabular-nums; font-feature-settings:"tnum" 1; }
+.val{ color: var(--accent-ink); font-weight:600; }
+
+/* ── the chart ────────────────────────────────────────────────────────── */
+.chart{ margin-top: var(--space-xl); }
+.chart__ticks{ position:relative; height: 1.25rem; }
+.rows__ticks td{ padding:0; border:none; }
+.chart__tick{ position:absolute; top:0; transform: translateX(-50%);
+  font-family: var(--sans); font-size: var(--text-xs); color: var(--ink-3);
+  font-variant-numeric: tabular-nums; }
+.chart__tick--chance{ color: var(--ink); font-weight:600; left:0; transform:none; }
+.chart__tick:last-child{ transform: translateX(-100%); }
+
+table.rows{ width:100%; border-collapse: collapse; table-layout: fixed; }
+table.rows caption{ text-align:left; }
+.row__name{
+  font-family: var(--sans); font-size: var(--text-sm); font-weight:500; color: var(--ink);
+  text-align:left; padding: var(--space-xs) var(--space-md) var(--space-xs) 0;
+  vertical-align: middle; font-variant-numeric: tabular-nums;
+}
+.row__name span{ display:block; color: var(--ink-3); font-weight:400; font-size: var(--text-xs); letter-spacing:0.04em; }
+.row__plot{ padding: var(--space-xs) 0; vertical-align: middle; }
+.row__value{
+  font-family: var(--sans); font-variant-numeric: tabular-nums; font-weight:600;
+  font-size: var(--text-sm); text-align:right; white-space:nowrap;
+  padding: var(--space-xs) 0 var(--space-xs) var(--space-md); vertical-align: middle; color: var(--ink);
+}
+.row__value b{ font-weight:400; color: var(--ink-3); display:block; font-size: var(--text-xs); }
+
+.track{ position:relative; height: 34px; background: var(--paper-sunk);
+  border-right: 1px solid var(--ink-3); }
+.track::before{ /* the chance baseline, at x=0 of our 0.5..1.0 domain */
+  content:""; position:absolute; inset-block:0; left:0; width:2px; background: var(--ink-3);
+}
+.bar{
+  position:absolute; top: 5px; height: 15px; left:0; width: var(--w);
+  background: var(--ink-2); transform-origin: left center;
+}
+.bar--best{ background: var(--accent); }
+.whisker{ position:absolute; top: 24px; height: 9px; left: var(--lo); width: calc(var(--hi) - var(--lo)); }
+.whisker::before, .whisker::after{
+  content:""; position:absolute; inset-block:0; width:1.5px; background: var(--ink-2);
+}
+.whisker::before{ left:0; } .whisker::after{ right:0; }
+.whisker{ background: linear-gradient(var(--ink-2), var(--ink-2)) center center / 100% 1.5px no-repeat; }
+.worst{ position:absolute; top: 19px; left: var(--x); width:2px; height: 19px; transform: translateX(-50%);
+  background: var(--accent-ink); }
+/* A second channel, because the tick and the whisker's end-caps were the same
+   1.5-2px vertical separated only by lightness — on the mark whose whole job is
+   showing the worst case. The tick now stands taller than the whisker at both
+   ends and carries a cap, so it reads as different in greyscale. */
+.worst::before{
+  content:""; position:absolute; left:50%; top:-3px; width:6px; height:3px;
+  transform: translateX(-50%); background: var(--accent-ink);
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+}
+
+.chart__key{
+  display:flex; flex-wrap:wrap; gap: var(--space-sm) var(--space-lg); margin-top: var(--space-md);
+  font-family: var(--sans); font-size: var(--text-xs); color: var(--ink-3); letter-spacing:0.02em;
+}
+.chart__key span{ display:inline-flex; align-items:center; gap: var(--space-2xs); }
+.key::before{ content:""; flex: 0 0 auto; }
+/* The swatches draw what the chart draws. The spread has 1.5px end-caps and the
+   worst tick is 19px with a triangular cap — the second, greyscale-legible
+   channel that was added on purpose and then left out of its own legend. */
+.key--sd::before{
+  width:14px; height:9px; align-self:center;
+  background:
+    linear-gradient(var(--ink-2), var(--ink-2)) center / 100% 1.5px no-repeat,
+    linear-gradient(var(--ink-2), var(--ink-2)) left / 1.5px 100% no-repeat,
+    linear-gradient(var(--ink-2), var(--ink-2)) right / 1.5px 100% no-repeat;
+}
+.key--worst::before{
+  width:6px; height:19px; align-self:center;
+  background:
+    linear-gradient(var(--accent-ink), var(--accent-ink)) center / 2px 100% no-repeat,
+    linear-gradient(var(--accent-ink), var(--accent-ink)) center top / 6px 3px no-repeat;
+  clip-path: polygon(0 0, 100% 0, 100% 16%, 66% 16%, 66% 100%, 33% 100%, 33% 16%, 0 16%);
+}
+
+/* ── data tables ──────────────────────────────────────────────────────── */
+.scroller{
+  overflow-x:auto; overscroll-behavior-x: contain; margin-top: var(--space-lg);
+  /* Edge shadows appear only while there is more table to scroll to: the
+     `local` gradients mask the `scroll` ones as you reach each end. At 14px and
+     16% alpha nobody saw them — a reader at 390px read a column cut off mid-word
+     with nothing saying it could be dragged — so they are 24px and 30%. */
+  background:
+    linear-gradient(to right, var(--paper) 40%, transparent) left / 52px 100% no-repeat local,
+    linear-gradient(to left,  var(--paper) 40%, transparent) right / 52px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, oklch(0.245 0.012 45 / 0.30), transparent) left / 24px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, oklch(0.245 0.012 45 / 0.30), transparent) right / 24px 100% no-repeat scroll;
+}
+/* The shadow says "there is more"; this says which way, for anyone who reads the
+   caption before dragging a table. Only where a table cannot fit. */
+@media (max-width: 560px){
+  .scroller::before, .cmd pre::before{
+    content: "drag the table sideways for the rest of it";
+    display:block; font-family: var(--sans); font-size: var(--text-xs);
+    letter-spacing:0.06em; text-transform:uppercase; color: var(--ink-3);
+    position:sticky; left:0; padding-bottom: var(--space-xs);
+  }
+  /* Commands wrap here rather than scroll, so nothing a reader is asked to type
+     is ever off-screen. `export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS` was visible
+     and `=1` was not, so a phone reader typing what they could see set the
+     variable empty — which is the exact failure this page's own troubleshooting
+     calls the usual cause. A hanging indent keeps a wrapped line from reading as
+     a second command, and the drag hint goes with the scrolling it described. */
+  .cmd pre{ overflow-x: visible; background: none; }
+  /* Only the hang is narrow-width. The block/one-command-per-line rules live
+     outside this query — see below. */
+  .cmd__line{ text-indent: -2ch; padding-left: 2ch; }
+  .cmd pre::before{ content: none; }
+}
+.glossary{ display:grid; grid-template-columns: minmax(9rem, 13rem) minmax(0,1fr);
+  gap: 0 var(--space-lg); margin: var(--space-md) 0 0; }
+.glossary dt{ font-family: var(--sans); font-size: var(--text-sm); font-weight:600; color: var(--ink); }
+.glossary dt, .glossary dd{ margin:0; padding-block: var(--space-xs); border-bottom: 1px solid var(--rule); }
+/* Unconstrained, a definition ran the width of the section: 87 characters a
+   line, against 71 for the body prose two sections above it. */
+.glossary dd{ max-width: var(--measure); }
+.glossary dt code, .glossary dd code{ font-size: 0.95em; }
+/* Arriving at a definition should show which of the twelve answered you. */
+.gloss-back{
+  margin: var(--space-sm) 0 0; position: sticky; z-index: 10;
+  top: calc(var(--nav-h, 56px) + env(safe-area-inset-top, 0px));
+  background: var(--paper); padding-block: var(--space-2xs);
+}
+.gloss-back button{
+  font-family: var(--sans); font-size: var(--text-sm); font-weight:600; color: var(--accent-ink);
+  background:none; border:0; border-bottom:1px solid currentColor; padding:0 0 2px; cursor:pointer;
+}
+.glossary dt:target{ color: var(--accent-ink); }
+.glossary dt:target + dd{ border-bottom-color: var(--accent-ink); }
+@media (max-width: 560px){
+  .glossary{ grid-template-columns: 1fr; }
+  .glossary dt{ border-bottom:0; padding-bottom:0; }
+}
+
+/* ── progressive disclosure ────────────────────────────────────────────────
+   The page had eleven sections and ran 20,782px. Every figure earns its place,
+   but a reader deciding in sixty seconds should not have to scroll past the
+   working to reach the conclusion. <details> is native: it opens with scripts
+   blocked, it is a real disclosure widget for a screen reader, and both a print
+   stylesheet and a beforeprint listener open them for paper. */
+details.more{ border-top: 1px solid var(--rule); margin-top: var(--space-md); }
+details.more > summary{
+  cursor: pointer; list-style: none; padding-block: var(--space-sm);
+  font-family: var(--sans); font-size: var(--text-sm); font-weight:600;
+  color: var(--ink-2); display:flex; gap: var(--space-sm); align-items: baseline;
+}
+details.more > summary::-webkit-details-marker{ display:none; }
+details.more > summary::before{
+  content: "+"; font-variant-numeric: tabular-nums; color: var(--accent-ink);
+  font-weight:700; width: 1ch; flex: 0 0 auto;
+}
+details.more[open] > summary::before{ content: "\2212"; }
+details.more > summary h3{ font: inherit; margin:0; color: inherit; letter-spacing: inherit; }
+details.more > summary:hover{ color: var(--accent-ink); }
+details.more > summary:focus-visible{ outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+details.more[open] > summary{ border-bottom: 1px solid var(--rule); }
+details.more > *:not(summary):last-child{ margin-bottom: var(--space-md); }
+/* Printing a folded block. `display: revert` was wrong and did nothing: it reverts
+   to the UA rule, which is the rule doing the hiding. Chrome hides the content
+   through ::details-content, so unhiding that works there; the script below adds
+   `open` on beforeprint, which is the path that works everywhere. Scripts blocked
+   *and* printing on an older engine is the one case that still loses the folded
+   content, and the summary lines say what is in it. */
+@media print{
+  details.more::details-content{ content-visibility: visible !important; }
+  details.more > *:not(summary){ content-visibility: visible !important; }
+}
+/* ── the stream ────────────────────────────────────────────────────────────
+   The recorder's whole job, played back on the calls it actually saw: each one
+   lands on a shape, and almost none of them lands on a shape anything else
+   shares. The six bars fill; the counter beside them runs away. That gap is the
+   finding, and it is easier to watch than to read. */
+.stream{ margin-top: var(--space-lg); border-top: 2px solid var(--ink); padding-top: var(--space-md); }
+.stream__bar{ display:flex; gap: var(--space-lg); align-items: baseline; flex-wrap: wrap;
+  margin-bottom: var(--space-md); }
+.stream__list{ list-style:none; margin:0; padding:0; }
+.stream__row{ display:grid; grid-template-columns: 22ch minmax(0,1fr) 5ch;
+  gap: var(--space-md); align-items:center; padding: var(--space-2xs) 0;
+  border-bottom:1px solid var(--rule); font-family: var(--sans); font-size: var(--text-xs); }
+.stream__row code{ font-size: 1em; }
+.stream__track{ height: 10px; background: var(--paper-sunk); position:relative; }
+/* Six accent bars is not an accent. The one that becomes the draft keeps it;
+   the other five are ink, so the colour reinforces the border, the weight and
+   the arrow below rather than being a sixth thing shouting the same loudness. */
+.stream__fill{ position:absolute; inset:0 auto 0 0; width:0; background: var(--ink-2); }
+.stream__row--drafted .stream__fill{ background: var(--accent-ink); }
+.stream__n{ text-align:right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+/* The row the draft below came from. Marked, not coloured: this is the one place
+   the page has to say "this bar is that file". */
+.stream__row--drafted{ border-bottom-color: var(--accent); }
+.stream__row--drafted code{ color: var(--accent-ink); font-weight:600; }
+.stream__row--drafted .stream__n{ color: var(--accent-ink); font-weight:700; }
+.stream__row--drafted .stream__n::after{ content: " \2193"; }
+/* The end of the story: the row at the top becomes a file. This is the real
+   output of `npm run propose -- --write 1`, rendered by the same function the
+   CLI calls, so the page shows the product rather than a picture of it. */
+.stream__draft{ margin-top: var(--space-md); border-top: 1px solid var(--rule-firm); padding-top: var(--space-sm); }
+.stream__draft pre{
+  margin:0; padding: var(--space-md); background: var(--paper-sunk);
+  border:1px solid var(--rule); overflow-x:auto;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: var(--text-xs); line-height:1.65; white-space: pre-wrap; overflow-wrap:anywhere;
+}
+.stream__draft[data-pending="1"]{ opacity: 0.25; }
+/* Sits above the file it introduces, not below a figure like every other caption. */
+.stream__says{ margin: 0 0 var(--space-xs); color: var(--ink-2); max-width: 64ch; }
+@media (max-width: 560px){
+  /* Two rows, not three. Auto-placement put the count on its own line below the
+     bar, where it sat nearer the next shape's name than to the bar it counts. */
+  .stream__row{ grid-template-columns: minmax(0,1fr) 5ch; }
+  .stream__row code{ grid-area: 1 / 1; }
+  .stream__n{ grid-area: 1 / 2; }
+  .stream__track{ grid-area: 2 / 1 / 2 / -1; }
+}
+table.data{ width:100%; min-width: 30rem; border-collapse: collapse; font-family: var(--sans); font-size: var(--text-sm); }
+table.data th, table.data td{ text-align:left; padding: var(--space-xs) var(--space-md) var(--space-xs) 0;
+  border-bottom: 1px solid var(--rule); font-variant-numeric: tabular-nums; }
+table.data thead th{ font-size: var(--text-xs); letter-spacing:0.01em;
+  color: var(--ink-3); font-weight:600; border-bottom: 1px solid var(--rule-firm); }
+table.data td.n, table.data th.n{ text-align:right; }
+/* The last cell inherited the column gutter as padding, so every table's figures
+   sat 16px inside the rule beneath them. */
+table.data tr > *:last-child{ padding-right: 0; }
+/* Backstop. Two &nbsp;-joined runs put 201px of horizontal scroll on a 390px
+   screen, and the worse part was that the render check could not see it: its
+   mobile pass was laying out at 591px and reporting the page clean. */
+code{ overflow-wrap: anywhere; }
+/* A row that repeated and is still not worth a skill. Greyed rather than hidden:
+   most of what repeated is greyed, and that is the finding. The exact count
+   moves with the corpus, so it is not written here — the figure states it and a
+   test binds the figure to the fixture. */
+table.data tr.dim td{ color: var(--ink-3); }
+table.data tr.dim code{ color: var(--ink-3); }
+table.data tbody tr:last-child > *{ border-bottom: 1px solid var(--rule-firm); }
+table.data tr.same td, table.data tr.same th{ background: var(--accent-wash); }
+table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink); font-weight:700; }
+/* A caption that labels a figure sits above it and keeps its distance. */
+.caption--fig{ margin: 0 0 var(--space-sm); caption-side: top; text-align: left; }
+/* A caption here is not a tick label: several of them are the explanation of the
+   figure above, and one defines the floor the whole policy turns on. 13px was
+   carrying 38% of the page's visible characters, running prose included. */
+.caption{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-3);
+  margin-top: var(--space-xs); max-width: 56ch; line-height:1.55; }
+
+/* ── who it is for ────────────────────────────────────────────────────────── */
+/* A definition list, not cards: each shape is a term and what it gets is the
+   definition, which is what this actually is. */
+/* Term beside definition once there is room for both.
+   Stacked in one 55ch column inside a 950px section, five short entries made
+   this the second-tallest thing on the page and left half the section empty. A
+   definition list is not prose: each entry is read on its own, so the measure
+   has to hold per entry rather than down the page. Source order is dt, dd, dt,
+   dd, so grid auto-placement does the pairing and the rule between entries is
+   drawn by each half separately, because it has to span both columns. */
+.cases{ margin: var(--space-xl) 0 0; max-width: var(--measure); }
+.cases dt{
+  font-family: var(--sans); font-size: var(--text-base); font-weight:600; color: var(--ink);
+  margin-top: var(--space-lg); padding-top: var(--space-sm); border-top: 1px solid var(--rule);
+}
+.cases dd{ margin: var(--space-xs) 0 0; }
+@media (min-width: 62rem){
+  .cases{
+    max-width: none; display:grid; column-gap: var(--space-2xl);
+    grid-template-columns: minmax(14ch, 20ch) minmax(0, 1fr);
+  }
+  /* The rule has to cross the gutter, or an entry is separated by two short
+     rules with a gap in the middle rather than by one line. */
+  .cases dt{
+    margin-top: 0; padding-top: var(--space-md);
+    margin-right: calc(-1 * var(--space-2xl)); padding-right: var(--space-2xl);
+  }
+  .cases dd{
+    margin: 0; padding-top: var(--space-md); border-top: 1px solid var(--rule);
+    /* The rule has to span the whole column and the text must not: the column is
+       about fourteen characters wider than the page's measure, and a definition
+       list is read line by line like everything else. Padding rather than
+       `max-width`, so the rule above it still reaches the right edge. */
+    padding-right: max(0px, calc(100% - var(--measure)));
+  }
+  .cases dt.cases__against + dd{ border-top-color: var(--accent); }
+}
+/* The one that argues against installing. Marked, because a reader skimming the
+   terms alone should see that one of them is a warning. */
+.cases dt.cases__against{ color: var(--accent-ink); border-top-color: var(--accent); }
+
+/* ── the plate: the one image, and it is made of the data ─────────────────── */
+.plate{ margin: var(--space-xl) 0 0; }
+.plate figcaption{
+  font-family: var(--sans); font-size: var(--text-sm); line-height:1.6;
+  color: var(--on-flood-2); margin-top: var(--space-sm); max-width: 56ch;
+}
+.plate figcaption em{ color: var(--on-flood); font-style: italic; }
+.rubric--flood{ color: var(--on-flood-2); border-bottom-color: var(--flood-rule); }
+.rubric--flood .rubric__n{ color: var(--on-flood); }
+.lede--flood{ color: var(--on-flood-2); }
+.flooded h2{ color: var(--on-flood); }
+
+/* ── the demonstration ────────────────────────────────────────────────────
+   Rows are a fixed height and only the bar scales, so nothing here animates a
+   layout property. The bar's scaleX is the information: it ends at the fraction
+   of the output that survived. */
+.demo{ margin-top: var(--space-lg); border-top: 2px solid var(--ink); }
+/* The two probabilities on each row used to be unlabelled: "0.158 · 0.973"
+   with no header anywhere, which a screen reader reads as "0.158 dot 0.973".
+   Same four columns as the rows, same widths, so it reads as their header. */
+.demo__legend{
+  display:grid; grid-template-columns: 25ch minmax(0,1fr) 11ch 12ch;
+  gap: var(--space-md); margin: var(--space-lg) 0 0; align-items:end;
+  max-width:none; font-family: var(--sans); font-size: var(--text-xs);
+  letter-spacing:0.02em; text-transform:uppercase; color: var(--ink-3); line-height:1.25;
+  border-bottom:1px solid var(--rule-firm); padding-bottom: var(--space-xs);
+}
+.demo__legend span:nth-child(3){ text-align:right; letter-spacing:0; }
+@media (max-width: 640px){
+  /* --nav-h is otherwise only set by script, so with scripts blocked every anchor
+     landed behind the bar. 140px was right while it wrapped to three rows; one
+     scrolling row measures 53px, and leaving the old value over-cleared every
+     anchor by 87px instead. */
+  :root{ --nav-h: 56px; }
+  .demo__legend{ display:block; border-bottom:0; padding-bottom:0; }
+  .demo__legend span{ display:none; }
+  .demo__legend::after{
+    content: "Each row: keep-result · keep-call, then the output size.";
+    text-transform:none; letter-spacing:0.01em;
+  }
+}
+
+.demo__bar{
+  display:flex; flex-wrap:wrap; align-items:center; gap: var(--space-sm) var(--space-lg);
+  padding: var(--space-sm) 0; border-bottom:1px solid var(--rule-firm);
+}
+.demo__stat{ font-family: var(--sans); font-size: var(--text-xs); letter-spacing:0.08em;
+  text-transform:uppercase; color: var(--ink-3); }
+.demo__stat b{ display:block; font-size: 1.35rem; letter-spacing:0; text-transform:none;
+  font-weight:700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.demo__stat--freed b{ color: var(--accent-ink); }
+.demo__run{
+  margin-left:auto; font-family: var(--sans); font-size: var(--text-sm); font-weight:600;
+  letter-spacing:0.01em; color: var(--paper);
+  background: var(--ink); border:1px solid var(--ink); padding: 10px var(--space-md); cursor:pointer;
+}
+.demo__run:hover{ background: var(--accent-ink); border-color: var(--accent-ink); }
+
+.demo__list{ list-style:none; margin:0; padding:0; }
+.demo__call{
+  display:grid; grid-template-columns: 25ch minmax(0,1fr) 11ch 12ch;
+  gap: var(--space-md); align-items:center; padding: var(--space-xs) 0;
+  border-bottom:1px solid var(--rule); font-family: var(--sans); font-size: var(--text-xs);
+}
+.demo__who{ min-width:0; }
+.demo__who b{ display:block; font-size: var(--text-sm); font-weight:600; color: var(--ink); }
+.demo__who span{ display:block; color: var(--ink-3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.demo__track{ position:relative; height: 16px; background: var(--paper-sunk); min-width:0;
+  border-right: 1px solid var(--ink-3); }
+/* The output's own extent, so "output, and what survives of it" draws both. */
+.demo__was{
+  position:absolute; inset-block:0; left:0; width: var(--w);
+  background: var(--rule); outline: 1px solid var(--ink-3); outline-offset:-1px;
+}
+.demo__fill{
+  position:absolute; inset:0; width:100%; background: var(--ink-2);
+  transform-origin: left center; transform: scaleX(var(--keep, 1));
+}
+.demo__scores{ color: var(--ink-3); font-variant-numeric: tabular-nums; text-align:right; }
+.demo__outcome{ font-weight:600; letter-spacing:0.02em; color: var(--ink-3); }
+.demo__call[data-state="kept"] .demo__outcome{ color: var(--ink); }
+.demo__call[data-state="small"] .demo__outcome{ color: var(--ink-2); font-style: italic; }
+/* `head only` and `dropped` both read accent, so a partial loss and a total one
+   were the same colour on the one column whose job is telling them apart.
+   Accent alone now means the result is gone; a head row keeps the ink and takes
+   an accent rule, matching the accent fill still left in its bar. */
+.demo__call[data-state="head"] .demo__outcome{
+  color: var(--ink); text-decoration: underline; text-decoration-color: var(--accent-ink);
+  text-decoration-thickness: 1px; text-underline-offset: 3px;
+}
+.demo__call[data-state="head"] .demo__fill{ background: var(--accent); }
+.demo__call[data-state="dropped"] .demo__outcome{ color: var(--accent-ink); }
+.demo__call[data-state="dropped"] .demo__who b,
+.demo__call[data-state="dropped"] .demo__who span{ color: var(--ink-3); }
+.demo__call[data-state="deciding"]{ background: var(--accent-wash); }
+/* `pinned` against `dropped` was a 1.23:1 lightness difference and nothing else,
+   which is no difference at all in greyscale. A leading bullet is a second
+   channel, matching the accent rule `head only` carries. */
+.demo__call[data-state="pinned"] .demo__outcome{ color: var(--ink-2); font-weight:600; }
+.demo__call[data-state="pinned"] .demo__outcome::before{ content: "\00B7\00A0"; color: var(--ink-3); }
+.demo__call[data-state="pending"] .demo__outcome{ color: var(--ink-3); font-style: italic; }
+.demo__call[data-state="pending"] .demo__scores{ color: var(--ink-3); }
+
+@media (prefers-reduced-motion: no-preference){
+  .demo__fill{ transition: transform 520ms cubic-bezier(0.16,1,0.3,1), background-color 220ms ease-out; }
+  .demo__call{ transition: background-color 260ms ease-out; }
+}
+
+@media (max-width: 640px){
+  .demo__call{ grid-template-columns: minmax(0,1fr) 11ch; grid-template-areas: "who scores" "track track" "out out"; }
+  .demo__who{ grid-area: who; } .demo__scores{ grid-area: scores; }
+  .demo__track{ grid-area: track; } .demo__outcome{ grid-area: out; }
+  .demo__run{ margin-left:0; width:100%; }
+}
+
+/* ── The ladder: one compaction after another ─────────────────────────── */
+/* The one figure on this page whose subject is TIME rather than a corpus. Each
+   row is the same context window; the dark part is what the session still held
+   and the red part is what that pass handed back, so six rows read as six
+   refills of the same bar rather than six different measurements. */
+.ladder__h{ margin-top: var(--space-2xl); }
+.ladder{
+  list-style:none; margin: var(--space-lg) 0 var(--space-sm); padding:0;
+  --at: 60%;
+}
+.ladder__row{
+  display:grid; grid-template-columns: 8ch minmax(0,1fr) 7ch 17ch;
+  gap: var(--space-md); align-items:center; padding: 6px 0;
+  font-family: var(--sans); font-size: var(--text-xs);
+}
+.ladder__row + .ladder__row{ border-top: 1px solid var(--rule); }
+.ladder__label{ color: var(--ink-2); font-weight:600; letter-spacing:0.02em; }
+.ladder__track{
+  position:relative; height: 14px; background: var(--paper-sunk);
+  outline:1px solid var(--rule); outline-offset:-1px; min-width:0;
+}
+/* Where the engine asks. Every row crosses it, which is the point of the figure. */
+.ladder__track::after{
+  content:""; position:absolute; inset-block:-3px; left: var(--at); width:1px;
+  background: var(--ink-3);
+}
+.ladder__held{ position:absolute; inset-block:0; left:0; width: var(--w); background: var(--ink-2); }
+.ladder__back{
+  position:absolute; inset-block:0; left: var(--l); width: var(--w);
+  background: var(--accent); transform-origin: left center;
+}
+.ladder__num{
+  text-align:right; font-variant-numeric: tabular-nums; font-weight:600;
+  color: var(--accent-ink);
+}
+.ladder__num--under{ color: var(--ink-3); font-weight:400; }
+.ladder__unit{ font-weight:400; color: var(--ink-3); margin-left: 2px; }
+.ladder__ms{ color: var(--ink-3); font-variant-numeric: tabular-nums; }
+/* The pass that is refused. It is drawn, because a figure that showed only the
+   passes taken would be an advertisement rather than a measurement. */
+.ladder__row--over .ladder__label{ color: var(--ink-3); font-weight:400; font-style:italic; }
+.ladder__row--over .ladder__back{ background: var(--rule-firm); }
+.ladder__row--over{ border-top: 1px solid var(--ink-3) !important; }
+
+@media (prefers-reduced-motion: no-preference){
+  .ladder__back{ transition: transform 560ms cubic-bezier(0.16,1,0.3,1); }
+  .ladder__row.reveal--armed .ladder__back{ transform: scaleX(0); }
+}
+
+@media (max-width: 640px){
+  .ladder__row{
+    grid-template-columns: minmax(0,1fr) 7ch; gap: var(--space-xs) var(--space-md);
+    grid-template-areas: "label num" "track track" "ms ms";
+  }
+  .ladder__label{ grid-area: label; } .ladder__num{ grid-area: num; }
+  .ladder__track{ grid-area: track; } .ladder__ms{ grid-area: ms; }
+}
+
+/* ── FAQ ──────────────────────────────────────────────────────────────── */
+.faq{ margin-top: var(--space-lg); border-top:1px solid var(--rule-firm); }
+.faq__item{ border-bottom:1px solid var(--rule); padding: var(--space-md) 0; }
+.faq__item h3{ margin: 0 0 var(--space-2xs); font-size: 1.15rem; letter-spacing:0.01em; }
+.faq__item p{ margin:0 0 var(--space-xs); font-size: var(--text-sm); color: var(--ink-2); max-width: 62ch; }
+.faq__item p:last-child{ margin-bottom:0; }
+
+/* ── what's next: the one place allowed the future tense ──────────────── */
+.next{ margin-top: var(--space-lg); border-top:1px solid var(--rule-firm); }
+.next__item{ display:grid; grid-template-columns: 15ch minmax(0,1fr); gap: var(--space-md);
+  padding: var(--space-md) 0; border-bottom:1px solid var(--rule); align-items:start; }
+.next__when{ font-family: var(--sans); font-size: var(--text-xs); font-weight:600;
+  letter-spacing:0.02em; color: var(--ink-3); margin:0; }
+.next__what{ margin:0; font-size: var(--text-sm); color: var(--ink-2); max-width: 62ch; }
+.next__what b{ color: var(--ink); font-weight:600; }
+@media (max-width: 640px){ .next__item{ grid-template-columns:1fr; gap: var(--space-2xs); } }
+
+/* ── quote / finding ──────────────────────────────────────────────────── */
+.finding{ margin: var(--space-xl) 0 0; padding: var(--space-lg) 0; border-top: 2px solid var(--ink); border-bottom:1px solid var(--rule); }
+.finding--loss{ border-top-color: var(--ink-3); }
+.finding p{ font-size: var(--text-lg); line-height:1.35; margin:0; max-width: 40ch; font-weight:500; }
+.finding p .val{ white-space:nowrap; }
+
+/* ── ledger ───────────────────────────────────────────────────────────── */
+.ledger{ margin-top: var(--space-lg); border-top: 1px solid var(--rule-firm); }
+.ledger__row{ display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1.25fr);
+  gap: var(--space-md); padding: var(--space-md) 0; border-bottom:1px solid var(--rule); align-items:start; }
+.ledger__blocks{
+  font-family: var(--sans); font-size: var(--text-xs); font-weight:600;
+  letter-spacing:0.06em; text-transform:uppercase; color: var(--accent-ink);
+  margin-left: var(--space-sm); white-space:nowrap;
+}
+.ledger__claim{ font-family: var(--sans); font-weight:600; font-size: var(--text-sm); margin:0; }
+.ledger__how{ margin:0; font-size: var(--text-sm); color: var(--ink-2); max-width: 62ch; }
+.ledger__row--open .ledger__claim{ color: var(--accent-ink); }
+.ledger__row--open .ledger__claim .flag{ font-weight:500; }
+
+/* ── install ──────────────────────────────────────────────────────────── */
+.cmd{ margin-top: var(--space-lg); border:1px solid var(--rule-firm); background: var(--paper-sunk); }
+.cmd__head{ display:flex; justify-content:space-between; align-items:center; gap: var(--space-md);
+  padding: var(--space-xs) var(--space-sm) var(--space-xs) var(--space-md); border-bottom:1px solid var(--rule); }
+.cmd__head .label{ margin:0; }
+/* One command per line, at every width. The markup carries no newlines any more
+   — each command is its own element — so these rules are what makes it a list of
+   commands rather than one long string. They were briefly inside the 560px query,
+   which meant every viewport above it rendered and copied the four commands run
+   together. */
+.cmd pre code{ display:block; white-space: normal; }
+.cmd__line{ display:block; white-space: pre-wrap; overflow-wrap: anywhere; }
+.cmd__gap{ display:block; height: 1lh; }
+.cmd pre{ margin:0; padding: var(--space-md); overflow-x:auto; font-size: var(--text-sm); line-height:1.75;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; font-variant-ligatures:none;
+  /* At 390px the longest command runs 92px past the edge. The six tables got
+     edge shadows and a keyboard handle; the one block the page asks you to copy
+     did not. Same treatment, on the sunk ground it sits on. */
+  background:
+    linear-gradient(to right, var(--paper-sunk) 40%, transparent) left / 52px 100% no-repeat local,
+    linear-gradient(to left,  var(--paper-sunk) 40%, transparent) right / 52px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, oklch(0.245 0.012 45 / 0.30), transparent) left / 24px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, oklch(0.245 0.012 45 / 0.30), transparent) right / 24px 100% no-repeat scroll; }
+.cmd pre:focus-visible{ outline: 2px solid var(--accent); outline-offset: -2px; }
+.cmd .c{ color: var(--ink-3); }
+.copy{ font-family: var(--sans); font-size: var(--text-xs); letter-spacing:0.08em; text-transform:uppercase;
+  font-weight:600; color: var(--ink-2); background:none; border:1px solid var(--ink-3);
+  padding: 6px var(--space-sm); cursor:pointer; }
+.copy:hover{ color: var(--accent-ink); border-color: var(--accent); }
+.copy[data-done="1"]{ color: var(--accent-ink); border-color: var(--accent); }
+
+footer{ padding-block: var(--space-xl) var(--space-3xl); }
+/* Same treatment as section.wrap::before, and for the same reason: on the box
+   itself the rule spans the wrap's padding too, and ran 64px wider each side
+   than every other rule on a page whose hierarchy is rules. */
+footer > .wrap{ position:relative; padding-top: var(--space-xl); }
+footer > .wrap::before{
+  content:""; position:absolute; top:0;
+  left: clamp(20px, 5vw, 64px); right: clamp(20px, 5vw, 64px);
+  border-top: 2px solid var(--ink);
+}
+/* 70ch of Archivo measured 101 characters on a full line: `ch` is the advance
+   of `0`, and a sans-serif's digits are far wider than its average lowercase, so
+   the unit overstates the measure by about half. 50ch lands at 72. */
+footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-2); max-width: 50ch; }
+
+/* ── load orchestration: one staggered reveal, transform+opacity only ─── */
+@media (prefers-reduced-motion: no-preference){
+  .reveal{ opacity:0; transform: translateY(10px); animation: rise 620ms cubic-bezier(0.16,1,0.3,1) forwards; animation-delay: var(--d,0ms); }
+  @keyframes rise{ to{ opacity:1; transform:none; } }
+  .bar{ transform: scaleX(0); animation: grow 760ms cubic-bezier(0.16,1,0.3,1) forwards; animation-delay: var(--d,0ms); }
+  @keyframes grow{ to{ transform: scaleX(1); } }
+  .whisker, .worst{ opacity:0; animation: fade 400ms ease-out forwards; animation-delay: calc(var(--d,0ms) + 560ms); }
+  @keyframes fade{ to{ opacity:1; } }
+}
+
+@media (max-width: 640px){
+  table.rows{ table-layout:auto; }
+  table.rows colgroup{ display:none; }
+  /* a table-caption with no table parent shrink-wraps to one word per line */
+  table.rows caption{ display:block; }
+  table.rows, table.rows tbody, table.rows tr, table.rows td, table.rows th{ display:block; width:auto; }
+  .row__name{ width:auto; padding-bottom: var(--space-2xs); }
+  .row__value{ text-align:left; padding: var(--space-2xs) 0 0; }
+  .row__value b{ display:inline; margin-left: var(--space-xs); }
+  table.rows tr{ padding-block: var(--space-sm); border-bottom:1px solid var(--rule); }
+  .ledger__row{ grid-template-columns: 1fr; gap: var(--space-2xs); }
+  
+}
+
+@media print{
+  /* Only paper, sunk and ink were reset, so the masthead and every flooded band
+     printed as cream on white — each headline figure invisible on paper. */
+  :root{
+    --paper:#fff; --paper-sunk:#f2f2f2; --ink:#111;
+    --flood:#fff; --on-flood:#111; --on-flood-2:#333; --flood-rule:#999;
+  }
+  .flooded{ border-bottom: 2px solid #111; }
+  body{ font-size: 10.5pt; } section{ break-inside: avoid; }
+  .copy, .skip{ display:none; } .reveal,.bar,.whisker,.worst{ opacity:1 !important; transform:none !important; animation:none !important; }
+}
