@@ -1,24 +1,54 @@
 {
-  "sessions": 114,
-  "flowSignatures": 3143,
-  "crossSessionFlows": 34,
-  "crossSessionPct": 1.1,
-  "reliableFlows": 25,
-  "reliablePct": 0.8,
-  "currentTopNPrecisionCrossSession": 10,
-  "currentTopNPrecisionReliable": 5,
+  "sessions": 195,
+  "flowSignatures": 4818,
+  "crossSessionFlows": 90,
+  "crossSessionPct": 1.9,
+  "reliableFlows": 43,
+  "reliablePct": 0.9,
+  "currentTopNPrecisionCrossSession": 20,
+  "currentTopNPrecisionReliable": 10,
   "topReliable": [
+    {
+      "sig": "Read → Bash(python3 -c) → Read",
+      "kind": "sequence",
+      "sessions": 2,
+      "n": 27
+    },
     {
       "sig": "Read → Edit → Edit",
       "kind": "sequence",
       "sessions": 3,
-      "n": 22
+      "n": 23
+    },
+    {
+      "sig": "Bash(python3 -c) → Read → Read",
+      "kind": "sequence",
+      "sessions": 2,
+      "n": 20
     },
     {
       "sig": "Read → Read → Edit",
       "kind": "sequence",
       "sessions": 2,
-      "n": 14
+      "n": 18
+    },
+    {
+      "sig": "Bash(python3 -c) → Read → Bash(python3 -c)",
+      "kind": "sequence",
+      "sessions": 2,
+      "n": 17
+    },
+    {
+      "sig": "Bash(python3 -) → Bash(grep -n) → Bash(grep -n)",
+      "kind": "sequence",
+      "sessions": 2,
+      "n": 15
+    },
+    {
+      "sig": "Bash(python3 -c) → Bash(sed -n) → Bash(sed -n)",
+      "kind": "sequence",
+      "sessions": 2,
+      "n": 11
     },
     {
       "sig": "Write → Write → Read",
@@ -33,40 +63,10 @@
       "n": 10
     },
     {
-      "sig": "Bash(grep -n) → Bash(sed -n) → Edit",
+      "sig": "Bash(python3 -c) → Bash(python3 -c) → Read",
       "kind": "sequence",
       "sessions": 2,
-      "n": 7
-    },
-    {
-      "sig": "Bash(python3 -c) → Bash(sed -n) → Bash(sed -n)",
-      "kind": "sequence",
-      "sessions": 2,
-      "n": 6
-    },
-    {
-      "sig": "Edit → Write → Write",
-      "kind": "sequence",
-      "sessions": 3,
-      "n": 6
-    },
-    {
-      "sig": "Read → Read → Write",
-      "kind": "sequence",
-      "sessions": 2,
-      "n": 6
-    },
-    {
-      "sig": "Write → ToolSearch → ExitPlanMode",
-      "kind": "sequence",
-      "sessions": 2,
-      "n": 5
-    },
-    {
-      "sig": "Write → Write → ExitPlanMode",
-      "kind": "sequence",
-      "sessions": 2,
-      "n": 5
+      "n": 10
     }
   ]
 }

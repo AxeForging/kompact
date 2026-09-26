@@ -224,20 +224,60 @@ ${fp.reliableFlows} flows that are habits and do something, e.g.:
 ${fpRows}
 \`\`\`
 
-So proposals *can* be made reliable, but the offer is small and does **not** compound
-with raw usage. Replaying the full history rather than the recent sessions moved the
-cross-session count by one (from 33 to ${fp.crossSessionFlows}): 150+ varied sessions surfaced almost no
-new recurring flow, because a workflow does not repeat across unrelated tasks. All ${fp.reliableFlows}
-reliable flows come from a tight cluster of similar recent work, and the accumulation
-curve (--curve) is step-like — flat, then a jump when several near-identical sessions
-land — not a smooth climb. On this corpus much of that cluster is the tooling of the
-sessions that built these very studies, so the organic signal is weaker still.
+So proposals *can* be made reliable, but only with the gate and only modestly. Scanning
+the full corpus (recursively — including the ~80 subagent transcripts an earlier 2-level
+walk missed — and keying by *parent* session so one session's many subagents do not fake
+recurrence) lifts the reliable set from 25 to ${fp.reliableFlows}, across ${fp.crossSessionFlows} cross-session flows: more data
+does raise the count. The character does not change, though. The reliable flows are
+generic edit / read / debug loops (Read → Edit → Edit, Read → python3 → Read), not
+distinctive procedures, and the saved-ranking still surfaces only ${fp.currentTopNPrecisionReliable}% reliable in its top
+20. More sessions buy more generic flows, not more skill-worthy ones.
 
-The honest reading: the feature compounds with sustained work in one domain, not with
-session count, and most of what recurs is generic editing. **Still not verified** (per
-the ledger): that encoding any of these as a skill saves time — recurrence is measured,
-payoff is not. The shippable part is the gate; the next test is whether the same flows
-recur in a second operator's domain work, which one machine cannot answer.`;
+**Still not verified** (per the ledger): that encoding any of these as a skill saves time
+— recurrence is measured, payoff is not. The shippable part is the gate; the honest next
+tests are a second operator's corpus (whether the same flows recur for someone else) and a
+SkillOpt-style held-out payoff check, neither of which one machine's history can answer.`;
+
+// Study 5 (better flow discovery than n-grams): reads its committed fixture.
+const fd = JSON.parse(
+  readFileSync(join(here, 'fixtures', 'flow-discovery.json'), 'utf8'),
+) as {
+  substantialSessions: number; totalTranscripts: number; totalParentSessions: number;
+  prefixspanActionable: number; prefixspanMaximalActionable: number;
+  prefixspanLongActionable: number; ngramBaselineReliable: number; recurringIntents: number;
+  intentsWithStableActionableFlow: number; topPatterns: { flow: string; support: number }[];
+};
+const fdTop = fd.topPatterns.slice(0, 5).map((p) => `  ${p.support}x  ${p.flow}`).join('\n');
+const discoverySection = `
+## A better flow-discovery method than n-grams? — \`eval/flow-discovery.ts\`
+
+Study 4's near-zero recurrence might have been the fixed 3-gram's fault, so two model-free
+upgrades were tried: **PrefixSpan** (frequent *gapped, variable-length* subsequences, so
+\`Edit … test … commit\` survives interleaved noise) and **intent-anchored** flows (the tool
+run following each recurring \`intentSignature\`, keyed by goal rather than tool syntax).
+
+\`\`\`
+distinct parent sessions: ${fd.totalParentSessions}  (substantial, ≥ 10 calls: ${fd.substantialSessions}; ${fd.totalTranscripts} transcripts, mostly subagents)
+PrefixSpan actionable patterns:         ${fd.prefixspanActionable}
+  deduped to maximal (fair vs baseline):${fd.prefixspanMaximalActionable}  (vs ${fd.ngramBaselineReliable} for the 3-gram)
+recurring intents (≥ 2 sessions):        ${fd.recurringIntents}
+  with a stable actionable flow:         ${fd.intentsWithStableActionableFlow}
+top patterns by support:
+${fdTop}
+\`\`\`
+
+The method is not the binding constraint — the **data** is. The ${fd.totalTranscripts} transcripts group into only
+${fd.totalParentSessions} parent sessions (most are subagents of a few), and just ${fd.substantialSessions} carry more than ten tool
+calls, dominated by one project and by the very sessions that built these studies. And the
+count comparison is itself unreliable: PrefixSpan returns ${fd.prefixspanActionable} actionable patterns, but
+deduping to maximal only trims that to ${fd.prefixspanMaximalActionable} — the bulk is combinatorial branching over a
+few sessions (AskUserQuestion → Write → Bash(ls -la) → {Write, Edit, Skill}), this session's
+own tooling, not an engineer's organic flows. Intent-anchoring finds ${fd.intentsWithStableActionableFlow} stable goal-flows.
+No heavier miner (PAM, Local Process Models, or an LLM auto-skill inducer) can conjure
+cross-operator regularity that ${fd.substantialSessions} same-context sessions do not contain. The honest next
+step for skill proposals is **a second operator's corpus**, not a cleverer algorithm — and
+then a SkillOpt-style held-out check for whether a proposed skill actually saves time, which
+no amount of mining answers.`;
 const cap = maybe('cap.ts');
 const mass = maybe('mass.ts');
 const inputs = maybe('inputs.ts');
@@ -411,7 +451,7 @@ anything. \`applyDecisions\` never touches prose, so what kompact leaves behind 
 verbatim tool calls and the user's and assistant's own words — not a narrative.
 \`maxPasses\` is the backstop for that, and its value is a judgement: the floor
 would allow more.
-${proseSection}${proseExtractiveSection}${flowSection}
+${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}
 `;
 
 const snapshotBody = `# Snapshot — one machine's own transcripts

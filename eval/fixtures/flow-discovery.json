@@ -1,0 +1,64 @@
+{
+  "substantialSessions": 4,
+  "totalTranscripts": 195,
+  "totalParentSessions": 12,
+  "prefixspanMaximalActionable": 1280,
+  "prefixspanCrossSessionPatterns": 1384,
+  "prefixspanActionable": 1369,
+  "prefixspanLongActionable": 1360,
+  "ngramBaselineCrossSession": 33,
+  "ngramBaselineReliable": 25,
+  "recurringIntents": 2,
+  "intentsWithStableActionableFlow": 0,
+  "topPatterns": [
+    {
+      "flow": "AskUserQuestion → AskUserQuestion → AskUserQuestion",
+      "support": 4
+    },
+    {
+      "flow": "Bash(echo ;) → AskUserQuestion → AskUserQuestion → AskUserQuestion",
+      "support": 3
+    },
+    {
+      "flow": "AskUserQuestion → Write → Bash(ls -la) → Write",
+      "support": 3
+    },
+    {
+      "flow": "AskUserQuestion → Write → Bash(ls -la) → ToolSearch",
+      "support": 3
+    },
+    {
+      "flow": "AskUserQuestion → Write → Bash(ls -la) → Skill",
+      "support": 3
+    },
+    {
+      "flow": "AskUserQuestion → Write → Bash(ls -la) → Read",
+      "support": 3
+    },
+    {
+      "flow": "AskUserQuestion → Write → Bash(ls -la) → Agent",
+      "support": 3
+    },
+    {
+      "flow": "AskUserQuestion → Write → Bash(ls -la) → AskUserQuestion",
+      "support": 3
+    },
+    {
+      "flow": "AskUserQuestion → Write → Bash(ls -la) → Edit",
+      "support": 3
+    },
+    {
+      "flow": "AskUserQuestion → Write → Write → ToolSearch",
+      "support": 3
+    },
+    {
+      "flow": "AskUserQuestion → Write → Write → ExitPlanMode",
+      "support": 3
+    },
+    {
+      "flow": "AskUserQuestion → Write → Write → Bash(mkdir -p)",
+      "support": 3
+    }
+  ],
+  "topGoalFlows": []
+}

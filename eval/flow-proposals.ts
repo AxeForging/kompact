@@ -64,13 +64,25 @@ export function isActionable(sig: string): boolean {
 function sessionFiles(root: string, limit: number): string[] {
   if (!existsSync(root)) return [];
   const files: string[] = [];
-  for (const project of readdirSync(root)) {
-    const dir = join(root, project);
-    try { if (!statSync(dir).isDirectory()) continue; } catch { continue; }
-    for (const name of readdirSync(dir)) if (name.endsWith('.jsonl')) files.push(join(dir, name));
-  }
+  const walk = (dir: string): void => {
+    let entries: string[] = [];
+    try { entries = readdirSync(dir); } catch { return; }
+    for (const e of entries) {
+      const p = join(dir, e);
+      try { if (statSync(p).isDirectory()) walk(p); else if (p.endsWith('.jsonl')) files.push(p); } catch { /* skip */ }
+    }
+  };
+  walk(root); // recursive: includes <session>/subagents/agent-*.jsonl, missed before
   return files.map((path) => ({ path, size: statSync(path).size }))
     .sort((a, b) => b.size - a.size).slice(0, limit).map((x) => x.path);
+}
+
+/** Session identity = the PARENT session, so many subagents of one session do not
+ *  fake cross-session recurrence. A subagent path is <parent>/subagents/agent-*.jsonl. */
+function parentSession(path: string): string {
+  const m = /([^/]+)\/subagents\/[^/]+\.jsonl$/.exec(path);
+  if (m) return m[1]!.slice(0, 8);
+  return path.split('/').pop()!.replace(/\.jsonl$/, '').slice(0, 8);
 }
 
 /** Mirrors the recorder's flow extraction (hooks/kompact-signals.ts replay). */
@@ -124,7 +136,7 @@ function main() {
   const files = sessionFiles(join(homedir(), '.claude', 'projects'), LIMIT);
   let sessions = 0;
   for (const path of files) {
-    try { replayFlows(rows, path, path.split('/').pop()!.slice(0, 8)); sessions += 1; }
+    try { replayFlows(rows, path, parentSession(path)); sessions += 1; }
     catch { /* skip unreadable */ }
   }
   const flows = toFlows(rows);

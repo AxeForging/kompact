@@ -401,43 +401,75 @@ habit across ≥ 2 sessions, and actionable rather than pure inspection. Flows a
 mined exactly as the recorder mines them (`hooks/kompact-signals.ts`).
 
 ```
-114 sessions, 3143 distinct flow shapes
-recur across ≥ 2 sessions:   34  (1.1%)   — a habit, not one afternoon
-reliable (≥ 2 sess + actionable): 25  (0.8%)
-current ranking (by saved), top 20:  10% cross-session, 5% reliable
+195 sessions, 4818 distinct flow shapes
+recur across ≥ 2 sessions:   90  (1.9%)   — a habit, not one afternoon
+reliable (≥ 2 sess + actionable): 43  (0.9%)
+current ranking (by saved), top 20:  20% cross-session, 10% reliable
 ```
 
-Two things are true at once. The recurrence signal is **sparse**: only 1.1% of
+Two things are true at once. The recurrence signal is **sparse**: only 1.9% of
 flow shapes are seen in more than one session, so most are one-off and cannot be
 proposed as habits at all. And the current ranking — modelled `saved`, what
-`propose.ts` shows — is **unreliable**: 5% of its top 20 are reliable, the rest
+`propose.ts` shows — is **unreliable**: 10% of its top 20 are reliable, the rest
 being single-session or inspection noise, exactly the failure the ledger warned of.
 
 A gate on **(≥ 2 sessions AND actionable)** fixes the precision — it isolates the
-25 flows that are habits and do something, e.g.:
+43 flows that are habits and do something, e.g.:
 
 ```
-  [sequence] Read → Edit → Edit                                    3 sess, 22x
-  [sequence] Read → Read → Edit                                    2 sess, 14x
+  [sequence] Read → Bash(python3 -c) → Read                        2 sess, 27x
+  [sequence] Read → Edit → Edit                                    3 sess, 23x
+  [sequence] Bash(python3 -c) → Read → Read                        2 sess, 20x
+  [sequence] Read → Read → Edit                                    2 sess, 18x
+  [sequence] Bash(python3 -c) → Read → Bash(python3 -c)            2 sess, 17x
+  [sequence] Bash(python3 -) → Bash(grep -n) → Bash(grep -n)       2 sess, 15x
+  [sequence] Bash(python3 -c) → Bash(sed -n) → Bash(sed -n)        2 sess, 11x
   [sequence] Write → Write → Read                                  2 sess, 11x
-  [sequence] Read → Write → Write                                  2 sess, 10x
-  [sequence] Bash(grep -n) → Bash(sed -n) → Edit                   2 sess, 7x
-  [sequence] Bash(python3 -c) → Bash(sed -n) → Bash(sed -n)        2 sess, 6x
-  [sequence] Edit → Write → Write                                  3 sess, 6x
-  [sequence] Read → Read → Write                                   2 sess, 6x
 ```
 
-So proposals *can* be made reliable, but the offer is small and does **not** compound
-with raw usage. Replaying the full history rather than the recent sessions moved the
-cross-session count by one (from 33 to 34): 150+ varied sessions surfaced almost no
-new recurring flow, because a workflow does not repeat across unrelated tasks. All 25
-reliable flows come from a tight cluster of similar recent work, and the accumulation
-curve (--curve) is step-like — flat, then a jump when several near-identical sessions
-land — not a smooth climb. On this corpus much of that cluster is the tooling of the
-sessions that built these very studies, so the organic signal is weaker still.
+So proposals *can* be made reliable, but only with the gate and only modestly. Scanning
+the full corpus (recursively — including the ~80 subagent transcripts an earlier 2-level
+walk missed — and keying by *parent* session so one session's many subagents do not fake
+recurrence) lifts the reliable set from 25 to 43, across 90 cross-session flows: more data
+does raise the count. The character does not change, though. The reliable flows are
+generic edit / read / debug loops (Read → Edit → Edit, Read → python3 → Read), not
+distinctive procedures, and the saved-ranking still surfaces only 10% reliable in its top
+20. More sessions buy more generic flows, not more skill-worthy ones.
 
-The honest reading: the feature compounds with sustained work in one domain, not with
-session count, and most of what recurs is generic editing. **Still not verified** (per
-the ledger): that encoding any of these as a skill saves time — recurrence is measured,
-payoff is not. The shippable part is the gate; the next test is whether the same flows
-recur in a second operator's domain work, which one machine cannot answer.
+**Still not verified** (per the ledger): that encoding any of these as a skill saves time
+— recurrence is measured, payoff is not. The shippable part is the gate; the honest next
+tests are a second operator's corpus (whether the same flows recur for someone else) and a
+SkillOpt-style held-out payoff check, neither of which one machine's history can answer.
+## A better flow-discovery method than n-grams? — `eval/flow-discovery.ts`
+
+Study 4's near-zero recurrence might have been the fixed 3-gram's fault, so two model-free
+upgrades were tried: **PrefixSpan** (frequent *gapped, variable-length* subsequences, so
+`Edit … test … commit` survives interleaved noise) and **intent-anchored** flows (the tool
+run following each recurring `intentSignature`, keyed by goal rather than tool syntax).
+
+```
+distinct parent sessions: 12  (substantial, ≥ 10 calls: 4; 195 transcripts, mostly subagents)
+PrefixSpan actionable patterns:         1369
+  deduped to maximal (fair vs baseline):1280  (vs 25 for the 3-gram)
+recurring intents (≥ 2 sessions):        2
+  with a stable actionable flow:         0
+top patterns by support:
+  4x  AskUserQuestion → AskUserQuestion → AskUserQuestion
+  3x  Bash(echo ;) → AskUserQuestion → AskUserQuestion → AskUserQuestion
+  3x  AskUserQuestion → Write → Bash(ls -la) → Write
+  3x  AskUserQuestion → Write → Bash(ls -la) → ToolSearch
+  3x  AskUserQuestion → Write → Bash(ls -la) → Skill
+```
+
+The method is not the binding constraint — the **data** is. The 195 transcripts group into only
+12 parent sessions (most are subagents of a few), and just 4 carry more than ten tool
+calls, dominated by one project and by the very sessions that built these studies. And the
+count comparison is itself unreliable: PrefixSpan returns 1369 actionable patterns, but
+deduping to maximal only trims that to 1280 — the bulk is combinatorial branching over a
+few sessions (AskUserQuestion → Write → Bash(ls -la) → {Write, Edit, Skill}), this session's
+own tooling, not an engineer's organic flows. Intent-anchoring finds 0 stable goal-flows.
+No heavier miner (PAM, Local Process Models, or an LLM auto-skill inducer) can conjure
+cross-operator regularity that 4 same-context sessions do not contain. The honest next
+step for skill proposals is **a second operator's corpus**, not a cleverer algorithm — and
+then a SkillOpt-style held-out check for whether a proposed skill actually saves time, which
+no amount of mining answers.
