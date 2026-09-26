@@ -9,8 +9,9 @@ import {
   tokensIn,
 } from '../src/compact.js';
 import { CONTEXT_LENGTH, STATE_BUDGET, buildSystemOneRequest } from '../src/request.js';
-import { questionsFor } from '../src/questions.js';
-import { FeatureAsker, toolFromState } from '../src/features.js';
+import { DEFAULT_PHRASING, questionsFor } from '../src/questions.js';
+import type { Phrasing } from '../src/questions.js';
+import { FeatureAsker, featureVector, normaliseCallText, toolFromState } from '../src/features.js';
 import type { Asker, Message, ToolCall } from '../src/index.js';
 
 function pair(id: string, tool: string, input: Record<string, unknown>, out: string, isError = false): Message[] {
@@ -551,5 +552,44 @@ describe('fields the engine owns survive a rebuild', () => {
     expect(tool.durationMs).toBe(1234);
     expect(tool.result).toEqual({ structured: true });
     expect(out[1].toolResults![0].result).toEqual({ structured: true });
+  });
+});
+
+/**
+ * `DEFAULT_PHRASING` moved from `reproducible` to `direct` because `direct`
+ * measured better on two of three checkpoints and `reproducible` scored below
+ * chance on the one that wins. That is a change to what a model-backed `Asker`
+ * is asked — and `FeatureAsker` appends a question's instructions to the state
+ * before running its regexes, so in principle it could have changed what SHIPS
+ * too. It does not, and this is what says so.
+ */
+describe('the phrasing only reaches a model', () => {
+  const phrasings: Phrasing[] = ['reproducible', 'direct', 'entailment'];
+  const call: ToolCall = {
+    id: 'x', tool_use_id: 'x', tool: 'Bash', input: {}, callIndex: 0, resultIndex: 0,
+    resultText: '', resultChars: 0, isError: false, pinned: false,
+  };
+  const states = [
+    'Task: fix the failing test.\n\nThe assistant ran the Bash tool with the command npm test. ' +
+      'That happened recently. The output was long.\n\nThe output said:\nFAIL one test',
+    'Task: rename the module.\n\nThe assistant ran the Read tool on the file src/auth.ts. ' +
+      'That happened long ago. The output was very short.\n\nThe output said:\nexport {};',
+    'Task: ship it.\n\nThe assistant ran the Write tool on the file dist/out.js. ' +
+      'That happened a while back. The output was short. The call failed and returned an error.',
+  ];
+
+  it('produces identical feature vectors whichever wording is used', () => {
+    for (const state of states) {
+      const vectors = phrasings.map((phrasing) => {
+        const instructions = questionsFor(call, phrasing)[`result_${call.id}`]!.instructions;
+        return featureVector(normaliseCallText(state, instructions), 'Bash',
+          state.includes('failed and returned an error'));
+      });
+      for (const vector of vectors.slice(1)) expect(vector).toEqual(vectors[0]);
+    }
+  });
+
+  it('ships the wording that measured best, not the one that was argued for', () => {
+    expect(DEFAULT_PHRASING).toBe('direct');
   });
 });

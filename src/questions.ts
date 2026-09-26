@@ -8,15 +8,35 @@ import type { SystemOneQuestions, ToolCall } from './types.js';
  * move?") came out inverted on every checkpoint while asking *what is true*
  * ("where is the bird?") gave clean graded answers.
  *
- * Both upstreams ask a what-to-do question ("should this stay in the
- * history?"). `reproducible` asks what is true of the text instead, which is
- * also the property the decision actually turns on: re-running a tool recovers
- * a file, but never recovers a test failure. The other two exist so Phase 4 can
- * measure them against labels rather than us guessing (`eval/score.ts`).
+ * That argument is why `reproducible` was written and why it was the default:
+ * both upstreams ask a what-to-do question ("should this stay in the history?"),
+ * and `reproducible` asks what is true of the text instead — which is also the
+ * property the decision turns on, since re-running a tool recovers a file but
+ * never recovers a test failure. The other two existed to be measured against
+ * labels rather than guessed at (`eval/score.ts`).
+ *
+ * Then they were measured, over ten grouped splits, and the argument lost:
+ *
+ *   checkpoint         reproducible   direct   entailment
+ *   typed-decisions           0.419    0.719        0.416
+ *   multilingual              0.610    0.667        0.604
+ *   english                   0.539    0.480        0.625
+ *
+ * `reproducible` is the worst of the three on two checkpoints, and on the one
+ * that wins overall it is **below chance**. The vendor's own integration guide
+ * says to try several phrasings and keep the best; the numbers sat in
+ * `eval/RESULTS.md` and `README.md` for weeks while the default stayed on the
+ * wording the reasoning had preferred. The default is `direct` now.
+ *
+ * This changes nothing about what ships by default. `FeatureAsker` appends a
+ * question's instructions to the state before running its regexes, so the
+ * phrasing is in principle visible to it — measured on all 1,063 paired rows,
+ * all three phrasings produce identical feature vectors, and
+ * `test/core.test.ts` holds that.
  */
 export type Phrasing = 'reproducible' | 'direct' | 'entailment';
 
-export const DEFAULT_PHRASING: Phrasing = 'reproducible';
+export const DEFAULT_PHRASING: Phrasing = 'direct';
 
 /**
  * The two `noul` questions asked about one call. Names must stay
