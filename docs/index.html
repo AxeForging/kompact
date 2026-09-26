@@ -114,7 +114,6 @@ a:hover{ color: var(--accent); }
   letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3);
   margin: 0 0 var(--space-sm);
 }
-.label--accent{ color: var(--accent-ink); }
 /* A label may contain a command, and a command is case-sensitive: uppercasing it
    put `NPM RUN PROPOSE -- --WRITE 1` on the page, which does not run. */
 .label code{ text-transform: none; letter-spacing: 0; font-size: 0.95em; }
@@ -513,6 +512,9 @@ table.rows caption{ text-align:left; }
   gap: 0 var(--space-lg); margin: var(--space-md) 0 0; }
 .glossary dt{ font-family: var(--sans); font-size: var(--text-sm); font-weight:600; color: var(--ink); }
 .glossary dt, .glossary dd{ margin:0; padding-block: var(--space-xs); border-bottom: 1px solid var(--rule); }
+/* Unconstrained, a definition ran the width of the section: 87 characters a
+   line, against 71 for the body prose two sections above it. */
+.glossary dd{ max-width: var(--measure); }
 .glossary dt code, .glossary dd code{ font-size: 0.95em; }
 /* Arriving at a definition should show which of the twelve answered you. */
 .gloss-back{
@@ -578,7 +580,11 @@ details.more > *:not(summary):last-child{ margin-bottom: var(--space-md); }
   border-bottom:1px solid var(--rule); font-family: var(--sans); font-size: var(--text-xs); }
 .stream__row code{ font-size: 1em; }
 .stream__track{ height: 10px; background: var(--paper-sunk); position:relative; }
-.stream__fill{ position:absolute; inset:0 auto 0 0; width:0; background: var(--accent-ink); }
+/* Six accent bars is not an accent. The one that becomes the draft keeps it;
+   the other five are ink, so the colour reinforces the border, the weight and
+   the arrow below rather than being a sixth thing shouting the same loudness. */
+.stream__fill{ position:absolute; inset:0 auto 0 0; width:0; background: var(--ink-2); }
+.stream__row--drafted .stream__fill{ background: var(--accent-ink); }
 .stream__n{ text-align:right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
 /* The row the draft below came from. Marked, not coloured: this is the one place
    the page has to say "this bar is that file". */
@@ -662,7 +668,14 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
     margin-top: 0; padding-top: var(--space-md);
     margin-right: calc(-1 * var(--space-2xl)); padding-right: var(--space-2xl);
   }
-  .cases dd{ margin: 0; padding-top: var(--space-md); border-top: 1px solid var(--rule); }
+  .cases dd{
+    margin: 0; padding-top: var(--space-md); border-top: 1px solid var(--rule);
+    /* The rule has to span the whole column and the text must not: the column is
+       about fourteen characters wider than the page's measure, and a definition
+       list is read line by line like everything else. Padding rather than
+       `max-width`, so the rule above it still reaches the right edge. */
+    padding-right: max(0px, calc(100% - var(--measure)));
+  }
   .cases dt.cases__against + dd{ border-top-color: var(--accent); }
 }
 /* The one that argues against installing. Marked, because a reader skimming the
@@ -915,7 +928,10 @@ footer > .wrap::before{
   left: clamp(20px, 5vw, 64px); right: clamp(20px, 5vw, 64px);
   border-top: 2px solid var(--ink);
 }
-footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-2); max-width: 70ch; }
+/* 70ch of Archivo measured 101 characters on a full line: `ch` is the advance
+   of `0`, and a sans-serif's digits are far wider than its average lowercase, so
+   the unit overstates the measure by about half. 50ch lands at 72. */
+footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-2); max-width: 50ch; }
 
 /* ── load orchestration: one staggered reveal, transform+opacity only ─── */
 @media (prefers-reduced-motion: no-preference){

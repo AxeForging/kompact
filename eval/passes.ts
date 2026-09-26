@@ -163,7 +163,7 @@ const paths = walk(join(homedir(), '.claude', 'projects'))
   .sort((a, b) => b.size - a.size)
   .slice(0, SESSIONS);
 
-console.log(`window ${WINDOW.toLocaleString()} tokens, compacting at ${AT}%, ` +
+console.log(`\nwindow ${WINDOW.toLocaleString()} tokens, compacting at ${AT}%, ` +
   `floor ${FLOOR} pp (${floorTokens.toLocaleString()} tokens), ceiling ${MAX_PASSES} passes\n`);
 console.log(`${'session'.padEnd(18)}${'msgs'.padStart(7)}${'passes'.padStart(8)}` +
   `${'pp reclaimed per pass'.padStart(30)}${'ms per pass'.padStart(22)}`);
