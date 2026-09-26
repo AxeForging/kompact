@@ -886,6 +886,11 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 .ledger{ margin-top: var(--space-lg); border-top: 1px solid var(--rule-firm); }
 .ledger__row{ display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1.25fr);
   gap: var(--space-md); padding: var(--space-md) 0; border-bottom:1px solid var(--rule); align-items:start; }
+.ledger__blocks{
+  font-family: var(--sans); font-size: var(--text-xs); font-weight:600;
+  letter-spacing:0.06em; text-transform:uppercase; color: var(--accent-ink);
+  margin-left: var(--space-sm); white-space:nowrap;
+}
 .ledger__claim{ font-family: var(--sans); font-weight:600; font-size: var(--text-sm); margin:0; }
 .ledger__how{ margin:0; font-size: var(--text-sm); color: var(--ink-2); max-width: 62ch; }
 .ledger__row--open .ledger__claim{ color: var(--accent-ink); }
@@ -1898,7 +1903,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p class="ledger__how">Everything here was run on 2.1.281, which has <a href="#g-function-hooks">function hooks</a>. Which release first shipped them has not been established, so “2.1.281 or newer” would be a claim from a sample of one. On a build without them the plugin installs and never runs.</p>
     </div>
     <div class="ledger__row ledger__row--open">
-      <p class="ledger__claim">An assistant still finishing the job <span class="flag">— not verified</span></p>
+      <p class="ledger__claim">An assistant still finishing the job <span class="flag">— not verified</span><span class="ledger__blocks">blocks a 1.0</span></p>
       <p class="ledger__how">The measurement above shows how often the information would no longer be there. Whether that changes what the assistant does needs the same session replayed with and without compaction, which needs a live A/B.</p>
     </div>
     <div class="ledger__row ledger__row--open">
@@ -1914,7 +1919,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       <p class="ledger__how">Six passes run before the model summary does, and how much room each one buys is measured. What the assistant loses by not getting a narrative summary for six compactions is not: this keeps verbatim tool calls and prose, which is a different thing from a story about them. <code>maxPasses</code> exists so the summary happens eventually, and its value is a judgement, not a result.</p>
     </div>
     <div class="ledger__row ledger__row--open">
-      <p class="ledger__claim">The engine calling <code>session.compact</code> live <span class="flag">— not verified</span></p>
+      <p class="ledger__claim">The engine calling <code>session.compact</code> live <span class="flag">— not verified</span><span class="ledger__blocks">blocks a 1.0</span></p>
       <p class="ledger__how">The plugin loads and <code>turn.complete</code> fires in a real session, but the engine declines to compact below ~31% full and the model cannot invoke <code>/compact</code> itself. Covered by the real-session test; the engine-side handoff is not.</p>
     </div>
   </div>
@@ -1960,13 +1965,6 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
   <div class="next">
     <div class="next__item">
-      <p class="next__when">Blocks a 1.0</p>
-      <p class="next__what"><b>A live A/B.</b> Task outcome is measured in <a href="#checked">section 08, Verification</a> as far as a
-        transcript allows — how often the information would no longer be there. Whether that
-        changes what an assistant does needs the same session replayed both ways, against a real
-        model, and it has not been.</p>
-    </div>
-    <div class="next__item">
       <p class="next__when">Open</p>
       <p class="next__what"><b>The corpus is still one person's.</b> Widening it from 18 sessions
         to 41 — all the same person — took leave-one-session-out AUC from
@@ -1974,12 +1972,6 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         error from <span class="num val">0.035</span> to <span class="num val">0.051</span>. Nine
         points and half again the error, inside one person's own work. A second operator's corpus would
         say how much of what is left is this person's habits.</p>
-    </div>
-    <div class="next__item">
-      <p class="next__when">Blocks a 1.0</p>
-      <p class="next__what"><b>The live handoff.</b> The engine calling
-        <code>session.compact</code> and accepting the replacement message list has not been seen
-        in a real session — forcing it needs genuine context pressure.</p>
     </div>
     <div class="next__item">
       <p class="next__when">Needs a machine</p>
@@ -2006,14 +1998,14 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <div class="faq__item">
     <details class="more">
       <summary><h3>Isn't this just a heuristic with extra steps?</h3></summary>
-      <p>It is a heuristic with error bars, which is the difference. Thirteen coefficients &#8212; twelve features and an intercept &#8212; fitted
-        on labelled data, evaluated on sessions held out whole, calibrated well enough that the
-        threshold means a probability — expected calibration error 0.035 leave-one-session-out on the
-        18-session corpus and 0.051 on all 41 — the 0.044 in <a href="#result">section 01, Evidence</a> is the same quantity
-        averaged over ten grouped splits instead. “Big outputs get reused”
-        alone reaches 0.878, so most of the signal really is one feature — three coefficients of the
-        twelve, since size is banded — and the other nine earn
-        their place on characters freed at a fixed safety level, not on ranking.</p>
+      <p>It is a heuristic with error bars, which is the difference. Thirteen coefficients &#8212;
+        twelve features and an intercept &#8212; fitted on labelled data, evaluated on sessions held
+        out whole, and calibrated well enough that the threshold means a probability rather than a
+        rank; <a href="#result">section 01, Evidence</a> carries the error itself.
+        And most of the signal really is one feature: &#8220;big outputs get reused&#8221; alone
+        reaches <span class="num val">0.878</span>. That is three coefficients of the twelve, since
+        size is banded. The other nine earn their place on characters freed at a fixed safety
+        level, not on ranking &#8212; which is the answer to the question.</p>
     </details>
   </div>
   <div class="faq__item">
@@ -2043,26 +2035,21 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <div class="faq__item">
     <details class="more">
       <summary><h3>Will it delete something I need?</h3></summary>
-      <p>Sometimes — <span class="num val">0.19</span> outputs a session where it would actually
-        cost you something, and 27 of 32 sessions lose nothing at all. Counting every reuse
-        anywhere later, including ones that had already happened before a real compaction could
-        fire, the upper bound is 1.24 a session. Both are in <a href="#losses">section 07, Where it loses</a>, and 47 of the 55 are
-        command output. A dropped result keeps its first 300 characters when the call survives, and a call
-        that recorded a change is never dropped at all. Every failure mode falls back to Claude
-        Code's own summary rather than to a half-compacted transcript, and a single failed request
-        keeps its call: a wrong keep costs context, a wrong drop costs work.</p>
+      <p>Sometimes, and <a href="#losses">section 07, Where it loses</a> prices it exactly.
+        The asymmetry is what the whole design turns on: <b>a wrong keep costs context, a wrong
+        drop costs work</b> — so a dropped result keeps its first 300 characters, a call that
+        recorded a change is never dropped, and every failure mode falls back to Claude Code's own
+        summary rather than to a half-compacted transcript.</p>
     </details>
   </div>
   <div class="faq__item">
     <details class="more">
       <summary><h3>Do I have to calibrate?</h3></summary>
-      <p>No. An earlier version effectively did, because an absolute probability cut cannot survive
-        a distribution it was not tuned on. Dropping lowest-score-first until a character budget is
-        met adapts on its own, so <code>npm run calibrate</code> is an accuracy upgrade. It is still
-        worth running: the shipped coefficients come from one person's 41 sessions, and
-        leave-one-session-out across them gives 0.789, not the 0.905 the narrow corpus shows.
-        <code>npm run dry-run</code> needs nothing installed if you want the size of the prize
-        before the accuracy of it.</p>
+      <p>No — spending a budget lowest-score-first adapts on its own, where an absolute
+        probability cut could not survive a distribution it was not tuned on. So
+        <code>npm run calibrate</code> is an upgrade rather than a prerequisite, and it is still
+        worth running on your own sessions, for the reason in <a href="#checked">the ledger</a>:
+        these coefficients come from one person's.</p>
     </details>
   </div>
   <div class="faq__item">
