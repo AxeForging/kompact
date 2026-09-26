@@ -48,6 +48,7 @@
     "docs:plot": "bun eval/distribution.ts",
     "docs:check": "bun eval/render-check.ts",
     "propose": "bun eval/propose.ts",
+    "propose:demo": "bun eval/propose.ts --file eval/fixtures/signals.json",
     "docs:signals": "bun eval/signals-page.ts"
   },
   "devDependencies": {

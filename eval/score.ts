@@ -29,6 +29,14 @@
  * way to be invalidated — re-measuring one checkpoint used to mean deleting the
  * whole file by hand.
  *
+ * `--questions choice2|choice3` asks the same corpus as a `choice` rather than
+ * two `noul`s. The vendor's guide singles out `choice` with described options as
+ * the strong type and this project only ever built `noul`, although the decision
+ * is natively three-way — keep the output verbatim, drop the output but keep the
+ * call, or drop both. `choice2` is the two-option form, directly comparable to
+ * the `noul` it replaces; `choice3` is the decision as `decideAll` actually makes
+ * it, scored on P(keep verbatim).
+ *
  * `--tag` writes the sweep under `checkpoint@tag/phrasing` instead of
  * overwriting `checkpoint/phrasing`, so a re-measurement sits BESIDE the one it
  * questions rather than replacing it. The two rows next to each other are the
@@ -45,7 +53,7 @@ import { inputTokens, noulAnswer, routedModel, CONTEXT_LENGTH, STATE_BUDGET } fr
 import { rowKey } from './corpus.js';
 import { questionsFor } from '../src/questions.js';
 import { auc, droppableAt, ece } from './metrics.js';
-import type { Phrasing } from '../src/index.js';
+import type { Phrasing, SystemOneQuestions } from '../src/index.js';
 import type { LabelRow } from './extract-labels.js';
 
 const dir = import.meta.dirname;
@@ -73,6 +81,43 @@ const only = args.includes('--only')
 const CHECKPOINTS = ['english', 'multilingual', 'typed-decisions']
   .filter((name) => only === undefined || only.has(name));
 const PHRASINGS: Phrasing[] = ['reproducible', 'direct', 'entailment'];
+
+const questionSet = args.includes('--questions')
+  ? args[args.indexOf('--questions') + 1] ?? 'noul'
+  : 'noul';
+
+/**
+ * The same decision as a `choice`, with every option described.
+ *
+ * The score has to stay comparable with the `noul` sweep or the tables cannot be
+ * put side by side, so what is recorded is P(the option that means "keep this
+ * output verbatim") — the same quantity `noul` reports as P(true).
+ */
+function choiceQuestions(tool: string, three: boolean): SystemOneQuestions {
+  const criteria = three
+    ? {
+      keep: 'the assistant still needs this output word for word; re-running the tool would not do',
+      drop_result: 'the output can be produced again by running the tool, but the fact that it ran still matters',
+      drop_both: 'neither the output nor the call matters to what happens next',
+    }
+    : {
+      keep: 'the assistant still needs this output word for word; re-running the tool would not do',
+      drop: 'the output can be produced again by running the tool',
+    };
+  return {
+    result_t: { type: 'choice', instructions: `What should happen to this ${tool} output?`, criteria },
+  } as unknown as SystemOneQuestions;
+}
+
+/** P(keep) out of a `choice` answer, on the same scale as a `noul`. */
+function keepProbability(answers: Record<string, unknown>, name: string): number {
+  const answer = answers[name] as { probabilities?: Record<string, number> } | undefined;
+  const probabilities = answer?.probabilities;
+  if (!probabilities) throw new Error(`no probabilities for ${name}`);
+  const keep = probabilities.keep;
+  if (typeof keep !== 'number' || !Number.isFinite(keep)) throw new Error(`no keep option for ${name}`);
+  return keep;
+}
 
 interface Scored { call: number; result: number; rowTokens: number; truncated: boolean }
 type Cache = Record<string, Record<string, Scored>>;
@@ -103,7 +148,11 @@ function forBudget(state: string, checkpoint: string): string {
 
 async function scoreConfig(checkpoint: string, phrasing: Phrasing): Promise<Record<string, Scored>> {
   const tag = args.includes('--tag') ? args[args.indexOf('--tag') + 1] : undefined;
-  const key = `${checkpoint}${tag ? `@${tag}` : ''}/${phrasing}`;
+  // A choice sweep does not vary by phrasing, so it records one row per
+  // checkpoint rather than three identical ones.
+  const key = questionSet === 'noul'
+    ? `${checkpoint}${tag ? `@${tag}` : ''}/${phrasing}`
+    : `${checkpoint}${tag ? `@${tag}` : ''}/${questionSet}`;
   if (args.includes('--refresh')) delete cache[key];
   const have = cache[key] ?? {};
   const todo = rows.filter((row) => have[idOf(row)] === undefined);
@@ -112,15 +161,19 @@ async function scoreConfig(checkpoint: string, phrasing: Phrasing): Promise<Reco
     let done = 0;
     await pool(todo, 8, async (row) => {
       const call = { id: 't', tool: row.tool, input: {} } as never;
-      const questions = questionsFor(call, phrasing);
+      const questions = questionSet === 'noul'
+        ? questionsFor(call, phrasing)
+        : choiceQuestions(row.tool, questionSet === 'choice3');
       try {
         const response = await client.ask(forBudget(row.state, checkpoint), questions);
         const used = inputTokens(response) ?? 0;
         const per = rowTokens(used, Object.keys(questions).length);
         const routed = routedModel(response) ?? checkpoint;
         have[idOf(row)] = {
-          call: noulAnswer(response.answers, 'call_t'),
-          result: noulAnswer(response.answers, 'result_t'),
+          call: questionSet === 'noul' ? noulAnswer(response.answers, 'call_t') : 0.5,
+          result: questionSet === 'noul'
+            ? noulAnswer(response.answers, 'result_t')
+            : keepProbability(response.answers as Record<string, unknown>, 'result_t'),
           rowTokens: per,
           truncated: per >= (CONTEXT_LENGTH[routed] ?? Infinity),
         };
@@ -151,12 +204,15 @@ console.log(header);
 console.log('-'.repeat(header.length));
 
 const results: { key: string; auc: number; drop: number; wrong: number }[] = [];
+// A choice sweep does not vary by phrasing: one pass per checkpoint, not three
+// identical ones.
+const SWEEP: Phrasing[] = questionSet === 'noul' ? PHRASINGS : [PHRASINGS[0]!];
 for (const checkpoint of CHECKPOINTS) {
-  for (const phrasing of PHRASINGS) {
+  for (const phrasing of SWEEP) {
     const scored = await scoreConfig(checkpoint, phrasing);
     const usable = rows.filter((row) => scored[idOf(row)] !== undefined);
     if (usable.length === 0) {
-      console.log(`${checkpoint.padEnd(16)}${phrasing.padEnd(14)}  no data`);
+      console.log(`${checkpoint.padEnd(16)}${(questionSet === 'noul' ? phrasing : questionSet).padEnd(14)}  no data`);
       continue;
     }
     const s = usable.map((row) => scored[idOf(row)]!.result);
@@ -168,7 +224,7 @@ for (const checkpoint of CHECKPOINTS) {
     const dropPct = (100 * at98.droppedChars) / Math.max(1, at98.totalChars);
     results.push({ key: `${checkpoint}/${phrasing}`, auc: a, drop: dropPct, wrong: at98.wrongDrops });
     console.log(
-      `${checkpoint.padEnd(16)}${phrasing.padEnd(14)}${a.toFixed(3).padStart(6)}${ece(s, y).toFixed(3).padStart(7)}` +
+      `${checkpoint.padEnd(16)}${(questionSet === 'noul' ? phrasing : questionSet).padEnd(14)}${a.toFixed(3).padStart(6)}${ece(s, y).toFixed(3).padStart(7)}` +
       `${String(truncated).padStart(7)}${at98.threshold.toFixed(3).padStart(7)}${dropPct.toFixed(1).padStart(8)}${String(at98.wrongDrops).padStart(12)}`,
     );
   }

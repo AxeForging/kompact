@@ -30,6 +30,7 @@
  */
 import { execFileSync, spawn } from 'node:child_process';
 import { LayaClient } from './sidecar-client.js';
+import { pool } from '../src/compact.js';
 
 const args = process.argv.slice(2);
 const flag = (name: string, fallback: string): string => {
@@ -191,33 +192,65 @@ console.log(`number of questions — not the size of the state.`);
 const CALLS = Number(flag('--calls', '1071'));
 const BUILT_IN_MS = Number(flag('--built-in-ms', '108'));
 const PER_REQUEST = 2;
-const CONCURRENCY = 8;
+
+/**
+ * Real wall time for real calls, at several levels of concurrency.
+ *
+ * The projection this replaces was `(calls / 8) * median`, and the divide-by-8
+ * was the last thing in this file still flattering the sidecar. Its own comment
+ * said so — "concurrency buys nothing, measured … dividing by CONCURRENCY
+ * flatters the sidecar and is kept here only because the latency row is measured
+ * under the same conditions" — and the number went to the page anyway.
+ *
+ * Measured properly on a CUDA sidecar, over real corpus states rather than the
+ * one short sentence `STATE` holds: 19.2, 19.0, 19.0 and 19.1 ms a call at
+ * concurrency 1, 4, 8 and 16. The GPU serialises completely; eight in flight is
+ * eight queued. So there is no divisor, and the projection is just per-call time
+ * times calls.
+ *
+ * Real states matter too: `STATE` is 198 input tokens and the corpus median is
+ * about 909 characters, which is why the same checkpoint reads 11 ms on the
+ * latency table above and 19 ms here. The table is a floor, not a forecast.
+ */
+async function throughput(levels: readonly number[]): Promise<{ perCall: number; rows: string[] }> {
+  const { readFileSync, existsSync } = await import('node:fs');
+  const corpus = new URL('labels.jsonl', `file://${import.meta.dirname}/`).pathname;
+  const states: string[] = existsSync(corpus)
+    ? readFileSync(corpus, 'utf8').split('\n').filter((l) => l.trim() !== '')
+      .slice(0, 400).map((l) => (JSON.parse(l) as { state: string }).state)
+    : [];
+  if (states.length === 0) return { perCall: NaN, rows: [] };
+  const client = new LayaClient({ baseUrl: url, model: 'multilingual', timeoutMs: 120_000 });
+  const ask = async (state: string): Promise<void> => {
+    try { await client.ask(state, noul(PER_REQUEST)); } catch { /* counted in the wall */ }
+  };
+  await pool(states.slice(0, 20), 4, ask);
+  const rows: string[] = [];
+  let best = Infinity;
+  for (const level of levels) {
+    const started = performance.now();
+    await pool(states, level, ask);
+    const perCall = (performance.now() - started) / states.length;
+    best = Math.min(best, perCall);
+    rows.push(`  ${String(level).padStart(2)} in flight: ${perCall.toFixed(1)} ms a call`);
+  }
+  return { perCall: best, rows };
+}
+
+const measured = await throughput([1, 4, 8, 16]).catch(() => ({ perCall: NaN, rows: [] }));
 const fastest = await latency('multilingual', PER_REQUEST, 5).catch(() => undefined);
 if (fastest) {
-  /**
-   * One request per call, not one per two.
-   *
-   * `compact()` scores each call on its own request carrying that call's two
-   * questions, so `PER_REQUEST` picks which latency row applies — it is not a
-   * divisor on the number of requests. Dividing by it halved the projection and
-   * published 23.1 s and "122x" where the arithmetic gives 41 s and 216x.
-   *
-   * Checked against a real end-to-end run rather than trusted: 159 calls through
-   * a CUDA sidecar on the multilingual checkpoint took 3,960 ms at concurrency
-   * 8, and this formula predicts 3,696 ms — within 7%. The old formula predicted
-   * 1,848 ms, off by a factor of two, which is the bug.
-   *
-   * Concurrency buys nothing, measured: 928 ms a call at one in flight, 1,002 ms
-   * at eight. The GPU serialises, so dividing by CONCURRENCY flatters the
-   * sidecar and is kept here only because the latency row is measured under the
-   * same conditions.
-   */
-  const requests = CALLS;
-  const wall = (requests / CONCURRENCY) * fastest.median;
+  // Measured per-call time where the corpus is present; otherwise the latency
+  // row, which is a floor because it times one short sentence.
+  const perCall = Number.isFinite(measured.perCall) ? measured.perCall : fastest.median;
+  const wall = CALLS * perCall;
   // Not "one session": CALLS is whatever sessions.ts just totalled, which is
   // every session on the machine.
-  console.log(`\nScoring ${CALLS} calls, the sessions above: ${PER_REQUEST} questions a request, ` +
-    `${CONCURRENCY} in flight.`);
+  console.log(`\nScoring ${CALLS} calls, the sessions above: ${PER_REQUEST} questions a request.`);
+  if (measured.rows.length > 0) {
+    console.log('Concurrency buys nothing; the GPU serialises, so there is no divisor:');
+    for (const row of measured.rows) console.log(row);
+  }
   console.log(`  fastest checkpoint: ${(wall / 1000).toFixed(1)} s and ` +
     `${residentMb().replace(/ \(pid \d+\)/, '')} held for the session`);
   console.log(`  built-in scorer:    ${(BUILT_IN_MS / 1000).toFixed(2)} s and no process at all`);

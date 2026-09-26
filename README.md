@@ -492,9 +492,31 @@ So the plugin counts the *shapes* it sees — a command with its arguments
 collapsed, a run of three tools, a request in your own words — and ranks them.
 
 ```sh
-npm run propose                 # the report; writes nothing
+npm run propose:demo            # the report, against the committed fixture
+npm run propose                 # the report, against your own recorded signals
 npm run propose -- --write 2    # drafts row 2 into .kompact/proposals/
 ```
+
+`propose:demo` exists because the other two print nothing until the plugin has
+been installed and used for a while — the recorder is a hook and never mines
+transcripts that already exist. That is the right default and it meant the whole
+second half of this product had no output anyone could look at, including us.
+The demo runs the real ranking over `eval/fixtures/signals.json`, the same
+committed corpus the page's figures come from, so the report can be read before
+deciding whether to install anything:
+
+```
+27 shapes recorded; 27 seen 3+ times in 2+ sessions.
+What repeating costs you
+    #  times sess  calls     chars    est.  what
+    1     95    2     95   167,518   262.5  the same command: sed -n
+    2     55    2     55    24,781    79.8  the same command: python3 -c
+    3     25    2     25    32,212    57.2  the same command: grep -n | head -<n>
+    4     16    2     48         0    48.0  the same run of tools: Read -> Edit -> Edit
+```
+
+Which is also the negative finding the page leads with: the top rows are generic
+shell verbs, not workflows anyone would write a skill for.
 
 Recording is local, on by default, and off with `recordSignals: false`. It keeps
 signatures plus up to three redacted examples in the plugin's own store, mirrored
