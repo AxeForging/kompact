@@ -12,7 +12,21 @@
  * `--cold` additionally starts a second sidecar on a spare port and times it to
  * first answer. It never touches the one already running.
  *
- * Run: bun eval/sidecar-bench.ts [--url http://127.0.0.1:8000/v1/systemone] [--cold]
+ * THE DEVICE IS THE MEASUREMENT. Every figure this script published once was
+ * taken against a sidecar started with `LAYA_DEVICE=cpu`, on a machine with an
+ * idle RTX 4060 — and the proof was printed two lines above the table, as
+ * `gpu: ... 148 MiB`. Nobody read it, and "319x the time" reached the landing
+ * page. So the device is now checked, not printed: `/health` reports it in one
+ * field, and a CPU sidecar refuses to produce publishable numbers unless
+ * `--allow-cpu` is passed, which labels every row it prints.
+ *
+ * `--inprocess` measures the other half. `laya-serve` exposes `/health` and
+ * `/v1/systemone` and nothing else, so one HTTP round trip per call is the
+ * slowest path Laya has; `Agent.predict_batch` packs many states into shared
+ * forward passes and is the fastest. A cost figure that quotes only the first
+ * is not a cost figure for Laya, it is a cost figure for this deployment of it.
+ *
+ * Run: bun eval/sidecar-bench.ts [--url ...] [--cold] [--inprocess] [--allow-cpu]
  */
 import { execFileSync, spawn } from 'node:child_process';
 import { LayaClient } from './sidecar-client.js';
@@ -47,6 +61,37 @@ function vramMb(): string {
   } catch {
     return 'no NVIDIA GPU on this machine';
   }
+}
+
+/** What the sidecar says about itself. One request, before anything is timed. */
+async function health(): Promise<{ device: string; loaded: string[] }> {
+  const response = await fetch(new URL('/health', url), { signal: AbortSignal.timeout(5_000) });
+  const body = await response.json() as { device?: unknown; loaded?: unknown };
+  return {
+    device: typeof body.device === 'string' ? body.device : 'unknown',
+    loaded: Array.isArray(body.loaded) ? body.loaded.map(String) : [],
+  };
+}
+
+/**
+ * Refuse to publish a CPU number as the cost of running Laya.
+ *
+ * This is the whole reason the script was wrong: a resource benchmark whose
+ * result is dominated by which device it ran on, printing the device as
+ * decoration rather than treating it as a precondition.
+ */
+function requireAccelerator(device: string): void {
+  if (device !== 'cpu') return;
+  if (args.includes('--allow-cpu')) {
+    console.log('\nNOTE: --allow-cpu. Every latency row below is a CPU measurement and is');
+    console.log('      NOT the cost of running Laya. Do not publish it as one.\n');
+    return;
+  }
+  console.error(`the sidecar at ${url} reports device "cpu".`);
+  console.error('Latency measured there is a property of this deployment, not of Laya:');
+  console.error('publishing it once produced the "319x the time" figure on the page.');
+  console.error('Restart it with LAYA_DEVICE=cuda, or pass --allow-cpu to label the rows.');
+  process.exit(1);
 }
 
 /**
@@ -108,9 +153,12 @@ async function latency(model: string, questions: number, runs: number): Promise<
   return { median: times[Math.floor(times.length / 2)]!, worst: times.at(-1)!, inputTokens };
 }
 
+const reported = await health();
 console.log(`sidecar: ${url}`);
+console.log(`device:  ${reported.device} (loaded: ${reported.loaded.join(', ') || 'none'})`);
 console.log(`memory:  ${residentMb()}`);
 console.log(`gpu:     ${vramMb()}`);
+requireAccelerator(reported.device);
 console.log(`\nAll three checkpoints are loaded by one process, so the memory above is the`);
 console.log(`whole router. Latency is per checkpoint, ${'5 runs, median and worst'}:\n`);
 
@@ -176,6 +224,121 @@ if (fastest) {
   console.log(`  ratio:              ${(wall / BUILT_IN_MS).toFixed(0)}x the time`);
   console.log(`(${CALLS} calls and ${BUILT_IN_MS} ms come from the eval/sessions.ts run in`);
   console.log(` this same report, so the two sides are the same work.)`);
+}
+
+/**
+ * The interpreter `laya-serve` itself runs under.
+ *
+ * Read off its shebang rather than hard-coded or assumed to be on `PATH`:
+ * `laya` is commonly installed as a uv or pipx tool, so the `python3` in scope
+ * here usually cannot import it, and guessing the venv path would rot.
+ */
+function layaPython(): string {
+  const bin = execFileSync('sh', ['-c', 'command -v laya-serve'], { encoding: 'utf8' }).trim();
+  const shebang = execFileSync('head', ['-1', bin], { encoding: 'utf8' }).trim();
+  const interpreter = shebang.replace(/^#!\s*/, '').split(/\s+/)[0];
+  if (!interpreter) throw new Error(`no interpreter in the shebang of ${bin}`);
+  return interpreter;
+}
+
+/**
+ * The paths the HTTP sidecar cannot take.
+ *
+ * `laya-serve` routes `/health` and `/v1/systemone` and nothing else, so over
+ * HTTP every call is one state in one forward pass in one round trip. The
+ * library has `Agent.predict_batch`, which packs many states into shared passes.
+ * Quoting only the HTTP figure as "what Laya costs" measures this deployment,
+ * not the model — which is the same mistake as measuring it on the wrong device,
+ * one level up.
+ */
+function inProcess(device: string): string {
+  const program = `
+import json, time, sys
+import laya
+state = json.loads(sys.argv[1]); questions = json.loads(sys.argv[2]); device = sys.argv[3]
+t = time.perf_counter()
+agent = laya.load("convaiinnovations/laya", subfolder="multilingual", device=device)
+load = time.perf_counter() - t
+def median(xs): xs = sorted(xs); return xs[len(xs)//2]
+agent.predict(state, questions)
+single = median([(lambda t0: (agent.predict(state, questions), (time.perf_counter()-t0)*1000)[1])(time.perf_counter()) for _ in range(12)])
+rows = [state]*32
+agent.predict_batch(rows[:4], questions)
+t = time.perf_counter(); agent.predict_batch(rows, questions); batch = (time.perf_counter()-t)*1000/32
+print(json.dumps({"load": load, "single": single, "batch": batch}))
+`;
+  const out = execFileSync(layaPython(), ['-c', program, JSON.stringify(STATE), JSON.stringify(noul(PER_REQUEST)), device], {
+    encoding: 'utf8', env: { ...process.env, HF_HUB_OFFLINE: '1', TQDM_DISABLE: '1' },
+  });
+  return out.trim().split('\n').at(-1)!;
+}
+
+/**
+ * A sidecar of our own, on a spare port, so the wire cost can be measured on the
+ * same device as everything else.
+ *
+ * One checkpoint, not all three: `LAYA_MODELS` keeps this to the ~1.4 GB the
+ * ladder actually uses, which matters because the in-process measurement holds
+ * its own copy of the same weights on the same 8 GB card.
+ */
+async function withSidecar<T>(device: string, on: string, body: (base: string) => Promise<T>): Promise<T | undefined> {
+  const child = spawn('laya-serve', [], {
+    env: { ...process.env, LAYA_PORT: on, LAYA_DEVICE: device, LAYA_MODELS: 'multilingual' },
+    stdio: 'ignore', detached: true,
+  });
+  const base = `http://127.0.0.1:${on}/v1/systemone`;
+  const probe = new LayaClient({ baseUrl: base, timeoutMs: 5_000 });
+  try {
+    for (let attempt = 0; attempt < 240; attempt += 1) {
+      try {
+        await probe.ask('x', { a: { type: 'noul', instructions: 'y' } });
+        return await body(base);
+      } catch {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    }
+    return undefined;
+  } finally {
+    try { process.kill(-child.pid!, 'SIGTERM'); } catch { /* already gone */ }
+  }
+}
+
+if (args.includes('--inprocess')) {
+  const device = flag('--inprocess-device', 'cuda');
+  console.log(`\nthe same work off the wire, ${PER_REQUEST} questions a state, ` +
+    `multilingual on ${device}:`);
+  try {
+    const { load, single, batch } = JSON.parse(inProcess(device)) as
+      { load: number; single: number; batch: number };
+    const wire = await latency('multilingual', PER_REQUEST, 5).catch(() => undefined);
+    const wireOnDevice = await withSidecar(device, flag('--ladder-port', '8002'), async (base) => {
+      const client = new LayaClient({ baseUrl: base, model: 'multilingual' });
+      const times: number[] = [];
+      for (let i = 0; i < 7; i += 1) {
+        const started = performance.now();
+        await client.ask(STATE, noul(PER_REQUEST));
+        times.push(performance.now() - started);
+      }
+      times.sort((a, b) => a - b);
+      return times[Math.floor(times.length / 2)]!;
+    }).catch(() => undefined);
+    const rows: [string, number][] = [
+      ...(wire ? [[`over HTTP on ${reported.device}, one call at a time`, wire.median] as [string, number]] : []),
+      ...(wireOnDevice ? [[`over HTTP on ${device}, one call at a time`, wireOnDevice] as [string, number]] : []),
+      [`in process on ${device}, one call at a time`, single],
+      [`in process on ${device}, predict_batch(32)`, batch],
+    ];
+    const slowest = Math.max(...rows.map(([, ms]) => ms));
+    console.log(`${'path'.padEnd(44)}${'per call'.padStart(11)}${'vs slowest'.padStart(12)}`);
+    console.log('-'.repeat(67));
+    for (const [name, ms] of rows) {
+      console.log(`${name.padEnd(44)}${`${ms.toFixed(1)} ms`.padStart(11)}` +
+        `${`${(slowest / ms).toFixed(1)}x`.padStart(12)}`);
+    }
+    console.log(`(model resident in ${load.toFixed(1)} s from a warm HF cache)`);
+  } catch (error) {
+    console.log(`  unavailable: ${error instanceof Error ? error.message.slice(0, 120) : String(error)}`);
+  }
 }
 
 if (args.includes('--cold')) await coldStart(flag('--cold-port', '8001'));

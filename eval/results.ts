@@ -318,7 +318,21 @@ Needs a live \`laya-serve\`, so this section is empty on a machine without one.
 One process serves all three checkpoints, so memory and start-up are properties
 of the router; only latency is per checkpoint.
 
-${maybe('sidecar-bench.ts', '--cold', ...benchArgs)}
+**This section was wrong once, and how it was wrong is worth keeping.** Every
+figure in it was measured against a sidecar started with \`LAYA_DEVICE=cpu\`,
+while the card sat idle — and the script printed that idle card two lines above
+its own table, as \`gpu: ... 148 MiB\`. A ratio of "319x the time" reached the
+landing page from it. The script now reads \`/health\`, which reports the device
+in one field, and refuses to produce publishable rows from a CPU sidecar unless
+\`--allow-cpu\` labels them.
+
+The ladder at the end is the other half of the same lesson. \`laya-serve\` routes
+\`/health\` and \`/v1/systemone\` and nothing else, so over HTTP every call is one
+state, one forward pass, one round trip — the slowest thing Laya can do. The
+library's \`predict_batch\` packs states into shared passes. A single number was
+never the cost of running Laya; it was the cost of this deployment of it.
+
+${maybe('sidecar-bench.ts', '--cold', '--inprocess', ...benchArgs)}
 `;
 
 /**
