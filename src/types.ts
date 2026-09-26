@@ -92,9 +92,14 @@ export interface CallDecision extends CallAnswer {
   action: CallAction;
   /**
    * `budget` means it scored low but the reduction target was already met;
-   * `too small` that dropping it would have freed less than it risked.
+   * `too small` that dropping it would have freed less than it risked;
+   * `unrepeatable` that nothing could produce the result again, so the scorer
+   * never had a vote. That last one shared `pinned` until it was noticed that
+   * the decision log filters `pinned` out and the notice counts it as one, so
+   * the newest guard was invisible in both.
    */
-  reason: 'pinned' | 'kept' | 'budget' | 'too small' | 'result_dropped' | 'call_dropped';
+  reason: 'pinned' | 'unrepeatable' | 'kept' | 'budget' | 'too small'
+    | 'result_dropped' | 'call_dropped';
 }
 
 

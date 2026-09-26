@@ -33,16 +33,14 @@ const PASSES_KEPT = 32;
 /** Turns `turn.complete` waits after a pass, so `usage()` is not read stale. */
 const COOLDOWN_TURNS = 2;
 
-export type HookFetchInit = { method?: string; headers?: Record<string, string>; body?: string };
-export type HookFetchResponse = { status: number; ok: boolean; text: string };
-/** The shape of `$.http.fetch`, so the hook can be driven without an engine. */
-export type HookFetch = (url: string, init?: HookFetchInit) => Promise<HookFetchResponse>;
-
 export type HookConfig = CompactOptions & {
   compactAtPercent: number;
   minFreedPercent: number;
   maxPasses: number;
 };
+
+const clamp = (value: number, low: number, high: number): number =>
+  Math.min(high, Math.max(low, value));
 
 function optionNumber(options: PluginOptions, key: string, fallback: number): number {
   const value = options[key];
@@ -72,11 +70,28 @@ export function resolveHookConfig(options: PluginOptions): HookConfig {
     const value = options[key];
     if (typeof value === 'number' && Number.isFinite(value)) numbers[key] = value;
   }
+  /**
+   * Clamped, because every one of these three has a value that breaks the loop
+   * quietly rather than loudly.
+   *
+   * `compactAtPercent: 0` fires `turn.complete` on every turn AND makes the
+   * derived window in `decideHandover` a hundred times too big, so every pass
+   * is handed over: a model summary every other turn. `minFreedPercent: 0`
+   * takes every pass straight to the ceiling. `maxPasses: 0` means kompact
+   * never compacts at all while still being installed and logging.
+   *
+   * The floors are the smallest values that still mean what the option says:
+   * compact somewhere inside the window, require a pass to free something,
+   * answer at least one compaction.
+   */
   const config: HookConfig = {
     ...numbers,
-    compactAtPercent: optionNumber(options, 'compactAtPercent', HOOK_DEFAULTS.compactAtPercent),
-    minFreedPercent: optionNumber(options, 'minFreedPercent', HOOK_DEFAULTS.minFreedPercent),
-    maxPasses: optionNumber(options, 'maxPasses', HOOK_DEFAULTS.maxPasses),
+    compactAtPercent: clamp(
+      optionNumber(options, 'compactAtPercent', HOOK_DEFAULTS.compactAtPercent), 1, 99),
+    minFreedPercent: clamp(
+      optionNumber(options, 'minFreedPercent', HOOK_DEFAULTS.minFreedPercent), 0.1, 100),
+    maxPasses: Math.round(clamp(
+      optionNumber(options, 'maxPasses', HOOK_DEFAULTS.maxPasses), 1, 100)),
   };
   const goal = optionString(options, 'goal');
   if (goal) config.goal = goal;
@@ -87,45 +102,6 @@ export function resolveHookConfig(options: PluginOptions): HookConfig {
     config.phrasing = phrasing;
   }
   return config;
-}
-
-/** Per-request deadline for the sidecar. A local call is milliseconds. */
-export const LAYA_TIMEOUT_MS = 30_000;
-
-/** Waits `ms`. The engine supplies `$.clock.sleep`; a hook has no raw timers. */
-export type Sleep = (ms: number) => Promise<void>;
-
-/**
- * Rejects if `work` has not settled within `ms`.
- *
- * `$.http.fetch` takes no timeout — `HttpInit` has no field for one — so a hung
- * sidecar would otherwise never settle, and the "any failure falls back to the
- * built-in summary" guarantee only fires on a *rejection*. A sidecar that
- * accepts the connection and then stalls would make `session.compact` never
- * return, which reads to the user as a frozen session rather than a failed
- * scorer. Note a hook has no `setTimeout`: the deadline is `$.clock.sleep`,
- * and without one supplied the call is simply awaited unguarded.
- */
-export async function withDeadline<T>(
-  work: Promise<T>,
-  ms: number,
-  what: string,
-  sleep?: Sleep,
-): Promise<T> {
-  if (!sleep) return work;
-  // Once the deadline wins the race nothing is left awaiting `work`, and a
-  // sidecar that rejects a moment later would surface as an unhandled rejection.
-  work.catch(() => {});
-  let done = false;
-  const guard = sleep(ms).then(() => {
-    if (!done) throw new Error(`${what} did not respond within ${ms}ms`);
-    return undefined as never;
-  });
-  try {
-    return await Promise.race([work, guard]);
-  } finally {
-    done = true;
-  }
 }
 
 /**
@@ -247,12 +223,21 @@ export function toSessionMessages(
 export type SessionCompaction = { result: CompactResult; messages: SessionMessage[] };
 
 /** Runs the library over a session transcript. Throws so the caller can fall back. */
+/**
+ * The whole scoring path, with no way out to the network.
+ *
+ * This took a `fetchFn` and a `sleep` its body never read — leftovers from the
+ * sidecar, kept for a timeout guard around an HTTP call that no longer happens.
+ * They cost more than dead code: the hook had to build a `$.http.fetch` closure
+ * to pass one, so `claude plugin validate` listed `$.http.fetch` among the
+ * capabilities this plugin uses, while the page's masthead says "no network
+ * call — no exceptions and no optional path that has any". Now the validator's
+ * own output is the proof of that sentence.
+ */
 export async function compactSession(
   messages: readonly SessionMessage[],
   config: HookConfig,
-  fetchFn: HookFetch,
   weights?: Weights,
-  sleep?: Sleep,
 ): Promise<SessionCompaction> {
   const result = await compact(messages, askerFor(weights), config);
   return { result, messages: toSessionMessages(messages, result.messages) };
@@ -394,6 +379,8 @@ const UI_LOG_MAX_CHARS = 4096;
 
 export function decisionLog(result: CompactResult): string {
   return result.decisions
+    // `unrepeatable` stays in the log: it is a decision the scorer did not make,
+    // which is exactly the kind a reader checking the log wants to see.
     .filter((d) => d.reason !== 'pinned')
     .map((d) => `${d.id}:${d.tool}:${d.action}/call=${d.keepCall.toFixed(2)}/result=${d.keepResult.toFixed(2)}`)
     .join(' ');
@@ -433,6 +420,11 @@ type PassEngine = {
   store: { get: (key: string) => Promise<unknown>; set: (key: string, value: unknown) => Promise<void> };
 };
 
+type HandoverEngine = PassEngine & {
+  session: { id: () => Promise<string>; turns: () => Promise<number> };
+  clock: { now: () => Promise<number> };
+};
+
 async function readPasses($: PassEngine): Promise<PassStore> {
   try {
     return asPassStore(await $.store.get(PASSES_KEY));
@@ -458,6 +450,26 @@ async function askOr<T>(ask: () => Promise<T>, fallback: T): Promise<T> {
   }
 }
 
+/**
+ * Record that the engine's summary just ran for this transcript.
+ *
+ * The count goes to zero because the summary rewrites the transcript and the
+ * next kompact pass is pass 1 again; the turn stays, because it is the cooldown
+ * and the moment straight after a model call is exactly when it must hold.
+ * Both the hand-over path and the failure path go through here, so they cannot
+ * drift apart again.
+ */
+async function markHandedOver($: HandoverEngine, agentId?: string): Promise<void> {
+  const store = await readPasses($);
+  const key = passKey(await askOr(() => $.session.id(), 'unknown'), agentId);
+  store[key] = {
+    passes: 0,
+    lastTurn: await askOr(() => $.session.turns(), 0),
+    lastAt: await askOr(() => $.clock.now(), 0),
+  };
+  await writePasses($, store);
+}
+
 async function writePasses($: PassEngine, store: PassStore): Promise<void> {
   try {
     await $.store.set(PASSES_KEY, prunePasses(store));
@@ -480,16 +492,7 @@ export const register: Register = (on: On, options: PluginOptions) => {
   on('session.compact', async ($, event, next) => {
     try {
       const weights = await readLocalWeights($, (text) => $.ui.log(text));
-      const { result, messages } = await compactSession(
-        event.messages,
-        config,
-        async (url, init) => {
-          const response = await $.http.fetch(url, init);
-          return { status: response.status, ok: response.ok, text: response.text };
-        },
-        weights,
-        (ms) => $.clock.sleep(ms),
-      );
+      const { result, messages } = await compactSession(event.messages, config, weights);
       for (const line of decisionLogLines(result)) $.ui.log(line);
 
       // A precompute never lands — its result is kept for a compaction that may
@@ -523,10 +526,7 @@ export const register: Register = (on: On, options: PluginOptions) => {
          * spent a model call, so the next turn asked for another compaction and
          * got a second summary of an already-summarised transcript.
          */
-        if (!speculative) {
-          store[key] = { passes: 0, lastTurn: await askOr(() => $.session.turns(), 0), lastAt: await askOr(() => $.clock.now(), 0) };
-          await writePasses($, store);
-        }
+        if (!speculative) await markHandedOver($, event.agentId);
         notify($, `fallback to built-in summary (${verdict.why}: ${summarize(result)})`);
         return next(event);
       }
@@ -544,7 +544,18 @@ export const register: Register = (on: On, options: PluginOptions) => {
       }));
       return { messages, tokensBefore: stats.tokensBefore, tokensAfter: stats.tokensAfter };
     } catch (error) {
-      // Any failure at all falls back rather than risking a broken session.
+      /**
+       * Any failure at all falls back rather than risking a broken session —
+       * and leaves the cooldown behind, which this did not.
+       *
+       * `turn.complete` skips only when it finds a record. A throwing
+       * compaction wrote none, so the engine spent a model call summarising,
+       * `usage()` still read above the trigger a turn later, and the next turn
+       * asked again: one summary per turn for as long as the fault lasted. The
+       * hand-over path already gets this right; the failure path is the one
+       * that most needs it.
+       */
+      if (event.trigger !== 'precompute') await markHandedOver($, event.agentId);
       notify($, `fallback to built-in summary (${error instanceof Error ? error.message : String(error)})`);
       return next(event);
     }
@@ -562,7 +573,11 @@ export const register: Register = (on: On, options: PluginOptions) => {
        * makes it impossible before the engine's own number catches up.
        */
       const store = await readPasses($);
-      const record = store[passKey(await askOr(() => $.session.id(), 'unknown'))];
+      // Keyed by agent as well, because `session.compact` writes it that way: a
+      // subagent's taken pass stored `sess|agent-7` and this looked under
+      // `sess|main`, found nothing, and recompacted on exactly the stale
+      // `usage()` the cooldown exists for.
+      const record = store[passKey(await askOr(() => $.session.id(), 'unknown'), event.agentId)];
       const turns = await askOr(() => $.session.turns(), 0);
       if (record && turns - record.lastTurn < COOLDOWN_TURNS) return next(event);
       compacting = true;

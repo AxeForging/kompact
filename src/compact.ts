@@ -113,7 +113,7 @@ export function decideCall(
   const base = { id: call.id, tool: call.tool, ...answer };
   if (call.pinned) return { ...base, action: 'keep', reason: 'pinned' };
   // A result nothing can produce again is not the scorer's to trade away.
-  if (UNREPEATABLE.has(call.tool)) return { ...base, action: 'keep', reason: 'pinned' };
+  if (UNREPEATABLE.has(call.tool)) return { ...base, action: 'keep', reason: 'unrepeatable' };
   if (answer.keepResult >= options.keepThreshold) {
     return { ...base, action: 'keep', reason: 'kept' };
   }
@@ -438,6 +438,16 @@ export function messageChars(message: Message): number {
     } catch {
       total += 20;
     }
+    /**
+     * A result can ride on the tool use rather than on a separate result, and
+     * `applyDecisions` truncates and caps it there. Not counting it meant a
+     * transcript shaped that way reported about half of what it actually held,
+     * so `freedTokens` read half too and a pass that had cleared the five-point
+     * floor was handed to the model summary instead. It was missed because the
+     * transcript it was checked against carries no `tool.text` at all, which is
+     * a property of that transcript and not a guarantee.
+     */
+    total += (tool.text ?? '').length;
   }
   for (const result of message.toolResults ?? []) total += result.text.length;
   return total;
@@ -547,7 +557,7 @@ export async function compact(
       kept: count(decisions, 'kept') + count(decisions, 'budget') + count(decisions, 'too small'),
       resultsDropped: count(decisions, 'result_dropped'),
       callsDropped: count(decisions, 'call_dropped'),
-      pinned: count(decisions, 'pinned'),
+      pinned: count(decisions, 'pinned') + count(decisions, 'unrepeatable'),
       maxRowTokens,
       truncatedRequests,
       checkpoint,

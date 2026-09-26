@@ -3,18 +3,15 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  askerFor, compactSession, compactionNotice, decisionLogLines, readLocalWeights, register,
-  resolveHookConfig, summarize, toSessionMessages,
+  askerFor, asPassStore, compactSession, compactionNotice, decideHandover, decisionLogLines,
+  passKey, prunePasses, readLocalWeights, register, resolveHookConfig, summarize,
+  toSessionMessages,
 } from '../hooks/kompact.js';
 import { FeatureAsker, parseWeights } from '../src/features.js';
 import type { CompactResult, Message } from '../src/index.js';
 
 /** The fixture is structurally what the engine passes; it carries no handles. */
 const asSession = (messages: Message[]) => messages as never;
-
-const never: () => never = () => {
-  throw new Error('the features scorer must not touch the network');
-};
 
 function transcript(): Message[] {
   const pair = (id: string, tool: string, input: Record<string, unknown>, out: string): Message[] => [
@@ -84,6 +81,102 @@ describe('resolveHookConfig', () => {
   });
 });
 
+/**
+ * The rule that decides every compaction, and it had no direct test at all.
+ *
+ * The only thing exercising it ran through `register` with `minFreedPercent: 0`
+ * — the floor disabled — so the headline change was never run against a real
+ * bar. These are the cases the ladder actually turns on.
+ */
+describe('decideHandover', () => {
+  const config = { minFreedPercent: 5, maxPasses: 6, compactAtPercent: 60 };
+  const ask = (over: Partial<Parameters<typeof decideHandover>[0]>) => decideHandover({
+    freedTokens: 12_000, tokensBefore: 120_000, windowTokens: 200_000, passes: 0, config, ...over,
+  });
+
+  it('takes a pass that clears the floor and refuses one that does not', () => {
+    expect(ask({ freedTokens: 12_000 }).take).toBe(true);
+    expect(ask({ freedTokens: 9_999 }).take).toBe(false);
+    // Exactly the floor is enough: 5% of a 200,000-token window.
+    expect(ask({ freedTokens: 10_000 }).take).toBe(true);
+  });
+
+  it('says which of the two bars refused it, because they mean different things', () => {
+    expect(ask({ freedTokens: 1_000 }).why).toContain('floor');
+    expect(ask({ passes: 6 }).why).toContain('passes');
+  });
+
+  it('hands over at the ceiling however much the pass freed', () => {
+    expect(ask({ passes: 5, freedTokens: 200_000 }).take).toBe(true);
+    expect(ask({ passes: 6, freedTokens: 200_000 }).take).toBe(false);
+  });
+
+  /**
+   * The engine only asks at the trigger, so a live context of `tokensBefore`
+   * stands for a window of `tokensBefore / compactAtPercent`. Without a window
+   * this is the whole rule, and nothing covered it: `fakeEngine` always answers.
+   */
+  it('derives a window from the trigger when usage does not report one', () => {
+    // 120,000 at 60% implies a 200,000 window, so the floor is still 10,000.
+    expect(ask({ windowTokens: 0, freedTokens: 10_000 }).take).toBe(true);
+    expect(ask({ windowTokens: 0, freedTokens: 9_000 }).take).toBe(false);
+  });
+});
+
+describe('the pass store', () => {
+  // S2 lived here: `session.compact` wrote with the agent and `turn.complete`
+  // read without it, so a subagent never found its own cooldown.
+  it('keys a subagent apart from the main loop', () => {
+    expect(passKey('s1')).toBe(passKey('s1', undefined));
+    expect(passKey('s1')).not.toBe(passKey('s1', 'agent-7'));
+  });
+
+  it('keeps the newest records and drops the rest', () => {
+    const store = Object.fromEntries(
+      Array.from({ length: 40 }, (_, i) => [`s${i}`, { passes: 1, lastTurn: 0, lastAt: i }]));
+    const pruned = prunePasses(store, 8);
+    expect(Object.keys(pruned)).toHaveLength(8);
+    expect(pruned.s39).toBeDefined();
+    expect(pruned.s0).toBeUndefined();
+  });
+
+  it('survives anything the store hands back', () => {
+    expect(asPassStore(undefined)).toEqual({});
+    expect(asPassStore('nonsense')).toEqual({});
+    expect(asPassStore({ a: { passes: 2 } })).toEqual({ a: { passes: 2, lastTurn: 0, lastAt: 0 } });
+    expect(asPassStore({ a: { lastTurn: 3 } })).toEqual({});
+  });
+});
+
+/**
+ * The masthead says "no API key, no GPU, no network call — no exceptions and no
+ * optional path that has any". For a while that was prose: the hook still built
+ * a `$.http.fetch` closure for a sidecar that had been removed, so
+ * `claude plugin validate` listed HTTP among the capabilities it uses. The
+ * claim is only true if the source cannot reach the network at all.
+ */
+describe('the no-network claim', () => {
+  const hook = readFileSync(new URL('../hooks/kompact.ts', import.meta.url), 'utf8');
+  const signals = readFileSync(new URL('../hooks/kompact-signals.ts', import.meta.url), 'utf8');
+
+  // Comments stripped: this is about what the code can do, and the comment
+  // explaining why the network path was removed necessarily names it.
+  const code = (source: string): string =>
+    source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
+  it('never reaches for $.http, in either hook module', () => {
+    for (const [name, source] of [['kompact', hook], ['kompact-signals', signals]] as const) {
+      expect(code(source), `${name}.ts still touches $.http`).not.toContain('$.http');
+      expect(code(source), `${name}.ts still calls fetch`).not.toMatch(/\bfetch\s*\(/);
+    }
+  });
+
+  it('states the claim on the page it is made on', () => {
+    const page = readFileSync(new URL('../docs/index.html', import.meta.url), 'utf8');
+    expect(page).toContain('no network');
+  });
+});
+
 describe('askerFor', () => {
   it('is the offline scorer, and there is no other', () => {
     expect(askerFor()).toBeInstanceOf(FeatureAsker);
@@ -93,14 +186,14 @@ describe('askerFor', () => {
 describe('compactSession', () => {
   it('compacts with no network access at all', async () => {
     const messages = transcript();
-    const { result, messages: out } = await compactSession(asSession(messages), resolveHookConfig({}), never);
+    const { result, messages: out } = await compactSession(asSession(messages), resolveHookConfig({}));
     expect(result.stats.failedRequests).toBe(0);
     expect(out.length).toBeLessThanOrEqual(messages.length);
   });
 
   it('hands back the engine’s own objects for untouched messages', async () => {
     const messages = transcript();
-    const { messages: out } = await compactSession(asSession(messages), resolveHookConfig({ keepThreshold: 0 }), never);
+    const { messages: out } = await compactSession(asSession(messages), resolveHookConfig({ keepThreshold: 0 }));
     expect(out[0]).toBe(messages[0]);
   });
 });
@@ -199,9 +292,11 @@ function fakeEngine(percent = 10, fetch = async (): Promise<never> => {
   const toasts: string[] = [];
   let compactRequested = 0;
   let turns = 20;
-  // A 200,000-token window, which is what the percentage-point floor is a
-  // fraction of; the fixture transcript is small, so the floor it implies is
-  // small too and a pass clears it.
+  // The window the percentage-point floor is a fraction of. The fixture
+  // transcript is a few thousand characters, so a realistic 200,000-token
+  // window would put every pass under the floor and every test would measure
+  // the fallback. 4,000 keeps the *ratio* realistic; the comment used to claim
+  // 200,000 over this line, which is how `decideHandover` went untested.
   let window = 4_000;
   const store = new Map<string, unknown>();
   const $ = {
@@ -339,6 +434,47 @@ describe('register', () => {
     expect(result, 'a working compaction was thrown away over bookkeeping')
       .not.toBe('FELL_BACK');
     expect(engine.toasts.join(' ')).toContain('no summary');
+  });
+
+  /**
+   * S1. The catch wrote no pass record, and `turn.complete` skips only when it
+   * finds one — so a compaction that threw left no cooldown, the engine spent a
+   * model call summarising, and the next turn asked for another. One summary
+   * per turn, for as long as the fault lasted.
+   */
+  it('leaves a cooldown behind when compaction itself throws', async () => {
+    const handlers = registered({ preserveRecentMessages: 2 });
+    const engine = fakeEngine(80);
+    // One transient engine failure inside the try, then a working log so the
+    // catch can still report. Any throw on that path used to leave no record.
+    let first = true;
+    const log = engine.$.ui.log;
+    engine.$.ui.log = (text: string): number => {
+      if (first) { first = false; throw new Error('transient'); }
+      return log(text);
+    };
+    const result = await handlers.get('session.compact')!(
+      engine.$, { messages: asSession(transcript()) }, () => 'FELL_BACK');
+    expect(result, 'the failure path did not run').toBe('FELL_BACK');
+    await handlers.get('turn.complete')!(engine.$, {}, () => 'NEXT');
+    expect(engine.compactRequested, 'a model summary every turn while it fails').toBe(0);
+  });
+
+  /**
+   * S2. `session.compact` wrote `sess|agent-7` and `turn.complete` looked under
+   * `sess|main`, so a subagent recompacted on exactly the stale usage the
+   * cooldown exists for.
+   */
+  it('finds a subagent\'s own cooldown, not the main loop\'s', async () => {
+    const handlers = registered({ preserveRecentMessages: 2, keepThreshold: 0.9 });
+    const engine = fakeEngine(80);
+    await handlers.get('session.compact')!(
+      engine.$, { messages: asSession(transcript()), agentId: 'agent-7' }, () => 'FELL_BACK');
+    await handlers.get('turn.complete')!(engine.$, { agentId: 'agent-7' }, () => 'NEXT');
+    expect(engine.compactRequested, 'the subagent did not find its own record').toBe(0);
+    // And the main loop is unaffected by it, which is the other half of the key.
+    await handlers.get('turn.complete')!(engine.$, {}, () => 'NEXT');
+    expect(engine.compactRequested).toBe(1);
   });
 
   it('does not ask again on the turn straight after handing over', async () => {
