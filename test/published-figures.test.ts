@@ -30,11 +30,22 @@ const results = read('eval/RESULTS.md');
 const snapshot = read('eval/SNAPSHOT.md');
 
 /** `logistic (features)   0.905  0.078  0.684  0.944  0.044   35.4%` */
-function scorerRow(name: string): { mean: string; sd: string; min: string; ece: string; drop: string } {
+/**
+ * `logistic (features)   0.905  0.078  0.684  0.944  0.044   0.044     35.4%`
+ *
+ * Positional, and therefore fragile: adding the `ECE(T)` column shifted `drop`
+ * one place and this test began asserting that README quotes an ECE as a drop
+ * share. That is the failure working — the column moved and something said so —
+ * but it is worth naming, because a column added at the END would have moved
+ * nothing and been bound by nothing.
+ */
+function scorerRow(name: string): {
+  mean: string; sd: string; min: string; ece: string; eceT: string; drop: string;
+} {
   const line = results.split('\n').find((l) => l.trimStart().startsWith(name));
   if (!line) throw new Error(`no row for ${name} in eval/RESULTS.md`);
-  const [mean, sd, min, , ece, drop] = line.slice(name.length).trim().split(/\s+/);
-  return { mean: mean!, sd: sd!, min: min!, ece: ece!, drop: drop! };
+  const [mean, sd, min, , ece, eceT, drop] = line.slice(name.length).trim().split(/\s+/);
+  return { mean: mean!, sd: sd!, min: min!, ece: ece!, eceT: eceT!, drop: drop! };
 }
 
 /** `budget 0.5, floor 0.10   42.5%  12  2  84.6%  87.5%` */
@@ -128,6 +139,29 @@ describe('published figures match eval/RESULTS.md', () => {
       });
     }
   }
+
+  /**
+   * The calibration column the model was condemned by, and its own self-check.
+   *
+   * `ECE` against Laya measured a step this project never ran — the vendor's
+   * guide asks for a temperature refit on your own labels and warns that
+   * `multilingual` ships at 1.0. `ECE(T)` is that step. Two things have to stay
+   * true or the column is decoration again: it has to MOVE where the guide said
+   * it would, and it has to leave the ranking columns alone.
+   */
+  it('calibrating the uncalibrated checkpoint actually changes its error', () => {
+    const uncalibrated = scorerRow('laya multilingual/reproducible');
+    expect(Number(uncalibrated.eceT),
+      'temperature scaling should cut multilingual\'s calibration error sharply')
+      .toBeLessThan(Number(uncalibrated.ece) - 0.1);
+  });
+
+  it('leaves the fitted scorer, and therefore the argument, untouched', () => {
+    // Already fitted by maximum likelihood on the same sessions, so a
+    // temperature on top should find ~1. If this ever moves, the arithmetic is
+    // wrong, not the model.
+    expect(logistic.eceT).toBe(logistic.ece);
+  });
 
   // The blocks that drifted while this test watched the other two. Both are
   // generated into eval/RESULTS.md, which is committed, so this runs on a runner

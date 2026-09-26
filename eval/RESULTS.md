@@ -24,19 +24,24 @@ nowhere near its centre.
 corpus (fixture, 1063 of 2239 rows scored by every config), laya answers (fixture): 1063 calls, 75 positives, 18 sessions
 10 grouped splits, 30% of sessions held out each time
 
-scorer                             AUC mean     sd    min    max    ECE  drop@90%
----------------------------------------------------------------------------------
-logistic (features)                   0.905  0.078  0.684  0.944  0.044     35.4%
-output size only                      0.878  0.010  0.855  0.890  0.069     11.9%
-laya typed-decisions/direct           0.719  0.026  0.666  0.754  0.413     12.1%
-laya multilingual/direct              0.667  0.023  0.638  0.713  0.588      4.5%
-laya english/entailment               0.625  0.016  0.602  0.658  0.417     18.0%
-laya multilingual/reproducible        0.610  0.016  0.594  0.632  0.634      2.5%
-laya multilingual/entailment          0.604  0.015  0.578  0.622  0.642      3.1%
-laya english/reproducible             0.539  0.016  0.521  0.566  0.380      4.1%
-laya english/direct                   0.480  0.012  0.462  0.502  0.445     10.1%
-laya typed-decisions/reproducible     0.419  0.025  0.393  0.470  0.382      8.2%
-laya typed-decisions/entailment       0.416  0.023  0.379  0.472  0.428      5.2%
+scorer                             AUC mean     sd    min    max    ECE  ECE(T)  drop@90%
+-----------------------------------------------------------------------------------------
+logistic (features)                   0.905  0.078  0.684  0.944  0.044   0.044     35.4%
+output size only                      0.878  0.010  0.855  0.890  0.069   0.123     11.9%
+laya typed-decisions/direct           0.719  0.026  0.666  0.754  0.413   0.423     12.1%
+laya multilingual/direct              0.667  0.023  0.638  0.713  0.588   0.435      4.5%
+laya english/entailment               0.625  0.016  0.602  0.658  0.417   0.424     18.0%
+laya multilingual/reproducible        0.610  0.016  0.594  0.632  0.634   0.441      2.5%
+laya multilingual/entailment          0.604  0.015  0.578  0.622  0.642   0.442      3.1%
+laya english/reproducible             0.539  0.016  0.521  0.566  0.380   0.414      4.1%
+laya english/direct                   0.480  0.012  0.462  0.502  0.445   0.425     10.1%
+laya typed-decisions/reproducible     0.419  0.025  0.393  0.470  0.382   0.277      8.2%
+laya typed-decisions/entailment       0.416  0.023  0.379  0.472  0.428   0.431      5.2%
+
+ECE(T) is ECE after temperature scaling fitted on each split's own training
+sessions — the calibration step the model's integration guide asks for and this
+project never ran. AUC and drop@90% are unchanged by it, and cannot change: the
+transform is monotone and both columns are rank-based.
 
 paired vs best laya (typed-decisions/direct):
   logistic - laya AUC: mean +0.186 (sd 0.062, range 0.018 to 0.227)
@@ -45,6 +50,27 @@ paired vs best laya (typed-decisions/direct):
 
 features: 13 (tool=Read, tool=Bash, tool=Edit|Write, ...)
 ```
+
+The `ECE` column used to run without its companion, and it was not a fair
+measurement. The model's own integration guide says to refit a temperature on
+your own labels before trusting its probabilities, and warns that the
+`multilingual` checkpoint ships uncalibrated at 1.0. This project never ran
+that step, and then published a calibration error against the model as though it
+were a property of the model. `ECE(T)` is the same column with the step run —
+one temperature per scorer, fitted on each split's own training sessions, and
+every scorer gets one, including this one.
+
+It matters most where the guide said it would: the `multilingual` rows fall from
+about 0.6 to about 0.44. It changes nothing for the scorer that ships, whose
+0.044 is already the product of a maximum-likelihood fit on the same sessions —
+a temperature on top finds ~1 and moves it not at all, which is the check that
+the arithmetic is right.
+
+And it cannot touch the result this table is actually about. Temperature scaling
+is strictly monotone in the probability, while AUC and `drop@90%` are rank-based
+— `droppableAt` sweeps the score's own values as candidate thresholds — so both
+columns are identical before and after, by construction rather than by luck.
+Correcting the unfair column leaves the ranking argument exactly where it was.
 
 ## Does the neural model know anything the coefficients do not? — `eval/teacher.ts`
 

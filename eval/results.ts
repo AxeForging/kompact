@@ -115,6 +115,27 @@ nowhere near its centre.
 ${repeat}
 \`\`\`
 
+The \`ECE\` column used to run without its companion, and it was not a fair
+measurement. The model's own integration guide says to refit a temperature on
+your own labels before trusting its probabilities, and warns that the
+\`multilingual\` checkpoint ships uncalibrated at 1.0. This project never ran
+that step, and then published a calibration error against the model as though it
+were a property of the model. \`ECE(T)\` is the same column with the step run —
+one temperature per scorer, fitted on each split's own training sessions, and
+every scorer gets one, including this one.
+
+It matters most where the guide said it would: the \`multilingual\` rows fall from
+about 0.6 to about 0.44. It changes nothing for the scorer that ships, whose
+0.044 is already the product of a maximum-likelihood fit on the same sessions —
+a temperature on top finds ~1 and moves it not at all, which is the check that
+the arithmetic is right.
+
+And it cannot touch the result this table is actually about. Temperature scaling
+is strictly monotone in the probability, while AUC and \`drop@90%\` are rank-based
+— \`droppableAt\` sweeps the score's own values as candidate thresholds — so both
+columns are identical before and after, by construction rather than by luck.
+Correcting the unfair column leaves the ranking argument exactly where it was.
+
 ## Does the neural model know anything the coefficients do not? — \`eval/teacher.ts\`
 
 The table above asks which scorer ranks better and answers: this one. That is the

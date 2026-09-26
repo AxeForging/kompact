@@ -51,7 +51,50 @@ const layaConfigs = Object.keys(cache)
   .filter((key) => rows.filter((r) => cache[key]![rowKey(r)]).length >= rows.length * 0.95)
   .sort();
 
-interface Run { auc: number; ece: number; drop90: number }
+/**
+ * Temperature scaling, the vendor's own calibration recipe, done on our side.
+ *
+ * Their integration guide says to refit `agent.temperature` on your own labels
+ * before trusting the numbers, and warns that the `multilingual` checkpoint
+ * ships at temperature 1.0. Nothing in this repo ever did it, and we published
+ * an ECE column against Laya anyway — a measurement of a step we skipped,
+ * presented as a property of the model.
+ *
+ * It does not need a sidecar. For a binary `noul`, temperature scaling is
+ * `p^(1/T) / (p^(1/T) + (1-p)^(1/T))`, so it can be fitted on the cached
+ * probabilities from the train split and applied to the test split, and a
+ * stranger with no GPU reproduces it from the committed fixture.
+ *
+ * Note what it cannot change, and say so rather than letting a reader wonder:
+ * that transform is strictly monotone in `p`, and both AUC and `droppableAt`
+ * are rank-based (`droppableAt` sweeps the score's own values as thresholds), so
+ * the AUC and drop@90% columns are identical before and after by construction.
+ * Calibration was never what the ranking result rested on.
+ */
+function applyTemperature(p: number, t: number): number {
+  const clamped = Math.min(1 - 1e-9, Math.max(1e-9, p));
+  const a = clamped ** (1 / t);
+  const b = (1 - clamped) ** (1 / t);
+  return a / (a + b);
+}
+
+/** One-dimensional grid search on negative log-likelihood. 60 points is plenty. */
+function fitTemperature(scores: readonly number[], labels: readonly boolean[]): number {
+  let best = 1;
+  let bestNll = Infinity;
+  for (let i = 0; i <= 60; i += 1) {
+    const t = 0.25 * (20 / 0.25) ** (i / 60);
+    let nll = 0;
+    for (const [index, raw] of scores.entries()) {
+      const q = Math.min(1 - 1e-12, Math.max(1e-12, applyTemperature(raw, t)));
+      nll -= labels[index] ? Math.log(q) : Math.log(1 - q);
+    }
+    if (nll < bestNll) { bestNll = nll; best = t; }
+  }
+  return best;
+}
+
+interface Run { auc: number; ece: number; eceT: number; drop90: number }
 const results = new Map<string, Run[]>();
 const record = (name: string, run: Run): void => {
   const list = results.get(name) ?? [];
@@ -75,22 +118,40 @@ while (iteration < ITERATIONS && attempts < ITERATIONS * 50) {
 
   const y = test.map((r) => r.result_needed);
   const chars = test.map((r) => r.output_chars);
-  const scoreRun = (scores: number[]): Run => {
+  const scoreRun = (scores: number[], trainScores?: number[], trainY?: boolean[]): Run => {
     const at90 = droppableAt(scores, y, chars, 0.9);
     // Calibration, not just ranking: the shipped policy compares a probability
     // to a floor, so a scorer that ranks well and is calibrated badly is not
     // usable at a fixed threshold. This column is the evidence for saying so.
+    //
+    // ECE(T) is the same column after the vendor's calibration recipe, fitted on
+    // THIS split's training sessions only, so a badly calibrated scorer is not
+    // condemned for a step nobody ran on its behalf.
+    const t = trainScores && trainY ? fitTemperature(trainScores, trainY) : 1;
     return {
       auc: auc(scores, y), ece: ece(scores, y),
+      eceT: ece(scores.map((p) => applyTemperature(p, t)), y),
       drop90: (100 * at90.droppedChars) / Math.max(1, at90.totalChars),
     };
   };
 
+  // Every scorer gets the same calibration chance, or the column would be an
+  // accusation rather than a measurement. The logistic is already fitted by
+  // maximum likelihood on these very sessions, so a temperature fitted on top
+  // should find ~1 and change nothing; that it does is the check.
   const w = fit(train.map((r) => x.get(rowKey(r))!), train.map((r) => (r.result_needed ? 1 : 0)));
-  record('logistic (features)', scoreRun(test.map((r) => sigmoid(dot(x.get(rowKey(r))!, w)))));
-  record('output size only', scoreRun(test.map((r) => Math.min(1, r.output_chars / 50_000))));
+  const trainY = train.map((r) => r.result_needed);
+  record('logistic (features)', scoreRun(
+    test.map((r) => sigmoid(dot(x.get(rowKey(r))!, w))),
+    train.map((r) => sigmoid(dot(x.get(rowKey(r))!, w))), trainY));
+  record('output size only', scoreRun(
+    test.map((r) => Math.min(1, r.output_chars / 50_000)),
+    train.map((r) => Math.min(1, r.output_chars / 50_000)), trainY));
   for (const key of layaConfigs) {
-    record(`laya ${key}`, scoreRun(test.map((r) => cache[key]![rowKey(r)]?.result ?? 0.5)));
+    record(`laya ${key}`, scoreRun(
+      test.map((r) => cache[key]![rowKey(r)]?.result ?? 0.5),
+      train.map((r) => cache[key]![rowKey(r)]?.result ?? 0.5), trainY,
+    ));
   }
 }
 
@@ -104,22 +165,26 @@ function stats(values: number[]): { mean: number; sd: number; lo: number; hi: nu
 console.log(`corpus (${from}), laya answers (${scoresFrom}): ${rows.length} calls, ${rows.filter((r) => r.result_needed).length} positives, ${sessions.length} sessions`);
 console.log(`${iteration} grouped splits, ${Math.round(100 * TEST_FRAC)}% of sessions held out each time\n`);
 
-const header = `${'scorer'.padEnd(34)}${'AUC mean'.padStart(9)}${'sd'.padStart(7)}${'min'.padStart(7)}${'max'.padStart(7)}${'ECE'.padStart(7)}${'drop@90%'.padStart(10)}`;
+const header = `${'scorer'.padEnd(34)}${'AUC mean'.padStart(9)}${'sd'.padStart(7)}${'min'.padStart(7)}${'max'.padStart(7)}${'ECE'.padStart(7)}${'ECE(T)'.padStart(8)}${'drop@90%'.padStart(10)}`;
 console.log(header);
 console.log('-'.repeat(header.length));
 const ranked = [...results.entries()]
   .map(([name, runs]) => ({
     name, a: stats(runs.map((r) => r.auc)), e: stats(runs.map((r) => r.ece)),
-    d: stats(runs.map((r) => r.drop90)),
+    t: stats(runs.map((r) => r.eceT)), d: stats(runs.map((r) => r.drop90)),
   }))
   .sort((p, q) => q.a.mean - p.a.mean);
-for (const { name, a, e, d } of ranked) {
+for (const { name, a, e, t, d } of ranked) {
   console.log(
     `${name.padEnd(34)}${a.mean.toFixed(3).padStart(9)}${a.sd.toFixed(3).padStart(7)}` +
     `${a.lo.toFixed(3).padStart(7)}${a.hi.toFixed(3).padStart(7)}${e.mean.toFixed(3).padStart(7)}` +
-    `${d.mean.toFixed(1).padStart(9)}%`,
+    `${t.mean.toFixed(3).padStart(8)}${d.mean.toFixed(1).padStart(9)}%`,
   );
 }
+console.log('\nECE(T) is ECE after temperature scaling fitted on each split\'s own training');
+console.log('sessions — the calibration step the model\'s integration guide asks for and this');
+console.log('project never ran. AUC and drop@90% are unchanged by it, and cannot change: the');
+console.log('transform is monotone and both columns are rank-based.');
 
 // The paired question: does the free model beat the best model on the SAME split
 // every time, or only on average? A win rate below 10/10 means it is not settled.
