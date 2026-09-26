@@ -1,0 +1,72 @@
+{
+  "sessions": 114,
+  "flowSignatures": 3143,
+  "crossSessionFlows": 34,
+  "crossSessionPct": 1.1,
+  "reliableFlows": 25,
+  "reliablePct": 0.8,
+  "currentTopNPrecisionCrossSession": 10,
+  "currentTopNPrecisionReliable": 5,
+  "topReliable": [
+    {
+      "sig": "Read → Edit → Edit",
+      "kind": "sequence",
+      "sessions": 3,
+      "n": 22
+    },
+    {
+      "sig": "Read → Read → Edit",
+      "kind": "sequence",
+      "sessions": 2,
+      "n": 14
+    },
+    {
+      "sig": "Write → Write → Read",
+      "kind": "sequence",
+      "sessions": 2,
+      "n": 11
+    },
+    {
+      "sig": "Read → Write → Write",
+      "kind": "sequence",
+      "sessions": 2,
+      "n": 10
+    },
+    {
+      "sig": "Bash(grep -n) → Bash(sed -n) → Edit",
+      "kind": "sequence",
+      "sessions": 2,
+      "n": 7
+    },
+    {
+      "sig": "Bash(python3 -c) → Bash(sed -n) → Bash(sed -n)",
+      "kind": "sequence",
+      "sessions": 2,
+      "n": 6
+    },
+    {
+      "sig": "Edit → Write → Write",
+      "kind": "sequence",
+      "sessions": 3,
+      "n": 6
+    },
+    {
+      "sig": "Read → Read → Write",
+      "kind": "sequence",
+      "sessions": 2,
+      "n": 6
+    },
+    {
+      "sig": "Write → ToolSearch → ExitPlanMode",
+      "kind": "sequence",
+      "sessions": 2,
+      "n": 5
+    },
+    {
+      "sig": "Write → Write → ExitPlanMode",
+      "kind": "sequence",
+      "sessions": 2,
+      "n": 5
+    }
+  ]
+}

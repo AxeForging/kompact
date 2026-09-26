@@ -178,8 +178,66 @@ dropped every non-reused sentence would free ${px.oracleDroppablePctOfProse}% of
 still only **~${pxOracleWindow}% of the window**, because prose is a small slice of it. A learned
 compressor (LLMLingua-2, Selective Context) cannot exceed that bound, so it cannot
 change the decision: on this corpus, the tokens are in tool output, and compacting
-prose — model-free or not — is not worth adding. kompact stays mechanical and hands
+prose — model-free or not — is not worth adding. A direct benchmark confirms the bound: LLMLingua-2 and a GPT-2
+self-information compressor both rank at chance on this label (AUC 0.51 and 0.49),
+below model-free's 0.594 and below length, at 335 ms and 41 ms per sentence on CPU with
+a multi-GB dependency — no accuracy gained, large cost added. kompact stays mechanical and hands
 the prose-only residual to the engine's summary.`;
+
+// Study 4 (reliable skill proposals for full flows): reads its committed fixture.
+const fp = JSON.parse(
+  readFileSync(join(here, 'fixtures', 'flow-proposals.json'), 'utf8'),
+) as {
+  sessions: number; flowSignatures: number; crossSessionFlows: number; crossSessionPct: number;
+  reliableFlows: number; reliablePct: number; currentTopNPrecisionCrossSession: number;
+  currentTopNPrecisionReliable: number; topReliable: { sig: string; kind: string; sessions: number; n: number }[];
+};
+const fpRows = fp.topReliable.slice(0, 8)
+  .map((r) => `  ${(`[${r.kind}]`).padEnd(11)}${r.sig.slice(0, 52).padEnd(54)}${r.sessions} sess, ${r.n}x`).join('\n');
+const flowSection = `
+## Can we reliably propose skills for full flows? — \`eval/flow-proposals.ts\`
+
+A "full flow" is a re-usable multi-step tool sequence (\`Read → Edit → test\`), plus
+the session-start \`orient\` reads and the pre-handback \`verify\` checks. The ledger
+marks *whether a proposed skill is worth having* as not verified; this measures the
+answerable part: of the flows kompact would surface, how many are **reliable** — a
+habit across ≥ 2 sessions, and actionable rather than pure inspection. Flows are
+mined exactly as the recorder mines them (\`hooks/kompact-signals.ts\`).
+
+\`\`\`
+${fp.sessions} sessions, ${fp.flowSignatures} distinct flow shapes
+recur across ≥ 2 sessions:   ${fp.crossSessionFlows}  (${fp.crossSessionPct}%)   — a habit, not one afternoon
+reliable (≥ 2 sess + actionable): ${fp.reliableFlows}  (${fp.reliablePct}%)
+current ranking (by saved), top 20:  ${fp.currentTopNPrecisionCrossSession}% cross-session, ${fp.currentTopNPrecisionReliable}% reliable
+\`\`\`
+
+Two things are true at once. The recurrence signal is **sparse**: only ${fp.crossSessionPct}% of
+flow shapes are seen in more than one session, so most are one-off and cannot be
+proposed as habits at all. And the current ranking — modelled \`saved\`, what
+\`propose.ts\` shows — is **unreliable**: ${fp.currentTopNPrecisionReliable}% of its top 20 are reliable, the rest
+being single-session or inspection noise, exactly the failure the ledger warned of.
+
+A gate on **(≥ 2 sessions AND actionable)** fixes the precision — it isolates the
+${fp.reliableFlows} flows that are habits and do something, e.g.:
+
+\`\`\`
+${fpRows}
+\`\`\`
+
+So proposals *can* be made reliable, but the offer is small and does **not** compound
+with raw usage. Replaying the full history rather than the recent sessions moved the
+cross-session count by one (from 33 to ${fp.crossSessionFlows}): 150+ varied sessions surfaced almost no
+new recurring flow, because a workflow does not repeat across unrelated tasks. All ${fp.reliableFlows}
+reliable flows come from a tight cluster of similar recent work, and the accumulation
+curve (--curve) is step-like — flat, then a jump when several near-identical sessions
+land — not a smooth climb. On this corpus much of that cluster is the tooling of the
+sessions that built these very studies, so the organic signal is weaker still.
+
+The honest reading: the feature compounds with sustained work in one domain, not with
+session count, and most of what recurs is generic editing. **Still not verified** (per
+the ledger): that encoding any of these as a skill saves time — recurrence is measured,
+payoff is not. The shippable part is the gate; the next test is whether the same flows
+recur in a second operator's domain work, which one machine cannot answer.`;
 const cap = maybe('cap.ts');
 const mass = maybe('mass.ts');
 const inputs = maybe('inputs.ts');
@@ -353,7 +411,7 @@ anything. \`applyDecisions\` never touches prose, so what kompact leaves behind 
 verbatim tool calls and the user's and assistant's own words — not a narrative.
 \`maxPasses\` is the backstop for that, and its value is a judgement: the floor
 would allow more.
-${proseSection}${proseExtractiveSection}
+${proseSection}${proseExtractiveSection}${flowSection}
 `;
 
 const snapshotBody = `# Snapshot — one machine's own transcripts

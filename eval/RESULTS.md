@@ -386,5 +386,58 @@ dropped every non-reused sentence would free 80.8% of prose characters —
 still only **~3.17% of the window**, because prose is a small slice of it. A learned
 compressor (LLMLingua-2, Selective Context) cannot exceed that bound, so it cannot
 change the decision: on this corpus, the tokens are in tool output, and compacting
-prose — model-free or not — is not worth adding. kompact stays mechanical and hands
+prose — model-free or not — is not worth adding. A direct benchmark confirms the bound: LLMLingua-2 and a GPT-2
+self-information compressor both rank at chance on this label (AUC 0.51 and 0.49),
+below model-free's 0.594 and below length, at 335 ms and 41 ms per sentence on CPU with
+a multi-GB dependency — no accuracy gained, large cost added. kompact stays mechanical and hands
 the prose-only residual to the engine's summary.
+## Can we reliably propose skills for full flows? — `eval/flow-proposals.ts`
+
+A "full flow" is a re-usable multi-step tool sequence (`Read → Edit → test`), plus
+the session-start `orient` reads and the pre-handback `verify` checks. The ledger
+marks *whether a proposed skill is worth having* as not verified; this measures the
+answerable part: of the flows kompact would surface, how many are **reliable** — a
+habit across ≥ 2 sessions, and actionable rather than pure inspection. Flows are
+mined exactly as the recorder mines them (`hooks/kompact-signals.ts`).
+
+```
+114 sessions, 3143 distinct flow shapes
+recur across ≥ 2 sessions:   34  (1.1%)   — a habit, not one afternoon
+reliable (≥ 2 sess + actionable): 25  (0.8%)
+current ranking (by saved), top 20:  10% cross-session, 5% reliable
+```
+
+Two things are true at once. The recurrence signal is **sparse**: only 1.1% of
+flow shapes are seen in more than one session, so most are one-off and cannot be
+proposed as habits at all. And the current ranking — modelled `saved`, what
+`propose.ts` shows — is **unreliable**: 5% of its top 20 are reliable, the rest
+being single-session or inspection noise, exactly the failure the ledger warned of.
+
+A gate on **(≥ 2 sessions AND actionable)** fixes the precision — it isolates the
+25 flows that are habits and do something, e.g.:
+
+```
+  [sequence] Read → Edit → Edit                                    3 sess, 22x
+  [sequence] Read → Read → Edit                                    2 sess, 14x
+  [sequence] Write → Write → Read                                  2 sess, 11x
+  [sequence] Read → Write → Write                                  2 sess, 10x
+  [sequence] Bash(grep -n) → Bash(sed -n) → Edit                   2 sess, 7x
+  [sequence] Bash(python3 -c) → Bash(sed -n) → Bash(sed -n)        2 sess, 6x
+  [sequence] Edit → Write → Write                                  3 sess, 6x
+  [sequence] Read → Read → Write                                   2 sess, 6x
+```
+
+So proposals *can* be made reliable, but the offer is small and does **not** compound
+with raw usage. Replaying the full history rather than the recent sessions moved the
+cross-session count by one (from 33 to 34): 150+ varied sessions surfaced almost no
+new recurring flow, because a workflow does not repeat across unrelated tasks. All 25
+reliable flows come from a tight cluster of similar recent work, and the accumulation
+curve (--curve) is step-like — flat, then a jump when several near-identical sessions
+land — not a smooth climb. On this corpus much of that cluster is the tooling of the
+sessions that built these very studies, so the organic signal is weaker still.
+
+The honest reading: the feature compounds with sustained work in one domain, not with
+session count, and most of what recurs is generic editing. **Still not verified** (per
+the ledger): that encoding any of these as a skill saves time — recurrence is measured,
+payoff is not. The shippable part is the gate; the next test is whether the same flows
+recur in a second operator's domain work, which one machine cannot answer.
