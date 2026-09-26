@@ -478,16 +478,63 @@
 
 <section class="wrap" id="signals" aria-labelledby="signals-h">
   <p class="rubric"><span class="rubric__n">05</span>What you repeat</p>
-  <h2 id="signals-h">The same reading of every call answers a second question.</h2>
+  <h2 id="signals-h">The same file, arriving again.</h2>
   <p class="lede">
-    Deciding what to keep means reading every tool call. The same reading says what you do over and
-    over, which is a skill nobody writes because noticing it is the hard part.
+    Deciding what to keep means reading every tool call. The same reading says what your sessions
+    spend on rediscovering things they already knew.
   </p>
-  <p class="fine">
-    The plugin counts the shapes it sees, on your machine, and <code>npm&nbsp;run&nbsp;propose</code>
-    ranks them and drafts a <code>SKILL.md</code> for any row you pick. Whether those proposals are
-    any good is <a href="evidence.html#checked">not established</a>, and below is what it found
-    including the part that does not flatter it.
+
+  <!-- bill:render -->
+  <figure class="bill" id="bill">
+    <p class="bill__lead"><b>128</b> of the <b>602</b> files read
+      were read more than once. Between them: <b>1,088</b> reads and
+      <b>619k</b> tokens, <b>91.1%</b> of every token this
+      machine spent reading a file.</p>
+    <ol class="bill__list">
+      <li class="bill__row" style="--i:0"><span class="bill__what"><code>docs/index.html</code></span><span class="bill__track"><span class="bill__fill" style="--w:1.0000"></span></span><span class="bill__tok">217k</span><span class="bill__n">233 reads &#183; 5 sess</span></li>
+      <li class="bill__row" style="--i:1"><span class="bill__what"><code>waveshare7b_3D/build_7b_case.py</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.1449"></span></span><span class="bill__tok">31k</span><span class="bill__n">102 reads &#183; 1 sess</span></li>
+      <li class="bill__row" style="--i:2"><span class="bill__what"><code>eval/RESULTS.md</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.1431"></span></span><span class="bill__tok">31k</span><span class="bill__n">35 reads &#183; 5 sess</span></li>
+      <li class="bill__row" style="--i:3"><span class="bill__what"><code>test/published-figures.test.ts</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.1094"></span></span><span class="bill__tok">24k</span><span class="bill__n">43 reads &#183; 3 sess</span></li>
+      <li class="bill__row" style="--i:4"><span class="bill__what"><code>README.md</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0925"></span></span><span class="bill__tok">20k</span><span class="bill__n">40 reads &#183; 2 sess</span></li>
+      <li class="bill__row" style="--i:5"><span class="bill__what"><code>src/compact.ts</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0788"></span></span><span class="bill__tok">17k</span><span class="bill__n">36 reads &#183; 2 sess</span></li>
+      <li class="bill__row" style="--i:6"><span class="bill__what"><code>plans/curried-cooking-abelson.md</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0592"></span></span><span class="bill__tok">13k</span><span class="bill__n">47 reads &#183; 1 sess</span></li>
+      <li class="bill__row" style="--i:7"><span class="bill__what"><code>laya-compact/.impeccable.md</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0557"></span></span><span class="bill__tok">12k</span><span class="bill__n">3 reads &#183; 2 sess</span></li>
+      <li class="bill__row" style="--i:8"><span class="bill__what"><code>eval/render-check.ts</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0462"></span></span><span class="bill__tok">10k</span><span class="bill__n">19 reads &#183; 4 sess</span></li>
+      <li class="bill__row" style="--i:9"><span class="bill__what"><code>index.html</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0449"></span></span><span class="bill__tok">10k</span><span class="bill__n">5 reads &#183; 2 sess</span></li>
+      <li class="bill__row" style="--i:10"><span class="bill__what"><code>src/features.ts</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0438"></span></span><span class="bill__tok">10k</span><span class="bill__n">8 reads &#183; 4 sess</span></li>
+      <li class="bill__row" style="--i:11"><span class="bill__what"><code>.impeccable.md</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0430"></span></span><span class="bill__tok">9k</span><span class="bill__n">7 reads &#183; 3 sess</span></li>
+      <li class="bill__row" style="--i:12"><span class="bill__what"><code>types/claude-code.d.ts</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0417"></span></span><span class="bill__tok">9k</span><span class="bill__n">15 reads &#183; 1 sess</span></li>
+      <li class="bill__row" style="--i:13"><span class="bill__what"><code>hooks/laya-compact.ts</code></span><span class="bill__track"><span class="bill__fill" style="--w:0.0398"></span></span><span class="bill__tok">9k</span><span class="bill__n">17 reads &#183; 3 sess</span></li>
+    </ol>
+    <figcaption class="caption">The files rediscovered most, over 8 sessions and
+      4,659 tool calls on one machine. Each read is the file arriving in context again.
+      This is what the repetition <b>cost</b>, counted from the transcripts &#8212; not what
+      anything would save: nothing here has measured whether writing a skill, or a line in
+      <code>CLAUDE.md</code>, changes a single one of these reads, and a skill does not stop you
+      needing to read a file. One operator&#8217;s transcripts, and a large share of the top row is
+      this site being edited. <code>bun eval/repetition.ts</code> runs it on yours.</figcaption>
+  </figure>
+  <!-- /bill:render -->
+
+  <!-- clock:render -->
+  <p class="fine" id="clock">
+    Repetition is <b>41%</b> of the tokens and
+    <b>19%</b> of the time. The time is the
+    smaller half and the less fixable: of 374 min of waiting across those sessions,
+    327 min was a tool running (4,576 calls),
+    38 min was a person deciding (33 calls),
+    10 min was a subagent working (50 calls). Gaps longer than
+    120&#8239;s are counted as 120&#8239;s, because a result arriving an
+    hour later is a session left open rather than a tool that ran for an hour.
+  </p>
+  <!-- /clock:render -->
+
+  <h3 class="ladder__h3">What this was built to find, and did not</h3>
+  <p>
+    It was built to propose skills. The plugin counts the shapes it sees, on your machine, and
+    <code>npm&nbsp;run&nbsp;propose</code> ranks them and drafts a <code>SKILL.md</code> for any row
+    you pick. On this corpus that fails, and it fails in a way worth publishing: the shapes that
+    repeat are the verbs, and the verbs are not where the cost is.
   </p>
 
   <!-- signals:render -->

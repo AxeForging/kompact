@@ -1,0 +1,122 @@
+{
+  "sessions": 8,
+  "calls": 4659,
+  "tokens": 1349998,
+  "seconds": 22455,
+  "tailSeconds": 120,
+  "repeated": {
+    "shapes": 31,
+    "tokens": 552174,
+    "seconds": 4187
+  },
+  "files": {
+    "read": 602,
+    "reread": 128,
+    "rereads": 1088,
+    "tokens": 618683,
+    "shareOfReadTokens": 91.1,
+    "top": [
+      {
+        "path": "docs/index.html",
+        "reads": 233,
+        "sessions": 5,
+        "tokens": 216918
+      },
+      {
+        "path": "waveshare7b_3D/build_7b_case.py",
+        "reads": 102,
+        "sessions": 1,
+        "tokens": 31427
+      },
+      {
+        "path": "eval/RESULTS.md",
+        "reads": 35,
+        "sessions": 5,
+        "tokens": 31051
+      },
+      {
+        "path": "test/published-figures.test.ts",
+        "reads": 43,
+        "sessions": 3,
+        "tokens": 23731
+      },
+      {
+        "path": "README.md",
+        "reads": 40,
+        "sessions": 2,
+        "tokens": 20057
+      },
+      {
+        "path": "src/compact.ts",
+        "reads": 36,
+        "sessions": 2,
+        "tokens": 17089
+      },
+      {
+        "path": "plans/curried-cooking-abelson.md",
+        "reads": 47,
+        "sessions": 1,
+        "tokens": 12833
+      },
+      {
+        "path": "laya-compact/.impeccable.md",
+        "reads": 3,
+        "sessions": 2,
+        "tokens": 12090
+      },
+      {
+        "path": "eval/render-check.ts",
+        "reads": 19,
+        "sessions": 4,
+        "tokens": 10027
+      },
+      {
+        "path": "index.html",
+        "reads": 5,
+        "sessions": 2,
+        "tokens": 9749
+      },
+      {
+        "path": "src/features.ts",
+        "reads": 8,
+        "sessions": 4,
+        "tokens": 9508
+      },
+      {
+        "path": ".impeccable.md",
+        "reads": 7,
+        "sessions": 3,
+        "tokens": 9320
+      },
+      {
+        "path": "types/claude-code.d.ts",
+        "reads": 15,
+        "sessions": 1,
+        "tokens": 9047
+      },
+      {
+        "path": "hooks/laya-compact.ts",
+        "reads": 17,
+        "sessions": 3,
+        "tokens": 8624
+      }
+    ]
+  },
+  "gates": [
+    {
+      "gate": "machine",
+      "calls": 4576,
+      "seconds": 19615
+    },
+    {
+      "gate": "human",
+      "calls": 33,
+      "seconds": 2263
+    },
+    {
+      "gate": "delegated",
+      "calls": 50,
+      "seconds": 577
+    }
+  ]
+}

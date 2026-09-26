@@ -1006,6 +1006,48 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
   margin:0; font-size: var(--text-sm); color: var(--ink-2); max-width: 46ch;
 }
 
+/* ── The context bill ─────────────────────────────────────────────────────
+   One row per file, the bar in tokens. The same drain-and-fill idiom as the
+   session bars and the floor curve, because they are all answering "what did
+   this cost" and a reader should not have to learn a third grammar. */
+.bill{ margin: var(--space-lg) 0 var(--space-lg); max-width: 80ch; }
+.bill__lead{
+  margin:0 0 var(--space-md); font-family: var(--sans); font-size: var(--text-sm);
+  color: var(--ink-2); max-width: 62ch;
+}
+.bill__lead b{ color: var(--ink); font-variant-numeric: tabular-nums; }
+.bill__list{ list-style:none; margin:0 0 var(--space-sm); padding:0; }
+.bill__row{
+  display:grid; grid-template-columns: 30ch minmax(0,1fr) 6ch 15ch; gap: var(--space-md);
+  align-items:center; padding: 5px 0;
+  font-family: var(--sans); font-size: var(--text-xs); color: var(--ink-3);
+}
+.bill__row + .bill__row{ border-top:1px solid var(--rule); }
+.bill__what{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.bill__what code{ font-size: inherit; color: var(--ink-2); background:none; padding:0; border:0; }
+.bill__track{ position:relative; height:14px; background: var(--paper-sunk); min-width:0; }
+.bill__fill{
+  position:absolute; inset-block:0; left:0; width:100%; background: var(--ink-2);
+  transform-origin:left center; transform: scaleX(var(--w, 0));
+}
+/* The top row is the one a reader is meant to feel, so it carries the accent. */
+.bill__row:first-child .bill__fill{ background: var(--accent); }
+.bill__tok{ text-align:right; font-weight:600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.bill__n{ font-variant-numeric: tabular-nums; }
+.bill figcaption{ margin-top:0; }
+@media (prefers-reduced-motion: no-preference){
+  .bill__fill{ transition: transform 520ms cubic-bezier(0.16,1,0.3,1) calc(var(--i) * 70ms); }
+  .bill.reveal--armed .bill__fill{ transform: scaleX(0); }
+}
+@media (max-width: 720px){
+  .bill__row{
+    grid-template-columns: minmax(0,1fr) 6ch; gap: var(--space-2xs) var(--space-md);
+    grid-template-areas: "what tok" "track track" "n n";
+  }
+  .bill__what{ grid-area: what; } .bill__tok{ grid-area: tok; }
+  .bill__track{ grid-area: track; } .bill__n{ grid-area: n; }
+}
+
 /* ── The study page: the grid, the headroom rail, the floor curve ─────────
    Only docs/trigger.html uses these. Kept in the one stylesheet because the
    study page is the same typeset document as the rest of the site and a second
