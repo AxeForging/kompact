@@ -16,7 +16,19 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const markdown = readFileSync(join(here, 'RESULTS.md'), 'utf8');
+/**
+ * Both halves of the evidence, in order.
+ *
+ * `RESULTS.md` is reproducible and CI gates it; `SNAPSHOT.md` is one machine's
+ * own transcripts and nothing regenerates it by accident. They were one file
+ * until mixing them let twelve published figures go stale at once — but a
+ * reader following "the full evaluation" wants all of it, so the page carries
+ * both with the snapshot's own header saying which is which.
+ */
+const markdown = [
+  readFileSync(join(here, 'RESULTS.md'), 'utf8'),
+  readFileSync(join(here, 'SNAPSHOT.md'), 'utf8').replace(/^# /, '# '),
+].join('\n\n');
 
 const escape = (text: string): string =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

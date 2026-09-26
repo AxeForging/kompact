@@ -264,7 +264,20 @@ console.log(`\nratio seen per pass: ${everyPass.map((p) => ratioOf(p).toFixed(2)
  * hand. The animation replays what is already rendered.
  */
 if (PUBLISH) {
-  const { writeFileSync, readFileSync } = await import('node:fs');
+  /**
+   * Writes the measurement, not the markup.
+   *
+   * `--publish` used to splice `docs/index.html` straight from this machine's
+   * transcripts, which meant the newest headline figure on the page could not
+   * be regenerated anywhere else — so `npm run docs` left it alone and CI's
+   * `git diff --exit-code -- docs/` never saw it. The fixture is committed and
+   * `eval/passes-page.ts` renders from it, the same two-step contract the
+   * signals figure already uses.
+   *
+   * Only numbers travel: pass sizes, milliseconds, counts. No transcript
+   * content and no session identifiers.
+   */
+  const { writeFileSync, mkdirSync } = await import('node:fs');
   // The longest loop, which is the one the claim is about. A session that takes
   // one pass is not a ladder and would make the figure say less than the table.
   const best = [...rows].sort(
@@ -272,106 +285,37 @@ if (PUBLISH) {
   )[0];
   if (!best) throw new Error('no session looped; nothing to publish');
   const taken = best.passes.filter((pass) => pass.taken);
-  const shown = best.passes.map((pass) => ({
-    from: (100 * pass.tokensBefore) / WINDOW,
-    to: (100 * pass.tokensAfter) / WINDOW,
-    ms: Math.round(pass.ms),
-    taken: pass.taken,
-    why: pass.why,
-  }));
-  const medianMs = Math.round([...taken.map((pass) => pass.ms)].sort((a, b) => a - b)[
-    Math.floor(taken.length / 2)] ?? 0);
-  const slowest = Math.round(Math.max(...best.passes.map((pass) => pass.ms)));
-  const oldBarTakes = everyPass.filter((pass) => ratioOf(pass) >= 0.25).length;
-  const looped = rows.filter((row) => row.passes.some((pass) => pass.taken)).length;
-  const medianPp = [...taken.map((pass) => pass.pp)].sort((a, b) => a - b)[
-    Math.floor(taken.length / 2)] ?? 0;
-  const avoided = rows.reduce((n, r) => n + r.passes.filter((p) => p.taken).length, 0);
-  const ordinal = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh',
-    'eighth', 'ninth', 'tenth'][taken.length - 1] ?? `${taken.length}th`;
+  const mid = <T>(values: T[]): T | undefined => values[Math.floor(values.length / 2)];
+  const stubs: number[] = [];
+  best.passes.forEach((pass, index) => { stubs[index] = pass.stubs; });
 
-  const bar = (row: { from: number; to: number; ms: number; taken: boolean; why: string }, index: number): string => {
-    const label = row.taken ? `pass ${index + 1}` : 'hand over';
-    const why = row.why === 'floor'
-      ? `below the ${FLOOR}&#8209;point floor`
-      : `${MAX_PASSES} passes is the ceiling`;
-    const note = row.taken
-      ? `<span class="ladder__num">&#8722;${(row.from - row.to).toFixed(1)}<span class="ladder__unit">pts</span></span>` +
-        `<span class="ladder__ms">${row.ms}&#8239;ms</span>`
-      : `<span class="ladder__num ladder__num--under">&#8722;${(row.from - row.to).toFixed(1)}<span class="ladder__unit">pts</span></span>` +
-        `<span class="ladder__ms">${why}</span>`;
-    return `      <li class="ladder__row${row.taken ? '' : ' ladder__row--over'}">` +
-      `<span class="ladder__label">${label}</span>` +
-      `<span class="visually-hidden">held ${row.to.toFixed(1)}% of the window, </span>` +
-      // The bar says exactly what the two numbers beside it say, so a screen
-      // reader is read the numbers and not two empty spans.
-      `<span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:${row.to.toFixed(1)}%"></span>` +
-      `<span class="ladder__back" style="--l:${row.to.toFixed(1)}%;--w:${(row.from - row.to).toFixed(1)}%"></span></span>` +
-      note + '</li>';
+  const fixture = {
+    window: WINDOW,
+    at: AT,
+    floor: FLOOR,
+    maxPasses: MAX_PASSES,
+    messages: best.messages,
+    sessions: rows.length,
+    looped: rows.filter((row) => row.passes.some((pass) => pass.taken)).length,
+    avoided: rows.reduce((n, r) => n + r.passes.filter((p) => p.taken).length, 0),
+    passesMeasured: everyPass.length,
+    oldBarTakes: everyPass.filter((pass) => ratioOf(pass) >= 0.25).length,
+    medianMs: Math.round(mid([...taken.map((pass) => pass.ms)].sort((a, b) => a - b)) ?? 0),
+    medianPp: Number((mid([...taken.map((pass) => pass.pp)].sort((a, b) => a - b)) ?? 0).toFixed(1)),
+    slowestMs: Math.round(Math.max(...best.passes.map((pass) => pass.ms))),
+    stubShare: stubs.map((share) => Number((100 * share).toFixed(1))),
+    rows: best.passes.map((pass) => ({
+      from: Number(((100 * pass.tokensBefore) / WINDOW).toFixed(1)),
+      to: Number(((100 * pass.tokensAfter) / WINDOW).toFixed(1)),
+      ms: Math.round(pass.ms),
+      taken: pass.taken,
+      why: pass.why,
+    })),
   };
-
-  // The sentence is generated too. It carried "six" as prose beside a figure
-  // that draws however many passes the measurement found, which is exactly the
-  // kind of number this page does not let anyone type.
-  const markup = `  <p>
-    One compaction is not the product; the loop is. The engine asks at ${AT}% of the window, this
-    answers, you keep working, and it asks again. Each answer costs about
-    <span class="num val">${medianMs}&#8239;ms</span> and hands back
-    <span class="num val">${medianPp.toFixed(0)} points</span> of window &#8212; so the model
-    summary, which is a model call and rewrites your session into prose, runs after the
-    ${ordinal} of them rather than the first.
-  </p>
-  <ol class="ladder" id="ladder">\n${shown.map(bar).join('\n')}\n  </ol>
-  <p class="caption">One real session of ${best.messages.toLocaleString()} messages, replayed against a
-    ${(WINDOW / 1000)}k&#8209;token window. The dark part of each bar is what the session was still
-    holding; the red part is what that pass handed back. Of ${rows.length} sessions measured on this
-    machine, ${looped} looped at all, and between them the loop answered <b>${avoided}</b>
-    compactions that would otherwise each have been a model summary. Snapshot of one machine's
-    transcripts, which grow as you work &#8212; <code>eval/passes.ts</code> re-runs it on yours.</p>
-  <details class="more">
-    <summary><h3>Why a percentage of the window, and not a percentage of the session</h3></summary>
-    <p>
-      Until this version the rule was <code>minReductionRatio: 0.25</code>: take the pass if it
-      removed a quarter of the transcript. Replaying the loop on real sessions, that bar took
-      <span class="num val">${oldBarTakes}</span> of <span class="num val">${everyPass.length}</span>
-      passes &#8212; every one went to the model summary while this could still free
-      ${medianPp.toFixed(0)} points of window in under ${slowest}&#8239;ms.
-    </p>
-    <p>
-      The unit was the mistake. A quarter of a ${best.messages.toLocaleString()}-message session and
-      a quarter of a 200-message one are not the same amount of room to keep working in, and room is
-      what runs out. Points of the context window are comparable between them, and they are the same
-      unit as the ${AT}% trigger &#8212; which makes the rule its own guard: a pass that is taken
-      leaves the session at least ${FLOOR} points below the trigger, so it has to grow back through
-      them before another compaction can be asked for. Compacting on every turn stops being possible
-      rather than discouraged.
-    </p>
-    <p>
-      The ceiling is <code>maxPasses: ${MAX_PASSES}</code>, and on the session drawn above it is
-      what stops the loop rather than the floor. That is deliberate: raised to 8 the same session
-      runs one more pass and then stops on the floor, and at 12 it stops in the same place. So
-      ${MAX_PASSES} is not where the loop runs out &#8212; it is where this hands over anyway,
-      because <a href="#checked">what deferring the summary costs</a> is not measured, and a
-      backstop whose value is a judgement should be the conservative one.
-    </p>
-    <p>
-      The worry a loop like this raises is that the transcript fills with receipts: every dropped
-      result leaves a note, and notes are never removed. Measured, it does not happen. The share
-      of surviving tool results that are a note rises for two passes and then stops &#8212;
-      <span class="num val">2.9%</span>, <span class="num val">6.3%</span>,
-      <span class="num val">8.3%</span>, and flat at about seven after that &#8212; because fresh
-      output arrives between passes at roughly the rate the loop creates stubs. A transcript
-      seven passes deep is still about 93% intact results, which is why there is no dial for it.
-    </p>
-  </details>`;
-
-  const page = join(import.meta.dirname, '..', 'docs', 'index.html');
-  const html = readFileSync(page, 'utf8');
-  const open = '  <!-- passes:render -->\n';
-  const close = '\n  <!-- /passes:render -->';
-  const from = html.indexOf(open);
-  const to = html.indexOf(close);
-  if (from < 0 || to < 0) throw new Error(`no passes:render markers in ${page}`);
-  writeFileSync(page, html.slice(0, from + open.length) + markup + html.slice(to));
-  console.log(`\nspliced ${shown.length} rows into docs/index.html (${taken.length} taken)`);
+  const dir = join(import.meta.dirname, 'fixtures');
+  mkdirSync(dir, { recursive: true });
+  const out = join(dir, 'passes.json');
+  writeFileSync(out, `${JSON.stringify(fixture, null, 1)}\n`);
+  console.log(`\nwrote ${out}: ${fixture.rows.length} rows, ${taken.length} taken`);
+  console.log('`npm run docs` renders it into the page via eval/passes-page.ts.');
 }

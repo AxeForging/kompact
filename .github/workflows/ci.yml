@@ -77,6 +77,16 @@ jobs:
       - name: the fixture must reproduce the Laya comparison, not just ours
         run: bun eval/repeat.ts --fixture | grep -q "logistic won 10/10 splits"
 
+      # Twelve published figures went stale at once because the evidence file
+      # mixed fixture measurements with ones read from the maintainer's own
+      # transcripts: regenerating moved bound numbers for reasons unrelated to
+      # any code change. RESULTS.md is now the fixture-only half, so it is
+      # reproducible on a runner with no ~/.claude/projects — gate it.
+      - name: the reproducible evidence must be up to date
+        run: |
+          bun run eval:results
+          git diff --exit-code -- eval/RESULTS.md
+
       # The two published pages are generated; regenerate and fail on a diff, so
       # a stale demonstration or evaluation cannot reach the site.
       - name: the published pages must be up to date

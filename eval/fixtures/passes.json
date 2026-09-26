@@ -1,0 +1,75 @@
+{
+ "window": 200000,
+ "at": 60,
+ "floor": 5,
+ "maxPasses": 6,
+ "messages": 8223,
+ "sessions": 5,
+ "looped": 3,
+ "avoided": 9,
+ "passesMeasured": 14,
+ "oldBarTakes": 0,
+ "medianMs": 10,
+ "medianPp": 8.4,
+ "slowestMs": 15,
+ "stubShare": [
+  6.7,
+  8.3,
+  8.3,
+  7.3,
+  7.1,
+  6.7,
+  6.8
+ ],
+ "rows": [
+  {
+   "from": 60.7,
+   "to": 52,
+   "ms": 15,
+   "taken": true,
+   "why": "taken"
+  },
+  {
+   "from": 60,
+   "to": 50.1,
+   "ms": 11,
+   "taken": true,
+   "why": "taken"
+  },
+  {
+   "from": 60.1,
+   "to": 51.7,
+   "ms": 10,
+   "taken": true,
+   "why": "taken"
+  },
+  {
+   "from": 60.3,
+   "to": 52,
+   "ms": 9,
+   "taken": true,
+   "why": "taken"
+  },
+  {
+   "from": 60,
+   "to": 52.8,
+   "ms": 9,
+   "taken": true,
+   "why": "taken"
+  },
+  {
+   "from": 60.7,
+   "to": 54.1,
+   "ms": 8,
+   "taken": true,
+   "why": "taken"
+  },
+  {
+   "from": 60.1,
+   "to": 54.3,
+   "ms": 8,
+   "taken": false,
+   "why": "ceiling"
+  }
+ ]
+}
