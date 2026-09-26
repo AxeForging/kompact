@@ -1,0 +1,13 @@
+{
+  "sessions": 35,
+  "proseSentences": 4274,
+  "reuseBaseRatePct": 17,
+  "aucModelFree": 0.594,
+  "aucLengthBaseline": 0.586,
+  "aucSelfInfoBaseline": 0.418,
+  "droppableAt95Pct": 8.1,
+  "wrongDropsAt95": 36,
+  "oracleDroppablePctOfProse": 80.8,
+  "proseShareOfWindowPct": 3.92,
+  "medianLatencyMsPerWindow": 6.3
+}

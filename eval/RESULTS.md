@@ -354,3 +354,37 @@ answers; dropping acknowledgements and restated context) would need a labelled
 prose corpus built the way the 1,063 labelled tool calls were, and its wrong
 drops are unrecoverable. At a 3.92% median ceiling against a 93.5% tool share,
 the tool path is where the tokens are; the prose scorer is filed, not funded.
+## Can prose be compacted without a model? — `eval/prose-extractive.ts`
+
+The ship target for prose is model-free and verbatim-safe. This asks whether cheap
+model-free features can rank an assistant prose sentence by whether it is
+*referenced again later* — the same verbatim-reuse proxy the tool-call scorer is
+judged on — well enough to drop the rest. Never a user message; assistant prose
+only. Features: length, LexRank-lite centrality, recency, has-path/code, average
+self-information from corpus unigram frequencies (a no-LM stand-in for Selective
+Context), is-question.
+
+```
+35 sessions, 4274 assistant prose sentences
+reuse base rate:           17%  (share referenced later)
+AUC, model-free logistic:  0.594   (out-of-fold, by session)
+AUC, length baseline:      0.586
+AUC, self-information:     0.418  (Selective-Context-lite, no LM)
+droppable @ 95% retained:  8.1% of prose chars (36 reused sentences lost)
+featurise + score:         6.3 ms/window
+```
+
+The model-free ranking is **at chance**: 0.594 against a 0.586
+length baseline, so the logistic learns essentially nothing beyond "longer sentences
+are kept a little more often", and self-information does *worse* than chance — rare
+wording is not what gets reused. At a safe 95% retention it frees 8.1% of prose
+characters, and prose is 3.92% of the window, so this is about 0.3% of the
+window.
+
+The ceiling is low for **any** method, not just this one. A perfect classifier that
+dropped every non-reused sentence would free 80.8% of prose characters —
+still only **~3.17% of the window**, because prose is a small slice of it. A learned
+compressor (LLMLingua-2, Selective Context) cannot exceed that bound, so it cannot
+change the decision: on this corpus, the tokens are in tool output, and compacting
+prose — model-free or not — is not worth adding. kompact stays mechanical and hands
+the prose-only residual to the engine's summary.

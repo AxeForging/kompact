@@ -134,6 +134,52 @@ answers; dropping acknowledgements and restated context) would need a labelled
 prose corpus built the way the 1,063 labelled tool calls were, and its wrong
 drops are unrecoverable. At a ${prose.medianStandaloneProsePct}% median ceiling against a ${prose.medianToolPct}% tool share,
 the tool path is where the tokens are; the prose scorer is filed, not funded.`;
+
+// Study 1 (model-free prose compaction feasibility): reads its committed fixture.
+const px = JSON.parse(
+  readFileSync(join(here, 'fixtures', 'prose-extractive.json'), 'utf8'),
+) as {
+  sessions: number; proseSentences: number; reuseBaseRatePct: number; aucModelFree: number;
+  aucLengthBaseline: number; aucSelfInfoBaseline: number; droppableAt95Pct: number;
+  wrongDropsAt95: number; medianLatencyMsPerWindow: number; oracleDroppablePctOfProse: number;
+  proseShareOfWindowPct: number;
+};
+const pxOracleWindow = ((px.oracleDroppablePctOfProse * px.proseShareOfWindowPct) / 100).toFixed(2);
+const proseExtractiveSection = `
+## Can prose be compacted without a model? — \`eval/prose-extractive.ts\`
+
+The ship target for prose is model-free and verbatim-safe. This asks whether cheap
+model-free features can rank an assistant prose sentence by whether it is
+*referenced again later* — the same verbatim-reuse proxy the tool-call scorer is
+judged on — well enough to drop the rest. Never a user message; assistant prose
+only. Features: length, LexRank-lite centrality, recency, has-path/code, average
+self-information from corpus unigram frequencies (a no-LM stand-in for Selective
+Context), is-question.
+
+\`\`\`
+${px.sessions} sessions, ${px.proseSentences} assistant prose sentences
+reuse base rate:           ${px.reuseBaseRatePct}%  (share referenced later)
+AUC, model-free logistic:  ${px.aucModelFree}   (out-of-fold, by session)
+AUC, length baseline:      ${px.aucLengthBaseline}
+AUC, self-information:     ${px.aucSelfInfoBaseline}  (Selective-Context-lite, no LM)
+droppable @ 95% retained:  ${px.droppableAt95Pct}% of prose chars (${px.wrongDropsAt95} reused sentences lost)
+featurise + score:         ${px.medianLatencyMsPerWindow} ms/window
+\`\`\`
+
+The model-free ranking is **at chance**: ${px.aucModelFree} against a ${px.aucLengthBaseline}
+length baseline, so the logistic learns essentially nothing beyond "longer sentences
+are kept a little more often", and self-information does *worse* than chance — rare
+wording is not what gets reused. At a safe 95% retention it frees ${px.droppableAt95Pct}% of prose
+characters, and prose is ${px.proseShareOfWindowPct}% of the window, so this is about 0.3% of the
+window.
+
+The ceiling is low for **any** method, not just this one. A perfect classifier that
+dropped every non-reused sentence would free ${px.oracleDroppablePctOfProse}% of prose characters —
+still only **~${pxOracleWindow}% of the window**, because prose is a small slice of it. A learned
+compressor (LLMLingua-2, Selective Context) cannot exceed that bound, so it cannot
+change the decision: on this corpus, the tokens are in tool output, and compacting
+prose — model-free or not — is not worth adding. kompact stays mechanical and hands
+the prose-only residual to the engine's summary.`;
 const cap = maybe('cap.ts');
 const mass = maybe('mass.ts');
 const inputs = maybe('inputs.ts');
@@ -307,7 +353,7 @@ anything. \`applyDecisions\` never touches prose, so what kompact leaves behind 
 verbatim tool calls and the user's and assistant's own words — not a narrative.
 \`maxPasses\` is the backstop for that, and its value is a judgement: the floor
 would allow more.
-${proseSection}
+${proseSection}${proseExtractiveSection}
 `;
 
 const snapshotBody = `# Snapshot — one machine's own transcripts
