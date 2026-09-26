@@ -308,7 +308,7 @@ measure, the share of later-quoted passages still present afterwards:
 | --- | --- | --- |
 | ranking only (shipped before this) | 23.1% | 81.6% |
 | ranking + cap 24,000 | **25.5%** | 81.5% |
-| ranking + cap 16,000 | 29.4% | 80.8% |
+| ranking + cap 16,000 | 29.3% | 80.8% |
 | ranking + cap 8,000 | 42.0% | 77.7% |
 | **cap 8,000, no ranking at all** | **30.3%** | **96.0%** |
 
@@ -377,7 +377,7 @@ change happened, this one protects **the record of what a person decided**: an
 `AskUserQuestion` result is somebody's answer and an `ExitPlanMode` result is the
 plan they approved, and re-running neither recovers it — asking again is a new
 question, planning again is a new plan. They are also the two most-reused tools
-in the corpus, **47.1%** and **83.3%** of their outputs quoted verbatim later
+in the corpus, **46.8%** and **83.3%** of their outputs quoted verbatim later
 against an 11.0% base rate, and the scorer scores **17 of the 23** of them below
 the floor. Never dropping them costs 0.1 of a point of freeing — 33.7% to 33.6% —
 and takes reused-output retention from 77.7% to **79.4%**.
@@ -441,9 +441,9 @@ Measured on one machine, RTX 4060 Laptop, one `laya-serve` process
 
 | | |
 |---|---|
-| cold start to first answer | **6.5 s** |
-| resident memory | **3.1 GB** at first answer, **4.4 GB** warm |
-| VRAM | **~5.0 GB** for the router with all three checkpoints; ~1.4 GB for one alone |
+| cold start to first answer | **6.1 s** |
+| resident memory | **3.1 GB** at first answer, **3.2 GB** warm |
+| VRAM | **~5.8 GB** for the router with all three checkpoints; ~1.4 GB for one alone |
 | latency, `multilingual`, 8 questions | **653 ms** median |
 | latency, `english` / `typed-decisions`, 8 questions | 1,871 ms / 1,889 ms |
 
@@ -451,10 +451,10 @@ Measured on one machine, RTX 4060 Laptop, one `laya-serve` process
 start-up and VRAM are properties of the router, not of any one checkpoint. Only
 latency is per checkpoint.
 
-Scoring this machine's sessions — 3,403 calls, two questions a request, eight in
-flight — takes **90.7 s on the fastest checkpoint against 284 ms for the built-in
-scorer**, holding ~4.4 GB of RAM and about 5.0 GB of VRAM the whole time. That is
-319x the time for a lower AUC, which is the arithmetic behind the default.
+Scoring this machine's sessions — 3,591 calls, two questions a request, eight in
+flight — takes **4.9 s on the fastest checkpoint against 281 ms for the built-in
+scorer**, holding ~3.2 GB of RAM and about 5.8 GB of VRAM the whole time. That is
+17x the time for a lower AUC, which is the arithmetic behind the default.
 Fine-tuning changes the AUC; it does not change this table.
 
 That ratio is a correction twice over. It read 23.1 s and 122x until the

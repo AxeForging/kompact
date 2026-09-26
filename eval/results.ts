@@ -50,10 +50,37 @@ const keptShare = shippedRow?.[1] ?? 'the share in the table below';
 const wantSnapshot = process.argv.includes('--snapshot');
 const maybe = (script: string, ...extra: string[]): string =>
   wantSnapshot ? optional(script, ...extra) : '_Not refreshed: run `npm run eval:snapshot`._';
+
+/**
+ * Where the sidecar is, for the three scripts that need one.
+ *
+ * It used to be `laya-serve`'s default port and nothing else, which is how the
+ * whole benchmark came to be taken against whatever happened to be listening —
+ * in the published case a sidecar pinned to `LAYA_DEVICE=cpu`. Naming it makes
+ * the choice deliberate: `npm run eval:snapshot -- --sidecar 8003`.
+ */
+const sidecarPort = process.argv.includes('--sidecar')
+  ? process.argv[process.argv.indexOf('--sidecar') + 1] ?? '8000'
+  // An env var as well as a flag, because `eval:snapshot` is two commands and
+  // `npm run eval:snapshot -- --sidecar 8003` appends the flag to the second
+  // one. The bench then measured the default port, found a CPU sidecar there
+  // and refused — the guard working, for the wrong reason.
+  : process.env.KOMPACT_SIDECAR_PORT ?? '8000';
+const sidecarUrl = `http://127.0.0.1:${sidecarPort}/v1/systemone`;
 // The sidecar comparison is against whatever `sessions.ts` just measured, not
 // against a constant typed into the benchmark months ago.
 const sessions = maybe('sessions.ts');
-const passes = maybe('passes.ts', '--sweep');
+/**
+ * `--publish` rides along with `--sweep`, deliberately.
+ *
+ * The ladder the page draws and the table beside it in this file are the same
+ * measurement, and they were taken by two separate runs of this script. The
+ * corpus is the maintainer's own live sessions, which grow between one run and
+ * the next, so the two could never agree: the page said 8,223 messages beside a
+ * table saying 8,147, and six published figures went stale from that alone.
+ * One invocation computes `rows` once and both outputs come off it.
+ */
+const passes = maybe('passes.ts', '--sweep', '--publish');
 const loop = run('outcome.ts', '--fixture', '--passes', '6');
 const cap = maybe('cap.ts');
 const mass = maybe('mass.ts');
@@ -331,7 +358,7 @@ Needs a live \`laya-serve\`, so this section is empty on a machine without one.
 The claim it backs is the page's, and until this script existed the rows behind
 it were prose nobody could re-run.
 
-${maybe('truncation.ts')}
+${maybe('truncation.ts', '--port', sidecarPort)}
 
 ### And what it costs, which is less than it sounds
 
@@ -344,7 +371,7 @@ The obvious conclusion was that those three numbers were unfair to the
 checkpoint. They are not. Giving it a state it can read whole makes it *worse*,
 at every wording, monotonically:
 
-${maybe('score.ts', '--only', 'english', '--budget-sweep')}
+${maybe('score.ts', '--only', 'english', '--budget-sweep', '--port', sidecarPort)}
 
 \`buildCallState\` front-loads on purpose — task first, derived facts second, raw
 output excerpt last — so the server's cut lands on the part that was already the
@@ -376,7 +403,7 @@ state, one forward pass, one round trip — the slowest thing Laya can do. The
 library's \`predict_batch\` packs states into shared passes. A single number was
 never the cost of running Laya; it was the cost of this deployment of it.
 
-${maybe('sidecar-bench.ts', '--cold', '--inprocess', ...benchArgs)}
+${maybe('sidecar-bench.ts', '--url', sidecarUrl, '--cold', '--inprocess', ...benchArgs)}
 `;
 
 /**

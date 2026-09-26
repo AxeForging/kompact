@@ -323,8 +323,9 @@ if (args.includes('--inprocess')) {
       return times[Math.floor(times.length / 2)]!;
     }).catch(() => undefined);
     const rows: [string, number][] = [
-      ...(wire ? [[`over HTTP on ${reported.device}, one call at a time`, wire.median] as [string, number]] : []),
-      ...(wireOnDevice ? [[`over HTTP on ${device}, one call at a time`, wireOnDevice] as [string, number]] : []),
+      ...(wire ? [[`over HTTP on ${reported.device}, ${reported.loaded.length} resident`,
+        wire.median] as [string, number]] : []),
+      ...(wireOnDevice ? [[`over HTTP on ${device}, 1 resident`, wireOnDevice] as [string, number]] : []),
       [`in process on ${device}, one call at a time`, single],
       [`in process on ${device}, predict_batch(32)`, batch],
     ];

@@ -48,13 +48,21 @@ TypeSafe's hosted Jev model.
   scores 17 of the 23 of them below the floor. The guard costs 0.1 of a point of
   freeing and takes retention from 77.7% to 79.4%.
 - **The neural sidecar is gone from the product**, and stays in the evaluation.
-  There is no option that turns it on; `scorer` and `layaUrl` are read and
-  ignored. What it cost is why: `eval/sidecar-bench.ts` reports 6.5 s to start,
-  ~4.4 GB resident, ~5.0 GB of VRAM for the router and 90.7 s to score the
-  sessions the built-in scorer scores in 284 ms — 319× the time for a lower AUC.
-  The ratio is a correction: the table read 23.1 s and 122× until the projection
-  was checked against an end-to-end run, and it halved itself by dividing
-  requests by the questions in one.
+  There is no option that turns it on, and `scorer` and `layaUrl` are gone from
+  the documented options rather than read and ignored. What it cost is why:
+  `eval/sidecar-bench.ts` reports 6.1 s to start, ~3.2 GB resident, ~5.8 GB of
+  VRAM for the router and 4.9 s to score the sessions the built-in scorer scores
+  in 281 ms — 17× the time for a lower AUC.
+
+  That ratio is the second correction to this line, and the larger one. It read
+  23.1 s and 122× until the projection was checked against an end-to-end run and
+  found to be halving itself by dividing requests by the questions in one. It
+  then read 90.7 s and **319×** for weeks, because the benchmark behind it was
+  measured against a sidecar pinned to `LAYA_DEVICE=cpu` while the card sat
+  idle — printed, unread, two lines above its own table as `gpu: … 148 MiB`. On
+  the GPU the same work takes 4.9 s. The conclusion is unchanged and the
+  magnitude was wrong by a factor of eighteen; the benchmark now refuses to
+  print publishable rows from a CPU sidecar.
 
 - **Compaction defers the model summary instead of replacing it once.**
   `minReductionRatio` is gone. A pass is taken when it reclaims at least

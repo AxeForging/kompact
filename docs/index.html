@@ -190,7 +190,7 @@ a:hover{ color: var(--accent); }
    Bodoni Moda is a Didone and its optical-size axis thins horizontal strokes as
    the size grows: measured on the shipped woff2, the en dash is 38 units of the
    em at opsz 11 and 13 at opsz 30, which at this 1.9rem is 0.40px. It rendered
-   as nothing, so `3.6–32.6%` read as two unrelated numbers, and ± kept only the
+   as nothing, so `8.7–32.0%` read as two unrelated numbers, and ± kept only the
    vertical stem of its plus. Literata draws both solid. */
 .upfront p > b .op{ font-family: var(--serif); font-weight:600; font-size:0.86em; }
 .upfront__do{ grid-column: 1 / -1; font-size: var(--text-base); }
@@ -371,7 +371,7 @@ h2{
   font-family: var(--display); font-weight: 700; font-size: var(--text-xl);
   /* Same reason as `.upfront b`, found later and in a worse place: at this size
      Bodoni's optical axis strips the serifs from the figure one and thins the
-     thousands comma to nothing, so "284 ms to score 3,403 tool calls" set itself
+     thousands comma to nothing, so "281 ms to score 3,591 tool calls" set itself
      as "I90 ms to score I.762" — and on a page where every other number is a
      three-decimal probability, "I.762" reads as a score rather than a count. */
   font-optical-sizing: none;
@@ -994,10 +994,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       scored against: <b>0.905 &#177; 0.078</b>, worst split 0.684, beating the
       322M&#8209;parameter model it was built on &#8212; un&#8209;fine&#8209;tuned, on a call it
       was never trained to make &#8212; 10 of 10 paired splits.</span></p>
-    <p><b>3.6<span class="op">&#8211;</span>32.6%</b><span>of tokens freed, per session, on four real ones. Over the whole
+    <p><b>8.7<span class="op">&#8211;</span>32.0%</b><span>of tokens freed, per session, on four real ones. Over the whole
       corpus the shipped code frees 33.6%, keeps 79.4% of the outputs that were reused later and
       88.1% of their characters &#8212; the missing <a href="#losses">11.9%</a> is mostly the cap.</span></p>
-    <p><b>284&#8239;ms</b><span>to score 3,403 calls, against 319&#215; that for the neural
+    <p><b>281&#8239;ms</b><span>to score 3,591 calls, against 17&#215; that for the neural
       sidecar it replaced, on an RTX&#160;4060 Laptop.</span></p>
     <p><b>6 passes</b><span>before the model summary runs &#8212; each about 9&#8239;ms, each
       handing back eight points of context window, so
@@ -1172,7 +1172,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <dl class="cases">
     <dt>Mostly shell.</dt>
     <dd>
-      Most to free &#8212; the <span class="val">32.6%</span> session is commands whose output
+      Most to free &#8212; the <span class="val">32.0%</span> session is commands whose output
       is never quoted again. Also the shape this scorer is <strong>worst</strong> at:
       <span class="val">47</span> of the 51 outputs it wrongly dropped were command output.
       Same habit causes both.
@@ -1196,7 +1196,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
     <dt>Nothing may leave the machine.</dt>
     <dd>
-      <span class="val">3,403</span> calls scored in <span class="val">284&#8239;ms</span>: no
+      <span class="val">3,591</span> calls scored in <span class="val">281&#8239;ms</span>: no
       process, no card, no key, no request. Not a setting &#8212; the path that needed one was
       removed after it lost.
     </dd>
@@ -1207,7 +1207,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       somebody's answer and an <code>ExitPlanMode</code> result is the plan they approved;
       asking again is a new question and planning again is a new plan, so neither is ever
       dropped. They are also the two most-reused tools in the corpus &#8212;
-      <span class="val">47.1%</span> and <span class="val">83.3%</span> against an
+      <span class="val">46.8%</span> and <span class="val">83.3%</span> against an
       <span class="val">11.0%</span> base &#8212; and <span class="val">1.67%</span> of its
       characters, so the rule costs <span class="val">0.1</span> of a point of freeing.
     </dd>
@@ -1335,21 +1335,21 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   <p>
     One compaction is not the product; the loop is. The engine asks at 60% of the window, this
     answers, you keep working, and it asks again. Each answer costs about
-    <span class="num val">10&#8239;ms</span> and hands back
+    <span class="num val">9&#8239;ms</span> and hands back
     <span class="num val">8 points</span> of window &#8212; so the model
     summary, which is a model call and rewrites your session into prose, runs after the
     sixth of them rather than the first.
   </p>
   <ol class="ladder" id="ladder">
-      <li class="ladder__row"><span class="ladder__label">pass 1</span><span class="visually-hidden">held 52.0% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:52.0%"></span><span class="ladder__back" style="--l:52.0%;--w:8.7%"></span></span><span class="ladder__num">&#8722;8.7<span class="ladder__unit">pts</span></span><span class="ladder__ms">15&#8239;ms</span></li>
-      <li class="ladder__row"><span class="ladder__label">pass 2</span><span class="visually-hidden">held 50.1% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:50.1%"></span><span class="ladder__back" style="--l:50.1%;--w:9.9%"></span></span><span class="ladder__num">&#8722;9.9<span class="ladder__unit">pts</span></span><span class="ladder__ms">11&#8239;ms</span></li>
-      <li class="ladder__row"><span class="ladder__label">pass 3</span><span class="visually-hidden">held 51.7% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:51.7%"></span><span class="ladder__back" style="--l:51.7%;--w:8.4%"></span></span><span class="ladder__num">&#8722;8.4<span class="ladder__unit">pts</span></span><span class="ladder__ms">10&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 1</span><span class="visually-hidden">held 52.0% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:52.0%"></span><span class="ladder__back" style="--l:52.0%;--w:8.7%"></span></span><span class="ladder__num">&#8722;8.7<span class="ladder__unit">pts</span></span><span class="ladder__ms">14&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 2</span><span class="visually-hidden">held 50.1% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:50.1%"></span><span class="ladder__back" style="--l:50.1%;--w:9.9%"></span></span><span class="ladder__num">&#8722;9.9<span class="ladder__unit">pts</span></span><span class="ladder__ms">10&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 3</span><span class="visually-hidden">held 51.7% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:51.7%"></span><span class="ladder__back" style="--l:51.7%;--w:8.4%"></span></span><span class="ladder__num">&#8722;8.4<span class="ladder__unit">pts</span></span><span class="ladder__ms">9&#8239;ms</span></li>
       <li class="ladder__row"><span class="ladder__label">pass 4</span><span class="visually-hidden">held 52.0% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:52.0%"></span><span class="ladder__back" style="--l:52.0%;--w:8.3%"></span></span><span class="ladder__num">&#8722;8.3<span class="ladder__unit">pts</span></span><span class="ladder__ms">9&#8239;ms</span></li>
-      <li class="ladder__row"><span class="ladder__label">pass 5</span><span class="visually-hidden">held 52.8% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:52.8%"></span><span class="ladder__back" style="--l:52.8%;--w:7.2%"></span></span><span class="ladder__num">&#8722;7.2<span class="ladder__unit">pts</span></span><span class="ladder__ms">9&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 5</span><span class="visually-hidden">held 52.8% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:52.8%"></span><span class="ladder__back" style="--l:52.8%;--w:7.2%"></span></span><span class="ladder__num">&#8722;7.2<span class="ladder__unit">pts</span></span><span class="ladder__ms">8&#8239;ms</span></li>
       <li class="ladder__row"><span class="ladder__label">pass 6</span><span class="visually-hidden">held 54.1% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:54.1%"></span><span class="ladder__back" style="--l:54.1%;--w:6.6%"></span></span><span class="ladder__num">&#8722;6.6<span class="ladder__unit">pts</span></span><span class="ladder__ms">8&#8239;ms</span></li>
       <li class="ladder__row ladder__row--over"><span class="ladder__label">hand over</span><span class="visually-hidden">held 54.3% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:54.3%"></span><span class="ladder__back" style="--l:54.3%;--w:5.8%"></span></span><span class="ladder__num ladder__num--under">&#8722;5.8<span class="ladder__unit">pts</span></span><span class="ladder__ms">6 passes is the ceiling</span></li>
   </ol>
-  <p class="caption">One real session of 8,223 messages, replayed against a
+  <p class="caption">One real session of 8,663 messages, replayed against a
     200k&#8209;token window. The dark part of each bar is what the session was still
     holding; the red part is what that pass handed back. Of 5 sessions measured on one
     machine, 3 looped at all, and between them the loop answered <b>9</b>
@@ -1363,10 +1363,10 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
       removed a quarter of the transcript. Replaying the loop on real sessions, that bar took
       <span class="num val">0</span> of <span class="num val">14</span>
       passes &#8212; every one went to the model summary while this could still free
-      8 points of window in under 15&#8239;ms.
+      8 points of window in under 14&#8239;ms.
     </p>
     <p>
-      The unit was the mistake. A quarter of a 8,223-message session and
+      The unit was the mistake. A quarter of a 8,663-message session and
       a quarter of a 200-message one are not the same amount of room to keep working in, and room is
       what runs out. Points of the context window are comparable between them, and they are the same
       unit as the 60% trigger &#8212; which makes the rule its own guard: a pass that is taken
@@ -1565,7 +1565,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
 
 <section class="wrap" id="cost" aria-labelledby="cost-h">
   <p class="rubric"><span class="rubric__n">06</span>Cost</p>
-  <h2 id="cost-h">284&nbsp;ms to score 3,403 tool calls.</h2>
+  <h2 id="cost-h">281&nbsp;ms to score 3,591 tool calls.</h2>
   <p class="lede">
     Compaction stops being a model call and becomes arithmetic. These are whole session
     logs, so the totals span more than one context window, so the ratio is what transfers.
@@ -1579,11 +1579,11 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
         <th scope="col" class="n">Freed</th><th scope="col" class="n">Scoring</th>
       </tr></thead>
       <tbody>
-        <tr><th scope="row">20628921</th><td class="n">2,815</td><td class="n">1,960,761</td><td class="n">1,326,140</td><td class="n val">32.4%</td><td class="n">247 ms</td></tr>
-        <tr><th scope="row">25e65eab</th><td class="n">473</td><td class="n">273,749</td><td class="n">224,484</td><td class="n val">18.0%</td><td class="n">28 ms</td></tr>
+        <tr><th scope="row">20628921</th><td class="n">3,003</td><td class="n">2,111,814</td><td class="n">1,435,062</td><td class="n val">32.0%</td><td class="n">247 ms</td></tr>
+        <tr><th scope="row">25e65eab</th><td class="n">473</td><td class="n">273,749</td><td class="n">224,484</td><td class="n val">18.0%</td><td class="n">26 ms</td></tr>
         <tr><th scope="row">agent-ab4cc5</th><td class="n">49</td><td class="n">43,400</td><td class="n">39,451</td><td class="n val">9.1%</td><td class="n">3 ms</td></tr>
-        <tr><th scope="row">agent-afa3fd</th><td class="n">66</td><td class="n">83,022</td><td class="n">75,768</td><td class="n val">8.7%</td><td class="n">6 ms</td></tr>
-        <tr><th scope="row">Total</th><td class="n">3,403</td><td class="n">2,360,932</td><td class="n">1,665,843</td><td class="n val">29.4%</td><td class="n">284 ms</td></tr>
+        <tr><th scope="row">agent-afa3fd</th><td class="n">66</td><td class="n">83,022</td><td class="n">75,768</td><td class="n val">8.7%</td><td class="n">5 ms</td></tr>
+        <tr><th scope="row">Total</th><td class="n">3,591</td><td class="n">2,511,985</td><td class="n">1,774,765</td><td class="n val">29.3%</td><td class="n">281 ms</td></tr>
       </tbody>
     </table>
   </div>
@@ -1605,13 +1605,12 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     your own history. If the number it prints is not worth having, you have lost a minute.
   </p>
   <p>
-    Expect somewhere in <span class="num val">3.6%</span> to <span class="num val">32.6%</span> —
-    the range four sessions covered, which is not a distribution. What moved it here was tool mix
-    and length: the 32.6% session is mostly commands whose output is never quoted afterwards; the
-    12.8% one is mostly large reads that get read again; the 3.6% one is 33 calls long, and a
-    session that short has almost nothing to free. At four sessions that is a reading of these
-    four and not a rule — nothing here has measured how much of the spread is noise. The dry run
-    tells you which of those you are.
+    Expect somewhere in <span class="num val">8.7%</span> to <span class="num val">32.0%</span> —
+    the range four sessions covered, which is not a distribution. What moved it was tool mix and
+    length: the 32.0% session is 3,003 calls of mostly commands whose output is never quoted
+    afterwards, and the two at the bottom are 49 and 66 calls long, where there is almost nothing
+    to free. At four sessions that is a reading of these four and not a rule — nothing here has
+    measured how much of the spread is noise. The dry run tells you which of those you are.
   </p>
 
   </details>
@@ -1678,18 +1677,18 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <table class="data">
       <caption class="visually-hidden">what the sidecar would have cost to run</caption>
       <thead><tr>
-        <th scope="col">Scoring 3,403 calls, the four sessions above</th><th scope="col" class="n">Time</th>
+        <th scope="col">Scoring 3,591 calls, the four sessions above</th><th scope="col" class="n">Time</th>
         <th scope="col" class="n">Memory held</th><th scope="col" class="n">VRAM</th>
         <th scope="col" class="n">Cold start</th>
       </tr></thead>
       <tbody>
-        <tr class="same"><th scope="row">Built-in scorer</th><td class="n mark">284 ms</td><td class="n">none</td><td class="n">none</td><td class="n">none</td></tr>
-        <tr><th scope="row">Neural sidecar, fastest checkpoint, on a GPU</th><td class="n">90.7 s</td><td class="n">4.4 GB</td><td class="n">5.0 GB</td><td class="n">6.5 s</td></tr>
+        <tr class="same"><th scope="row">Built-in scorer</th><td class="n mark">281 ms</td><td class="n">none</td><td class="n">none</td><td class="n">none</td></tr>
+        <tr><th scope="row">Neural sidecar, fastest checkpoint, on a GPU</th><td class="n">4.9 s</td><td class="n">3.2 GB</td><td class="n">5.8 GB</td><td class="n">6.1 s</td></tr>
       </tbody>
     </table>
   </div>
   <p class="caption">
-    <strong>319&#215; the time, for a lower AUC</strong>, on an RTX 4060 Laptop. Per request the
+    <strong>17&#215; the time, for a lower AUC</strong>, on an RTX 4060 Laptop. Per request the
     fastest checkpoint answers eight questions in 653 ms and the slowest in 1,889 ms. The VRAM is
     the router with all three checkpoints resident, which is what the benchmark starts; one
     checkpoint alone is about 1.4 GB.
@@ -1700,7 +1699,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     <span class="val">122×</span>, from a projection in <code>eval/sidecar-bench.ts</code> that
     divided the number of requests by the number of questions in a request — but a request
     carries one call's two questions, so there is one request per call and the projection halved
-    itself. The VRAM said ~5.0 GB and was read off a router started with
+    itself. The VRAM said ~5.8 GB and was read off a router started with
     in CPU mode, which puts almost nothing on the GPU at all. Both figures
     flattered the sidecar. The row now says what was measured end to end against a CUDA
     sidecar: <span class="val">24.9 ms</span> a call over 159 calls, multiplied out to the same
@@ -1858,8 +1857,8 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
   </p>
   <p>
     <strong>It never shortens what a tool was <em>asked</em>.</strong> Every lever here acts on
-    output. <code>eval/mass.ts</code> says output is <span class="num val">47.1%</span> of a
-    transcript and tool <em>input</em> is <span class="num val">42.7%</span> &#8212; a
+    output. <code>eval/mass.ts</code> says output is <span class="num val">46.8%</span> of a
+    transcript and tool <em>input</em> is <span class="num val">43.6%</span> &#8212; a
     <code>Write</code> carries the whole file it wrote, a <code>Bash</code> its heredoc &#8212;
     and nothing shortens any of it. <code>eval/inputs.ts</code> priced capping it and the trade
     is poor: capping every input at 16,000 characters frees
@@ -2131,7 +2130,7 @@ footer p{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-
     same line, plus one per decision, to the session log. The pass number says where in
     <a href="#demo">the ladder</a> you are, the parts sum to what was scored, and the time is
     the whole compaction — collecting the calls, scoring them, deciding, and rebuilding the
-    transcript — for the 71 calls in that one, not the 3,403 in
+    transcript — for the 71 calls in that one, not the 3,591 in
     <a href="#cost">section 06, Cost</a>. If anything at all goes wrong you get
     the other notice instead, naming the reason:
     <code>fallback to built-in summary (…)</code>. Silence at a compaction is

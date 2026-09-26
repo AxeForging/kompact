@@ -20,12 +20,12 @@ one corpus, and the per-session column as the range that matters.
 ```
 session              calls  tok before  tok after    freed  scoring
 -------------------------------------------------------------------
-20628921-046d-4fc0    2815   1,960,761  1,326,140    32.4%    247ms
-25e65eab-4941-41ea     473     273,749    224,484    18.0%     28ms
+20628921-046d-4fc0    3003   2,111,814  1,435,062    32.0%    247ms
+25e65eab-4941-41ea     473     273,749    224,484    18.0%     26ms
 agent-ab4cc58e7542      49      43,400     39,451     9.1%      3ms
-agent-afa3fde141a2      66      83,022     75,768     8.7%      6ms
+agent-afa3fde141a2      66      83,022     75,768     8.7%      5ms
 -------------------------------------------------------------------
-total                 3403   2,360,932  1,665,843    29.4%    284ms
+total                 3591   2,511,985  1,774,765    29.3%    281ms
 ```
 
 ## How many passes before the summary is due — `eval/passes.ts`
@@ -46,17 +46,17 @@ window 200,000 tokens, compacting at 60%, floor 5 pp (10,000 tokens), ceiling 6 
 
 session              msgs  passes         pp reclaimed per pass           ms per pass
 -------------------------------------------------------------------------------------
-20628921             8147       6  8.7 9.9 8.4 8.3 7.2 6.6 5.8†        12 9 8 7 7 7 8
-25e65eab             1455       2                 12.2 7.2 3.4*              16 13 11
-78d7d176             1140       1                      5.7 3.4*                   7 5
-agent-a2              294       0                          5.0*                    20
+20628921             8663       6  8.7 9.9 8.4 8.3 7.2 6.6 5.8†       14 10 9 9 8 8 8
+25e65eab             1455       2                 12.2 7.2 3.4*              18 14 12
+78d7d176             1140       1                      5.7 3.4*                   8 6
+agent-a2              294       0                          5.0*                    11
 agent-ad              201       0                          5.0*                     7
 
 * = refused by the floor, † = refused by the ceiling. Neither is taken, but only
 the first says the loop had run out of things worth freeing.
 
 9 engine summaries avoided across 3 sessions (3.0 per session that loops at all).
-slowest single pass 20 ms.
+slowest single pass 18 ms.
   pass 1: median 5.7 pp over 5 sessions
   pass 2: median 7.2 pp over 3 sessions
   pass 3: median 8.4 pp over 2 sessions
@@ -89,13 +89,16 @@ what each bar takes, over the 14 passes measured:
   minFreedPercent     10  takes   1 of 14
 
 ratio seen per pass: 0.14 0.16 0.14 0.14 0.12 0.11 0.10 0.20 0.12 0.06 0.09 0.06 0.08 0.08
+
+wrote /home/oa/workspace/tools/laya-compact/eval/fixtures/passes.json: 7 rows, 6 taken
+`npm run docs` renders it into the page via eval/passes-page.ts.
 ```
 
 `minReductionRatio: 0.25` — the bar that shipped before `minFreedPercent` —
 takes **0 of the 14 passes measured** of them. It asks whether a pass was a large *fraction of
 the transcript*, and the passes above are 0.06 to 0.20 of theirs, so it was never
 cleared: kompact handed every one of these compactions to the model summary while
-it could still free 5.7 points of window in under 20 ms.
+it could still free 5.7 points of window in under 18 ms.
 
 The unit is the fix rather than the value. Percentage points of the context
 window are what runs out, are comparable between a large session and a small one,
@@ -127,46 +130,46 @@ output the reuse sits, and among outputs that survived the floor it has spent it
 information.
 
 ```
-corpus: 78 sessions, 6377 calls, 11,789,640 characters
-reused shingles to protect: 16,344
+corpus: 81 sessions, 6685 calls, 12,604,050 characters
+reused shingles to protect: 18,197
 floor 0.2, dropped outputs keep their first 300 characters
 
 policy                        freed    reuse kept
 -------------------------------------------------
 keep everything                0.0%         100.0%
-ranking only (shipped)        22.3%          80.1%
-cap 32,000 only                7.8%          99.9%
-cap 24,000 only               10.3%          99.8%
-cap 16,000 only               15.9%          99.2%
-cap 8,000 only                30.3%          96.4%
-cap 4,000 only                46.4%          86.9%
-ranking + cap 32,000          23.7%          80.1%
-ranking + cap 24,000          24.9%          80.0%
-ranking + cap 16,000          29.1%          79.4%
-ranking + cap 8,000           42.0%          76.6%
-ranking + cap 4,000           57.3%          67.2%
-ranking + graded 0.6/32k/12k    33.3%          78.6%
-ranking + graded 0.6/24k/8k    41.4%          77.3%
-ranking + graded 0.8/48k/8k    41.8%          77.1%
+ranking only (shipped)        22.0%          80.8%
+cap 32,000 only                7.6%          99.9%
+cap 24,000 only               10.0%          99.8%
+cap 16,000 only               15.4%          99.1%
+cap 8,000 only                29.7%          96.3%
+cap 4,000 only                45.9%          86.1%
+ranking + cap 32,000          23.4%          80.8%
+ranking + cap 24,000          24.5%          80.7%
+ranking + cap 16,000          28.6%          80.1%
+ranking + cap 8,000           41.4%          77.2%
+ranking + cap 4,000           56.7%          67.1%
+ranking + graded 0.6/32k/12k    32.8%          79.3%
+ranking + graded 0.6/24k/8k    40.8%          77.8%
+ranking + graded 0.8/48k/8k    41.1%          77.6%
 
 freed = share of all output characters removed.
 reuse kept = share of shingles later text quoted that are still present.
 
-per session, over the 50 sessions with 10+ reused shingles
+per session, over the 53 sessions with 10+ reused shingles
 ruinous = sessions keeping under half of what was quoted from them
 policy                      freed med  kept med kept p10 kept worst  ruinous
 ----------------------------------------------------------------------------
-ranking only (shipped)           7.3%     97.3%     69.2%       37.5%        2
-cap 8,000 only                  17.0%     94.1%     61.7%        0.0%        3
-ranking + cap 8,000             27.4%     84.7%     53.3%        0.0%        5
-cap 16,000 only                  1.6%    100.0%     81.8%       37.5%        1
+ranking only (shipped)           7.2%     96.5%     66.7%       37.5%        2
+cap 8,000 only                  16.1%     94.3%     61.7%        0.0%        3
+ranking + cap 8,000             26.0%     83.7%     53.3%        0.0%        5
+cap 16,000 only                  1.4%    100.0%     81.8%       37.5%        1
 cap 32,000 only                  0.0%    100.0%    100.0%       43.8%        1
-ranking + cap 32,000             7.8%     96.5%     69.2%       37.5%        2
-ranking + cap 24,000             9.4%     96.5%     69.2%       37.5%        2
-ranking + cap 16,000            14.8%     94.5%     67.6%       37.5%        3
-ranking + graded 0.6/32k/12k      17.0%     91.7%     56.3%        0.0%        4
-ranking + graded 0.6/24k/8k      25.3%     86.3%     53.3%        0.0%        5
-ranking + graded 0.8/48k/8k      27.4%     85.1%     53.3%        0.0%        5
+ranking + cap 32,000             7.3%     96.3%     66.7%       37.5%        2
+ranking + cap 24,000             8.7%     96.3%     66.7%       37.5%        2
+ranking + cap 16,000            14.3%     93.2%     66.7%       37.5%        3
+ranking + graded 0.6/32k/12k      16.8%     91.0%     56.3%        0.0%        4
+ranking + graded 0.6/24k/8k      24.9%     85.1%     53.3%        0.0%        5
+ranking + graded 0.8/48k/8k      26.0%     84.7%     53.3%        0.0%        5
 ```
 
 ## The half nothing touches — `eval/mass.ts`, `eval/inputs.ts`
@@ -189,84 +192,84 @@ Code install has, so a default built on it would be a default fitted to this
 operator — the thing every other number here is arranged to avoid.
 
 ```
-24 sessions, 12,423,107 characters
+24 sessions, 12,875,280 characters
 
-prose (never touched)         9.8%     1,219,628
-tool input                   43.4%     5,387,027
-tool output                  46.8%     5,816,452
+prose (never touched)         9.6%     1,241,042
+tool input                   43.6%     5,614,810
+tool output                  46.8%     6,019,428
 
 tool                calls        input       output  in/call   share
 --------------------------------------------------------------------
-Bash                 3917    3,413,737    5,008,955      872   67.8%
-Write                 113      774,166       31,057    6,851    6.5%
-Read                  657       67,360      465,696      103    4.3%
-SubagentHandback       20      439,487        1,220   21,974    3.5%
-Agent                  67      280,887       76,216    4,192    2.9%
-Edit                  211      234,567       42,476    1,112    2.2%
-ExitPlanMode            9      114,321      113,763   12,702    1.8%
-AskUserQuestion        23       44,507       12,897    1,935    0.5%
+Bash                 4090    3,568,078    5,184,707      872   68.0%
+Write                 116      806,837       32,056    6,955    6.5%
+Read                  657       67,360      465,696      103    4.1%
+SubagentHandback       20      439,487        1,220   21,974    3.4%
+Agent                  70      289,864       79,348    4,141    2.9%
+Edit                  214      242,197       42,941    1,132    2.2%
+ExitPlanMode           10      135,611      134,853   13,561    2.1%
+AskUserQuestion        24       46,729       13,345    1,947    0.5%
 mcp__lightpanda__       2          130       41,840       65    0.3%
-WebFetch                6        2,310        8,114      385    0.1%
+WebFetch                7        2,820        9,203      403    0.1%
 Skill                  10        7,243          407      724    0.1%
 TaskStop                9          207        4,799       23    0.0%
+ToolSearch             30        2,420        1,460       81    0.0%
 SendMessage             2        3,493          339    1,747    0.0%
-ToolSearch             27        2,278        1,459       84    0.0%
 ```
 
 ```
-66 sessions, 6,343 tool inputs, 6,010,867 characters
-reused shingles to protect: 114,299
+69 sessions, 6,651 tool inputs, 6,265,370 characters
+reused shingles to protect: 120,308
 
 policy                                freed     reuse kept
 ----------------------------------------------------------
-cap every input at 16,000              4.2%          98.7%
-cap every input at 8,000              11.1%          89.6%
-cap every input at 4,000              22.0%          70.6%
-cap every input at 2,000              37.7%          48.9%
-cap every input at 1,000              55.2%          29.3%
+cap every input at 16,000              4.1%          98.6%
+cap every input at 8,000              11.0%          89.3%
+cap every input at 4,000              21.8%          70.5%
+cap every input at 2,000              37.5%          48.8%
+cap every input at 1,000              55.0%          29.2%
 
-cap non-mutating inputs at 8,000       7.5%          98.7%
-cap non-mutating inputs at 4,000      14.4%          93.1%
-cap non-mutating inputs at 2,000      25.9%          82.7%
+cap non-mutating inputs at 8,000       7.4%          98.6%
+cap non-mutating inputs at 4,000      14.2%          93.2%
+cap non-mutating inputs at 2,000      25.8%          82.7%
 
-cap mutating inputs at 8,000           3.6%          90.9%
-cap mutating inputs at 4,000           7.6%          77.5%
-cap mutating inputs at 2,000          11.8%          66.2%
+cap mutating inputs at 8,000           3.6%          90.7%
+cap mutating inputs at 4,000           7.7%          77.4%
+cap mutating inputs at 2,000          11.7%          66.1%
 
 the same rows, as a share of the whole transcript:
 policy                                freed     reuse kept
 ----------------------------------------------------------
 cap every input at 32,000              0.1%          99.8%
-cap every input at 16,000              1.8%          98.7%
-cap every input at 12,000              2.7%          97.2%
-cap every input at 8,000               4.7%          89.6%
-cap every input at 6,000               6.5%          82.0%
+cap every input at 16,000              1.8%          98.6%
+cap every input at 12,000              2.7%          96.9%
+cap every input at 8,000               4.7%          89.3%
+cap every input at 6,000               6.4%          81.8%
 
 how deep into an input the reuse falls:
 tool                   reuses  median depth  in first 10%
 ---------------------------------------------------------
-Write                   51518         0.499         10.0%
-Bash                    50687         0.471          7.4%
-Edit                     7767         0.615          4.6%
-Agent                    3265         0.485         11.3%
-Skill                     816         0.503          6.4%
-ExitPlanMode              151         0.482          0.7%
-AskUserQuestion            46         0.423         15.2%
+Write                   53915         0.498         10.1%
+Bash                    53475         0.471          7.4%
+Edit                     8444         0.614          4.7%
+Agent                    3269         0.484         11.3%
+Skill                     815         0.502          6.4%
+ExitPlanMode              293         0.477          2.7%
+AskUserQuestion            48         0.423         16.7%
 SendMessage                20         0.676          0.0%
 
 where the reuse is, by tool:
 tool                  inputs       chars   reused  per input
 ------------------------------------------------------------
-Bash                    4842   3,692,230    50687      10.47
-Write                    128     911,408    51518     402.48
+Bash                    5112   3,871,499    53475      10.46
+Write                    131     944,079    53915     411.56
 SubagentHandback          26     542,790       19       0.73
-Edit                     255     310,873     7767      30.46
-Agent                     67     280,887     3265      48.73
-ExitPlanMode               9     114,321      151      16.78
-Read                     888      87,955        0       0.00
-AskUserQuestion           23      44,507       46       2.00
-Skill                     11       7,370      816      74.18
-WebFetch                  15       5,895        8       0.53
+Edit                     258     318,503     8444      32.73
+Agent                     70     289,864     3269      46.70
+ExitPlanMode              10     135,611      293      29.30
+Read                     911      89,747        0       0.00
+AskUserQuestion           24      46,729       48       2.00
+Skill                     11       7,370      815      74.09
+WebFetch                  16       6,405        8       0.50
 ```
 
 ## Where the sidecar fails quietly — `eval/truncation.ts`
@@ -294,47 +297,121 @@ The cost: move that same sentence to the end of that same filler and the answer 
 Both upstream projects send the whole conversation, up to 25,000 tokens, as a single state.
 ```
 
+### And what it costs, which is less than it sounds
+
+The corpus was built at one state budget, 700 tokens, and handed to every
+checkpoint. The English checkpoint's own budget is 320, so the server had been
+cutting **700 of 2,239** English rows — nearly a third — at HTTP 200 with no
+warning, and three published AUCs carried no footnote saying so.
+
+The obvious conclusion was that those three numbers were unfair to the
+checkpoint. They are not. Giving it a state it can read whole makes it *worse*,
+at every wording, monotonically:
+
+```
+rows 2239  positives 247  corpus private  states as built (700 tokens)  sidecar http://127.0.0.1:8003/v1/systemone
+
+checkpoint      phrasing         AUC    ECE  trunc    thr   drop%  wrongDrops
+-----------------------------------------------------------------------------
+english         reproducible   0.568  0.371    700  0.379     0.5           4
+english         direct         0.525  0.411    681  0.463     2.2           4
+english         entailment     0.578  0.394    659  0.419     1.4           4
+
+the same rows at three state budgets, english:
+state budget          phrasing         AUC   cut
+------------------------------------------------
+as built (700)        reproducible   0.568   700
+as built (700)        direct         0.525   681
+as built (700)        entailment     0.578   659
+trimmed to 450        reproducible   0.528   169
+trimmed to 450        direct         0.540   142
+trimmed to 450        entailment     0.570   110
+its own budget (320)  reproducible   0.406     2
+its own budget (320)  direct         0.501     1
+its own budget (320)  entailment     0.531     0
+
+More state wins at every wording, even when a third of it is being cut.
+The cut falls on the output excerpt, which buildCallState already puts last.
+
+best by AUC: english/entailment (AUC 0.578, drops 1.4% of output chars at 98% safety)
+AUC 0.5 = coin flip. Below ~0.65 zero-shot, fine-tuning is the only route to production.
+```
+
+`buildCallState` front-loads on purpose — task first, derived facts second, raw
+output excerpt last — so the server's cut lands on the part that was already the
+most expendable, while an honest trim to a smaller budget removes that part and
+then some. The silent cut was the problem, not the damage; the fix is the
+`trunc` column travelling as far as the AUC does, which it now does.
+
+It also shows `STATE_BUDGET.english` is pessimistic. It reserves 192 tokens for
+the option head, and two `noul` questions with short criteria are nothing like
+that: at a 450-token state only about 150 rows of 2,239 are cut at all.
+
 ## What the sidecar costs to run — `eval/sidecar-bench.ts`
 
 Needs a live `laya-serve`, so this section is empty on a machine without one.
 One process serves all three checkpoints, so memory and start-up are properties
 of the router; only latency is per checkpoint.
 
+**This section was wrong once, and how it was wrong is worth keeping.** Every
+figure in it was measured against a sidecar started with `LAYA_DEVICE=cpu`,
+while the card sat idle — and the script printed that idle card two lines above
+its own table, as `gpu: ... 148 MiB`. A ratio of "319x the time" reached the
+landing page from it. The script now reads `/health`, which reports the device
+in one field, and refuses to produce publishable rows from a CPU sidecar unless
+`--allow-cpu` labels them.
+
+The ladder at the end is the other half of the same lesson. `laya-serve` routes
+`/health` and `/v1/systemone` and nothing else, so over HTTP every call is one
+state, one forward pass, one round trip — the slowest thing Laya can do. The
+library's `predict_batch` packs states into shared passes. A single number was
+never the cost of running Laya; it was the cost of this deployment of it.
+
 ```
-sidecar: http://127.0.0.1:8000/v1/systemone
-memory:  4369 MB resident (pid 1407371)
-gpu:     NVIDIA GeForce RTX 4060 Laptop GPU, 148 MiB, 8188 MiB
+sidecar: http://127.0.0.1:8003/v1/systemone
+device:  cuda (loaded: english, typed-decisions, multilingual)
+memory:  3170 MB resident (pid 3577571)
+gpu:     NVIDIA GeForce RTX 4060 Laptop GPU, 5779 MiB, 8188 MiB
 
 All three checkpoints are loaded by one process, so the memory above is the
 whole router. Latency is per checkpoint, 5 runs, median and worst:
 
 checkpoint           questions    median    worst  per question  input tok
 --------------------------------------------------------------------------
-english                      1    380 ms   393 ms      380.2 ms        104
-english                      2    561 ms   580 ms      280.7 ms        208
-english                      4    946 ms   962 ms      236.4 ms        416
-english                      8   1871 ms  1887 ms      233.8 ms        832
-multilingual                 1    143 ms   156 ms      143.5 ms         99
-multilingual                 2    222 ms   241 ms      111.0 ms        198
-multilingual                 4    358 ms   397 ms       89.5 ms        396
-multilingual                 8    653 ms   674 ms       81.6 ms        792
-typed-decisions              1    473 ms   707 ms      473.0 ms        104
-typed-decisions              2    662 ms   681 ms      331.2 ms        208
-typed-decisions              4   1085 ms  1090 ms      271.1 ms        416
-typed-decisions              8   1889 ms  1906 ms      236.1 ms        832
+english                      1     19 ms    31 ms       19.1 ms        104
+english                      2     24 ms    25 ms       12.1 ms        208
+english                      4     31 ms    31 ms        7.7 ms        416
+english                      8     46 ms    47 ms        5.8 ms        832
+multilingual                 1      9 ms    10 ms        9.3 ms         99
+multilingual                 2     11 ms    11 ms        5.4 ms        198
+multilingual                 4     14 ms    15 ms        3.6 ms        396
+multilingual                 8     21 ms    21 ms        2.6 ms        792
+typed-decisions              1     18 ms    19 ms       18.1 ms        104
+typed-decisions              2     23 ms    24 ms       11.6 ms        208
+typed-decisions              4     31 ms    31 ms        7.7 ms        416
+typed-decisions              8     46 ms    46 ms        5.8 ms        832
 
 input tok is usage.input_tokens, which is the per-question row count times the
 number of questions — not the size of the state.
 
-Scoring 3403 calls, the sessions above: 2 questions a request, 8 in flight.
-  fastest checkpoint: 90.7 s and 4404 MB resident held for the session
+Scoring 3591 calls, the sessions above: 2 questions a request, 8 in flight.
+  fastest checkpoint: 4.9 s and 3170 MB resident held for the session
   built-in scorer:    0.28 s and no process at all
-  ratio:              319x the time
-(3403 calls and 284 ms come from the eval/sessions.ts run in
+  ratio:              17x the time
+(3591 calls and 281 ms come from the eval/sessions.ts run in
  this same report, so the two sides are the same work.)
 
-cold start:   6.5 s to first answer
-  memory:     3091 MB resident (pid 3477936)
-  gpu after:  NVIDIA GeForce RTX 4060 Laptop GPU, 5145 MiB, 8188 MiB
-  gpu before: NVIDIA GeForce RTX 4060 Laptop GPU, 148 MiB, 8188 MiB
+the same work off the wire, 2 questions a state, multilingual on cuda:
+path                                           per call  vs slowest
+-------------------------------------------------------------------
+over HTTP on cuda, 3 resident                   10.9 ms        1.0x
+over HTTP on cuda, 1 resident                   10.2 ms        1.1x
+in process on cuda, one call at a time           9.4 ms        1.2x
+in process on cuda, predict_batch(32)            4.5 ms        2.4x
+(model resident in 4.4 s from a warm HF cache)
+
+cold start:   6.1 s to first answer
+  memory:     3915 MB resident (pid 3584247)
+  gpu after:  NVIDIA GeForce RTX 4060 Laptop GPU, 7594 MiB, 8188 MiB
+  gpu before: NVIDIA GeForce RTX 4060 Laptop GPU, 7424 MiB, 8188 MiB
 ```
