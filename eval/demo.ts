@@ -155,6 +155,31 @@ const esc = (t: string): string =>
 const freedTotal = shown.reduce((sum, d) => sum + d.freed, 0);
 const shortened = shown.filter((d) => d.freed > 0).length;
 
+/**
+ * The two rows the Q&A used to explain in prose.
+ *
+ * "A head-only row shrinks its fill to 300 characters" and "freed is bigger
+ * than the output because dropping a call takes its input with it" were two
+ * paragraphs about two specific rows. Written onto the rows, they are shorter
+ * and they point at the thing they describe. Every figure is from the decision
+ * itself, so a regenerated demo cannot leave a stale note behind.
+ *
+ * Returns '' for every other row: a note on all nine would be noise, and these
+ * are the two that a reader otherwise misreads.
+ */
+function note(d: (typeof shown)[number]): string {
+  const kept = d.chars - d.freed;
+  if (d.state === 'head') {
+    return `<span class="demo__note">Kept <b>${num(kept)}</b> of ${num(d.chars)} characters: `
+      + `the head, and a line saying it was shortened.</span>`;
+  }
+  if (d.state === 'dropped') {
+    return `<span class="demo__note"><b>${num(d.chars)}</b> characters of output, `
+      + `<b>${num(d.freed)}</b> freed: dropping a call takes its input with it.</span>`;
+  }
+  return '';
+}
+
 const markup = [
   '<div class="demo__bar">',
   `  <p class="demo__stat">Tool output<b>${num(data.stats.outputChars)} chars</b></p>`,
@@ -174,7 +199,7 @@ const markup = [
   '</p>',
   '<ol class="demo__list" id="d-list">',
   ...shown.map((d) => '  ' + [
-    `<li class="demo__call" data-state="${d.state}">`,
+    `<li class="demo__call${note(d) ? ' demo__call--noted' : ''}" data-state="${d.state}">`,
     `<span class="demo__who"><b>${esc(d.tool)}</b><span>${esc(d.target) || '—'}</span></span>`,
     // Two marks, not one: a ghost at the output's own extent, and inside it the
     // part that survived. Drawing only the survivor meant the two rows where
@@ -186,6 +211,7 @@ const markup = [
     `<span class="demo__scores"><span class="visually-hidden">keep-result </span>${d.keepResult.toFixed(3)} · `
       + `<span class="visually-hidden">keep-call </span>${d.keepCall.toFixed(3)}<br>${num(d.chars)} ch</span>`,
     `<span class="demo__outcome">${d.outcome}</span>`,
+    note(d),
     '</li>',
   ].join('')),
   '</ol>',

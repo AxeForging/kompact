@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>kompact — where to compact, and how much</title>
+<meta name="description" content="A sweep of the two settings that decide kompact's loop: where it answers a compaction, and how much a pass must reclaim to be worth taking. Includes the study that got the second one wrong and what caught it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,700&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<a class="skip" href="#ceiling">Skip to the finding</a>
+
+<nav class="contents-bar" aria-label="Contents">
+  <div class="contents-bar__row wrap">
+    <div class="contents">
+    <a class="contents__out" href="./" aria-label="Back to kompact">&#8592;&#8239;<span class="contents__long">kompact</span><span class="contents__short">back</span></a><a href="#ceiling"><span class="contents__long">The ceiling</span><span class="contents__short">Ceiling</span></a><a href="#sweep"><span class="contents__long">The grid</span><span class="contents__short">Grid</span></a><a href="#floor"><span class="contents__long">The floor</span><span class="contents__short">Floor</span></a><a href="#wrong"><span class="contents__long">What went wrong</span><span class="contents__short">Wrong</span></a><a href="#changed"><span class="contents__long">What changed</span><span class="contents__short">Changed</span></a><a class="contents__out" href="evidence.html">Evidence&#8239;&#8599;</a></div>
+    <p class="contents__tools">
+      <a class="contents__go" href="./#install">Install</a>
+      <a class="contents__top" href="#top" aria-label="Back to top"><span class="contents__word">Top&nbsp;</span>&#8593;</a>
+    </p>
+  </div>
+</nav>
+
+<main id="top">
+
+<section class="wrap" id="ceiling" aria-labelledby="ceiling-h">
+  <p class="rubric">Study &#183; the loop&#8217;s two settings</p>
+  <h2 id="ceiling-h">There is a ceiling, and it is not ours.</h2>
+  <p class="lede">
+    kompact answers a compaction at <code>compactAtPercent</code> of the window. Claude Code
+    auto-compacts at its own threshold, and it is the engine, so it goes first.
+  </p>
+  <p>
+    That settles the question before any measurement. A trigger at or above the engine&#8217;s means
+    kompact is installed, logging, and never answers a single compaction: the worst shape of
+    failure, because nothing looks broken. So the usable range sits below it, and the only question
+    left is how far below &#8212; which is a question about how much one more turn can cost.
+  </p>
+
+  <!-- headroom:render -->
+  <figure class="gap" id="headroom">
+    <p class="gap__lead">The trigger has to leave room for one more turn to land</p>
+    <div class="gap__rail" aria-hidden="true">
+      <span class="gap__band" style="--from:35.00%;--to:75.00%"></span>
+      <span class="gap__turn" style="--from:35.00%;--w:29.85%"><b>5.97pp &#183; the worst turn measured</b></span>
+      <span class="gap__mark gap__mark--ours" style="--x:35.00%">
+        <b>kompact 62%</b></span>
+      <span class="gap__mark gap__mark--engine" style="--x:75.00%">
+        <b>engine 70%</b></span>
+      <span class="gap__end gap__end--from">55%</span>
+      <span class="gap__end gap__end--to">75% of the window</span>
+    </div>
+    <p class="gap__sum"><span><b>8 points</b> of headroom</span><span><b>5.97pp</b> the largest single message</span><span><b>0</b> of 12,452 messages would overrun it</span></p>
+    <figcaption class="caption">Every message of the 5 largest sessions on one machine,
+      priced as points of a 200k&#8209;token window: median 0.03, 90th
+      percentile 0.32, 99th 1.41, largest <b>5.97</b>. Only 2 of
+      12,452 cost more than 5 points, so a trigger at 62% has
+      room for the worst turn in the corpus to land before the engine reaches 70%.
+      <b>The engine&#8217;s 70% is Claude Code&#8217;s documented default, not something
+      measured here</b>: it is the assumption the whole setting rests on, and it is on
+      <a href="evidence.html#checked">the ledger</a> as one.</figcaption>
+  </figure>
+  <!-- /headroom:render -->
+
+  <p class="fine">
+    The clamp enforces this rather than trusting a settings file: a configured trigger at or above
+    the engine&#8217;s is refused and pulled back under it. A value that silently disables the thing
+    you installed is not a value worth honouring.
+  </p>
+</section>
+
+<section class="wrap" id="sweep" aria-labelledby="sweep-h">
+  <p class="rubric">The grid</p>
+  <h2 id="sweep-h">Every trigger that can run, against every floor worth trying.</h2>
+  <p class="lede">
+    Each cell replays real sessions through the shipped rule and counts the engine summaries the
+    loop deferred. More is better, and zero means the loop never ran.
+  </p>
+
+  <!-- grid:render -->
+  <figure class="grid" id="grid">
+    <div class="scroller" tabindex="0" data-label="Table: engine summaries deferred by trigger and floor">
+      <table class="data grid__table">
+        <caption class="visually-hidden">Engine summaries deferred, by trigger and floor</caption>
+        <thead><tr><th scope="col">trigger</th><th scope="col" class="n">3pp</th><th scope="col" class="n">4pp</th><th scope="col" class="n">5pp</th><th scope="col" class="n">7pp</th><th scope="col" class="n">10pp</th><th scope="col" class="n">15pp</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">50%</th><td class="grid__cell " style="--v:0.93"><b>13</b></td><td class="grid__cell " style="--v:0.36"><b>5</b></td><td class="grid__cell " style="--v:0.14"><b>2</b></td><td class="grid__cell " style="--v:0.07"><b>1</b></td><td class="grid__cell " style="--v:0.07"><b>1</b></td><td class="grid__cell grid__cell--dead" style="--v:0"><b>0</b></td></tr>
+          <tr><th scope="row">55%</th><td class="grid__cell grid__cell--best" style="--v:1"><b>14</b></td><td class="grid__cell " style="--v:0.79"><b>11</b></td><td class="grid__cell " style="--v:0.43"><b>6</b></td><td class="grid__cell " style="--v:0.21"><b>3</b></td><td class="grid__cell " style="--v:0.07"><b>1</b></td><td class="grid__cell grid__cell--dead" style="--v:0"><b>0</b></td></tr>
+          <tr><th scope="row">58%</th><td class="grid__cell grid__cell--best" style="--v:1"><b>14</b></td><td class="grid__cell " style="--v:0.71"><b>10</b></td><td class="grid__cell " style="--v:0.64"><b>9</b></td><td class="grid__cell " style="--v:0.36"><b>5</b></td><td class="grid__cell " style="--v:0.07"><b>1</b></td><td class="grid__cell grid__cell--dead" style="--v:0"><b>0</b></td></tr>
+          <tr><th scope="row">60%</th><td class="grid__cell grid__cell--best" style="--v:1"><b>14</b></td><td class="grid__cell " style="--v:0.79"><b>11</b></td><td class="grid__cell " style="--v:0.64"><b>9</b></td><td class="grid__cell " style="--v:0.5"><b>7</b></td><td class="grid__cell " style="--v:0.07"><b>1</b></td><td class="grid__cell grid__cell--dead" style="--v:0"><b>0</b></td></tr>
+          <tr><th scope="row">62%</th><td class="grid__cell grid__cell--best" style="--v:1"><b>14</b></td><td class="grid__cell " style="--v:0.86"><b>12</b></td><td class="grid__cell grid__cell--ships" style="--v:0.71"><b>10</b><span class="grid__ships">ships</span></td><td class="grid__cell " style="--v:0.5"><b>7</b></td><td class="grid__cell " style="--v:0.21"><b>3</b></td><td class="grid__cell grid__cell--dead" style="--v:0"><b>0</b></td></tr>
+          <tr><th scope="row">64%</th><td class="grid__cell " style="--v:0.86"><b>12</b></td><td class="grid__cell " style="--v:0.71"><b>10</b></td><td class="grid__cell " style="--v:0.71"><b>10</b></td><td class="grid__cell " style="--v:0.57"><b>8</b></td><td class="grid__cell " style="--v:0.29"><b>4</b></td><td class="grid__cell grid__cell--dead" style="--v:0"><b>0</b></td></tr>
+          <tr><th scope="row">66%</th><td class="grid__cell " style="--v:0.86"><b>12</b></td><td class="grid__cell " style="--v:0.79"><b>11</b></td><td class="grid__cell " style="--v:0.71"><b>10</b></td><td class="grid__cell " style="--v:0.57"><b>8</b></td><td class="grid__cell " style="--v:0.14"><b>2</b></td><td class="grid__cell grid__cell--dead" style="--v:0"><b>0</b></td></tr>
+          <tr><th scope="row">68%</th><td class="grid__cell " style="--v:0.93"><b>13</b></td><td class="grid__cell " style="--v:0.79"><b>11</b></td><td class="grid__cell " style="--v:0.71"><b>10</b></td><td class="grid__cell " style="--v:0.5"><b>7</b></td><td class="grid__cell " style="--v:0.36"><b>5</b></td><td class="grid__cell grid__cell--dead" style="--v:0"><b>0</b></td></tr>
+          <tr><th scope="row">69%</th><td class="grid__cell " style="--v:0.93"><b>13</b></td><td class="grid__cell " style="--v:0.86"><b>12</b></td><td class="grid__cell " style="--v:0.71"><b>10</b></td><td class="grid__cell " style="--v:0.57"><b>8</b></td><td class="grid__cell " style="--v:0.36"><b>5</b></td><td class="grid__cell grid__cell--dead" style="--v:0"><b>0</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figcaption class="caption">Engine summaries deferred over 5 real sessions on one
+      machine, at every trigger below the engine&#8217;s own and every floor worth trying. Darker is
+      more deferred. A <b>0</b> is a setting where the loop never takes a pass at all: the plugin is
+      installed, it logs, and it answers nothing. Every trigger at 15pp is that, which is why the floor did not go up; whether it should go down is the open question below. <code>bun eval/trigger-page.ts --measure</code> re-runs it on yours.</figcaption>
+  </figure>
+  <!-- /grid:render -->
+
+  <p>
+    Two things fall out of it. Raising the trigger helps, because waiting lets more compactible
+    material accumulate and each pass clears the floor more easily &#8212; but the gain plateaus
+    well below the ceiling, and every point above the plateau spends headroom for nothing. Raising
+    the floor does not help at all. It is not a dial between thrift and safety: past a point it is
+    an off switch.
+  </p>
+</section>
+
+<section class="wrap" id="floor" aria-labelledby="floor-h">
+  <p class="rubric">The floor</p>
+  <h2 id="floor-h">A stricter floor does not buy safety. It buys nothing.</h2>
+  <p class="lede">
+    The intuition is that a higher bar means fewer, better-earned passes. What it means in practice
+    is no passes &#8212; and the lowest bar measured is the one that reclaims the most.
+  </p>
+  <!-- floorcurve:render -->
+  <figure class="curve" id="floorcurve">
+    <p class="curve__lead">At the trigger that ships, what each floor reclaims</p>
+    <ol class="curve__list">
+      <li class="curve__row" style="--i:0"><span class="curve__who">3pp</span><span class="curve__track"><span class="curve__fill" style="--w:1.0000"></span></span><span class="curve__pp">97.7</span><span class="curve__n">14 deferred</span></li>
+      <li class="curve__row" style="--i:1"><span class="curve__who">4pp</span><span class="curve__track"><span class="curve__fill" style="--w:0.9365"></span></span><span class="curve__pp">91.5</span><span class="curve__n">12 deferred</span></li>
+      <li class="curve__row curve__row--ships" style="--i:2"><span class="curve__who">5pp<span> ships</span></span><span class="curve__track"><span class="curve__fill" style="--w:0.8424"></span></span><span class="curve__pp">82.3</span><span class="curve__n">10 deferred</span></li>
+      <li class="curve__row" style="--i:3"><span class="curve__who">7pp</span><span class="curve__track"><span class="curve__fill" style="--w:0.6622"></span></span><span class="curve__pp">64.7</span><span class="curve__n">7 deferred</span></li>
+      <li class="curve__row" style="--i:4"><span class="curve__who">10pp</span><span class="curve__track"><span class="curve__fill" style="--w:0.3388"></span></span><span class="curve__pp">33.1</span><span class="curve__n">3 deferred</span></li>
+      <li class="curve__row curve__row--dead" style="--i:5"><span class="curve__who">15pp</span><span class="curve__track"><span class="curve__fill" style="--w:0.0000"></span></span><span class="curve__pp">0.0</span><span class="curve__n">0 deferred</span></li>
+    </ol>
+    <figcaption class="caption">Points of a 200k&#8209;token window reclaimed across
+      5 sessions, and the engine summaries each floor deferred, at a 62%
+      trigger. <b>The lowest floor measured reclaims the most and defers the most</b>, and the share
+      of surviving results that is a truncation note is the same at 3pp as at
+      5pp. What 5pp buys is a wider band a session has to grow back
+      through before it can be compacted again &#8212; a judgement about how often to interrupt a
+      session rather than a measurement. It is the open question on this page.</figcaption>
+  </figure>
+  <!-- /floorcurve:render -->
+
+  <div class="qa">
+    <div>
+      <h3>Why does it collapse so fast?</h3>
+      <p>Because a pass reclaims single-digit points of the window, not tens. Compaction only ever
+        touches tool inputs and outputs, and those are a little over half a transcript; the rest is
+        prose it never reads. A bar set above what a pass can physically reclaim is refused every
+        time, and a refusal hands that compaction to the model summary.</p>
+    </div>
+    <div>
+      <h3>So why have a floor at all?</h3>
+      <p>It is the hysteresis band. A taken pass leaves the session at least that far below the
+        trigger, so it has to grow back through those points before another compaction can be asked
+        for. Without it, compacting on every turn is possible rather than merely discouraged. The
+        floor&#8217;s job is spacing, not thrift.</p>
+    </div>
+    <div>
+      <h3>Then why not ship the lowest one?</h3>
+      <p>Honestly: it might be right, and nothing here has shown otherwise. It reclaims more, defers
+        more, and leaves the same share of receipts behind. What it also does is compact a session
+        more often for smaller gains each time, and how often a session should be interrupted is not
+        something any of these measurements can answer. The setting stays where it is until that is
+        measured rather than argued, and this paragraph exists so the gap is not silent.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="wrong" aria-labelledby="wrong-h">
+  <p class="rubric">What went wrong</p>
+  <h2 id="wrong-h">The first version of this study recommended disabling the loop.</h2>
+  <p class="lede">
+    It is on this page because the failure is more useful than the finding, and because a study that
+    reports only the run that worked is not a study.
+  </p>
+  <p>
+    The first sweep ran on the labelled corpus, which is the reproducible one: every call in it
+    carries the message index that first quoted its output verbatim, so it can answer the question
+    that matters most &#8212; whether a dropped output was one the next ten messages went on to
+    need. That corpus carries tool <em>output</em> and nothing else.
+  </p>
+  <p>
+    So the window it fills is made entirely of the most compactible material there is. A pass that
+    reclaims a quarter of <em>that</em> window reclaims a small single-digit share of a real one.
+    The sweep reported a far stricter floor as costing a few per cent of what is freed, and
+    recommended it. Measured against whole transcripts with honest token accounting, the same floor
+    takes no passes at all.
+  </p>
+  <p>
+    What caught it was this repository&#8217;s own snapshot, which had recorded a floor sweep on
+    real transcripts long before and disagreed flatly. The check took one <code>grep</code>. The
+    recommendation had already been written down.
+  </p>
+  <div class="qa">
+    <div>
+      <h3>What survives from it?</h3>
+      <p>The trigger axis, because a trigger is a position in the session rather than a quantity of
+        window, and both measurements agree on its direction. And the continuity column, which
+        nothing else can produce: across every setting in that grid, not one dropped output was one
+        whose first reuse fell within the next ten messages.</p>
+    </div>
+    <div>
+      <h3>What changed so it cannot happen again?</h3>
+      <p><code>eval/trigger.ts</code> prints the limitation above its own table now, rather than
+        keeping it in a comment nobody reads at the moment of believing a number. And the eval
+        scripts read the shipped defaults from the hook instead of keeping their own copies, so a
+        published figure and the plugin cannot drift apart.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="changed" aria-labelledby="changed-h">
+  <p class="rubric">What changed</p>
+  <h2 id="changed-h">The trigger moved. The floor did not.</h2>
+  <p class="lede">
+    One setting, a short distance, for one more deferred model summary and one more session that
+    loops at all.
+  </p>
+  <p>
+    The honest size of it: the gain is a single deferred summary across five sessions, and those
+    sessions are one person&#8217;s. The direction is consistent across both studies and every
+    column of the grid; the magnitude is thin, and the ceiling it stops below is a documented
+    default rather than anything measured here. If Claude Code&#8217;s threshold is configured
+    differently on your machine, this is the setting to move with it.
+  </p>
+  <p class="fine">
+    Reproduce it: <code>bun eval/trigger-page.ts --measure</code> re-runs the grid against your own
+    transcripts and rewrites both figures above. <code>bun eval/passes.ts --at N --floor N</code> is
+    one cell of it. <code>bun eval/trigger.ts</code> is the labelled-corpus study, limitation and
+    all.
+  </p>
+</section>
+
+</main>
+
+<footer class="wrap">
+  <p class="fine">
+    <a href="./">kompact</a> &#183; <a href="evidence.html">the evidence</a> &#183;
+    <a href="glossary.html">glossary</a> &#183; <a href="eval.html">the full evaluation</a>
+  </p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

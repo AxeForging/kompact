@@ -44,6 +44,7 @@
      a little height and buy back the small type, which is most of this page. The
      body moves 17 to 18: Literata's x-height is modest and it was set a step
      below where this measure wants it. */
+  --text-2xs: 0.75rem;   /* axis and scale labels only, never prose */
   --text-xs: 0.8125rem;
   --text-sm: 0.9375rem;
   --text-base: 1.125rem;
@@ -135,7 +136,42 @@ a:hover{ color: var(--accent); }
 /* ── masthead ─────────────────────────────────────────────────────────── */
 .flooded{ background: var(--flood); color: var(--on-flood); }
 .masthead{ padding-block: clamp(var(--space-2xl), 6vw, var(--space-4xl)) var(--space-xl); }
-.masthead__rule{ height:0; border-top: 1px solid var(--flood-rule); margin-bottom: var(--space-md); }
+/* The rule above the wordmark is gone, and so is the one `.upfront` drew above
+   the stats. Three rules in the first screen — one over the mark, one over the
+   stats, one over the version line — and a coloured field that already separates
+   the masthead from everything under it. A rule should mean a new kind of thing
+   starts here; at that density it meant nothing. */
+
+/* The mark, which used to be the h1 at 112px. It is a name, and a name is not a
+   claim: the h1 below it makes one. */
+.mark{
+  font-family: var(--display); font-weight:700; font-size: var(--text-lg);
+  font-optical-sizing: none; letter-spacing:0.01em; line-height:1;
+  margin: 0 0 var(--space-md); color: var(--on-flood-2);
+}
+.mark em{ font-style: italic; font-weight:400; }
+.claim{
+  font-family: var(--display); font-weight:700; font-size: var(--text-display);
+  font-optical-sizing: none; line-height:1.04; letter-spacing:-0.012em;
+  margin: 0 0 var(--space-md); max-width: 18ch; text-wrap: balance;
+}
+
+/* Three things to press, at the fold, where there were none. Square and
+   1px-bordered: this page has no rounded rectangles anywhere else and is not
+   starting at the one place a reader decides. */
+.cta{ display:flex; flex-wrap:wrap; gap: var(--space-sm); margin: 0 0 var(--space-xl); }
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; min-height:44px;
+  padding: 11px 16px; font-family: var(--sans); font-size: var(--text-sm); font-weight:600;
+  letter-spacing:0.02em; text-decoration:none; white-space:nowrap;
+  border:1px solid var(--on-flood); color: var(--on-flood); background:none;
+}
+.btn:hover{ background: var(--on-flood); color: var(--flood); }
+.btn--solid{ background: var(--on-flood); color: var(--flood); }
+.btn--solid:hover{ background:none; color: var(--on-flood); }
+.flooded .btn:hover, .flooded .btn--solid{ color: var(--flood); }
+@media (max-width: 560px){ .cta{ display:grid; grid-template-columns: minmax(0,1fr); } }
+.fine--flood{ color: var(--on-flood-2); }
 .flooded a{ color: var(--on-flood); }
 .flooded a:hover{ color: var(--on-flood-2); }
 .flooded :focus-visible{ outline-color: var(--on-flood); }
@@ -164,10 +200,11 @@ a:hover{ color: var(--accent); }
 .upfront{
   display:grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
   gap: var(--space-sm) var(--space-xl);
-  border-top:1px solid var(--flood-rule); padding-top: var(--space-md);
   margin-bottom: var(--space-lg); font-family: var(--sans);
 }
 .upfront p{ margin:0; font-size: var(--text-sm); line-height:1.45; color: var(--on-flood-2); }
+.upfront > p > b{ display:block; }
+.upfront > p > span{ display:block; margin-top: var(--space-2xs, 4px); }
 .upfront b{
   /* `auto` puts this on Bodoni's opsz 30 drawing, where the hairlines are thin
      by design and disappear on the flood: the figure one lost both serifs and
@@ -278,6 +315,13 @@ ul.plain li::marker{ color: var(--ink-3); }
     radial-gradient(farthest-side at 100% 50%, oklch(0.245 0.012 45 / 0.28), transparent) right / 18px 100% no-repeat scroll;
 }
 .contents-bar .contents a{ flex: 0 0 auto; scroll-snap-align: start; }
+/* On a 320px screen the bar is 190px wide and three 15px links plus two 16px
+   gaps do not fit in it, so a reader saw two and no sign there were more. The
+   bar scrolls, but a scroller that shows no second item does not read as one. */
+@media (max-width: 380px){
+  .contents-bar .contents{ gap: var(--space-2xs) var(--space-sm); }
+  .contents-bar .contents a{ font-size: var(--text-xs); }
+}
 /* --on-flood-2 is 5.63:1 on the flood and about 2:1 on paper. */
 .contents-bar .contents a{ color: var(--ink-2); }
 .contents-bar .contents a:hover, .contents-bar .contents a[aria-current]{ color: var(--accent-ink); }
@@ -712,46 +756,6 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 .caption{ font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-3);
   margin-top: var(--space-xs); max-width: 56ch; line-height:1.55; }
 
-/* ── who it is for ────────────────────────────────────────────────────────── */
-/* A definition list, not cards: each shape is a term and what it gets is the
-   definition, which is what this actually is. */
-/* Term beside definition once there is room for both.
-   Stacked in one 55ch column inside a 950px section, five short entries made
-   this the second-tallest thing on the page and left half the section empty. A
-   definition list is not prose: each entry is read on its own, so the measure
-   has to hold per entry rather than down the page. Source order is dt, dd, dt,
-   dd, so grid auto-placement does the pairing and the rule between entries is
-   drawn by each half separately, because it has to span both columns. */
-.cases{ margin: var(--space-xl) 0 0; max-width: var(--measure); }
-.cases dt{
-  font-family: var(--sans); font-size: var(--text-base); font-weight:600; color: var(--ink);
-  margin-top: var(--space-lg); padding-top: var(--space-sm); border-top: 1px solid var(--rule);
-}
-.cases dd{ margin: var(--space-xs) 0 0; }
-@media (min-width: 62rem){
-  .cases{
-    max-width: none; display:grid; column-gap: var(--space-2xl);
-    grid-template-columns: minmax(14ch, 20ch) minmax(0, 1fr);
-  }
-  /* The rule has to cross the gutter, or an entry is separated by two short
-     rules with a gap in the middle rather than by one line. */
-  .cases dt{
-    margin-top: 0; padding-top: var(--space-md);
-    margin-right: calc(-1 * var(--space-2xl)); padding-right: var(--space-2xl);
-  }
-  .cases dd{
-    margin: 0; padding-top: var(--space-md); border-top: 1px solid var(--rule);
-    /* The rule has to span the whole column and the text must not: the column is
-       about fourteen characters wider than the page's measure, and a definition
-       list is read line by line like everything else. Padding rather than
-       `max-width`, so the rule above it still reaches the right edge. */
-    padding-right: max(0px, calc(100% - var(--measure)));
-  }
-  .cases dt.cases__against + dd{ border-top-color: var(--accent); }
-}
-/* The one that argues against installing. Marked, because a reader skimming the
-   terms alone should see that one of them is a warning. */
-.cases dt.cases__against{ color: var(--accent-ink); border-top-color: var(--accent); }
 
 /* ── the plate: the one image, and it is made of the data ─────────────────── */
 .plate{ margin: var(--space-xl) 0 0; }
@@ -831,6 +835,30 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
   position:absolute; inset:0; width:100%; background: var(--ink-2);
   transform-origin: left center; transform: scaleX(var(--keep, 1));
 }
+/* Two rows carry their own reading, under the bar they describe. A third grid
+   row rather than an absolute overlay, so the note pushes the row taller
+   instead of colliding with the one below it. */
+.demo__call--noted{
+  grid-template-areas: "who track scores out" ". note note ."; row-gap: var(--space-2xs);
+}
+.demo__call--noted > .demo__who{ grid-area: who; }
+.demo__call--noted > .demo__track{ grid-area: track; }
+.demo__call--noted > .demo__scores{ grid-area: scores; }
+.demo__call--noted > .demo__outcome{ grid-area: out; }
+.demo__note{
+  grid-area: note; color: var(--ink-3); font-size: var(--text-2xs); letter-spacing:0.01em;
+  max-width: 54ch;
+}
+.demo__note b{ color: var(--ink-2); font-weight:600; font-variant-numeric: tabular-nums; }
+/* A note is the reading of a settled decision, so it is not there while the row
+   is still being scored. No script does this: the replay already moves
+   `data-state`, and the note follows it. */
+.demo__call[data-state="pending"] .demo__note,
+.demo__call[data-state="deciding"] .demo__note{ opacity:0; }
+@media (prefers-reduced-motion: no-preference){
+  .demo__note{ transition: opacity 320ms ease-out 180ms; }
+}
+
 .demo__scores{ color: var(--ink-3); font-variant-numeric: tabular-nums; text-align:right; }
 .demo__outcome{ font-weight:600; letter-spacing:0.02em; color: var(--ink-3); }
 .demo__call[data-state="kept"] .demo__outcome{ color: var(--ink); }
@@ -863,6 +891,8 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 
 @media (max-width: 640px){
   .demo__call{ grid-template-columns: minmax(0,1fr) 11ch; grid-template-areas: "who scores" "track track" "out out"; }
+  .demo__call--noted{ grid-template-areas: "who scores" "track track" "out out" "note note"; }
+  .demo__note{ grid-area: note; }
   .demo__who{ grid-area: who; } .demo__scores{ grid-area: scores; }
   .demo__track{ grid-area: track; } .demo__outcome{ grid-area: out; }
   .demo__run{ margin-left:0; width:100%; }
@@ -876,8 +906,23 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 .ladder__h{ margin-top: var(--space-2xl); }
 .ladder{
   list-style:none; margin: var(--space-lg) 0 var(--space-sm); padding:0;
-  --at: 60%;
+  /* `--at` and `--floor` come from the fixture, written onto the element by
+     eval/passes-page.ts. They are the two rules the figure argues with, so
+     neither is allowed to be a number typed into a stylesheet. */
+  --at: 60%; --floor: 55%;
 }
+/* The two rules, labelled once at the top rather than on every bar. */
+.ladder__scale{
+  display:grid; grid-template-columns: 8ch minmax(0,1fr) 7ch 17ch; gap: var(--space-md);
+  font-family: var(--sans); font-size: var(--text-2xs); color: var(--ink-3);
+  letter-spacing:0.02em; padding-bottom: 4px;
+}
+.ladder__marks{ position:relative; min-width:0; height:1.2em; }
+/* The two are five points apart, so they hang off opposite sides of their own
+   line rather than both leaning left and colliding, which is what they did. */
+.ladder__mark{ position:absolute; bottom:0; white-space:nowrap; }
+.ladder__mark--at{ left: var(--at); padding-left:5px; }
+.ladder__mark--floor{ left: var(--floor); transform: translateX(-100%); padding-right:5px; color: var(--accent-ink); }
 .ladder__row{
   display:grid; grid-template-columns: 8ch minmax(0,1fr) 7ch 17ch;
   gap: var(--space-md); align-items:center; padding: 6px 0;
@@ -893,6 +938,16 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
 .ladder__track::after{
   content:""; position:absolute; inset-block:-3px; left: var(--at); width:1px;
   background: var(--ink-3);
+}
+/* The floor: a taken pass has to land left of this, and every one of them does.
+   Dashed because it is a rule the loop imposes on itself, not one the engine
+   imposes — the solid line is the engine's. */
+.ladder__track::before{
+  content:""; position:absolute; inset-block:0; left: var(--floor); width:1px;
+  /* Pale, because it crosses the red part of every taken bar: an accent-coloured
+     dash on an accent-coloured bar was invisible on six rows out of seven. */
+  background-image: linear-gradient(var(--paper) 55%, transparent 0);
+  background-size: 1px 4px; z-index:1;
 }
 .ladder__held{ position:absolute; inset-block:0; left:0; width: var(--w); background: var(--ink-2); }
 .ladder__back{
@@ -924,6 +979,297 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
   }
   .ladder__label{ grid-area: label; } .ladder__num{ grid-area: num; }
   .ladder__track{ grid-area: track; } .ladder__ms{ grid-area: ms; }
+  .ladder__scale{ grid-template-columns: minmax(0,1fr); }
+  .ladder__scale > span:first-child{ display:none; }
+}
+
+.ladder__h3{ margin-top: var(--space-xl); }
+
+/* ── Elsewhere: the pages behind this one ─────────────────────────────────
+   Two entries, and it has to stay readable at two rather than needing three to
+   look deliberate. A rule above each and nothing else: these are signposts, and
+   a signpost in a card is a signpost pretending to be a destination. */
+.elsewhere{ list-style:none; margin: var(--space-lg) 0 0; padding:0; }
+@media (min-width: 900px){
+  .elsewhere{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: var(--space-xl); }
+}
+.elsewhere__item{ border-top:1px solid var(--rule-firm); padding-top: var(--space-sm); }
+.elsewhere__item + .elsewhere__item{ margin-top: var(--space-lg); }
+@media (min-width: 900px){ .elsewhere__item + .elsewhere__item{ margin-top:0; } }
+.elsewhere__kind{
+  margin:0 0 var(--space-2xs); font-family: var(--sans); font-size: var(--text-2xs);
+  letter-spacing:0.08em; text-transform:uppercase; color: var(--ink-3);
+}
+.elsewhere__item h3{ margin:0 0 var(--space-2xs); font-size: var(--text-lg); line-height:1.2; }
+.elsewhere__item h3 a{ text-decoration-thickness:1px; text-underline-offset:3px; }
+.elsewhere__item p:last-child{
+  margin:0; font-size: var(--text-sm); color: var(--ink-2); max-width: 46ch;
+}
+
+/* ── The study page: the grid, the headroom rail, the floor curve ─────────
+   Only docs/trigger.html uses these. Kept in the one stylesheet because the
+   study page is the same typeset document as the rest of the site and a second
+   stylesheet would be a second place for the type scale to drift. */
+.grid{ margin: var(--space-lg) 0 0; }
+/* `width:auto` and a measure: stretched to the full column the six numeric
+   columns were 200px apiece and the shading read as a band behind the number
+   rather than as the cell containing it. */
+.grid__table{ font-variant-numeric: tabular-nums; width:auto; max-width:54ch; }
+.grid__table th[scope="row"]{ white-space:nowrap; font-weight:600; color: var(--ink-2); }
+.grid__table thead th.n, .grid__table td.grid__cell{ text-align:center; }
+.grid__cell{
+  position:relative; min-width:7ch;
+  /* `--v` is the cell's share of the best count, written by the generator. */
+  background: color-mix(in oklab, var(--ink) calc(var(--v, 0) * 16%), transparent);
+}
+.grid__cell b{ font-weight:600; }
+.grid__cell--dead{ background: none; color: var(--ink-3); }
+.grid__cell--dead b{ font-weight:400; }
+.grid__cell--best b{ color: var(--accent-ink); }
+.grid__cell--ships{ outline:2px solid var(--accent); outline-offset:-2px; }
+.grid__ships{
+  display:block; font-family: var(--sans); font-size: var(--text-2xs); letter-spacing:0.06em;
+  text-transform:uppercase; color: var(--accent-ink);
+}
+.grid figcaption{ margin-top: var(--space-xs); }
+
+/* The rail: a zoomed slice of the window with the two thresholds on it. The
+   gap between them is the whole argument, so the gap is the filled part and
+   both ends of the slice are labelled rather than implied. */
+.gap{ margin: var(--space-lg) 0 0; max-width: 74ch; }
+.gap__lead{
+  margin:0 0 var(--space-2xl); font-family: var(--sans); font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+.gap__rail{
+  position:relative; height:18px; margin-bottom: var(--space-2xl);
+  background: var(--paper-sunk); outline:1px solid var(--rule); outline-offset:-1px;
+}
+.gap__band{
+  position:absolute; inset-block:0; left: var(--from); right: calc(100% - var(--to));
+  background: var(--accent-wash); outline:1px solid var(--accent); outline-offset:-1px;
+}
+/* The worst turn measured, laid against the gap so a reader can see it fits. */
+.gap__turn{
+  position:absolute; top:100%; margin-top:5px; left: var(--from); width: var(--w);
+  border-left:1px solid var(--ink-2); border-right:1px solid var(--ink-2);
+  border-bottom:1px solid var(--ink-2); height:8px;
+  /* The bracket carries no text of its own; its label is the absolutely
+     positioned child, or the text flows inside the bracket and crosses it. */
+  font-size:0;
+}
+.gap__turn b{
+  position:absolute; top:11px; left:0; white-space:nowrap; font-weight:600;
+  font-family: var(--sans); font-size: var(--text-2xs); color: var(--ink-2);
+}
+.gap__mark{
+  position:absolute; bottom:100%; margin-bottom:6px; left: var(--x); white-space:nowrap;
+  font-family: var(--sans); font-size: var(--text-2xs); letter-spacing:0.02em;
+  padding-left:6px; border-left:1px solid var(--ink-3);
+}
+.gap__mark::after{ content:""; position:absolute; left:-1px; bottom:-8px; height:8px; width:1px; background: var(--ink-3); }
+.gap__mark--ours{ color: var(--accent-ink); border-left-color: var(--accent); }
+.gap__mark--ours::after{ background: var(--accent); }
+.gap__mark--engine{
+  transform: translateX(-100%); padding: 0 6px 0 0;
+  border-left:0; border-right:1px solid var(--ink); color: var(--ink);
+}
+.gap__mark--engine::after{ left:auto; right:-1px; background: var(--ink); }
+.gap__end{
+  position:absolute; top:100%; margin-top: var(--space-lg);
+  font-family: var(--sans); font-size: var(--text-2xs); color: var(--ink-3);
+}
+.gap__end--from{ left:0; }
+.gap__end--to{ right:0; }
+.gap__sum{
+  display:flex; flex-wrap:wrap; gap: var(--space-2xs) var(--space-lg); margin:0 0 var(--space-xs);
+  font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-3);
+}
+.gap__sum b{ color: var(--ink); font-variant-numeric: tabular-nums; }
+.gap figcaption{ margin-top:0; }
+@media (max-width: 560px){ .gap__mark, .gap__end, .gap__turn{ font-size:11px; } }
+
+/* The floor curve: six bars, the shipped one marked, the dead ones hollow. */
+.curve{ margin: var(--space-lg) 0 0; max-width: 74ch; }
+.curve__lead{
+  margin:0 0 var(--space-xs); font-family: var(--sans); font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+.curve__list{ list-style:none; margin:0 0 var(--space-sm); padding:0; }
+.curve__row{
+  display:grid; grid-template-columns: 9ch minmax(0,1fr) 6ch 12ch; gap: var(--space-md);
+  align-items:center; padding: 5px 0;
+  font-family: var(--sans); font-size: var(--text-xs); color: var(--ink-3);
+}
+.curve__row + .curve__row{ border-top:1px solid var(--rule); }
+.curve__who{ color: var(--ink-2); font-weight:600; font-variant-numeric: tabular-nums; }
+.curve__who span{ font-weight:400; color: var(--accent-ink); letter-spacing:0.04em; }
+.curve__track{ position:relative; height:14px; background: var(--paper-sunk); min-width:0; }
+.curve__fill{
+  position:absolute; inset-block:0; left:0; width:100%; background: var(--ink-2);
+  transform-origin:left center; transform: scaleX(var(--w, 0));
+}
+.curve__row--ships .curve__fill{ background: var(--accent); }
+.curve__row--dead .curve__track{ outline:1px dashed var(--rule-firm); outline-offset:-1px; }
+.curve__pp{ text-align:right; font-weight:600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.curve__n{ font-variant-numeric: tabular-nums; }
+.curve figcaption{ margin-top:0; }
+@media (prefers-reduced-motion: no-preference){
+  .curve__fill{ transition: transform 480ms cubic-bezier(0.16,1,0.3,1) calc(var(--i) * 90ms); }
+  .curve.reveal--armed .curve__fill{ transform: scaleX(0); }
+}
+@media (max-width: 640px){
+  .curve__row{
+    grid-template-columns: minmax(0,1fr) 6ch; gap: var(--space-2xs) var(--space-md);
+    grid-template-areas: "who pp" "track track" "n n";
+  }
+  .curve__who{ grid-area: who; } .curve__pp{ grid-area: pp; }
+  .curve__track{ grid-area: track; } .curve__n{ grid-area: n; }
+}
+
+/* ── What one compaction freed, per session ───────────────────────────────
+   Four bars that let go of what they freed. The same drain idiom as the nine
+   blocks below them, because they are two halves of one answer: room back, and
+   a model call deferred. */
+.spread{ margin: var(--space-lg) 0 var(--space-2xl); max-width: 74ch; }
+.spread__lead, .avoided__lead{
+  margin:0 0 var(--space-xs); font-family: var(--sans); font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+.spread__lead b, .avoided__lead b{ color: var(--ink); }
+.spread__list{ list-style:none; margin:0 0 var(--space-sm); padding:0; }
+.spread__row{
+  display:grid; grid-template-columns: 9ch minmax(0,1fr) 6ch 11ch; gap: var(--space-md);
+  align-items:center; padding: 5px 0;
+  font-family: var(--sans); font-size: var(--text-xs); color: var(--ink-3);
+}
+.spread__row + .spread__row{ border-top:1px solid var(--rule); }
+.spread__who{ color: var(--ink-2); font-weight:600; font-variant-numeric: tabular-nums; }
+.spread__who span{ font-weight:400; color: var(--ink-3); }
+.spread__track{
+  position:relative; height:14px; min-width:0;
+  border:1px dashed var(--rule-firm); background: var(--paper);
+}
+.spread__kept{
+  position:absolute; inset:0; background: var(--ink-2);
+  transform-origin:left center; transform: scaleX(var(--keep, 1));
+}
+.spread__pct{ text-align:right; font-weight:600; color: var(--accent-ink); font-variant-numeric: tabular-nums; }
+.spread__tok{ font-variant-numeric: tabular-nums; }
+.spread__sum{
+  display:flex; flex-wrap:wrap; gap: var(--space-2xs) var(--space-lg); margin:0 0 var(--space-xs);
+  font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-3);
+}
+.spread__sum b{ color: var(--ink); font-variant-numeric: tabular-nums; }
+.spread figcaption{ margin-top:0; }
+
+@media (prefers-reduced-motion: no-preference){
+  .spread__kept{ transition: transform 520ms cubic-bezier(0.16,1,0.3,1) calc(var(--i) * 110ms); }
+  /* Armed is the session before the pass: the bar still full. */
+  .spread.reveal--armed .spread__kept{ transform: scaleX(1); }
+}
+@media (max-width: 640px){
+  .spread__row{
+    grid-template-columns: minmax(0,1fr) 6ch; gap: var(--space-2xs) var(--space-md);
+    grid-template-areas: "who pct" "track track" "tok tok";
+  }
+  .spread__who{ grid-area: who; } .spread__pct{ grid-area: pct; }
+  .spread__track{ grid-area: track; } .spread__tok{ grid-area: tok; }
+}
+
+/* ── The model calls that did not happen ──────────────────────────────────
+   Nine blocks, one per deferred summary, on one line rather than nine rows:
+   the page's problem is length, and a figure that argues for compactness
+   should not take a screen to do it. */
+/* Nine blocks that empty, not nine blocks that fill. Filled, they read as nine
+   things that happened, which is the opposite of what they count. Settled — with
+   scripts blocked, or once the figure has played — each is an empty dashed slot
+   where a model call would have gone. */
+.avoided{ margin: var(--space-lg) 0 0; max-width: 74ch; }
+.avoided__strip{
+  list-style:none; display:flex; flex-wrap:wrap; gap:6px; margin:0 0 var(--space-sm); padding:0;
+}
+.avoided__block{
+  flex:1 1 0; min-width:26px; height:46px; position:relative;
+  border:1px dashed var(--rule-firm); background: var(--paper);
+}
+.avoided__block::after{
+  content:""; position:absolute; inset:0; background: var(--accent); opacity:0.9;
+  transform: scaleY(0); transform-origin: top center;
+}
+.avoided__sum{
+  display:grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--space-2xs) var(--space-md); margin:0 0 var(--space-xs);
+  font-family: var(--sans); font-size: var(--text-sm); color: var(--ink-3);
+}
+.avoided__sum b{ color: var(--ink); font-variant-numeric: tabular-nums; }
+.avoided figcaption{ margin-top:0; }
+
+@media (prefers-reduced-motion: no-preference){
+  .avoided__block::after{
+    transition: transform 380ms cubic-bezier(0.16,1,0.3,1) calc(var(--i) * 95ms);
+  }
+  /* Armed is the state that never ships: the nine calls still standing. */
+  .avoided.reveal--armed .avoided__block::after{ transform: scaleY(1); }
+}
+
+/* ── The cut, sweeping the plate ──────────────────────────────────────────
+   The page asserted that a fixed cut sweeps the reused outputs too and asked to
+   be believed. The marks were already drawn; this only puts a line through them
+   and counts what falls left of it. Ships at 0.50, the end of the argument, so
+   a reader with scripts blocked gets the finding rather than a control. */
+.cut{
+  position:absolute; inset:0; pointer-events:none;
+  /* Plot area runs from pad.left to w - pad.right of a 1200-unit viewBox.
+     `--at` here is a number; the ladder's `--at` is a percentage, so this one
+     is scoped to `.cut` and never registered globally. */
+  --x: calc((56 + var(--at) * 1120) / 1200 * 100%);
+}
+.cut__line{
+  position:absolute; top:44px; bottom:52px; left: var(--x); width:2px;
+  background: var(--on-flood);
+}
+.cut__read{
+  margin: 0 0 var(--space-sm); max-width: 62ch;
+  font-family: var(--sans); font-size: var(--text-sm); color: var(--on-flood-2);
+}
+.cut__read b{ color: var(--on-flood); font-variant-numeric: tabular-nums; }
+
+/* The sweep is driven frame by frame in app.js rather than by a transition:
+   the line and the three numbers beside it have to move together, and a
+   transition on a custom property would move the line while the count sat
+   still. */
+
+/* ── The stub spark ───────────────────────────────────────────────────────
+   Seven measured points where the page used to write "flat at about seven
+   after that". The coordinates are in the markup, so the shape is right with
+   scripts off; the script only draws the line on. */
+.spark{ margin: var(--space-md) 0 0; max-width: 46ch; }
+/* Uniform scaling, not `preserveAspectRatio="none"`: stretching the x axis by
+   ten turned every r=1.6 dot into a 17px-wide ellipse that painted over the
+   line it was marking, so the figure read as five disconnected segments. */
+.spark__plot{ display:block; width:100%; height:auto; overflow:visible; }
+/* Widths are in user units, not pixels, and nothing here asks for
+   `non-scaling-stroke`: under it the dash pattern is measured in screen pixels,
+   which makes `pathLength="1"` mean nothing and drew the line as fifty dashes
+   instead of one. Unitless, the whole figure scales together. */
+.spark__base{ stroke: var(--rule-firm); stroke-width:0.2; }
+.spark__tick{ font-family: var(--sans); font-size:2.6px; fill: var(--ink-3); }
+.spark__line{ stroke: var(--ink); stroke-width:0.4; stroke-linejoin:round; stroke-linecap:round; }
+.spark__dot{ fill: var(--paper); stroke: var(--ink); stroke-width:0.3; }
+.spark__axis{
+  display:flex; justify-content:space-between; margin: var(--space-2xs) 0 var(--space-xs);
+  font-family: var(--sans); font-size: var(--text-2xs); color: var(--ink-3); letter-spacing:0.02em;
+}
+.spark__peak{ color: var(--accent-ink); }
+.spark figcaption{ margin-top:0; }
+
+@media (prefers-reduced-motion: no-preference){
+  .spark__line{ stroke-dasharray:1; stroke-dashoffset:0; transition: stroke-dashoffset 900ms cubic-bezier(0.16,1,0.3,1); }
+  .spark__dot{ transition: opacity 240ms linear, transform 240ms cubic-bezier(0.16,1,0.3,1); transform-box: fill-box; transform-origin:center; }
+  .spark.reveal--armed .spark__line{ stroke-dashoffset:1; }
+  .spark.reveal--armed .spark__dot{ opacity:0; transform: scale(0.4); }
+  .spark__dot{ transition-delay: calc(240ms + var(--i) * 110ms); }
 }
 
 /* ── FAQ ──────────────────────────────────────────────────────────────── */

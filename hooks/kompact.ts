@@ -20,8 +20,35 @@ import type {
   ToolUse,
 } from '../src/types.js';
 
-const HOOK_DEFAULTS = {
-  compactAtPercent: 60,
+/**
+ * The two numbers that decide the loop, and why they are these numbers.
+ *
+ * `compactAtPercent` has a ceiling that is not ours: Claude Code's own
+ * auto-compaction fires at 70% of the window by default, and it is the engine,
+ * so it goes first. A trigger at or above that never runs — kompact would be
+ * installed, logging, and silent. Everything here has to sit below 70 with room
+ * for one more turn to land before it.
+ *
+ * Swept over real transcripts (`eval/passes.ts --at N --floor 5`), engine
+ * summaries deferred by trigger: 55% takes 6, 58–60% takes 9, and 62% through
+ * 69% takes 10 — one more, and one more session that loops at all. The benefit
+ * plateaus at 62, so everything above it buys nothing and spends headroom.
+ *
+ * 62 leaves 8 points before the engine's 70. Over 12,396 messages of real
+ * transcripts the most expensive single message costs 5.97 points of a 200k
+ * window and only two exceed 5, so one more turn fits inside that gap and the
+ * engine does not get there first. At 68% the gap is 2 points and 66 of those
+ * messages would have overrun it.
+ *
+ * `minFreedPercent` stays at 5, and the sweep is why rather than inertia: on
+ * whole transcripts 10pp takes 1 of 14 passes and 15pp takes none at all. A
+ * study on the labelled corpus rated 15pp as cheap; that corpus is tool output
+ * only, so a point of its window is about two of a real one, and the
+ * recommendation was an artefact of the unit. `eval/trigger.ts` carries the
+ * correction.
+ */
+export const HOOK_DEFAULTS = {
+  compactAtPercent: 62,
   minFreedPercent: 5,
   maxPasses: 6,
 };
@@ -86,8 +113,11 @@ export function resolveHookConfig(options: PluginOptions): HookConfig {
    */
   const config: HookConfig = {
     ...numbers,
+    // Clamped to 69 rather than 99: at 70 and above Claude Code's own
+    // auto-compaction fires first and kompact never answers a single
+    // compaction, which is a silent failure rather than a loud one.
     compactAtPercent: clamp(
-      optionNumber(options, 'compactAtPercent', HOOK_DEFAULTS.compactAtPercent), 1, 99),
+      optionNumber(options, 'compactAtPercent', HOOK_DEFAULTS.compactAtPercent), 1, 69),
     minFreedPercent: clamp(
       optionNumber(options, 'minFreedPercent', HOOK_DEFAULTS.minFreedPercent), 0.1, 100),
     maxPasses: Math.round(clamp(

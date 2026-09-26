@@ -56,7 +56,7 @@ const block = `<!-- propose:render -->
     <pre tabindex="0" data-label="Shell command and the ranked report it prints"><code><span class="cmd__line">npm run propose:demo</span><span class="cmd__gap"></span>${body}</code></pre>
   </div>
   <p class="caption">Real output, captured from <code>eval/propose.ts</code> when this page was
-    built, over the same committed corpus as the table above &#8212; not a mock-up.
+    built, over the same committed corpus as the table above. Not a mock-up.
     <code>npm run propose</code> is the same report over what the recorder saw on your machine,
     which is nothing until the plugin has been installed a while.</p>
   <!-- /propose:render -->`;

@@ -84,9 +84,9 @@ if (backRow && backButton) {
   showBack();
 }
 
-// Sixteen folds, and no way to read the whole argument without sixteen clicks.
-// Hidden in the markup for the usual reason: with scripts blocked it would be a
-// control that cannot act, and the folds already open one at a time on their own.
+// The evidence page still folds; the landing page does not, and does not ship
+// this button at all. Hidden in the markup for the usual reason: with scripts
+// blocked it would be a control that cannot act.
 const openAll = document.getElementById('open-all');
 const folds = [...document.querySelectorAll('details.more')];
 if (openAll && folds.length) {
@@ -405,6 +405,101 @@ if (plot && stack && plateCanvas && plateAnim && plateCanvas.getContext && !slow
     watch.observe(ladder);
   }
 }
+
+/* ── figures that hold themselves back until they are looked at ────────────
+   Three of them now, all on the same contract: the settled state is already in
+   the markup, written there by the generating script, and this only arms the
+   figure and lets it play once. With scripts blocked or reduced motion asked
+   for, nothing is armed and the figure is simply correct. */
+function armOnce(selector, play) {
+  const el = document.querySelector(selector);
+  if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!('IntersectionObserver' in window)) return;
+  el.classList.add('reveal--armed');
+  const watch = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      watch.disconnect();
+      requestAnimationFrame(() => { el.classList.remove('reveal--armed'); play?.(el); });
+    }
+  }, { threshold: 0.4 });
+  watch.observe(el);
+}
+
+armOnce('.spark');
+armOnce('#spread');
+armOnce('#floorcurve');
+
+/* ── the cut, sweeping the plate ───────────────────────────────────────────
+   Walks the line from the shipped floor to where the markup already leaves it,
+   reading the count off the table `eval/distribution.ts` emitted. It never
+   computes a figure: the last row of that table is the state in the markup, so
+   the sweep can only ever end where the page already says it ends. */
+{
+  const cut = document.getElementById('cut');
+  const sweep = window.PLOT?.sweep;
+  const reusedTotal = window.PLOT?.reusedTotal;
+  const still = matchMedia('(prefers-reduced-motion: reduce)');
+  if (cut && sweep?.length && reusedTotal && !still.matches && 'IntersectionObserver' in window) {
+    const at = document.getElementById('cut-at');
+    const n = document.getElementById('cut-n');
+    const pct = document.getElementById('cut-pct');
+    const settled = { at: at.textContent, n: n.textContent, pct: pct.textContent };
+    const show = (row) => {
+      cut.style.setProperty('--at', String(row.at));
+      at.textContent = row.at.toFixed(2);
+      n.textContent = String(row.swept);
+      pct.textContent = `${Math.round((100 * row.swept) / reusedTotal)}%`;
+    };
+    const watch = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        watch.disconnect();
+        show(sweep[0]);
+        const span = 2200, started = performance.now();
+        const step = (now) => {
+          const t = Math.min(1, (now - started) / span);
+          const eased = 1 - (1 - t) ** 3;
+          if (t < 1) {
+            show(sweep[Math.min(sweep.length - 1, Math.round(eased * (sweep.length - 1)))]);
+            requestAnimationFrame(step);
+          } else {
+            // Restore the markup's own text, so a rounding difference here can
+            // never leave the page saying something it did not ship.
+            cut.style.setProperty('--at', String(sweep[sweep.length - 1].at));
+            at.textContent = settled.at;
+            n.textContent = settled.n;
+            pct.textContent = settled.pct;
+          }
+        };
+        requestAnimationFrame(step);
+      }
+    }, { threshold: 0.35 });
+    watch.observe(cut.closest('.plate') ?? cut);
+  }
+}
+
+/* The nine blocks fill in sequence and the token count climbs with them. The
+   final number is the one already in the markup — this reads it back off the
+   element rather than computing it, so the count can never land somewhere the
+   page does not say. */
+armOnce('#avoided', () => {
+  const el = document.getElementById('av-tokens');
+  const to = Number(el?.dataset.to);
+  if (!el || !Number.isFinite(to)) return;
+  const settled = el.textContent;
+  const span = 900, started = performance.now();
+  const step = (now) => {
+    const t = Math.min(1, (now - started) / span);
+    // Same curve as the blocks, so the number arrives when the last one does.
+    const eased = 1 - (1 - t) ** 3;
+    el.textContent = t < 1
+      ? Math.round(to * eased).toLocaleString('en-GB')
+      : settled;
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+});
 
 const demo = window.DEMO;
 const list = document.getElementById('d-list');

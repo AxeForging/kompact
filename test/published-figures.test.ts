@@ -274,7 +274,10 @@ describe('published figures match eval/RESULTS.md', () => {
     });
 
     it('renders every row into the page', () => {
-      const rows = page.match(/<li class="demo__call" data-state="/g) ?? [];
+      // `[^"]*`, because the two rows that carry their own reading are
+      // `demo__call demo__call--noted` and a literal class match silently
+      // counted seven of nine.
+      const rows = page.match(/<li class="demo__call[^"]*" data-state="/g) ?? [];
       expect(rows.length, 'the <ol> ships empty; only JS fills it').toBe(decisions.length);
     });
 
@@ -290,10 +293,130 @@ describe('published figures match eval/RESULTS.md', () => {
       expect(page).toContain(`id="d-count">${decisions.length}<`);
     });
 
+    /**
+     * The two rows that carry their own reading.
+     *
+     * These replaced two Q&A paragraphs, so the numbers in them have to come
+     * from the same decisions the bars are drawn from — a note is prose until
+     * something checks it against the data, and prose is what went stale.
+     */
+    it('annotates the head-only and dropped rows from their own decisions', () => {
+      const head = decisions.find((d) => d.outcome === 'head only');
+      const dropped = decisions.find((d) => d.outcome === 'dropped');
+      expect(head, 'the demo no longer has a head-only row').toBeDefined();
+      expect(dropped, 'the demo no longer has a dropped row').toBeDefined();
+
+      const fmt = (n: number): string => n.toLocaleString('en-GB');
+      expect(page, 'the head-only note does not say what survived')
+        .toContain(`Kept <b>${fmt(head!.chars - head!.freed)}</b> of ${fmt(head!.chars)} characters`);
+      expect(page, 'the dropped note does not price the call its result came with')
+        .toContain(`<b>${fmt(dropped!.chars)}</b> characters of output, <b>${fmt(dropped!.freed)}</b> freed`);
+
+      // Exactly two: a note on all nine would be noise rather than a reading.
+      expect((page.match(/class="demo__note"/g) ?? []).length).toBe(2);
+    });
+
     // A control that cannot do anything is worse than no control.
     it('hides the replay button until the script that drives it runs', () => {
       expect(page).toMatch(/id="d-run" hidden/);
       expect(read('docs/app.js')).toContain('run.hidden = false;');
+    });
+
+    /**
+     * The stub spark, which replaced the sentence "flat at about seven after
+     * that" with the seven points it was summarising.
+     *
+     * Same contract as everything else here: `eval/passes-page.ts` computes the
+     * coordinates from the fixture and writes them into the markup, so the shape
+     * is correct with scripts blocked and `app.js` only draws the line on. A
+     * figure whose points arrived by script would be a blank box to a reader who
+     * has them off, and this page is read by people who do.
+     */
+    /**
+     * The four session bars, and the cut sweeping the plate.
+     *
+     * Both read data the page already carried and neither has a fixture of its
+     * own, which is the point: the bars parse the same `SNAPSHOT.md` table the
+     * masthead quotes, and the cut counts marks out of the array the plate is
+     * drawn from. A figure with its own copy of a measurement is a second thing
+     * to keep in step, and the first draft of the bars went out of step on the
+     * day it was written.
+     */
+    it('draws the session bars from the snapshot the page already quotes', () => {
+      const table = /## What it frees in practice[\s\S]*?```\n([\s\S]*?)```/.exec(snapshot)?.[1];
+      expect(table, 'eval/SNAPSHOT.md has no sessions table').toBeDefined();
+      const rows = (table ?? '').split('\n')
+        .filter((line) => /^\S+\s+\d+\s+[\d,]+/.test(line.trim()) && !line.startsWith('total'));
+      expect(rows.length, 'no session rows to draw').toBeGreaterThan(0);
+      expect((page.match(/class="spread__row"/g) ?? []).length).toBe(rows.length);
+
+      for (const row of rows) {
+        const freed = /([\d.]+)%/.exec(row)?.[1];
+        expect(page, `a session freeing ${freed}% is not on the figure`)
+          .toContain(`>${freed}%</span>`);
+      }
+    });
+
+    it('counts the sweep out of the same marks the plate is drawn from', () => {
+      const data = read('docs/distribution-data.js');
+      const plot: { sweep: Array<{ at: number; swept: number }>; reusedTotal: number } =
+        JSON.parse(data.slice(data.indexOf('{'), data.lastIndexOf('}') + 1));
+      const last = plot.sweep[plot.sweep.length - 1]!;
+
+      // The settled markup is the end of the sweep, so a reader with scripts
+      // blocked gets the finding rather than a line parked at the floor.
+      expect(page).toContain(`id="cut-at">${last.at.toFixed(2)}</b>`);
+      expect(page).toContain(`id="cut-n">${last.swept}</b>`);
+      expect(page).toContain(`id="cut-pct">${Math.round((100 * last.swept) / plot.reusedTotal)}%</b>`);
+      expect(page).toContain(`style="--at:${last.at}"`);
+    });
+
+    /**
+     * The model calls that did not happen.
+     *
+     * Two of its three numbers are measured and the third is arithmetic, so the
+     * arithmetic is what this checks: nine blocks, and a token total that is the
+     * count times the window share the engine asks at. The figure states a
+     * derived number as if it were large, and a derived number nothing checks is
+     * how a page starts lying slowly.
+     */
+    it('derives the tokens not sent from the fixture, and shows nine blocks', () => {
+      const fixture: { avoided: number; window: number; at: number } =
+        JSON.parse(read('eval/fixtures/passes.json'));
+      const blocks = page.match(/<li class="avoided__block"/g) ?? [];
+      expect(blocks.length, 'the strip ships without its blocks').toBe(fixture.avoided);
+
+      const perSummary = Math.round((fixture.window * fixture.at) / 100);
+      const total = perSummary * fixture.avoided;
+      expect(page, `${fixture.avoided} summaries of ~${perSummary} tokens is ${total}`)
+        .toContain(`data-to="${total}"`);
+      expect(page).toContain(`${total.toLocaleString('en-GB')}</b>`);
+
+      // The claim this figure must never make. A duration is an unverified row
+      // on the ledger, and the page argues that it does not publish those.
+      const section = page.slice(page.indexOf('id="freed"'), page.indexOf('</section>', page.indexOf('id="freed"')));
+      expect(section, 'the section publishes a saving in seconds')
+        .not.toMatch(/saves?\s+[\d.,]+\s*(seconds|minutes|hours)/i);
+      expect(section, 'the section does not say the duration is unmeasured')
+        .toContain('is not measured');
+    });
+
+    it('plots every measured point of the stub spark into the markup', () => {
+      const fixture: { stubShare: number[] } =
+        JSON.parse(read('eval/fixtures/passes.json'));
+      const dots = page.match(/<circle class="spark__dot"/g) ?? [];
+      expect(dots.length, 'the spark ships without its points').toBe(fixture.stubShare.length);
+
+      // The path has to reach every one of them, so it carries n-1 line-tos.
+      const path = /class="spark__line"[^>]*\sd="([^"]+)"/.exec(page)?.[1];
+      expect(path, 'the spark ships without a path').toBeDefined();
+      expect((path?.match(/L/g) ?? []).length).toBe(fixture.stubShare.length - 1);
+
+      // The axis is zeroed and says so on the figure. Without the ceiling named,
+      // a line drawn at 8.3 of 10 sits near the top of its box and reads as the
+      // opposite of what it measures.
+      expect(page, 'the spark axis does not name its ceiling')
+        .toMatch(/<text class="spark__tick"[^>]*>10%<\/text>/);
     });
   });
 
@@ -354,23 +477,6 @@ describe('published figures match eval/RESULTS.md', () => {
   });
 
   /**
-   * Section 02 counts its own cases.
-   *
-   * The heading said "Four shapes of session" over five of them, which is the
-   * same class of error as the ledger's, in the one section written to be
-   * skimmed. Both are now bound to what is actually on the page.
-   */
-  it('says how many shapes of session it lists', () => {
-    const page = read('docs/index.html');
-    const list = page.slice(page.indexOf('<dl class="cases">'), page.indexOf('</dl>', page.indexOf('<dl class="cases">')));
-    const terms = (list.match(/<dt[\s>]/g) ?? []).length;
-    const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
-    expect(terms, 'no cases found, so this proves nothing').toBeGreaterThan(0);
-    expect(page, `section 02 lists ${terms} shapes`)
-      .toContain(`>${words[terms]![0]!.toUpperCase()}${words[terms]!.slice(1)} shapes of session,`);
-  });
-
-  /**
    * The loop's own cost, bound to the table that measured it.
    *
    * These are the numbers that qualify the ladder rather than sell it, which is
@@ -423,13 +529,23 @@ describe('published figures match eval/RESULTS.md', () => {
   // and none of them was bound to anything. They are all in the generated report;
   // being right once is not the same as staying right.
   it('binds the claims a later copy pass put in the masthead', () => {
-    const page = read('docs/index.html');
+    // The masthead that named this test is gone: it carried 310 words and now
+    // carries 134, and the claims it used to state moved down into the sections
+    // that prove them, where two of them are now marked up mid-sentence. So
+    // these read the landing page with its tags removed. What is being asserted
+    // is unchanged — the landing page still quotes these figures and they still
+    // come from the generated reports — only where on it has stopped mattering.
+    const page = read('docs/index.html').replace(/<[^>]+>/g, '');
 
     // `  ratio:              122x the time` — a snapshot: it compares against
     // whatever session corpus `sessions.ts` measured in the same report.
+    // Across the site, not the landing page: this comparison moved to the
+    // evidence page with the cost measurement it belongs to. It was passing
+    // here on an accident — `3.17&#215;` in a different sentence contains
+    // `17&#215;` — and only surfaced when that unrelated figure changed.
     const ratio = /ratio:\s+(\d+)x the time/.exec(snapshot)?.[1];
     expect(ratio, 'eval/SNAPSHOT.md no longer reports a latency ratio').toBeDefined();
-    expect(page, `the report says ${ratio}x`).toContain(`${ratio}&#215;`);
+    expect(site(), `the report says ${ratio}x`).toContain(`${ratio}&#215;`);
 
     // `  logistic won 10/10 splits`
     const won = /logistic won (\d+)\/(\d+) splits/.exec(results);
@@ -551,7 +667,13 @@ describe('published figures match eval/RESULTS.md', () => {
     // `<dt[ >]`, not `<dt>`: each term carries an id now, so the link from where
     // the word is used lands on the definition rather than on the section.
     expect(rows(/<dt[ >]/g), 'the glossary is rendered by script').toBeGreaterThanOrEqual(12);
-    expect(rows(/<details class="more"/g), 'the folded blocks need script').toBeGreaterThanOrEqual(15);
+    expect(rows(/<details class="more"/g), 'the folded blocks need script').toBeGreaterThanOrEqual(13);
+    // None on the landing page. Every one of them was a reader being asked to
+    // click a triangle to find out whether the page is honest, and two carried
+    // the diagnostic tree and the safety contract — the two things someone
+    // deciding whether to install this is actually looking for.
+    expect(read('docs/index.html'), 'a folded block is back on the landing page')
+      .not.toContain('<details');
 
     // Nesting is the defect worth guarding, not the count. The script that
     // wrapped these found its boundaries by searching forward, so the five FAQ

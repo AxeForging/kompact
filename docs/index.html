@@ -16,42 +16,33 @@
 
 <header class="flooded" id="top">
 <div class="masthead wrap">
-  <div class="masthead__rule reveal" style="--d:0ms"></div>
-  <h1 class="wordmark reveal" style="--d:40ms">k<em>ompact</em></h1>
+  <p class="mark reveal" style="--d:0ms">k<em>ompact</em></p>
+  <h1 class="claim reveal" style="--d:40ms">It keeps the file, not a summary of it.</h1>
   <p class="standfirst reveal" style="--d:110ms">
-    Claude Code compacts by asking a model to summarise your session, and the exact wording
-    goes with it. This scores every tool call instead and <strong>keeps what survives
-    verbatim</strong>, dropping only what is no longer needed &#8212; so a file you read is
-    still the file, not a description of it. It answers
-    <a href="#demo">six of those compactions</a> before the summary runs at all.
-    On your machine: no API key, no GPU, no network call &#8212; <span class="standfirst__note">no exceptions and no optional path that has any,
-    since the neural <a href="glossary.html#g-sidecar">sidecar</a> this was built on
-    <a href="#result">lost to thirteen coefficients</a> and was removed.</span>
+    Claude Code compacts by asking a model to summarise your session, and the exact wording goes
+    with it. This scores every tool call instead and drops only what is no longer needed.
   </p>
-  <div class="upfront reveal" style="--d:150ms">
-    <p><b>0.789</b><span>ranking quality, held out one session at a time across all 41 &#8212; the
-      number to plan around. On the narrower 18&#8209;session corpus the neural model was
-      scored against: <b>0.905 &#177; 0.078</b>, worst split 0.684, beating the
-      322M&#8209;parameter model it was built on &#8212; un&#8209;fine&#8209;tuned, on a call it
-      was never trained to make &#8212; 10 of 10 paired splits.</span></p>
-    <p><b>8.7<span class="op">&#8211;</span>32.0%</b><span>of tokens freed, per session, on four real ones. Over the whole
-      corpus the shipped code frees 33.6%, keeps 79.4% of the outputs that were reused later and
-      88.1% of their characters &#8212; the missing <a href="evidence.html#losses">11.9%</a> is mostly the cap.</span></p>
-    <p><b>281&#8239;ms</b><span>to score 3,591 calls, against 17&#215; that for the neural
-      sidecar it replaced, on an RTX&#160;4060 Laptop.</span></p>
-    <p><b>6 passes</b><span>before the model summary runs &#8212; each about 9&#8239;ms, each
-      handing back eight points of context window, so
-      <a href="#demo">the summary is deferred, not replaced</a>.</span></p>
-    <p><b>Never</b><span>drops an <code>Edit</code>, <code>Write</code>, <code>MultiEdit</code> or
-      <code>NotebookEdit</code> call, whatever it scores. Only their output can be trimmed.</span></p>
-    <p class="upfront__do">
-      <a href="#install">Install it</a> &#8212; or run <code>npm&#160;run&#160;dry&#8209;run</code>
-      first and see what it frees on your own sessions, installing nothing
-      (<a href="evidence.html#cost">section 06, Cost</a>).
-    </p>
+  <div class="cta reveal" style="--d:140ms">
+    <a class="btn btn--solid" href="#install">Install it</a>
+    <a class="btn" href="#demo">Watch it decide</a>
+    <a class="btn" href="#install">Try it, nothing installed</a>
   </div>
-  <div class="colophon reveal" style="--d:170ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>222</b> tests</span>
+  <div class="upfront reveal" style="--d:170ms">
+    <p><b>29.3%</b><span>of tokens freed</span></p>
+    <p><b>0.789</b><span>ranking quality</span></p>
+    <p><b>281&#8239;ms</b><span>to score 3,591 calls</span></p>
+    <p><b>0</b><span>network calls, ever</span></p>
+  </div>
+  <p class="fine fine--flood reveal" id="rules" style="--d:190ms">
+    No API key, no GPU, no network call. Two things are never dropped whatever they score: a call
+    that changed something, and an answer you gave it (an <code>AskUserQuestion</code> result,
+    or an approved plan), because asking again is a new question. It hands back to Claude
+    Code&#8217;s own summary rather than to a half-compacted transcript. Think twice if you run
+    commands that are unsafe to repeat: <a href="evidence.html#losses">section 07</a> prices that
+    case.
+  </p>
+  <div class="colophon reveal" style="--d:210ms">
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>242</b> tests</span>
     <span><b>0</b> network calls</span><span><b>5</b> claims <a href="evidence.html#checked">not verified</a></span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
 </div>
@@ -60,9 +51,8 @@
 <nav class="contents-bar" aria-label="Contents">
   <div class="contents-bar__row wrap">
     <div class="contents">
-    <a href="#result"><span class="contents__long">Evidence</span><span class="contents__short">Evidence</span></a><a href="#for"><span class="contents__long">Who it is for</span><span class="contents__short">Who for</span></a><a href="#demo"><span class="contents__long">Watch it decide</span><span class="contents__short">Watch</span></a><a href="#shape"><span class="contents__long">The shape of it</span><span class="contents__short">Shape</span></a><a href="#signals"><span class="contents__long">What you repeat</span><span class="contents__short">Repeats</span></a><a href="evidence.html#cost">Cost</a><a href="evidence.html#losses"><span class="contents__long">Where it loses</span><span class="contents__short">Losses</span></a><a href="evidence.html#checked"><span class="contents__long">Verification</span><span class="contents__short">Verified</span></a><a class="contents__out" href="glossary.html">Glossary&#8239;&#8599;</a><a class="contents__out" href="evidence.html">Cost, losses, verification&#8239;&#8599;</a></div>
+    <a href="#result"><span class="contents__long">Evidence</span><span class="contents__short">Evidence</span></a><a href="#demo"><span class="contents__long">Watch it decide</span><span class="contents__short">Watch</span></a><a href="#freed"><span class="contents__long">What it gives back</span><span class="contents__short">Calls</span></a><a href="#shape"><span class="contents__long">The shape of it</span><span class="contents__short">Shape</span></a><a href="#signals"><span class="contents__long">What you repeat</span><span class="contents__short">Repeats</span></a><a href="evidence.html#cost">Cost</a><a href="evidence.html#losses"><span class="contents__long">Where it loses</span><span class="contents__short">Losses</span></a><a href="evidence.html#checked"><span class="contents__long">Verification</span><span class="contents__short">Verified</span></a><a class="contents__out" href="trigger.html">Study&#8239;&#8599;</a><a class="contents__out" href="glossary.html">Glossary&#8239;&#8599;</a></div>
     <p class="contents__tools">
-      <button class="contents__all" type="button" id="open-all" hidden>Open all</button>
       <a class="contents__go" href="#install">Install</a>
       <a class="contents__top" href="#top" aria-label="Back to top"><span class="contents__word">Top&nbsp;</span>&#8593;</a>
     </p>
@@ -85,7 +75,7 @@
 
   <div class="chart">
     <table class="rows">
-      <caption class="caption caption--fig" style="margin-bottom:var(--space-xs)">Area under ROC — the chance
+      <caption class="caption caption--fig" style="margin-bottom:var(--space-xs)">Area under ROC: the chance
         that a needed output outranks an unneeded one, picked at random</caption>
       <colgroup><col style="width:21ch"><col><col style="width:15ch"></colgroup>
       <tbody>
@@ -178,97 +168,23 @@
        gets <span class="val">0.789</span>, not <span class="val">0.905</span>.
        That is the number to plan around.</p>
   </div>
-    <details class="more">
-    <summary><h3>How to read these two numbers, and which corpus they come from</h3></summary>
-<p class="caption">
-    <b>What these two numbers are.</b> <span class="num val">AUC</span> is the chance that a
-    needed output outranks an unneeded one, if you pick one of each at random: 0.5 is a coin
-    flip, 1.0 is perfect ordering. <span class="num val">Calibration error</span> is how far the
-    probabilities are from the truth — if it says 0.3 for a hundred outputs, about thirty
-    should turn out to be needed. The first decides whether the ranking is any good; the second
-    decides whether a fixed floor can be trusted to mean anything.
-  </p>
-  <p class="caption">
-    <b>Read that bar as the narrow corpus.</b> Those splits hold out 30% of 18 sessions — the
-    ones the neural model was scored against, so the comparison is possible at all — and every
-    scorer is judged on the same held-out sessions each split, which is what makes it paired.
-    Splitting by session rather than by row, because calls inside one session are correlated.
-    Across those splits the <a href="glossary.html#g-calibration-error">calibration error</a> is <span class="num val">0.044</span> against every
-    neural config’s <span class="num val">0.380–0.642</span>. The coefficients that ship are fitted
-    on all <span class="num val">41</span> sessions, where the same measurement gives
-    <span class="num val">0.789</span> and <span class="num val">0.051</span> —
+    <p class="fine">
+    <b><a href="glossary.html#g-auc">AUC</a></b> is the chance a needed output outranks an unneeded
+    one; <b><a href="glossary.html#g-calibration-error">calibration error</a></b> is how far the
+    probabilities are from the truth. Read the bar as the narrow corpus: 30% of 18 sessions held
+    out each split, split by session because calls inside one are correlated, every scorer judged
+    on the same held-out sessions,
+    which is what makes it paired. Its calibration error is
+    <span class="num val">0.044</span> against every neural config&#8217;s
+    <span class="num val">0.380&#8211;0.642</span>. What ships is fitted on all
+    <span class="num val">41</span> sessions, where the same measurement gives
+    <span class="num val">0.789</span> and <span class="num val">0.051</span>:
     <a href="evidence.html#next">the gaps in section 08</a> says why that is the pair to plan around.
   </p>
-  </details>
-</section>
-
-<section class="wrap" id="for" aria-labelledby="for-h">
-  <p class="rubric"><span class="rubric__n">02</span>Who it is for</p>
-  <h2 id="for-h">Six shapes of session, and what each one gets.</h2>
-  <p class="lede">
-    The saving is a property of how a session is shaped, not one number. Each shape carries its
-    cost, because for one of them the honest answer is to raise the floor.
-  </p>
-  <p class="fine">
-    Every figure here is measured elsewhere on this page; what is added is which one applies.
-  </p>
-
-  <dl class="cases">
-    <dt>Mostly shell.</dt>
-    <dd>
-      Most to free &#8212; the <span class="val">32.0%</span> session is commands whose output
-      is never quoted again. Also the shape this scorer is <strong>worst</strong> at:
-      <span class="val">47</span> of the 51 outputs it wrongly dropped were command output.
-      Same habit causes both.
-    </dd>
-
-    <dt>Large files.</dt>
-    <dd>
-      The ranking keeps these, correctly, which is why the <a href="glossary.html#g-the-cap">cap</a> exists:
-      <span class="val">27</span> calls of 2,239 run past 24,000 characters, and shortening
-      those 27 frees <span class="val">20.7%</span> of the corpus. Here most of the saving is
-      the cap, not the model.
-    </dd>
-
-    <dt>One long bug.</dt>
-    <dd>
-      The <code>Edit</code> that fixed it has a worthless output &#8212; <span class="val">1</span>
-      of 220 mutating calls was ever needed verbatim &#8212; so a scorer reading outputs drops
-      it, and <a href="#demo">this page's own demonstration did</a>. The guard saves
-      <span class="val">15</span> of those 220. A read can be re-run; a change cannot.
-    </dd>
-
-    <dt>Nothing may leave the machine.</dt>
-    <dd>
-      <span class="val">3,591</span> calls scored in <span class="val">281&#8239;ms</span>: no
-      process, no card, no key, no request. Not a setting &#8212; the path that needed one was
-      removed after it lost.
-    </dd>
-
-    <dt>Sessions that ask the operator questions.</dt>
-    <dd>
-      Answered by a rule rather than by advice. An <code>AskUserQuestion</code> result is
-      somebody's answer and an <code>ExitPlanMode</code> result is the plan they approved;
-      asking again is a new question and planning again is a new plan, so neither is ever
-      dropped. They are also the two most-reused tools in the corpus &#8212;
-      <span class="val">46.8%</span> and <span class="val">83.3%</span> against an
-      <span class="val">11.0%</span> base &#8212; and <span class="val">1.67%</span> of its
-      characters, so the rule costs <span class="val">0.1</span> of a point of freeing.
-    </dd>
-
-    <dt class="cases__against">Commands you cannot safely re-run.</dt>
-    <dd>
-      Think twice. <span class="val">47</span> of the <span class="val">51</span> outputs this
-      wrongly drops are <code>Bash</code>, and the recovery is &#8220;run it again&#8221; &#8212;
-      which is free for a <code>git&#160;log</code> and is not free for a migration or a deploy.
-      Nothing here knows which is which. Raise <code>keepThreshold</code>;
-      <a href="evidence.html#cost">section 06</a> prices the trade.
-    </dd>
-  </dl>
 </section>
 
 <section class="wrap" id="demo" aria-labelledby="demo-h">
-  <p class="rubric"><span class="rubric__n">03</span>Watch it decide</p>
+  <p class="rubric"><span class="rubric__n">02</span>Watch it decide</p>
   <h2 id="demo-h">Nine calls, two probabilities each, one ranking.</h2>
   <p class="lede">
     A real session: a test that fails only on CI, traced to a timezone in a fixture, then fixed.
@@ -294,11 +210,11 @@
       <span>keep&#8209;result &#183; keep&#8209;call<br>size</span><span>Outcome</span>
     </p>
     <ol class="demo__list" id="d-list">
-      <li class="demo__call" data-state="head"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:38.3%"><span class="demo__fill" style="--keep:0.0537"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.158 · <span class="visually-hidden">keep-call </span>0.973<br>7,186 ch</span><span class="demo__outcome">head only</span></li>
+      <li class="demo__call demo__call--noted" data-state="head"><span class="demo__who"><b>Bash</b><span>npm test -- auth.spec.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:38.3%"><span class="demo__fill" style="--keep:0.0537"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.158 · <span class="visually-hidden">keep-call </span>0.973<br>7,186 ch</span><span class="demo__outcome">head only</span><span class="demo__note">Kept <b>386</b> of 7,186 characters: the head, and a line saying it was shortened.</span></li>
       <li class="demo__call" data-state="capped"><span class="demo__who"><b>Read</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:86.1%"><span class="demo__fill" style="--keep:0.6626"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.762 · <span class="visually-hidden">keep-call </span>0.946<br>36,341 ch</span><span class="demo__outcome">capped</span></li>
       <li class="demo__call" data-state="small"><span class="demo__who"><b>Grep</b><span>JWT_SECRET</span></span><span class="demo__track"><span class="demo__was" style="--w:4.3%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.020 · <span class="visually-hidden">keep-call </span>0.037<br>89 ch</span><span class="demo__outcome">too small</span></li>
       <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>src/config.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:53.5%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.282 · <span class="visually-hidden">keep-call </span>0.270<br>14,026 ch</span><span class="demo__outcome">kept</span></li>
-      <li class="demo__call" data-state="dropped"><span class="demo__who"><b>Bash</b><span>git log --oneline -20 -- src/auth.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:17.8%"><span class="demo__fill" style="--keep:0"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.081 · <span class="visually-hidden">keep-call </span>0.093<br>1,547 ch</span><span class="demo__outcome">dropped</span></li>
+      <li class="demo__call demo__call--noted" data-state="dropped"><span class="demo__who"><b>Bash</b><span>git log --oneline -20 -- src/auth.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:17.8%"><span class="demo__fill" style="--keep:0"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.081 · <span class="visually-hidden">keep-call </span>0.093<br>1,547 ch</span><span class="demo__outcome">dropped</span><span class="demo__note"><b>1,547</b> characters of output, <b>1,597</b> freed: dropping a call takes its input with it.</span></li>
       <li class="demo__call" data-state="kept"><span class="demo__who"><b>Read</b><span>.github/workflows/ci.yml</span></span><span class="demo__track"><span class="demo__was" style="--w:33.9%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.282 · <span class="visually-hidden">keep-call </span>0.270<br>5,615 ch</span><span class="demo__outcome">kept</span></li>
       <li class="demo__call" data-state="capped"><span class="demo__who"><b>Bash</b><span>gh run view 4821 --log | tail -60</span></span><span class="demo__track"><span class="demo__was" style="--w:100%"><span class="demo__fill" style="--keep:0.4914"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>0.228 · <span class="visually-hidden">keep-call </span>0.305<br>49,001 ch</span><span class="demo__outcome">capped</span></li>
       <li class="demo__call" data-state="pinned"><span class="demo__who"><b>Edit</b><span>src/auth.ts</span></span><span class="demo__track"><span class="demo__was" style="--w:2.4%"><span class="demo__fill" style="--keep:1"></span></span></span><span class="demo__scores"><span class="visually-hidden">keep-result </span>1.000 · <span class="visually-hidden">keep-call </span>1.000<br>29 ch</span><span class="demo__outcome">pinned</span></li>
@@ -311,122 +227,120 @@
     <div>
       <h3>How do I read a bar?</h3>
       <p>The outline is how big that result was against the largest in the session; the filled part
-        is how much of it survived. A <em>head only</em> row keeps its outline and shrinks its fill
-        to 300 characters. A <em>dropped</em> row keeps its outline with nothing in it.</p>
-    </div>
-    <div>
-      <h3>Why is <em>freed</em> bigger than the output?</h3>
-      <p>Dropping a call takes its input with it, so some of those characters were never in the
-        column to the left. The <code>git&nbsp;log</code> row is the clearest case: 1,547
-        characters of output, 1,597 freed.</p>
+        is how much of it survived.</p>
     </div>
     <div>
       <h3>Is this a real session?</h3>
-      <p>The transcript is constructed. Every real session on this machine is someone&#8217;s work
-        and this page is public. The <em>decisions</em> are not constructed: the list is produced by
-        running the shipped scorer with the shipped defaults, nothing in it was chosen by hand, and
-        <code>npm&nbsp;run&nbsp;docs:demo</code> regenerates it.</p>
+      <p>The transcript is constructed, because every real session on this machine is someone&#8217;s
+        work and this page is public. The <em>decisions</em> are not: the shipped scorer produced
+        this list with the shipped defaults, and <code>npm&nbsp;run&nbsp;docs:demo</code>
+        regenerates it.</p>
     </div>
-  </div>
-
-
-  <div class="qa">
     <div>
       <h3>Did it ever drop something that mattered?</h3>
-      <p>Yes. The first time this ran, the scorer dropped the <code>Edit</code> that fixed the bug.
-        Both its scores were low and honestly so: &#8220;Applied 1 edit to src/auth.ts&#8221; is
-        worth nothing, and exactly 1 of the 220 mutating calls in the corpus had an output that was
-        ever needed verbatim.</p>
-    </div>
-    <div>
-      <h3>So what changed?</h3>
-      <p>A mutating call is no longer the scorer&#8217;s decision. <code>Edit</code>,
-        <code>Write</code>, <code>MultiEdit</code> and <code>NotebookEdit</code> keep their call
-        whatever the probabilities say; only their output can go. The input is the only record that
-        the change happened, and unlike a read it cannot be recovered by running it again.</p>
-    </div>
-    <div>
-      <h3>What does that rule actually save?</h3>
-      <p>Re-running the same decisions with the guard removed answers it: 15 of those 220 calls
-        would otherwise lose their call or their output. So the rule saves 15, not 220 &#8212; and
-        the honest figure is the smaller one.</p>
+      <p>Yes. The first run dropped the <code>Edit</code> that fixed the bug, and both its scores
+        were low honestly: &#8220;Applied 1 edit to src/auth.ts&#8221; is worth nothing. So a
+        mutating call is no longer the scorer&#8217;s to decide. Its input is the only record the
+        change happened and re-running cannot recover it, so <code>Edit</code>, <code>Write</code>,
+        <code>MultiEdit</code> and <code>NotebookEdit</code> keep their call whatever the
+        probabilities say. Re-running the corpus without that guard prices it: <b>15</b> of the 220
+        mutating calls would otherwise lose something, not 220.</p>
     </div>
     <div>
       <h3>Why is a <code>Grep</code> scoring 0.020 still kept?</h3>
-      <p>Dropping it would have freed 126 characters, more than the 89 its result holds, because
-        dropping a call takes its input with it. Roughly thirty tokens, against a real chance of
-        losing something the session still needed. Below <a href="glossary.html#g-minyieldchars">minYieldChars</a>
-        the ranking is not worth acting on however confident it is, so that call reads
-        <em>too small</em> rather than <em>dropped</em>.</p>
+      <p>Dropping it frees 126 characters, more than the 89 its result holds, because the call goes
+        with it. Thirty tokens, against a real chance of losing something still needed. Below
+        <a href="glossary.html#g-minyieldchars">minYieldChars</a> the ranking is not worth acting on
+        however confident it is, so that call reads <em>too small</em> rather than
+        <em>dropped</em>.</p>
     </div>
   </div>
 
   <h3 class="ladder__h">And then it does it again.</h3>
   <!-- passes:render -->
   <p>
-    One compaction is not the product; the loop is. The engine asks at 60% of the window, this
+    One compaction is not the product; the loop is. The engine asks at 62% of the window, this
     answers, you keep working, and it asks again. Each answer costs about
-    <span class="num val">9&#8239;ms</span> and hands back
-    <span class="num val">8 points</span> of window &#8212; so the model
+    <span class="num val">8&#8239;ms</span> and hands back
+    <span class="num val">9 points</span> of window, so the model
     summary, which is a model call and rewrites your session into prose, runs after the
     sixth of them rather than the first.
   </p>
-  <ol class="ladder" id="ladder">
-      <li class="ladder__row"><span class="ladder__label">pass 1</span><span class="visually-hidden">held 52.0% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:52.0%"></span><span class="ladder__back" style="--l:52.0%;--w:8.7%"></span></span><span class="ladder__num">&#8722;8.7<span class="ladder__unit">pts</span></span><span class="ladder__ms">14&#8239;ms</span></li>
-      <li class="ladder__row"><span class="ladder__label">pass 2</span><span class="visually-hidden">held 50.1% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:50.1%"></span><span class="ladder__back" style="--l:50.1%;--w:9.9%"></span></span><span class="ladder__num">&#8722;9.9<span class="ladder__unit">pts</span></span><span class="ladder__ms">10&#8239;ms</span></li>
-      <li class="ladder__row"><span class="ladder__label">pass 3</span><span class="visually-hidden">held 51.7% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:51.7%"></span><span class="ladder__back" style="--l:51.7%;--w:8.4%"></span></span><span class="ladder__num">&#8722;8.4<span class="ladder__unit">pts</span></span><span class="ladder__ms">9&#8239;ms</span></li>
-      <li class="ladder__row"><span class="ladder__label">pass 4</span><span class="visually-hidden">held 52.0% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:52.0%"></span><span class="ladder__back" style="--l:52.0%;--w:8.3%"></span></span><span class="ladder__num">&#8722;8.3<span class="ladder__unit">pts</span></span><span class="ladder__ms">9&#8239;ms</span></li>
-      <li class="ladder__row"><span class="ladder__label">pass 5</span><span class="visually-hidden">held 52.8% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:52.8%"></span><span class="ladder__back" style="--l:52.8%;--w:7.2%"></span></span><span class="ladder__num">&#8722;7.2<span class="ladder__unit">pts</span></span><span class="ladder__ms">8&#8239;ms</span></li>
-      <li class="ladder__row"><span class="ladder__label">pass 6</span><span class="visually-hidden">held 54.1% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:54.1%"></span><span class="ladder__back" style="--l:54.1%;--w:6.6%"></span></span><span class="ladder__num">&#8722;6.6<span class="ladder__unit">pts</span></span><span class="ladder__ms">8&#8239;ms</span></li>
-      <li class="ladder__row ladder__row--over"><span class="ladder__label">hand over</span><span class="visually-hidden">held 54.3% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:54.3%"></span><span class="ladder__back" style="--l:54.3%;--w:5.8%"></span></span><span class="ladder__num ladder__num--under">&#8722;5.8<span class="ladder__unit">pts</span></span><span class="ladder__ms">6 passes is the ceiling</span></li>
+  <ol class="ladder" id="ladder" style="--at:62%;--floor:57%">
+    <li class="ladder__scale" aria-hidden="true"><span></span><span class="ladder__marks">
+      <span class="ladder__mark ladder__mark--floor">floor 57%</span>
+      <span class="ladder__mark ladder__mark--at">asks at 62%</span>
+    </span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 1</span><span class="visually-hidden">held 51.6% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:51.6%"></span><span class="ladder__back" style="--l:51.6%;--w:10.5%"></span></span><span class="ladder__num">&#8722;10.5<span class="ladder__unit">pts</span></span><span class="ladder__ms">13&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 2</span><span class="visually-hidden">held 53.2% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:53.2%"></span><span class="ladder__back" style="--l:53.2%;--w:10.2%"></span></span><span class="ladder__num">&#8722;10.2<span class="ladder__unit">pts</span></span><span class="ladder__ms">9&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 3</span><span class="visually-hidden">held 52.8% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:52.8%"></span><span class="ladder__back" style="--l:52.8%;--w:9.2%"></span></span><span class="ladder__num">&#8722;9.2<span class="ladder__unit">pts</span></span><span class="ladder__ms">8&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 4</span><span class="visually-hidden">held 53.9% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:53.9%"></span><span class="ladder__back" style="--l:53.9%;--w:8.2%"></span></span><span class="ladder__num">&#8722;8.2<span class="ladder__unit">pts</span></span><span class="ladder__ms">8&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 5</span><span class="visually-hidden">held 55.1% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:55.1%"></span><span class="ladder__back" style="--l:55.1%;--w:7.0%"></span></span><span class="ladder__num">&#8722;7.0<span class="ladder__unit">pts</span></span><span class="ladder__ms">7&#8239;ms</span></li>
+      <li class="ladder__row"><span class="ladder__label">pass 6</span><span class="visually-hidden">held 55.6% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:55.6%"></span><span class="ladder__back" style="--l:55.6%;--w:6.6%"></span></span><span class="ladder__num">&#8722;6.6<span class="ladder__unit">pts</span></span><span class="ladder__ms">8&#8239;ms</span></li>
+      <li class="ladder__row ladder__row--over"><span class="ladder__label">hand over</span><span class="visually-hidden">held 55.6% of the window, </span><span class="ladder__track" aria-hidden="true"><span class="ladder__held" style="--w:55.6%"></span><span class="ladder__back" style="--l:55.6%;--w:6.7%"></span></span><span class="ladder__num ladder__num--under">&#8722;6.7<span class="ladder__unit">pts</span></span><span class="ladder__ms">6 passes is the ceiling</span></li>
   </ol>
-  <p class="caption">One real session of 8,663 messages, replayed against a
+  <p class="caption">One real session of 10,331 messages, replayed against a
     200k&#8209;token window. The dark part of each bar is what the session was still
     holding; the red part is what that pass handed back. Of 5 sessions measured on one
-    machine, 3 looped at all, and between them the loop answered <b>9</b>
+    machine, 4 looped at all, and between them the loop answered <b>10</b>
     compactions that would otherwise each have been a model summary. A dated snapshot of one
-    machine's transcripts, which grow as you work &#8212; <code>npm run dry-run</code> re-runs it
+    machine's transcripts, which grow as you work. <code>npm run dry-run</code> re-runs it
     on yours.</p>
-  <details class="more">
-    <summary><h3>Why a percentage of the window, and not a percentage of the session</h3></summary>
-    <p>
-      Until this version the rule was <code>minReductionRatio: 0.25</code>: take the pass if it
-      removed a quarter of the transcript. Replaying the loop on real sessions, that bar took
-      <span class="num val">0</span> of <span class="num val">14</span>
-      passes &#8212; every one went to the model summary while this could still free
-      8 points of window in under 14&#8239;ms.
-    </p>
-    <p>
-      The unit was the mistake. A quarter of a 8,663-message session and
-      a quarter of a 200-message one are not the same amount of room to keep working in, and room is
-      what runs out. Points of the context window are comparable between them, and they are the same
-      unit as the 60% trigger &#8212; which makes the rule its own guard: a pass that is taken
-      leaves the session at least 5 points below the trigger, so it has to grow back through
-      them before another compaction can be asked for. Compacting on every turn stops being possible
-      rather than discouraged.
-    </p>
-    <p>
-      The ceiling is <code>maxPasses: 6</code>, and on the session drawn above it is
-      what stops the loop rather than the floor. That is deliberate: what
-      <a href="evidence.html#checked">deferring the summary costs</a> is not measured, and a backstop whose value
-      is a judgement should be the conservative one.
-    </p>
-    <p>
-      The worry a loop like this raises is that the transcript fills with receipts: every dropped
-      result leaves a note, and notes are never removed. Measured, it does not happen. The share
-      of surviving tool results that are a note rises for two passes and then stops &#8212;
-      <span class="num val">6.7%</span>, <span class="num val">8.3%</span>, <span class="num val">8.3%</span>, and flat at about seven after that &#8212; because fresh output arrives
-      between passes at roughly the rate the loop creates stubs. A transcript seven passes deep is
-      still about 93% intact results, which is why there is no dial for it.
-    </p>
-  </details>
+  <h3 class="ladder__h3">Why a percentage of the window, and not of the session</h3>
+  <p>
+    The rule used to be <code>minReductionRatio: 0.25</code>: take the pass if it removed a quarter
+    of the transcript. Replayed on real sessions that bar took
+    <span class="num val">0</span> of <span class="num val">15</span>
+    passes. Every one went to the model summary while this could still free 9
+    points of window in under 13&#8239;ms.
+  </p>
+  <p>
+    The unit was the mistake. A quarter of a 10,331-message session and a
+    quarter of a 200-message one are not the same amount of room to keep working in, and room is what
+    runs out. Points of the window are comparable, and they are the same unit as the 62% trigger,
+    which makes the rule its own guard: the dashed line above is the floor, and a pass is only taken
+    if it lands below it. Growing back through those 5 points is what stops a compaction on
+    every turn.
+  </p>
+  <p>
+    The ceiling is <code>maxPasses: 6</code>, and on the session drawn above it is what
+    ends the loop rather than the floor. That is deliberate: what
+    <a href="evidence.html#checked">deferring the summary costs</a> is not measured, and a backstop
+    whose value is a judgement should be the conservative one.
+  </p>
+  <p>
+    Every dropped result leaves a note and notes are never removed, so the standing worry is that a
+    transcript fills up with receipts. Measured, it does not.
+  </p>
+  <figure class="spark">
+      <svg class="spark__plot" viewBox="0 0 100 27" role="img"
+        aria-label="Share of surviving tool results that is a note, by pass: 7.1%, 7%, 8.3%, 6.7%, 6.3%, 6.4%, 6.5%. The axis runs from zero to 10 per cent.">
+        <text class="spark__tick" x="6" y="1.6" text-anchor="end">10%</text>
+        <text class="spark__tick" x="6" y="26" text-anchor="end">0</text>
+        <line class="spark__base" x1="8" y1="26" x2="100" y2="26"></line>
+        <path class="spark__line" pathLength="1" fill="none"
+          d="M8.0 7.5 L23.3 7.8 L38.7 4.4 L54.0 8.6 L69.3 9.6 L84.7 9.4 L100.0 9.1"></path>
+        <circle class="spark__dot" r="1.1" cx="8.0" cy="7.5" style="--i:0"></circle>
+        <circle class="spark__dot" r="1.1" cx="23.3" cy="7.8" style="--i:1"></circle>
+        <circle class="spark__dot" r="1.1" cx="38.7" cy="4.4" style="--i:2"></circle>
+        <circle class="spark__dot" r="1.1" cx="54.0" cy="8.6" style="--i:3"></circle>
+        <circle class="spark__dot" r="1.1" cx="69.3" cy="9.6" style="--i:4"></circle>
+        <circle class="spark__dot" r="1.1" cx="84.7" cy="9.4" style="--i:5"></circle>
+        <circle class="spark__dot" r="1.1" cx="100.0" cy="9.1" style="--i:6"></circle>
+      </svg>
+      <p class="spark__axis" aria-hidden="true"><span>pass 1</span><span class="spark__peak">peak 8.3%</span><span>pass 7</span></p>
+      <figcaption class="caption">Share of surviving tool results that is a note, per pass. It rises
+        for two passes and then levels: fresh output arrives between passes at about the rate the loop
+        makes stubs. Seven passes deep the transcript is still
+        94% intact results, which is why there
+        is no dial for it.</figcaption>
+    </figure>
   <!-- /passes:render -->
   <div class="finding finding--loss reveal">
     <p>The extra passes are not free. Replayed over
       <span class="val">32</span> sessions, the loop drops
-      <span class="val">19</span> outputs a later step went back to, against
-      <span class="val">6</span> for a single pass &#8212;
-      <span class="val">3.17&#215;</span> the loss for <span class="val">1.38&#215;</span>
+      <span class="val">17</span> outputs a later step went back to, against
+      <span class="val">5</span> for a single pass: <span class="val">3.40&#215;</span> the loss for <span class="val">1.32&#215;</span>
       the characters freed.</p>
   </div>
   <p>
@@ -434,12 +348,75 @@
     accumulated backlog at once, where the cheap bulk is, at
     <span class="num val">0.058</span> lost outputs per 10,000 characters freed. Every pass
     after it works on fresh material only and pays <span class="num val">0.25</span> to
-    <span class="num val">0.71</span> &#8212; four to twelve times as much. It is still not an
+    <span class="num val">0.71</span>, four to twelve times as much. It is still not an
     argument for stopping at one, because the alternative to pass two is not keeping
     everything: it is the model summary, which keeps no tool output verbatim at all. But the
     price is on the page rather than under it, and <code>maxPasses:&#160;1</code> buys the
     cheap pass and nothing else.
   </p>
+</section>
+
+<section class="wrap" id="freed" aria-labelledby="freed-h">
+  <p class="rubric"><span class="rubric__n">03</span>What it gives back</p>
+  <h2 id="freed-h">Room back, and the model call that never runs.</h2>
+  <p class="lede">
+    Half of it is room to keep working in. The other half is what the loop defers, which is not a
+    pause: it is a model call.
+  </p>
+
+  <!-- spread:render -->
+  <figure class="spread" id="spread">
+    <p class="spread__lead">What one compaction freed, on each of the
+      <b>4</b> largest sessions on one machine</p>
+    <ol class="spread__list">
+      <li class="spread__row" style="--i:0"><span class="spread__who">66<span> calls</span></span><span class="spread__track"><span class="spread__kept" style="--keep:0.9130"></span></span><span class="spread__pct">8.7%</span><span class="spread__tok">7k tokens</span></li>
+      <li class="spread__row" style="--i:1"><span class="spread__who">49<span> calls</span></span><span class="spread__track"><span class="spread__kept" style="--keep:0.9090"></span></span><span class="spread__pct">9.1%</span><span class="spread__tok">4k tokens</span></li>
+      <li class="spread__row" style="--i:2"><span class="spread__who">473<span> calls</span></span><span class="spread__track"><span class="spread__kept" style="--keep:0.8200"></span></span><span class="spread__pct">18.0%</span><span class="spread__tok">49k tokens</span></li>
+      <li class="spread__row" style="--i:3"><span class="spread__who">3,003<span> calls</span></span><span class="spread__track"><span class="spread__kept" style="--keep:0.6800"></span></span><span class="spread__pct">32.0%</span><span class="spread__tok">677k tokens</span></li>
+    </ol>
+    <p class="spread__sum"><span><b>29.3%</b> freed across all
+      3,591 calls</span><span><b>8.7%</b> to <b>32%</b> per session</span></p>
+    <figcaption class="caption">The dark part of each bar is what the session still held after one
+      pass; the empty part is what it handed back. Four sessions is a reading of four sessions and
+      not a distribution: what moves it is how much of the session was tool output in the first
+      place, and nothing here has measured how much of the spread is noise.
+      <code>npm run dry-run</code> measures yours.</figcaption>
+  </figure>
+  <!-- /spread:render -->
+
+  <h3 class="figure-title">And nine model calls that did not happen</h3>
+  <!-- avoided:render -->
+  <figure class="avoided" id="avoided">
+    <p class="avoided__lead"><b>10</b> engine summaries deferred, across
+      <b>4</b> of the <b>5</b> sessions measured</p>
+    <ol class="avoided__strip" aria-hidden="true">
+      <li class="avoided__block" style="--i:0"></li>
+      <li class="avoided__block" style="--i:1"></li>
+      <li class="avoided__block" style="--i:2"></li>
+      <li class="avoided__block" style="--i:3"></li>
+      <li class="avoided__block" style="--i:4"></li>
+      <li class="avoided__block" style="--i:5"></li>
+      <li class="avoided__block" style="--i:6"></li>
+      <li class="avoided__block" style="--i:7"></li>
+      <li class="avoided__block" style="--i:8"></li>
+      <li class="avoided__block" style="--i:9"></li>
+    </ol>
+    <p class="avoided__sum">
+      <span><b class="num" id="av-tokens" data-to="1240000">1,240,000</b>
+        input tokens not sent</span>
+      <span><b class="num">0</b> tokens spent answering</span>
+      <span><b class="num">8&#8239;ms</b> each, on this machine</span>
+    </p>
+    <figcaption class="caption">The same 5 sessions as the ladder. A summary asked at
+      62% of a 200k&#8209;token window reads a transcript of roughly
+      124,000 tokens and rewrites it into prose; 10 of them
+      is 1,240,000 input tokens that were never sent anywhere. What ran
+      instead took 8&#8239;ms and sent nothing. <b>How long the engine&#8217;s own summary
+      takes is not measured</b>
+      (a <a href="evidence.html#checked">standing unverified claim</a>), so this counts calls and
+      tokens, and never seconds.</figcaption>
+  </figure>
+  <!-- /avoided:render -->
 </section>
 
 <section class="flooded" id="shape" aria-labelledby="shape-h">
@@ -453,6 +430,11 @@
   </p>
   <h3 class="figure-title">Every one of the 2,239 decisions, plotted</h3>
 <figure class="plate">
+    <!-- cutread:render -->
+    <p class="cut__read">A fixed cut at <b id="cut-at">0.50</b> would sweep
+      <b id="cut-n">212</b> of the 247 reused outputs with it:
+      <b id="cut-pct">86%</b> of the work this is here to protect.</p>
+    <!-- /cutread:render -->
     <!-- Below ~760px the 1200-unit plate scales to a third and its 13px labels
          render at ~4px. Rather than ship a second asset, it keeps its size and
          drags, the same way the six tables on this page do. -->
@@ -467,19 +449,26 @@
         <img src="distribution-frame.svg" alt="" aria-hidden="true" decoding="async">
         <canvas id="plate-canvas" width="1200" height="420" aria-hidden="true"></canvas>
       </div>
+    <!-- cut:render -->
+      <div class="cut" id="cut" style="--at:0.5" aria-hidden="true">
+        <div class="cut__line"></div>
+      </div>
+    <!-- /cut:render -->
     </div>
     </div>
     <figcaption>
       <span id="plate-note" hidden>The marks arrive scattered and settle into the order the
-      scorer puts them in. That opening scatter is <em>not</em> data — it is these same 2,239
-      marks with their scores taken away, drawn from a published seed — so what you are watching
+      scorer puts them in. That opening scatter is <em>not</em> data. It is these same 2,239
+      marks with their scores taken away, drawn from a published seed, so what you are watching
       is the ordering being applied and nothing else. With scripting off or motion turned down,
       the plate below is simply the finished picture.</span>
-      The reused band leans right — that is the model working. The bands also overlap, heavily,
-      and that overlap is why a <em>floor</em> decides what is kept rather than a cut: below 0.2
-      there are far too many genuinely-needed outputs to sweep. The marks fall into columns
+      The reused band leans right: that is the model working. The bands also overlap, heavily,
+      and that overlap is why a <em>floor</em> decides what is kept rather than a cut. The line
+      above sweeps from the shipped floor to 0.50 and counts what a fixed cut there would take
+      with it; below the floor kompact spends a budget lowest-score-first instead, which is what
+      leaves the overlap alone. The marks fall into columns
       because twelve of the thirteen inputs are yes-or-no, so the model has only a few dozen
-      distinct scores to give — a ranking this coarse is still enough to beat a 322M-parameter
+      distinct scores to give. A ranking this coarse is still enough to beat a 322M-parameter
       network asked the same question without being fine-tuned on it.
     </figcaption>
   </figure>
@@ -503,8 +492,7 @@
 
   <!-- signals:render -->
   <p class="caption caption--fig">31 shapes that repeated, of 2,000 recorded over 40 sessions and 4,013 tool calls</p>
-      <details class="more">
-    <summary><h3>All 31 shapes that repeated, ranked</h3></summary>
+      <h3 class="figure-title">All 31 shapes that repeated, ranked</h3>
 <div class="scroller" data-label="Table: what repeated">
   <table class="data">
     <thead><tr><th>Kind</th><th>Signature</th><th class="n">times</th><th class="n">sessions</th><th class="n">calls</th><th class="n">chars</th><th class="n">est.</th></tr></thead>
@@ -526,22 +514,21 @@
     chosen for this. A model of effort, not a measurement of time; every input to it is on the row,
     so any row can be recomputed by hand. Greyed rows are generic shell verbs.</p>
 
-    </details>
+    
 
   <div class="finding finding--loss reveal">
     <p>Of <span class="val">2,000</span> shapes recorded,
-      <span class="val">31</span> repeated enough to propose — and
+      <span class="val">31</span> repeated enough to propose, and
       <span class="val">10</span> of the 12 repeated command shapes are generic
       shell verbs. The highest-ranked thing this found is
       <code>sed -n</code>.</p>
   </div>
   <p>
     10 of the 12 are verbs like
-    <code>sed</code>, <code>grep</code> or <code>cat</code>. No skill helps with those. The 2 that fall outside that list &#8212;
-      <code>git diff | head -&lt;n&gt;</code> and <code>git status --short</code> &#8212; are not
+    <code>sed</code>, <code>grep</code> or <code>cat</code>. No skill helps with those. The 2 that fall outside that list
+      (<code>git diff | head -&lt;n&gt;</code> and <code>git status --short</code>) are not
       workflows either; they are simply verbs the list was not written to catch, and adding them
-      to it to keep a sentence tidy is the kind of tuning this page exists to avoid. The best row that reads like an actual workflow &#8212;
-      <code>Bash(grep -n) → Bash(sed -n) → Bash(sed -n)</code> &#8212; is ranked 8th, because the ranking
+      to it to keep a sentence tidy is the kind of tuning this page exists to avoid. The best row that reads like an actual workflow, <code>Bash(grep -n) → Bash(sed -n) → Bash(sed -n)</code>, is ranked 8th, because the ranking
       rewards total work and a generic verb runs more often than a workflow does.
   </p>
   <!-- /signals:render -->
@@ -556,7 +543,7 @@
     <pre tabindex="0" data-label="Shell command and the ranked report it prints"><code><span class="cmd__line">npm run propose:demo</span><span class="cmd__gap"></span><span class="cmd__line">Run: eval/fixtures/signals.json</span><span class="cmd__line">31 shapes recorded; 31 seen 3+ times in 2+ sessions.</span><span class="cmd__line">&#8203;</span><span class="cmd__line">What repeating costs you</span><span class="cmd__line">    #  times sess  calls     chars    est.  what</span><span class="cmd__line">    1    239    2    239   438,423   677.4  the same command: sed -n</span><span class="cmd__line">    2     76    2     76    36,662   112.7  the same command: python3 -c</span><span class="cmd__line">    3     60    2     60    49,995   110.0  the same command: grep -n | head -&lt;n&gt;</span><span class="cmd__line">    4     14    2     14    47,318    61.3  the same command: cat &lt;path&gt;</span><span class="cmd__line">    5     19    3     57         0    57.0  the same run of tools: Read → Edit → Edit</span><span class="cmd__line">    6     14    2     42         0    42.0  the same run of tools: Read → Read → Edit</span><span class="cmd__line">    7      7    2     21         0    21.0  the same run of tools: Read → Write → Write</span><span class="cmd__line">    8      7    2     21         0    21.0  the same run of tools: Bash(grep -n) → Bash(sed -n) → Bash(sed -n)</span><span class="cmd__line">    9      7    2     21         0    21.0  the same run of tools: Read → Bash(grep -n) → Bash(sed -n)</span><span class="cmd__line">   10     15    2     15     4,105    19.1  the same command: grep -n</span><span class="cmd__line">   11      6    2     18         0    18.0  the same run of tools: Read → Read → Write</span><span class="cmd__line">   12     12    2     12     3,134    15.1  the same command: cat | tail -&lt;n&gt;</span><span class="cmd__line">&#8203;</span><span class="cmd__line">  est. = total tool calls + total output characters / 1000. A model of effort,</span><span class="cmd__line">  not a measurement of time, and every input to it is on the row.</span><span class="cmd__line">&#8203;</span><span class="cmd__line">Nothing written. `npm run propose -- --write 1,3` drafts those rows into .kompact/proposals/.</span></code></pre>
   </div>
   <p class="caption">Real output, captured from <code>eval/propose.ts</code> when this page was
-    built, over the same committed corpus as the table above &#8212; not a mock-up.
+    built, over the same committed corpus as the table above. Not a mock-up.
     <code>npm run propose</code> is the same report over what the recorder saw on your machine,
     which is nothing until the plugin has been installed a while.</p>
   <!-- /propose:render -->
@@ -577,37 +564,13 @@
   </div>
   
 
-  <details class="more">
-    <summary>Why this is not established yet, and what it cost to find out</summary>
-  <p>
-    That is not the finding this was built to get. The classifier itself works: the counts are real,
-    the signatures group work that belongs together, and three separate design ideas turned out to be
-    wrong only because the data said so — 94% of command shapes were seen exactly once until a
-    pipeline stopped keeping every stage's arguments, sequences never formed at all until the window
-    slid across batches instead of inside one, and the 2,000-row cap cut the rarest kinds to nothing
-    until each kind was pruned against itself.
+  <p class="fine">
+    The classifier works and the counts are real. What is <em>not</em> established is the premise
+    underneath: these sessions are an assistant&#8217;s tool use, and what an assistant repeats is
+    reading files, editing them, and reaching for the shell.
+    <a href="evidence.html#repeats">What that cost to find out, and what this table is not</a>,
+    is on the evidence page.
   </p>
-  <p>
-    What is <em>not</em> established is the premise underneath it. These sessions are an assistant's
-    tool use, and what an assistant repeats is reading files, editing them, and reaching for the
-    shell.
-  </p>
-  <p class="caption">
-    Two things this table is not. It is not from a live install: the recorder only sees sessions
-    from the moment it is switched on, so these counts come from replaying existing transcripts
-    through the recorder's own functions (<code>eval/signals-fixture.ts</code>) rather than from the
-    hook having run. And it carries no examples — the signatures are shapes and safe to publish, but
-    the samples kept beside them are raw text, and the first fixture built without stripping them
-    passed all eight credential checks while carrying another project's brief and a path with a
-    session id in it. On your own machine the samples are the point, because they are how a wrong
-    grouping becomes visible. In anything published they have no place.
-  </p>
-  <p class="caption">
-    Nothing recorded leaves the machine, and nothing is written into a skills directory: drafts land
-    in <code>.kompact/proposals/</code>, which Claude Code does not read. Set
-    <code>recordSignals</code> to false to record nothing at all.
-  </p>
-  </details>
 </section>
 
 
@@ -618,17 +581,29 @@
 
 
 <section class="wrap" id="elsewhere" aria-labelledby="elsewhere-h">
-  <p class="rubric"><span class="rubric__n">06&#8211;08</span>On the evidence page</p>
-  <h2 id="elsewhere-h">Cost, where it loses, and what is not verified.</h2>
+  <p class="rubric"><span class="rubric__n">06&#8211;08</span>Elsewhere</p>
+  <h2 id="elsewhere-h">The arithmetic, and the settings it decided.</h2>
   <p class="lede">
-    Three sections, <a href="evidence.html">on their own page</a>: what it costs to run, the
-    outputs it dropped that were needed, and the claims this project has not established.
+    Two kinds of page behind this one: what every figure here cost to produce, and the sweeps
+    that chose the numbers the loop runs on.
   </p>
-  <p class="fine">
-    They left this page when it reached seventeen thousand pixels. Nothing was cut &#8212; the
-    numbering runs straight through, and a reader who wants the arithmetic rather than the
-    argument should start there.
-  </p>
+
+  <ol class="elsewhere">
+    <li class="elsewhere__item">
+      <p class="elsewhere__kind">Evidence &#183; three sections</p>
+      <h3><a href="evidence.html">Cost, where it loses, and what is not verified</a></h3>
+      <p>What it costs to run, the outputs it dropped that were needed, and the claims this
+        project has not established. They left this page when it reached seventeen thousand
+        pixels; the numbering runs straight through.</p>
+    </li>
+    <li class="elsewhere__item">
+      <p class="elsewhere__kind">Study &#183; the loop&#8217;s two settings</p>
+      <h3><a href="trigger.html">Where to compact, and how much</a></h3>
+      <p>Claude Code compacts at its own threshold and goes first, so kompact has to answer
+        under it. The grid says how far under, and says plainly that the floor shipped here is
+        not the floor that measured best.</p>
+    </li>
+  </ol>
 </section>
 
 <section class="wrap" id="install" aria-labelledby="install-h">
@@ -649,8 +624,7 @@
     <code>npm&nbsp;run&nbsp;dry-run</code>: it scores your own transcripts with the same code the
     hook calls and prints both what one compaction would free and how many passes the loop
     would take before handing over, writing nothing and installing nothing.
-    Needs <code>git</code> and Node 18 or later, and it reads the sessions already in <code>~/.claude/projects</code> — with
-    none there it has nothing to score and says so.
+    Needs <code>git</code> and Node 18 or later, and it reads the sessions already in <code>~/.claude/projects</code>. With none there it has nothing to score and says so.
     <a href="evidence.html#cost">Section 06, Cost</a> has the range to expect.
   </p>
   <div class="cmd">
@@ -684,45 +658,34 @@
     the shipped behaviour, not a policy: each line is a default in <code>src/compact.ts</code> or
     a guard the scorer does not get a vote on.
   </p>
-  <details class="more">
-    <summary><h3>If nothing happens</h3></summary>
+  <h3>If nothing happens</h3>
   <p>
-    It says so, every time it fires. On each compaction the plugin raises a notice reading
+    It says so, every time it fires. Each compaction raises a notice reading
     <code>kept 202/260 messages, no summary (pass 1 of 6, freed 10.9% of the context window;
     17%&nbsp;reduction;
     40&nbsp;kept,&nbsp;2&nbsp;results&nbsp;truncated,&nbsp;29&nbsp;calls&nbsp;dropped,&nbsp;2&nbsp;pinned;
-    71&nbsp;scored;&nbsp;compacted&nbsp;in&nbsp;16ms)</code> — and writes the
-    same line, plus one per decision, to the session log. The pass number says where in
-    <a href="#demo">the ladder</a> you are, the parts sum to what was scored, and the time is
-    the whole compaction — collecting the calls, scoring them, deciding, and rebuilding the
-    transcript — for the 71 calls in that one, not the 3,591 in
-    <a href="evidence.html#cost">section 06, Cost</a>. If anything at all goes wrong you get
-    the other notice instead, naming the reason:
-    <code>fallback to built-in summary (…)</code>. Silence at a compaction is
-    different: it means the hook never ran at all, which is a setup answer rather than a bad
-    decision. <code>claude&nbsp;plugin&nbsp;list</code> confirms it is installed; only the notice
-    confirms it is running. Two checks, in this order:
+    71&nbsp;scored;&nbsp;compacted&nbsp;in&nbsp;16ms)</code>, and writes the same line, plus
+    one per decision, to the session log. If anything goes wrong you get
+    <code>fallback to built-in summary (&#8230;)</code> instead, naming the reason. Silence is a
+    different thing: the hook never ran, which is a setup answer rather than a bad decision. Two
+    checks, in this order:
   </p>
   <ul class="plain">
-    <li><code>echo $CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> must print <code>1</code>.
-      Empty is the usual answer and the usual cause. It has to be exported <em>before</em> Claude
-      Code starts, so typing <code>export</code> into a session that is already running changes
-      nothing for that session — and nothing for the next terminal either, unless the line is in
-      your shell's startup file.</li>
-    <li><code>claude&nbsp;plugin&nbsp;list</code> must show <code>kompact</code>. If it does,
-      the variable is <code>1</code>, and no notice ever appears, the build is older than function
-      hooks: see the version rule in <a href="#install">section 09, Install</a>.</li>
+    <li><code>echo $CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> must print <code>1</code>. Empty is
+      the usual answer and the usual cause. It has to be exported <em>before</em> Claude Code
+      starts, and it has to be in your shell&#8217;s startup file to survive the next terminal.</li>
+    <li><code>claude&nbsp;plugin&nbsp;list</code> must show <code>kompact</code>. If it does, the
+      variable is <code>1</code>, and no notice ever appears, the build is older than function
+      hooks: see the version rule above.</li>
   </ul>
-  </details>
-  <details class="more">
-    <summary><h3>Everything it touches, in full</h3></summary>
+  <h3>Everything it touches, in full</h3>
     <ul class="plain">
     <li>The <b>last six messages</b> are never touched, whatever they contain.</li>
     <li>Your prose and the assistant’s is never touched. Only tool results and tool calls.</li>
     <li>A shortened result <b>keeps its first 300 characters</b>, so the call is still legible
       and the tool can be run again.</li>
-    <li>A call that recorded a change — <code>Edit</code>, <code>Write</code>,
-      <code>MultiEdit</code>, <code>NotebookEdit</code> — is <b>never dropped</b>, whatever it scores.</li>
+    <li>A call that recorded a change (<code>Edit</code>, <code>Write</code>,
+      <code>MultiEdit</code>, <code>NotebookEdit</code>) is <b>never dropped</b>, whatever it scores.</li>
     <li>A kept result is still <b>capped at <a href="glossary.html#g-the-cap">24,000 characters</a></b>, because
       half of all tool output lives in about 3% of the calls.</li>
     <li>It answers <b>at most six compactions</b> on one session, and only while a pass reclaims
@@ -733,7 +696,6 @@
       <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> to turn every function hook off. Either way
       the next compaction is Claude Code’s own summary again.</li>
   </ul>
-  </details>
 
 </section>
 

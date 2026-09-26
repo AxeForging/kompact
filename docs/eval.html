@@ -292,28 +292,28 @@ finishes the task. That needs a live A/B and is listed as unverified.</pre></div
 <h2 id="whether-the-work-survives-eval-outcome-ts">Whether the work survives — <code>eval/outcome.ts</code></h2>
 <p>The measurement every other figure here stands in for. Every other one asks whether an output was reused <em>somewhere</em> later, which counts reuses that had already happened when a real compaction fired and could not therefore be lost. This finds where the engine would actually compact, decides only the calls that exist at that point, and counts the reuses that come afterwards whose source was dropped. It is still not a replay: it measures how often the information would no longer be there, which is the necessary condition for the work to suffer.</p>
 <div class="scroller" tabindex="0" role="region" aria-label="Whether the work survives — measured output"><pre>fixture: 2239 calls, 32 sessions with a compaction point
-compacting at 60% of a session's tool output
+compacting at 62% of a session's tool output
 
-calls present when it fires:        1038
-of those, reused only afterwards:   68
-and dropped anyway:                 6 (8.8% of them)
-                                    56,199 characters
-per session:                        0.19
-sessions that lose nothing:         27 of 32
+calls present when it fires:        1071
+of those, reused only afterwards:   72
+and dropped anyway:                 5 (6.9% of them)
+                                    54,576 characters
+per session:                        0.16
+sessions that lose nothing:         28 of 32
 
 This is the necessary condition for the work to suffer, not proof that it
 did: nothing here replays an assistant against the compacted transcript.</pre></div>
 <h2 id="what-the-loop-costs-eval-outcome-ts-passes">What the loop costs — <code>eval/outcome.ts --passes</code></h2>
 <p>The premise of a ladder is that passes 2..N take <em>cheap</em> context rather than compounding loss. Asked properly — the loop replayed over the labelled corpus, each pass charged only for outputs whose first reuse comes after the point it fired at — that premise does not hold.</p>
 <div class="scroller" tabindex="0" role="region" aria-label="What the loop costs — measured output"><pre>fixture: 2239 calls, 32 sessions with a compaction point
-compacting at 60% of a session's tool output
+compacting at 62% of a session's tool output
 
-calls present when it fires:        1038
-of those, reused only afterwards:   68
-and dropped anyway:                 6 (8.8% of them)
-                                    56,199 characters
-per session:                        0.19
-sessions that lose nothing:         27 of 32
+calls present when it fires:        1071
+of those, reused only afterwards:   72
+and dropped anyway:                 5 (6.9% of them)
+                                    54,576 characters
+per session:                        0.16
+sessions that lose nothing:         28 of 32
 
 This is the necessary condition for the work to suffer, not proof that it
 did: nothing here replays an assistant against the compacted transcript.
@@ -322,16 +322,16 @@ did: nothing here replays an assistant against the compacted transcript.
 the loop, up to 6 passes a session
  pass  calls live  at risk  lost       freed   lost per 10k freed
 -----------------------------------------------------------------
-    1        1038       68     6   1,026,019                0.058
-    2         973       72     6     144,800                0.414
-    3        1014       63     3     121,230                0.247
-    4        1079       64     3      93,314                0.321
-    5         762       52     1      14,089                0.710
-    6         770       43     0      11,439                0.000
+    1        1071       72     5   1,034,605                0.048
+    2        1022       65     6     157,502                0.381
+    3        1105       59     4     124,535                0.321
+    4         786       53     1      22,525                0.444
+    5         791       50     1      15,778                0.634
+    6         794       44     0      12,751                0.000
 
-whole loop: 19 outputs lost, 1,410,891 characters freed
-            0.59 a session, against 0.19 for one pass
-            1.38x the characters, 3.17x the loss
+whole loop: 17 outputs lost, 1,367,696 characters freed
+            0.53 a session, against 0.16 for one pass
+            1.32x the characters, 3.40x the loss
 
 The ladder's premise is that the rate column stays flat: a later pass takes
 cheap context rather than compounding loss. It does not. The first pass is the

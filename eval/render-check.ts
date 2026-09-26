@@ -287,7 +287,14 @@ const PROBE = String.raw`
 
 const dir = mkdtempSync(join(tmpdir(), 'render-check-'));
 for (const file of readdirSync(docs)) copyFileSync(join(docs, file), join(dir, file));
-const url = `file://${join(dir, 'index.html')}`;
+/**
+ * Every page a reader can reach, not just the landing page.
+ *
+ * It checked `index.html` alone while three other pages carried tables in
+ * scrollers, a fixed contents bar and figures of their own — the exact things
+ * this probe exists to catch. A new page with new figures was the prompt.
+ */
+const PAGES = ['index.html', 'evidence.html', 'glossary.html', 'trigger.html'];
 
 /**
  * `--dump-dom` lays out no viewport at all — `innerWidth` comes back 0 — and
@@ -361,6 +368,8 @@ function connect(endpoint: string): {
 const cdp = connect(browserWs);
 let failed = 0;
 try {
+  for (const page of PAGES) {
+  const url = `file://${join(dir, page)}`;
   for (const width of [1400, 390, 320]) {
     const { targetId } = await cdp.send('Target.createTarget', { url: 'about:blank' });
     const { sessionId } = await cdp.send('Target.attachToTarget', { targetId, flatten: true });
@@ -387,9 +396,11 @@ try {
     for (const line of lines.split('\n')) {
       const [verdict, name, detail] = line.split('\t');
       if (verdict === 'FAIL') failed += 1;
-      console.log(`${verdict === 'FAIL' ? '\u2717' : '\u2713'} ${(name ?? '').padEnd(40)} ${detail ?? ''}`);
+      console.log(`${verdict === 'FAIL' ? '\u2717' : '\u2713'} ${page.replace('.html', '').padEnd(10)}`
+        + `${(name ?? '').padEnd(40)} ${detail ?? ''}`);
     }
     await cdp.send('Target.closeTarget', { targetId });
+  }
   }
 } finally {
   cdp.close();

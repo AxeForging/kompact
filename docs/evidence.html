@@ -16,7 +16,7 @@
 <nav class="contents-bar" aria-label="Contents">
   <div class="contents-bar__row wrap">
     <div class="contents">
-    <a class="contents__out" href="./">&#8592;&#8239;kompact</a><a href="#cost">Cost</a><a href="#losses"><span class="contents__long">Where it loses</span><span class="contents__short">Losses</span></a><a href="#checked"><span class="contents__long">Verification</span><span class="contents__short">Verified</span></a><a class="contents__out" href="eval.html">Full evaluation&#8239;&#8599;</a></div>
+    <a class="contents__out" href="./" aria-label="Back to kompact">&#8592;&#8239;<span class="contents__long">kompact</span><span class="contents__short">back</span></a><a href="#cost">Cost</a><a href="#losses"><span class="contents__long">Where it loses</span><span class="contents__short">Losses</span></a><a href="#checked"><span class="contents__long">Verification</span><span class="contents__short">Verified</span></a><a class="contents__out" href="eval.html">Full evaluation&#8239;&#8599;</a></div>
     <p class="contents__tools">
       <button class="contents__all" type="button" id="open-all" hidden>Open all</button>
       <a class="contents__go" href="./#install">Install</a>
@@ -52,27 +52,27 @@
   </div>
   <p class="caption">
     Modest on purpose. The absolute cut this replaced frees 95.3% of the labelled corpus and
-    keeps 8.9% of the outputs that were reused later — the first row of the policy table below, and
+    keeps 8.9% of the outputs that were reused later: the first row of the policy table below, and
     the reason a third is the honest number. Measured on one machine’s own
-    transcripts, which grow as work continues — the per-session column is the figure that carries.
+    transcripts, which grow as work continues. The per-session column is the figure that carries.
   </p>
 
   <details class="more">
     <summary><h3>Get this table for your own machine first</h3></summary>
     <p>
-    Clone the repository and run <code>npm&nbsp;run&nbsp;dry-run</code> — the commands are in
+    Clone the repository and run <code>npm&nbsp;run&nbsp;dry-run</code>. The commands are in
     <a href="./#install">section 09, Install</a>. It reads
     <code>~/.claude/projects</code>, scores every tool call in every transcript it finds, and
     prints the table above for your sessions instead of these. It writes nothing, installs no
-    plugin, and needs no key — it is the same <code>compact</code> the hook calls, run against
+    plugin, and needs no key: it is the same <code>compact</code> the hook calls, run against
     your own history. If the number it prints is not worth having, you have lost a minute.
   </p>
   <p>
-    Expect somewhere in <span class="num val">8.7%</span> to <span class="num val">32.0%</span> —
+    Expect somewhere in <span class="num val">8.7%</span> to <span class="num val">32.0%</span>,
     the range four sessions covered, which is not a distribution. What moved it was tool mix and
     length: the 32.0% session is 3,003 calls of mostly commands whose output is never quoted
     afterwards, and the two at the bottom are 49 and 66 calls long, where there is almost nothing
-    to free. At four sessions that is a reading of these four and not a rule — nothing here has
+    to free. At four sessions that is a reading of these four and not a rule. Nothing here has
     measured how much of the spread is noise. The dry run tells you which of those you are.
   </p>
 
@@ -80,11 +80,11 @@
   <h3>Why it frees a third and not four fifths</h3>
   <p>
     The scorer produces a <em>ranking</em>, and a ranking transfers across sessions better than
-    an absolute probability cut &#8212; <span class="val">0.789</span> held out one session at a
+    an absolute probability cut: <span class="val">0.789</span> held out one session at a
     time against <span class="val">0.879</span> on the narrower corpus, so it degrades rather
     than collapses. A cut does not travel at all, because every session has its own mix of tools
     and so its own distribution: a Bash-heavy session scores low throughout, and a fixed cut
-    sweeps all of it. Barely 11% of tool outputs are ever reused verbatim — 247 of 2,239 — so a well-calibrated
+    sweeps all of it. Barely 11% of tool outputs are ever reused verbatim (247 of 2,239), so a well-calibrated
     scorer seldom passes 0.5 even for the ones that matter.
   </p>
   <p>
@@ -111,7 +111,7 @@
     <strong>What the cap costs, priced.</strong> The <span class="val">33.6%</span> above
     includes it; so does this. Of the 247 outputs that were genuinely reused later,
     <span class="val">5</span> are longer than the cap, and shortening them removes
-    <span class="val">76,466</span> characters those later steps had quoted &#8212;
+    <span class="val">76,466</span> characters those later steps had quoted,
     <span class="val">6.2%</span> of every reused character. Counting the wrong drops beside it,
     <span class="val">88.1%</span> of reused characters survive the shipped defaults and
     <span class="val">11.9%</span> do not. The gain and the loss are measured the same way,
@@ -122,7 +122,7 @@
     than this simulation, the same defaults give <strong>33.6% freed and 79.4% kept</strong>. The
     sweep has no notion of two shipped rules: a call recording a change is never dropped, and a
     kept result is capped at <a href="glossary.html#g-the-cap">24,000 characters</a>. The cap is most of the
-    gap &#8212; <span class="val">27</span> of the 2,239 calls are longer than it, and shortening
+    gap: <span class="val">27</span> of the 2,239 calls are longer than it, and shortening
     those 27 alone frees <span class="val">20.7%</span> of every character in the corpus. Calibrating on your own sessions is an accuracy upgrade rather than a
     prerequisite, because the policy adapts to your distribution on its own.
   </p>
@@ -130,7 +130,7 @@
   <details class="more">
     <summary><h3>What the neural sidecar would have cost to run</h3></summary>
     <p>
-    The neural model is not in this product any more &#8212; there is no option that turns it on,
+    The neural model is not in this product any more. There is no option that turns it on,
     and nothing shipped imports it. What it cost to run is a large part of why. The
     <code>eval/</code> scripts still measure all of this against a live sidecar, so every row below
     is reproducible rather than remembered. One router process loads every checkpoint and routes
@@ -160,7 +160,7 @@
   <p class="caption">
     This row has been wrong twice, and the second time is the more useful story. It first read
     <span class="val">23.1 s</span> and <span class="val">122×</span>, from a projection that
-    divided requests by the number of questions in a request — but a request carries one call's
+    divided requests by the number of questions in a request, but a request carries one call's
     two questions, so there is one request per call and the projection had halved itself. It then
     read <span class="val">90.7 s</span> and <span class="val">319×</span> for weeks, because
     the benchmark behind it was measuring a sidecar started with
@@ -171,14 +171,13 @@
     reports its device in one field, and refuses to print publishable rows from a CPU one.
   </p>
   <p class="caption">
-    One number was never the cost of running this model — it was the cost of one deployment of
+    One number was never the cost of running this model. It was the cost of one deployment of
     it. <code>laya-serve</code> routes <code>/health</code> and <code>/v1/systemone</code> and
     nothing else, so over HTTP every call is one state in one forward pass in one round trip,
     which is the slowest thing the model can do; the library packs many states into shared passes.
     Measured on the same card, the wire costs about <span class="val">0.3&#8239;ms</span> of that
     round trip and batching roughly halves what is left. The <a href="eval.html">evaluation
-    page</a> prints the whole ladder. Even at its fastest the sidecar loses this comparison —
-    which is the point of publishing the ladder rather than the one number that flattered our
+    page</a> prints the whole ladder. Even at its fastest the sidecar loses this comparison, which is the point of publishing the ladder rather than the one number that flattered our
     own conclusion.
   </p>
   </details>
@@ -189,8 +188,8 @@
   <h2 id="losses-h">The model this replaced fails quietly, which is worse than failing.</h2>
   <p>
     The English checkpoint reads 512 tokens and discards the rest with HTTP 200 and no
-    warning. <code>eval/truncation.ts</code> asks one question — <em>the text says the
-    deployment was rolled back</em> — of four states. Every one of them states the fact
+    warning. <code>eval/truncation.ts</code> asks one question (<em>the text says the
+    deployment was rolled back</em>) of four states. Every one of them states the fact
     verbatim. Only the position of the sentence changes.
   </p>
   <div class="scroller" tabindex="0" data-label="Table: the truncation test">
@@ -212,14 +211,14 @@
     Rows two and three are bit-identical: <strong>32,220 characters were discarded</strong> and
     nothing in the response says so. Row four is the bill for that. It is the same 40,360
     characters and the same sentence, moved to the end where the cut removes it, and the answer
-    falls from 0.9152 to <strong>0.2191 for a fact the text still states verbatim</strong> —
+    falls from 0.9152 to <strong>0.2191 for a fact the text still states verbatim</strong>:
     from the right side of any threshold to the wrong one. A caller cannot tell rows three and
     four apart: same HTTP 200, same shape, same silence. Whether an answer is about your input
     or about the first 512 tokens of it is settled by where the evidence happened to fall. Both
     upstream projects send the whole conversation, up to 25,000 tokens, as one state.
   </p>
   <p class="caption">
-    This table used to be three rows that no script produced — the one claim here with no code
+    This table used to be three rows that no script produced. The one claim here with no code
     behind it, on a page arguing that every figure is generated. It is
     <code>npm&nbsp;run&nbsp;eval:truncation</code> now, and the figures it prints are these. The
     ones it replaced are retracted: they showed the cut but not what the cut costs.
@@ -234,7 +233,7 @@
     never dropped, and neither is a result nothing can produce again. Run through the shipped
     code the same defaults give <strong>33.6% freed and 79.4% kept</strong>, which is the pair
     the masthead quotes.) Held-out scores, shipped policy, per session: <strong>51 of the 247
-    reused outputs are dropped</strong> — 1.24 a session, and only one of them kept a head.
+    reused outputs are dropped</strong>: 1.24 a session, and only one of them kept a head.
   </p>
   <div class="scroller" tabindex="0" data-label="Table: what a wrong drop costs">
     <table class="data">
@@ -252,23 +251,22 @@
   </div>
   <p class="caption">
     Only one of the 51 kept a head, because when a result scores below the floor the call
-    usually does too. Forty-seven are command output that a later tool input quoted verbatim —
-    the shape this scorer is worst at, since most command output is never referred to again and
+    usually does too. Forty-seven are command output that a later tool input quoted verbatim, the shape this scorer is worst at, since most command output is never referred to again and
     the minority that is gets swept along with it. The bottom row used to read
-    <span class="val">4</span> <code>AskUserQuestion</code> results &#8212; a human's answer,
+    <span class="val">4</span> <code>AskUserQuestion</code> results, a human&#8217;s answer,
     which no amount of re-running brings back. It reads zero because
-    <a href="./#for">a result nothing can produce again</a> is no longer the scorer's to drop.
-    <strong>This is recovery cost, and it over-counts</strong> — it includes reuses that had
+    <a href="./#rules">a result nothing can produce again</a> is no longer the scorer's to drop.
+    <strong>This is recovery cost, and it over-counts</strong>: it includes reuses that had
     already happened when a real compaction fired. The next section measures what is actually
     at risk.
   </p>
 
   </details>
   <div class="finding reveal">
-    <p>Compacting where the engine would actually fire, <span class="val">27</span> of
+    <p>Compacting where the engine would actually fire, <span class="val">28</span> of
       <span class="val">32</span> sessions lost nothing at all. Across the rest,
-      <span class="val">6</span> outputs were dropped that a later step went back to:
-      <span class="val">0.19</span> a session, and <span class="val">8.8%</span> of what was
+      <span class="val">5</span> outputs were dropped that a later step went back to:
+      <span class="val">0.16</span> a session, and <span class="val">6.9%</span> of what was
       genuinely still needed. Nothing here replays an assistant against the compacted
       transcript, so whether that changed the work stays
       <a href="#checked">not verified</a>.</p>
@@ -279,26 +277,26 @@
     Every figure above asks whether an output was reused <em>somewhere</em> later, which counts
     reuses that had already happened by the time a compaction fired and could never have been
     lost. <code>eval/outcome.ts</code> asks it in the right order: find where the engine would
-    actually compact — 60% of a session's tool output — decide only the calls present at that
+    actually compact (62% of a session's tool output), decide only the calls present at that
     moment, then count the reuses that come <em>afterwards</em> whose source was dropped.
   </p>
   <div class="scroller" tabindex="0" data-label="Table: what the work loses">
     <table class="data">
       <caption class="visually-hidden">what the work loses</caption>
       <thead><tr>
-        <th scope="col">Compacting at 60%, across 32 sessions</th><th scope="col" class="n">Count</th>
+        <th scope="col">Compacting at 62%, across 32 sessions</th><th scope="col" class="n">Count</th>
       </tr></thead>
       <tbody>
-        <tr><th scope="row">Calls present when it fires</th><td class="n">1,038</td></tr>
-        <tr><th scope="row">Reused only <em>after</em> that point</th><td class="n">68</td></tr>
-        <tr class="same"><th scope="row">…and dropped anyway</th><td class="n mark">6</td></tr>
-        <tr><th scope="row">Sessions that lose nothing at all</th><td class="n">27 of 32</td></tr>
+        <tr><th scope="row">Calls present when it fires</th><td class="n">1,071</td></tr>
+        <tr><th scope="row">Reused only <em>after</em> that point</th><td class="n">72</td></tr>
+        <tr class="same"><th scope="row">…and dropped anyway</th><td class="n mark">5</td></tr>
+        <tr><th scope="row">Sessions that lose nothing at all</th><td class="n">28 of 32</td></tr>
       </tbody>
     </table>
   </div>
   <p class="caption">
-    <span class="num val">0.19</span> lost outputs a session, and
-    <span class="num val">8.8%</span> of what was genuinely still needed. This is the necessary
+    <span class="num val">0.16</span> lost outputs a session, and
+    <span class="num val">6.9%</span> of what was genuinely still needed. This is the necessary
     condition for the work to suffer, not proof that it did: nothing here replays an assistant
     against the compacted transcript, and that remains unverified.
   </p>
@@ -313,13 +311,13 @@
   </p>
   <p>
     <strong>One feature does most of the work.</strong> Output size alone scores 0.878 with an
-    eighth of the spread — sd 0.010 against 0.078 — and a sixtieth of the variance. The other coefficients earn their place on characters freed at a
+    eighth of the spread (sd 0.010 against 0.078) and a sixtieth of the variance. The other coefficients earn their place on characters freed at a
     given safety level, not on ranking.
   </p>
   <p>
     <strong>It has never seen a <code>Grep</code>.</strong> The corpus contains no
     <code>Grep</code> and no <code>Glob</code> call at all, so that feature never fired during
-    fitting and its weight is <span class="num val">0.0</span> — zero by absence, not by
+    fitting and its weight is <span class="num val">0.0</span>: zero by absence, not by
     measurement. A search falls to the reference level, alongside <code>WebFetch</code> and
     <code>Agent</code>, about which this scorer also knows nothing. Thirteen features were
     defined; <span class="num val">twelve</span> were fitted.
@@ -332,8 +330,8 @@
   <p>
     <strong>It never shortens what a tool was <em>asked</em>.</strong> Every lever here acts on
     output. <code>eval/mass.ts</code> says output is <span class="num val">46.8%</span> of a
-    transcript and tool <em>input</em> is <span class="num val">43.6%</span> &#8212; a
-    <code>Write</code> carries the whole file it wrote, a <code>Bash</code> its heredoc &#8212;
+    transcript and tool <em>input</em> is <span class="num val">43.6%</span>. A
+    <code>Write</code> carries the whole file it wrote and a <code>Bash</code> its heredoc,
     and nothing shortens any of it. <code>eval/inputs.ts</code> priced capping it and the trade
     is poor: capping every input at 16,000 characters frees
     <span class="num val">1.9%</span> of the transcript for
@@ -402,7 +400,7 @@
     </div>
     <div class="ledger__row">
       <p class="ledger__claim">What a compaction costs the work</p>
-      <p class="ledger__how">Compaction simulated where the engine would fire it, then the reuses that come afterwards counted: 6 of 68, 0.19 a session, 27 of 32 sessions losing nothing. <code>eval/outcome.ts</code></p>
+      <p class="ledger__how">Compaction simulated where the engine would fire it, then the reuses that come afterwards counted: 5 of 72, 0.16 a session, 28 of 32 sessions losing nothing. <code>eval/outcome.ts</code></p>
     </div>
     <div class="ledger__row">
       <p class="ledger__claim">The sidecar truncates silently</p>
@@ -410,6 +408,36 @@
     </div>
   </div>
   </details>
+  <h3 id="repeats">What repeats, and why the premise under it is not established</h3>
+<p>
+    That is not the finding this was built to get. The classifier itself works: the counts are real,
+    the signatures group work that belongs together, and three separate design ideas turned out to be
+    wrong only because the data said so: 94% of command shapes were seen exactly once until a
+    pipeline stopped keeping every stage's arguments, sequences never formed at all until the window
+    slid across batches instead of inside one, and the 2,000-row cap cut the rarest kinds to nothing
+    until each kind was pruned against itself.
+  </p>
+  <p>
+    What is <em>not</em> established is the premise underneath it. These sessions are an assistant's
+    tool use, and what an assistant repeats is reading files, editing them, and reaching for the
+    shell.
+  </p>
+  <p class="caption">
+    Two things this table is not. It is not from a live install: the recorder only sees sessions
+    from the moment it is switched on, so these counts come from replaying existing transcripts
+    through the recorder's own functions (<code>eval/signals-fixture.ts</code>) rather than from the
+    hook having run. And it carries no examples. The signatures are shapes and safe to publish, but
+    the samples kept beside them are raw text, and the first fixture built without stripping them
+    passed all eight credential checks while carrying another project's brief and a path with a
+    session id in it. On your own machine the samples are the point, because they are how a wrong
+    grouping becomes visible. In anything published they have no place.
+  </p>
+  <p class="caption">
+    Nothing recorded leaves the machine, and nothing is written into a skills directory: drafts land
+    in <code>.kompact/proposals/</code>, which Claude Code does not read. Set
+    <code>recordSignals</code> to false to record nothing at all.
+  </p>
+
   <details class="more" id="next">
     <summary>The gaps, in the order they matter</summary>
 
@@ -421,7 +449,7 @@
     <div class="next__item">
       <p class="next__when">Open</p>
       <p class="next__what"><b>The corpus is still one person's.</b> Widening it from 18 sessions
-        to 41 — all the same person — took leave-one-session-out AUC from
+        to 41 (all the same person) took leave-one-session-out AUC from
         <span class="num val">0.879</span> to <span class="num val">0.789</span>, and calibration
         error from <span class="num val">0.035</span> to <span class="num val">0.051</span>. Nine
         points and half again the error, inside one person's own work. A second operator's corpus would
@@ -452,14 +480,13 @@
   <div class="faq__item">
     <details class="more">
       <summary><h3>Isn't this just a heuristic with extra steps?</h3></summary>
-      <p>It is a heuristic with error bars, which is the difference. Thirteen coefficients &#8212;
-        twelve features and an intercept &#8212; fitted on labelled data, evaluated on sessions held
+      <p>It is a heuristic with error bars, which is the difference. Thirteen coefficients (twelve features and an intercept) fitted on labelled data, evaluated on sessions held
         out whole, and calibrated well enough that the threshold means a probability rather than a
         rank; <a href="./#result">section 01, Evidence</a> carries the error itself.
         And most of the signal really is one feature: &#8220;big outputs get reused&#8221; alone
         reaches <span class="num val">0.878</span>. That is three coefficients of the twelve, since
         size is banded. The other nine earn their place on characters freed at a fixed safety
-        level, not on ranking &#8212; which is the answer to the question.</p>
+        level, not on ranking, which is the answer to the question.</p>
     </details>
   </div>
   <div class="faq__item">
@@ -471,18 +498,18 @@
         was measured, and the wording mattered more than the checkpoint: on
         <code>typed-decisions</code>, asking what the assistant should <em>do</em> next scores
         <span class="num val">0.719</span>, and asking what is <em>true</em> of the text scores
-        <span class="num val">0.416</span> — below the coin flip, which is worse
+        <span class="num val">0.416</span>, below the coin flip, which is worse
         than not scoring at all. That is the reverse of
         what that documentation suggests, which is the finding rather than an
         embarrassment: the checkpoint is better at a decision than at an entailment.</p>
       <p>The checkpoint named for English is also not the best at English. On that same
-        wording it scores <span class="num val">0.480</span> &#8212; below the coin flip &#8212;
+        wording it scores <span class="num val">0.480</span> (below the coin flip)
         where the multilingual one scores <span class="num val">0.667</span>, and the two ranges
         do not overlap: English tops out at 0.502, multilingual bottoms out at 0.638. English wins
         only on entailment, by 0.021, which is inside one standard deviation, and its best config
         still loses to multilingual's best. It also reads half the context, 512 tokens against
-        1024, and runs about three times slower. None of that is why the sidecar loses &#8212;
-        <code>typed&#8209;decisions</code> reads 1024 too and reaches 0.719 &#8212; but it does mean
+        1024, and runs about three times slower. None of that is why the sidecar loses:
+        <code>typed&#8209;decisions</code> reads 1024 too and reaches 0.719, but it does mean
         there is no configuration in which the English checkpoint is the one to pick.</p>
     </details>
   </div>
@@ -491,7 +518,7 @@
       <summary><h3>Will it delete something I need?</h3></summary>
       <p>Sometimes, and <a href="#losses">section 07, Where it loses</a> prices it exactly.
         The asymmetry is what the whole design turns on: <b>a wrong keep costs context, a wrong
-        drop costs work</b> — so a dropped result keeps its first 300 characters, a call that
+        drop costs work</b>, so a dropped result keeps its first 300 characters, a call that
         recorded a change is never dropped, and every failure mode falls back to Claude Code's own
         summary rather than to a half-compacted transcript.</p>
     </details>
@@ -499,7 +526,7 @@
   <div class="faq__item">
     <details class="more">
       <summary><h3>Do I have to calibrate?</h3></summary>
-      <p>No — spending a budget lowest-score-first adapts on its own, where an absolute
+      <p>No: spending a budget lowest-score-first adapts on its own, where an absolute
         probability cut could not survive a distribution it was not tuned on. So
         <code>npm run calibrate</code> is an upgrade rather than a prerequisite, and it is still
         worth running on your own sessions, for the reason in <a href="#checked">the ledger</a>:
@@ -512,7 +539,7 @@
       <p>The built-in asks a model to summarise the session and replaces it with prose, which
         compresses far harder than a third. This keeps what survives <em>verbatim</em>, so a file
         you read is still the file, not a description of it. It is not a better compressor; it is a
-        different trade — and it hands the session back to the built-in summary whenever it cannot
+        different trade, and it hands the session back to the built-in summary whenever it cannot
         do its job.</p>
     </details>
   </div>

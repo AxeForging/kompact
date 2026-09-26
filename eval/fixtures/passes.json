@@ -1,73 +1,73 @@
 {
  "window": 200000,
- "at": 60,
+ "at": 62,
  "floor": 5,
  "maxPasses": 6,
- "messages": 8663,
+ "messages": 10331,
  "sessions": 5,
- "looped": 3,
- "avoided": 9,
- "passesMeasured": 14,
+ "looped": 4,
+ "avoided": 10,
+ "passesMeasured": 15,
  "oldBarTakes": 0,
- "medianMs": 9,
- "medianPp": 8.4,
- "slowestMs": 14,
+ "medianMs": 8,
+ "medianPp": 9.2,
+ "slowestMs": 13,
  "stubShare": [
-  6.7,
-  8.3,
-  8.3,
-  7.3,
   7.1,
+  7,
+  8.3,
   6.7,
-  6.8
+  6.3,
+  6.4,
+  6.5
  ],
  "rows": [
   {
-   "from": 60.7,
-   "to": 52,
-   "ms": 14,
+   "from": 62.1,
+   "to": 51.6,
+   "ms": 13,
    "taken": true,
    "why": "taken"
   },
   {
-   "from": 60,
-   "to": 50.1,
-   "ms": 10,
-   "taken": true,
-   "why": "taken"
-  },
-  {
-   "from": 60.1,
-   "to": 51.7,
+   "from": 63.4,
+   "to": 53.2,
    "ms": 9,
    "taken": true,
    "why": "taken"
   },
   {
-   "from": 60.3,
-   "to": 52,
-   "ms": 9,
-   "taken": true,
-   "why": "taken"
-  },
-  {
-   "from": 60,
+   "from": 62,
    "to": 52.8,
    "ms": 8,
    "taken": true,
    "why": "taken"
   },
   {
-   "from": 60.7,
-   "to": 54.1,
+   "from": 62.1,
+   "to": 53.9,
    "ms": 8,
    "taken": true,
    "why": "taken"
   },
   {
-   "from": 60.1,
-   "to": 54.3,
+   "from": 62.1,
+   "to": 55.1,
+   "ms": 7,
+   "taken": true,
+   "why": "taken"
+  },
+  {
+   "from": 62.2,
+   "to": 55.6,
    "ms": 8,
+   "taken": true,
+   "why": "taken"
+  },
+  {
+   "from": 62.3,
+   "to": 55.6,
+   "ms": 7,
    "taken": false,
    "why": "ceiling"
   }

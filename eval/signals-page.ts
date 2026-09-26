@@ -88,8 +88,7 @@ const workflowPlace = workflow ? ranked.indexOf(workflow) + 1 : 0;
 const markup = `  <p class="caption caption--fig">${fixture.meta.repeated} shapes that repeated, of ` +
   `${fixture.meta.shapes.toLocaleString()} recorded over ${fixture.meta.sessions} sessions ` +
   `and ${fixture.meta.calls.toLocaleString()} tool calls</p>
-      <details class="more">
-    <summary><h3>All ${fixture.meta.repeated} shapes that repeated, ranked</h3></summary>
+      <h3 class="figure-title">All ${fixture.meta.repeated} shapes that repeated, ranked</h3>
 <div class="scroller" data-label="Table: what repeated">
   <table class="data">
     <thead><tr><th>Kind</th><th>Signature</th><th class="n">times</th>` +
@@ -104,11 +103,11 @@ ${rows}
     chosen for this. A model of effort, not a measurement of time; every input to it is on the row,
     so any row can be recomputed by hand. Greyed rows are generic shell verbs.</p>
 
-    </details>
+    
 
   <div class="finding finding--loss reveal">
     <p>Of <span class="val">${fixture.meta.shapes.toLocaleString()}</span> shapes recorded,
-      <span class="val">${fixture.meta.repeated}</span> repeated enough to propose — and
+      <span class="val">${fixture.meta.repeated}</span> repeated enough to propose, and
       ${generic === commands
         ? `all <span class="val">${generic}</span>`
         : `<span class="val">${generic}</span> of the ${commands}`} repeated command shapes are generic
@@ -121,12 +120,11 @@ ${rows}
       : `${generic} of the ${commands} are verbs like`}
     <code>sed</code>, <code>grep</code> or <code>cat</code>. No skill helps with those.${generic === commands
       ? ''
-      : ` The ${commands - generic} that fall outside that list &#8212;
-      ${rest.map((row) => `<code>${escape(row.sig)}</code>`).join(' and ')} &#8212; are not
+      : ` The ${commands - generic} that fall outside that list
+      (${rest.map((row) => `<code>${escape(row.sig)}</code>`).join(' and ')}) are not
       workflows either; they are simply verbs the list was not written to catch, and adding them
       to it to keep a sentence tidy is the kind of tuning this page exists to avoid.`}${workflow
-      ? ` The best row that reads like an actual workflow &#8212;
-      <code>${escape(workflow.sig)}</code> &#8212; is ranked ${workflowPlace}th, because the ranking
+      ? ` The best row that reads like an actual workflow, <code>${escape(workflow.sig)}</code>, is ranked ${workflowPlace}th, because the ranking
       rewards total work and a generic verb runs more often than a workflow does.`
       : ''}
   </p>`;

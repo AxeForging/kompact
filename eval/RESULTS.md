@@ -244,14 +244,14 @@ no longer be there, which is the necessary condition for the work to suffer.
 
 ```
 fixture: 2239 calls, 32 sessions with a compaction point
-compacting at 60% of a session's tool output
+compacting at 62% of a session's tool output
 
-calls present when it fires:        1038
-of those, reused only afterwards:   68
-and dropped anyway:                 6 (8.8% of them)
-                                    56,199 characters
-per session:                        0.19
-sessions that lose nothing:         27 of 32
+calls present when it fires:        1071
+of those, reused only afterwards:   72
+and dropped anyway:                 5 (6.9% of them)
+                                    54,576 characters
+per session:                        0.16
+sessions that lose nothing:         28 of 32
 
 This is the necessary condition for the work to suffer, not proof that it
 did: nothing here replays an assistant against the compacted transcript.
@@ -266,14 +266,14 @@ fired at — that premise does not hold.
 
 ```
 fixture: 2239 calls, 32 sessions with a compaction point
-compacting at 60% of a session's tool output
+compacting at 62% of a session's tool output
 
-calls present when it fires:        1038
-of those, reused only afterwards:   68
-and dropped anyway:                 6 (8.8% of them)
-                                    56,199 characters
-per session:                        0.19
-sessions that lose nothing:         27 of 32
+calls present when it fires:        1071
+of those, reused only afterwards:   72
+and dropped anyway:                 5 (6.9% of them)
+                                    54,576 characters
+per session:                        0.16
+sessions that lose nothing:         28 of 32
 
 This is the necessary condition for the work to suffer, not proof that it
 did: nothing here replays an assistant against the compacted transcript.
@@ -282,16 +282,16 @@ did: nothing here replays an assistant against the compacted transcript.
 the loop, up to 6 passes a session
  pass  calls live  at risk  lost       freed   lost per 10k freed
 -----------------------------------------------------------------
-    1        1038       68     6   1,026,019                0.058
-    2         973       72     6     144,800                0.414
-    3        1014       63     3     121,230                0.247
-    4        1079       64     3      93,314                0.321
-    5         762       52     1      14,089                0.710
-    6         770       43     0      11,439                0.000
+    1        1071       72     5   1,034,605                0.048
+    2        1022       65     6     157,502                0.381
+    3        1105       59     4     124,535                0.321
+    4         786       53     1      22,525                0.444
+    5         791       50     1      15,778                0.634
+    6         794       44     0      12,751                0.000
 
-whole loop: 19 outputs lost, 1,410,891 characters freed
-            0.59 a session, against 0.19 for one pass
-            1.38x the characters, 3.17x the loss
+whole loop: 17 outputs lost, 1,367,696 characters freed
+            0.53 a session, against 0.16 for one pass
+            1.32x the characters, 3.40x the loss
 
 The ladder's premise is that the rate column stays flat: a later pass takes
 cheap context rather than compounding loss. It does not. The first pass is the

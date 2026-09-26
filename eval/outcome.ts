@@ -37,9 +37,19 @@ import { outOfFoldScores } from './oof.js';
 import { DEFAULT_OPTIONS, decideAll, freedBy } from '../src/compact.js';
 import type { CallAnswer, ToolCall } from '../src/index.js';
 import type { LabelRow } from './extract-labels.js';
+import { HOOK_DEFAULTS } from '../hooks/kompact.js';
 
 const args = process.argv.slice(2);
-const at = args.includes('--at') ? Number(args[args.indexOf('--at') + 1]) : 60;
+/**
+ * The trigger comes from the hook, not from a copy of it kept here.
+ *
+ * This stood for production with a hand-typed 60 while the plugin shipped a
+ * different number, so "where the engine would actually compact" was measuring
+ * somewhere the engine no longer compacts.
+ */
+const at = args.includes('--at')
+  ? Number(args[args.indexOf('--at') + 1])
+  : HOOK_DEFAULTS.compactAtPercent;
 const PASSES = args.includes('--passes') ? Number(args[args.indexOf('--passes') + 1]) : 0;
 
 const { rows, from } = loadCorpus(import.meta.dirname);

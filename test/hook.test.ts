@@ -31,7 +31,7 @@ function transcript(): Message[] {
 describe('resolveHookConfig', () => {
   it('needs no key and no sidecar', () => {
     const config = resolveHookConfig({});
-    expect(config.compactAtPercent).toBe(60);
+    expect(config.compactAtPercent).toBe(62);
     expect(config.minFreedPercent).toBe(5);
     expect(config.maxPasses).toBe(6);
   });
@@ -42,7 +42,25 @@ describe('resolveHookConfig', () => {
     const config = resolveHookConfig({ scorer: 'laya', layaUrl: 'http://127.0.0.1:8000' });
     expect('scorer' in config).toBe(false);
     expect('layaUrl' in config).toBe(false);
-    expect(config.compactAtPercent).toBe(60);
+    expect(config.compactAtPercent).toBe(62);
+  });
+
+  /**
+   * The ceiling that is not ours.
+   *
+   * Claude Code auto-compacts at 70% of the window by default, and it is the
+   * engine, so it goes first. A trigger at or above 70 means kompact is
+   * installed, logging, and never answers a single compaction — the worst kind
+   * of failure, because everything looks fine. The clamp makes that
+   * unreachable, and the default leaves 8 points below it, which is more than
+   * the most expensive message measured over 12,396 of them.
+   */
+  it('refuses a trigger the engine would beat to it', () => {
+    expect(resolveHookConfig({ compactAtPercent: 70 }).compactAtPercent).toBe(69);
+    expect(resolveHookConfig({ compactAtPercent: 95 }).compactAtPercent).toBe(69);
+    expect(resolveHookConfig({ compactAtPercent: 65 }).compactAtPercent).toBe(65);
+    // The default has to stay under it too, with room for one more turn.
+    expect(resolveHookConfig({}).compactAtPercent).toBeLessThanOrEqual(65);
   });
 
   it('passes numeric options through and ignores rubbish', () => {

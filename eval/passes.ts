@@ -30,6 +30,7 @@ import { TRUNCATION_MARK, compact, messageChars, tokensIn } from '../src/compact
 import { FeatureAsker } from '../src/features.js';
 import { collectToolCalls } from '../src/state.js';
 import { readTranscript } from './transcript.js';
+import { HOOK_DEFAULTS } from '../hooks/kompact.js';
 import type { Message } from '../src/index.js';
 
 const args = process.argv.slice(2);
@@ -40,10 +41,17 @@ const num = (name: string, fallback: number): number => {
 };
 
 const WINDOW = num('--window', 200_000);
-const AT = num('--at', 60);
+/**
+ * The three defaults come from the hook rather than being typed again here.
+ *
+ * They were typed twice, and the copies drifted the moment `compactAtPercent`
+ * moved: this script would have gone on publishing a fixture measured at 60%
+ * while the plugin shipped 62, and the page draws its ladder from that fixture.
+ */
+const AT = num('--at', HOOK_DEFAULTS.compactAtPercent);
 /** Percentage points of the window a pass must reclaim to be worth taking. */
-const FLOOR = num('--floor', 5);
-const MAX_PASSES = num('--max', 6);
+const FLOOR = num('--floor', HOOK_DEFAULTS.minFreedPercent);
+const MAX_PASSES = num('--max', HOOK_DEFAULTS.maxPasses);
 const SESSIONS = num('--sessions', 24);
 /** `maxKeptChars`; -1 leaves the shipped default alone. */
 const CAP = num('--cap', -1);
@@ -194,6 +202,25 @@ for (const { path } of paths) {
     `${passes.map((p) => `${p.pp.toFixed(1)}${p.why === 'taken' ? '' : p.why === 'floor' ? '*' : '\u2020'}`).join(' ').padStart(30)}` +
     `${passes.map((p) => Math.round(p.ms)).join(' ').padStart(22)}`,
   );
+}
+
+/**
+ * `--json` prints one line of machine-readable summary and stops.
+ *
+ * The (trigger, floor) grid needs 30 runs of this, and the alternative was
+ * parsing the fixed-width table above with a regular expression — which broke
+ * on the first session whose name starts with a digit and silently summed a
+ * reclaimed-points value into the pass count.
+ */
+if (args.includes('--json')) {
+  console.log(JSON.stringify({
+    at: AT, floor: FLOOR, maxPasses: MAX_PASSES, window: WINDOW,
+    taken: takenTotal, looped: sessionsWithLoop, sessions: rows.length,
+    freedPp: Number(everyPass.filter((p) => p.taken)
+      .reduce((sum, p) => sum + p.pp, 0).toFixed(1)),
+    slowestMs: Math.round(slowest),
+  }));
+  process.exit(0);
 }
 
 const median = (values: number[]): number => {
