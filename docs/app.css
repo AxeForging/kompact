@@ -393,6 +393,31 @@ p{ max-width: var(--measure); margin: 0 0 var(--space-md); }
    established. It used to be inside the lead, which is why the leads ran to 44,
    48, 66, 74 and 105 words against the 25 the gutter layout above can set
    beside a heading without growing the row. */
+/* ── question and answer ──────────────────────────────────────────────────
+   Prose inside a disclosure triangle reads as material the author would rather
+   you skipped, which is the wrong signal from a page whose thesis is that it
+   shows the working including the parts that went against it. Eleven folds on
+   this page held about forty per cent of the argument.
+   The grid is also a word budget with a visible wall: two columns at ~52ch
+   means an answer cannot run to a hundred and ten words without looking broken
+   next to its sibling, and nothing in `.lede` or `p` ever stopped one before.
+   1px and an inset, which is the house pattern a `.finding` should adopt too. */
+.qa{
+  display:grid; grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: calc(var(--space-2xl) + var(--space-md)) var(--space-xl);
+  margin: var(--space-2xl) 0 0; max-width:none;
+}
+.qa > div{ border-left: 1px solid var(--rule-firm); padding-left: var(--space-md); }
+.qa h3{
+  margin: 0 0 var(--space-xs); font-family: var(--sans); font-size: var(--text-base);
+  font-weight: 600; line-height: 1.35; letter-spacing: 0; text-wrap: balance;
+  font-optical-sizing: auto;
+}
+.qa p{ margin: 0; max-width: 52ch; font-size: var(--text-sm); line-height:1.6; color: var(--ink-2); }
+@media (max-width: 720px){
+  .qa{ grid-template-columns: minmax(0,1fr); gap: var(--space-xl); }
+}
+
 /* The heading a figure used to hide behind.
    Two of this site's four animations shipped inside `<details>` — the
    2,239-mark plate and the command stream — while the prose standing in for

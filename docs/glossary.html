@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>kompact — glossary</title>
+<meta name="description" content="Fourteen terms this project uses precisely: the floor, the budget, a pass, a stub, and the rest.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,700&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<a class="skip" href="#glossary">Skip to the terms</a>
+
+<nav class="contents-bar" aria-label="Contents">
+  <div class="contents-bar__row wrap">
+    <div class="contents">
+    <a class="contents__out" href="./">&#8592;&#8239;kompact</a><a href="#glossary">Glossary</a><a class="contents__out" href="evidence.html">Cost, losses, verification&#8239;&#8599;</a><a class="contents__out" href="eval.html">Full evaluation&#8239;&#8599;</a></div>
+    <p class="contents__tools">
+      <a class="contents__go" href="./#install">Install</a>
+      <a class="contents__top" href="#top" aria-label="Back to top"><span class="contents__word">Top&nbsp;</span>&#8593;</a>
+    </p>
+  </div>
+</nav>
+
+<main id="top">
+<section class="wrap" id="glossary" aria-labelledby="glossary-h">
+  <p class="rubric rubric--appendix">Glossary</p>
+  <h2 id="glossary-h">What the words mean.</h2>
+  <p class="gloss-back" hidden><button type="button" id="gloss-back">&#8592; Back to where you were</button></p>
+
+    <details class="more">
+    <summary><h3>The fourteen terms this page uses for its own machinery</h3></summary>
+<dl class="glossary">
+    <dt id="g-auc">AUC</dt>
+    <dd>How often the scorer ranks a call that turned out to be needed above one that did not, over
+      every possible pair. 0.5 is a coin flip; 1.0 never gets a pair the wrong way round.</dd>
+    <dt id="g-calibration-error">Calibration error</dt>
+    <dd>The average gap between a score and what actually happens at it. At 0.035, calls scored
+      near 0.30 are genuinely needed about 30% of the time — which is what makes a threshold mean
+      something rather than just order things.</dd>
+    <dt id="g-keep-8209-result-keep-8209-call">keep&#8209;result, keep&#8209;call</dt>
+    <dd>The two probabilities scored for every call: whether its <em>output</em> is still needed
+      word for word, and whether the <em>call itself</em> should stay. They differ often, which is
+      why both exist.</dd>
+    <dt id="g-function-hooks">Function hooks</dt>
+    <dd>The Claude Code extension point this plugin runs on: a module that the engine
+      calls at named moments, rather than a shell command it spawns. Early access, which is
+      why <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> exists.</dd>
+    <dt id="g-sidecar">Sidecar</dt>
+    <dd>The local neural&#8209;model process this plugin was first built to score against,
+      over HTTP. It lost to the built-in model on <a href="./#result">10 of 10 paired splits</a>
+      and has been removed; <code>eval/</code> still measures it. It is the only thing here that
+      ever wanted a GPU, and nothing here wants one now.</dd>
+    <dt id="g-leave-one-session-out">Leave-one-session-out</dt>
+    <dd>Fit on every session but one, test on the one held out, repeat for each. It is the
+      honest number when sessions differ from each other more than calls within a session
+      do, and it is lower than the grouped-split figure for exactly that reason.</dd>
+    <dt id="g-minyieldchars"><code>minYieldChars</code></dt>
+    <dd>The smallest result worth dropping. Below it, dropping frees less than it risks, so
+      the call is refused outright — the <em>too small</em> outcome in <a href="./#demo">section 03, Watch it decide</a>.</dd>
+    <dt id="g-the-floor">The floor</dt>
+    <dd><code>keepThreshold</code>, 0.2 by default. At or above it nothing is dropped, whatever the
+      budget still wants. It is the guard the budget cannot argue with.</dd>
+    <dt id="g-points-of-window">Points of the context window</dt>
+    <dd>The unit a compaction pass is judged in. One point is one per cent of the whole window,
+      so a pass that reclaims nine of them buys back nine per cent of everything the model
+      reads &#8212; comparable between a long session and a short one in a way that
+      &#8220;a quarter of the transcript&#8221; is not, and the same unit as the 60% at which
+      the engine asks. <code>minFreedPercent</code> is a floor in these, and because the two
+      share a unit, a pass that clears it leaves the session below the trigger by construction.</dd>
+    <dt id="g-the-cap">The cap</dt>
+    <dd><code>maxKeptChars</code>, 24,000 by default; 0 turns it off. The floor and the budget
+      decide <em>which</em> results to drop. The cap decides how much of the ones they keep is
+      worth carrying, which is a different question: half of all tool output lives in about 3%
+      of calls. Measured, reuse falls evenly through an output rather than at its head, so this
+      is close to sampling it — 24,000 is the largest setting that frees more while leaving the
+      worst session exactly where it was.</dd>
+    <dt id="g-the-budget">The budget</dt>
+    <dd><code>targetReduction</code>, 0.5 by default. The fraction of droppable characters to free.
+      Calls are dropped lowest-score-first until it is met, and then dropping stops — so a session
+      with little to gain loses little.</dd>
+    <dt id="g-head-only">Head only</dt>
+    <dd>The call survives and its result is cut to its first 300 characters. Enough to see what it
+      was and to run it again.</dd>
+    <dt id="g-pinned">Pinned</dt>
+    <dd>Inside the six newest messages, which are never touched. A pinned call is not scored for
+      dropping at all, so its 1.000 is a statement about the rule, not about the call.</dd>
+    <dt id="g-dry-run">Dry run</dt>
+    <dd><code>npm run dry-run</code>: scores the transcripts already on your machine and prints
+      what one compaction would free and how many passes the loop would take on each of them. It
+      writes nothing, installs nothing, and needs no plugin.</dd>
+  </dl>
+  </details>
+</section>
+</main>
+
+<footer>
+<div class="wrap">
+  <p>
+    <a href="./">Back to kompact</a> &#183; <a href="evidence.html">cost, losses and verification</a>
+    &#183; <a rel="noopener" href="https://github.com/AxeForging/kompact">the source</a>.
+  </p>
+</div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

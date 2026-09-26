@@ -90,7 +90,7 @@
   <p>
     Calls are therefore dropped lowest-score-first only until the reduction target is met, with
     the keep threshold acting as a floor that nothing is dropped above. Simulated per session on
-    the labelled corpus, scored <a href="./#g-leave-one-session-out">leave-one-session-out</a>:
+    the labelled corpus, scored <a href="glossary.html#g-leave-one-session-out">leave-one-session-out</a>:
   </p>
   <div class="scroller" tabindex="0" data-label="Table: the policy sweep">
     <table class="data">
@@ -121,7 +121,7 @@
     Freeing nearly everything is easy and nearly worthless. Run through the shipped code rather
     than this simulation, the same defaults give <strong>33.6% freed and 79.4% kept</strong>. The
     sweep has no notion of two shipped rules: a call recording a change is never dropped, and a
-    kept result is capped at <a href="./#g-the-cap">24,000 characters</a>. The cap is most of the
+    kept result is capped at <a href="glossary.html#g-the-cap">24,000 characters</a>. The cap is most of the
     gap &#8212; <span class="val">27</span> of the 2,239 calls are longer than it, and shortening
     those 27 alone frees <span class="val">20.7%</span> of every character in the corpus. Calibrating on your own sessions is an accuracy upgrade rather than a
     prerequisite, because the policy adapts to your distribution on its own.
@@ -354,7 +354,7 @@
   <div class="ledger">
     <div class="ledger__row ledger__row--open">
       <p class="ledger__claim">The minimum Claude Code version <span class="flag">— not verified</span></p>
-      <p class="ledger__how">Everything here was run on 2.1.281, which has <a href="./#g-function-hooks">function hooks</a>. Which release first shipped them has not been established, so “2.1.281 or newer” would be a claim from a sample of one. On a build without them the plugin installs and never runs.</p>
+      <p class="ledger__how">Everything here was run on 2.1.281, which has <a href="glossary.html#g-function-hooks">function hooks</a>. Which release first shipped them has not been established, so “2.1.281 or newer” would be a claim from a sample of one. On a build without them the plugin installs and never runs.</p>
     </div>
     <div class="ledger__row ledger__row--open">
       <p class="ledger__claim">An assistant still finishing the job <span class="flag">— not verified</span><span class="ledger__blocks">blocks a 1.0</span></p>

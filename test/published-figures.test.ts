@@ -25,7 +25,8 @@ const read = (path: string): string => readFileSync(join(root, path), 'utf8');
  * read this; assertions that mean "the LANDING page says this" keep naming
  * `docs/index.html`, because that distinction is the whole point of the split.
  */
-const site = (): string => read('docs/index.html') + read('docs/evidence.html');
+const site = (): string =>
+  read('docs/index.html') + read('docs/evidence.html') + read('docs/glossary.html');
 const results = read('eval/RESULTS.md');
 /**
  * The machine-local half, split out of `RESULTS.md` because mixing the two is
@@ -676,7 +677,9 @@ describe('published figures match eval/RESULTS.md', () => {
    * exists to prevent.
    */
   it('counts its own glossary correctly', () => {
-    const page = read('docs/index.html');
+    // The glossary moved to its own page when the landing page had to earn back
+    // the height that unfolding two hidden figures cost it.
+    const page = read('docs/glossary.html');
     const terms = [...page.matchAll(/<dt id="g-/g)].length;
     expect(terms, 'no glossary terms found, so this test proves nothing').toBeGreaterThan(5);
     const words = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen'];

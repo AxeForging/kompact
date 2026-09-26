@@ -25,7 +25,7 @@
     still the file, not a description of it. It answers
     <a href="#demo">six of those compactions</a> before the summary runs at all.
     On your machine: no API key, no GPU, no network call &#8212; <span class="standfirst__note">no exceptions and no optional path that has any,
-    since the neural <a href="#g-sidecar">sidecar</a> this was built on
+    since the neural <a href="glossary.html#g-sidecar">sidecar</a> this was built on
     <a href="#result">lost to thirteen coefficients</a> and was removed.</span>
   </p>
   <div class="upfront reveal" style="--d:150ms">
@@ -60,7 +60,7 @@
 <nav class="contents-bar" aria-label="Contents">
   <div class="contents-bar__row wrap">
     <div class="contents">
-    <a href="#result"><span class="contents__long">Evidence</span><span class="contents__short">Evidence</span></a><a href="#for"><span class="contents__long">Who it is for</span><span class="contents__short">Who for</span></a><a href="#demo"><span class="contents__long">Watch it decide</span><span class="contents__short">Watch</span></a><a href="#shape"><span class="contents__long">The shape of it</span><span class="contents__short">Shape</span></a><a href="#signals"><span class="contents__long">What you repeat</span><span class="contents__short">Repeats</span></a><a href="evidence.html#cost">Cost</a><a href="evidence.html#losses"><span class="contents__long">Where it loses</span><span class="contents__short">Losses</span></a><a href="evidence.html#checked"><span class="contents__long">Verification</span><span class="contents__short">Verified</span></a><a href="#glossary">Glossary</a><a class="contents__out" href="evidence.html">Cost, losses, verification&#8239;&#8599;</a></div>
+    <a href="#result"><span class="contents__long">Evidence</span><span class="contents__short">Evidence</span></a><a href="#for"><span class="contents__long">Who it is for</span><span class="contents__short">Who for</span></a><a href="#demo"><span class="contents__long">Watch it decide</span><span class="contents__short">Watch</span></a><a href="#shape"><span class="contents__long">The shape of it</span><span class="contents__short">Shape</span></a><a href="#signals"><span class="contents__long">What you repeat</span><span class="contents__short">Repeats</span></a><a href="evidence.html#cost">Cost</a><a href="evidence.html#losses"><span class="contents__long">Where it loses</span><span class="contents__short">Losses</span></a><a href="evidence.html#checked"><span class="contents__long">Verification</span><span class="contents__short">Verified</span></a><a class="contents__out" href="glossary.html">Glossary&#8239;&#8599;</a><a class="contents__out" href="evidence.html">Cost, losses, verification&#8239;&#8599;</a></div>
     <p class="contents__tools">
       <button class="contents__all" type="button" id="open-all" hidden>Open all</button>
       <a class="contents__go" href="#install">Install</a>
@@ -193,7 +193,7 @@
     ones the neural model was scored against, so the comparison is possible at all — and every
     scorer is judged on the same held-out sessions each split, which is what makes it paired.
     Splitting by session rather than by row, because calls inside one session are correlated.
-    Across those splits the <a href="#g-calibration-error">calibration error</a> is <span class="num val">0.044</span> against every
+    Across those splits the <a href="glossary.html#g-calibration-error">calibration error</a> is <span class="num val">0.044</span> against every
     neural config’s <span class="num val">0.380–0.642</span>. The coefficients that ship are fitted
     on all <span class="num val">41</span> sessions, where the same measurement gives
     <span class="num val">0.789</span> and <span class="num val">0.051</span> —
@@ -224,7 +224,7 @@
 
     <dt>Large files.</dt>
     <dd>
-      The ranking keeps these, correctly, which is why the <a href="#g-the-cap">cap</a> exists:
+      The ranking keeps these, correctly, which is why the <a href="glossary.html#g-the-cap">cap</a> exists:
       <span class="val">27</span> calls of 2,239 run past 24,000 characters, and shortening
       those 27 frees <span class="val">20.7%</span> of the corpus. Here most of the saving is
       the cap, not the model.
@@ -276,7 +276,7 @@
   </p>
   <p class="fine">
     Every row was written into this page when the demonstration was generated, with nothing
-    overridden. The five outcomes are defined in <a href="#glossary">the glossary</a>, and
+    overridden. The five outcomes are defined in <a href="glossary.html">the glossary</a>, and
     <b>Replay</b> re-runs the decisions in the order the ranking spends them, lowest first.
   </p>
 
@@ -307,56 +307,59 @@
     <!-- /demo:render -->
   </div>
 
-  <details class="more">
-    <summary><h3>How to read the bars, and what is constructed here</h3></summary>
-  <p class="caption">
-    <b>Two layers to every bar.</b> The outline is how big that result was against the largest in
-    the session; the filled part is how much of it survived the decision. So a <em>head only</em>
-    row keeps its outline and shrinks its fill to 300 characters, and a <em>dropped</em> row keeps
-    its outline with nothing in it.
-  </p>
-  <p class="caption">
-    <b>Freed is not a slice of tool output.</b> Dropping a call takes its input with it, so a
-    few of those characters were never in the column to its left. The <code>git&nbsp;log</code>
-    row above is the clearest case: 1,547 characters of output, 1,597 freed.
-  </p>
-  <p class="caption">
-    The transcript is constructed — every real session on this machine is someone's work and
-    this page is public. The decisions are not: the list is produced by running the shipped
-    scorer with the shipped defaults, and nothing in it was chosen by hand. Regenerate it with
-    <code>npm&nbsp;run&nbsp;docs:demo</code>.
-  </p>
-  </details>
+  <div class="qa">
+    <div>
+      <h3>How do I read a bar?</h3>
+      <p>The outline is how big that result was against the largest in the session; the filled part
+        is how much of it survived. A <em>head only</em> row keeps its outline and shrinks its fill
+        to 300 characters. A <em>dropped</em> row keeps its outline with nothing in it.</p>
+    </div>
+    <div>
+      <h3>Why is <em>freed</em> bigger than the output?</h3>
+      <p>Dropping a call takes its input with it, so some of those characters were never in the
+        column to the left. The <code>git&nbsp;log</code> row is the clearest case: 1,547
+        characters of output, 1,597 freed.</p>
+    </div>
+    <div>
+      <h3>Is this a real session?</h3>
+      <p>The transcript is constructed. Every real session on this machine is someone&#8217;s work
+        and this page is public. The <em>decisions</em> are not constructed: the list is produced by
+        running the shipped scorer with the shipped defaults, nothing in it was chosen by hand, and
+        <code>npm&nbsp;run&nbsp;docs:demo</code> regenerates it.</p>
+    </div>
+  </div>
 
 
-  <details class="more">
-    <summary><h3>The Edit it wanted to delete, and the two rules that came out of it</h3></summary>
-  <p>
-    The first time this ran, <strong>the scorer dropped the <code>Edit</code> that fixed the
-    bug</strong>. Both its scores were low and honestly so — “Applied 1 edit to src/auth.ts”
-    is worth nothing, and exactly 1 of the 220 mutating calls in the corpus had an output
-    that was ever needed verbatim. But the <em>input</em> is the only record that the change
-    happened, and unlike a read it cannot be recovered by running it again.
-  </p>
-  <p>
-    So a mutating call is no longer the scorer’s decision. <code>Edit</code>, <code>Write</code>,
-    <code>MultiEdit</code> and <code>NotebookEdit</code> keep their call whatever the
-    probabilities say; only their output can go. The rule covers
-    <span class="num val">220</span> calls in the corpus, and re-running the same decisions with
-    the guard removed shows what it actually saves: <span class="num val">15</span> of them
-    would otherwise lose their call or their output, against the single output in those 220
-    that was ever needed verbatim.
-  </p>
-  <p>
-    A second rule came from the same place. The <code>Grep</code> in the list above scored 0.020
-    and 0.037 — about as low as this scorer goes — and dropping it would have freed
-    <span class="num val">126 characters</span> — more than the 89 its result holds, because
-    dropping the call takes its input with it. Roughly thirty tokens, against a real chance of
-    losing something the session still needed. Below <a href="#g-minyieldchars"><code>minYieldChars</code></a> the ranking is
-    not worth acting on however confident it is, so that call reads <em>too small</em> rather
-    than <em>dropped</em>.
-  </p>
-  </details>
+  <div class="qa">
+    <div>
+      <h3>Did it ever drop something that mattered?</h3>
+      <p>Yes. The first time this ran, the scorer dropped the <code>Edit</code> that fixed the bug.
+        Both its scores were low and honestly so: &#8220;Applied 1 edit to src/auth.ts&#8221; is
+        worth nothing, and exactly 1 of the 220 mutating calls in the corpus had an output that was
+        ever needed verbatim.</p>
+    </div>
+    <div>
+      <h3>So what changed?</h3>
+      <p>A mutating call is no longer the scorer&#8217;s decision. <code>Edit</code>,
+        <code>Write</code>, <code>MultiEdit</code> and <code>NotebookEdit</code> keep their call
+        whatever the probabilities say; only their output can go. The input is the only record that
+        the change happened, and unlike a read it cannot be recovered by running it again.</p>
+    </div>
+    <div>
+      <h3>What does that rule actually save?</h3>
+      <p>Re-running the same decisions with the guard removed answers it: 15 of those 220 calls
+        would otherwise lose their call or their output. So the rule saves 15, not 220 &#8212; and
+        the honest figure is the smaller one.</p>
+    </div>
+    <div>
+      <h3>Why is a <code>Grep</code> scoring 0.020 still kept?</h3>
+      <p>Dropping it would have freed 126 characters, more than the 89 its result holds, because
+        dropping a call takes its input with it. Roughly thirty tokens, against a real chance of
+        losing something the session still needed. Below <a href="glossary.html#g-minyieldchars">minYieldChars</a>
+        the ranking is not worth acting on however confident it is, so that call reads
+        <em>too small</em> rather than <em>dropped</em>.</p>
+    </div>
+  </div>
 
   <h3 class="ladder__h">And then it does it again.</h3>
   <!-- passes:render -->
@@ -720,7 +723,7 @@
       and the tool can be run again.</li>
     <li>A call that recorded a change — <code>Edit</code>, <code>Write</code>,
       <code>MultiEdit</code>, <code>NotebookEdit</code> — is <b>never dropped</b>, whatever it scores.</li>
-    <li>A kept result is still <b>capped at <a href="#g-the-cap">24,000 characters</a></b>, because
+    <li>A kept result is still <b>capped at <a href="glossary.html#g-the-cap">24,000 characters</a></b>, because
       half of all tool output lives in about 3% of the calls.</li>
     <li>It answers <b>at most six compactions</b> on one session, and only while a pass reclaims
       five points of the context window. After that Claude Code's own summary runs.</li>
@@ -734,75 +737,7 @@
 
 </section>
 
-<section class="wrap" id="glossary" aria-labelledby="glossary-h">
-  <p class="rubric rubric--appendix">Glossary</p>
-  <h2 id="glossary-h">What the words mean.</h2>
-  <p class="gloss-back" hidden><button type="button" id="gloss-back">&#8592; Back to where you were</button></p>
 
-    <details class="more">
-    <summary><h3>The fourteen terms this page uses for its own machinery</h3></summary>
-<dl class="glossary">
-    <dt id="g-auc">AUC</dt>
-    <dd>How often the scorer ranks a call that turned out to be needed above one that did not, over
-      every possible pair. 0.5 is a coin flip; 1.0 never gets a pair the wrong way round.</dd>
-    <dt id="g-calibration-error">Calibration error</dt>
-    <dd>The average gap between a score and what actually happens at it. At 0.035, calls scored
-      near 0.30 are genuinely needed about 30% of the time — which is what makes a threshold mean
-      something rather than just order things.</dd>
-    <dt id="g-keep-8209-result-keep-8209-call">keep&#8209;result, keep&#8209;call</dt>
-    <dd>The two probabilities scored for every call: whether its <em>output</em> is still needed
-      word for word, and whether the <em>call itself</em> should stay. They differ often, which is
-      why both exist.</dd>
-    <dt id="g-function-hooks">Function hooks</dt>
-    <dd>The Claude Code extension point this plugin runs on: a module that the engine
-      calls at named moments, rather than a shell command it spawns. Early access, which is
-      why <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> exists.</dd>
-    <dt id="g-sidecar">Sidecar</dt>
-    <dd>The local neural&#8209;model process this plugin was first built to score against,
-      over HTTP. It lost to the built-in model on <a href="#result">10 of 10 paired splits</a>
-      and has been removed; <code>eval/</code> still measures it. It is the only thing here that
-      ever wanted a GPU, and nothing here wants one now.</dd>
-    <dt id="g-leave-one-session-out">Leave-one-session-out</dt>
-    <dd>Fit on every session but one, test on the one held out, repeat for each. It is the
-      honest number when sessions differ from each other more than calls within a session
-      do, and it is lower than the grouped-split figure for exactly that reason.</dd>
-    <dt id="g-minyieldchars"><code>minYieldChars</code></dt>
-    <dd>The smallest result worth dropping. Below it, dropping frees less than it risks, so
-      the call is refused outright — the <em>too small</em> outcome in <a href="#demo">section 03, Watch it decide</a>.</dd>
-    <dt id="g-the-floor">The floor</dt>
-    <dd><code>keepThreshold</code>, 0.2 by default. At or above it nothing is dropped, whatever the
-      budget still wants. It is the guard the budget cannot argue with.</dd>
-    <dt id="g-points-of-window">Points of the context window</dt>
-    <dd>The unit a compaction pass is judged in. One point is one per cent of the whole window,
-      so a pass that reclaims nine of them buys back nine per cent of everything the model
-      reads &#8212; comparable between a long session and a short one in a way that
-      &#8220;a quarter of the transcript&#8221; is not, and the same unit as the 60% at which
-      the engine asks. <code>minFreedPercent</code> is a floor in these, and because the two
-      share a unit, a pass that clears it leaves the session below the trigger by construction.</dd>
-    <dt id="g-the-cap">The cap</dt>
-    <dd><code>maxKeptChars</code>, 24,000 by default; 0 turns it off. The floor and the budget
-      decide <em>which</em> results to drop. The cap decides how much of the ones they keep is
-      worth carrying, which is a different question: half of all tool output lives in about 3%
-      of calls. Measured, reuse falls evenly through an output rather than at its head, so this
-      is close to sampling it — 24,000 is the largest setting that frees more while leaving the
-      worst session exactly where it was.</dd>
-    <dt id="g-the-budget">The budget</dt>
-    <dd><code>targetReduction</code>, 0.5 by default. The fraction of droppable characters to free.
-      Calls are dropped lowest-score-first until it is met, and then dropping stops — so a session
-      with little to gain loses little.</dd>
-    <dt id="g-head-only">Head only</dt>
-    <dd>The call survives and its result is cut to its first 300 characters. Enough to see what it
-      was and to run it again.</dd>
-    <dt id="g-pinned">Pinned</dt>
-    <dd>Inside the six newest messages, which are never touched. A pinned call is not scored for
-      dropping at all, so its 1.000 is a statement about the rule, not about the call.</dd>
-    <dt id="g-dry-run">Dry run</dt>
-    <dd><code>npm run dry-run</code>: scores the transcripts already on your machine and prints
-      what one compaction would free and how many passes the loop would take on each of them. It
-      writes nothing, installs nothing, and needs no plugin.</dd>
-  </dl>
-  </details>
-</section>
 </main>
 
 <footer>
