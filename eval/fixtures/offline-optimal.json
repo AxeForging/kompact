@@ -1,0 +1,12 @@
+{
+  "calls": 2239,
+  "neededPct": 11,
+  "oracleFreedPct": 75.1,
+  "logisticRawFreedAt100Pct": 0.2,
+  "policyFreedAt100Pct": 0,
+  "policyFreedAt95Pct": 1.3,
+  "forceKeptPct": 10.9,
+  "sizeFreedAt100Pct": 25.7,
+  "featureCount": 13,
+  "corpus": "local labels"
+}

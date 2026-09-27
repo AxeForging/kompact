@@ -580,3 +580,32 @@ not reproducible in CI. This is the standing credibility ceiling; naming it prec
 outcome. The harness belongs beside `eval/outcome.ts`, which already measures the necessary
 condition (whether the dropped information was later needed) without the sufficient one (whether its
 absence changed the work).
+## How far is the scorer from the offline optimum? — `eval/offline-optimal.ts`
+
+kompact's keep/drop is an eviction policy; the reuse labels give perfect foresight, so we can
+compute the best-possible decision (keep an output iff it is needed later) and measure the gap. Over
+2,239 labelled calls (11% needed later):
+
+```
+freed at 100% needed-retention (never drop a needed output):
+  offline optimum (oracle):         75.1%   <- ceiling: drop exactly the not-needed
+  kompact policy (force-keeps on):  0%
+  raw logistic ranking:             0.2%
+  size-only baseline:               25.7%
+  (10.9% of calls force-kept: mutating / unrepeatable)
+```
+
+Read it carefully. **freed@100% is a stringent, outlier-dominated metric** — one needed output
+ranked below everything blocks all safe freeing, which is what drives the ~0% here. It does NOT mean
+kompact frees nothing in practice: at the shipped floor (0.2) it frees ~23% while accepting ~23%
+needed-loss (see the decision-policy section), leaning on re-run and the local archive to recover the
+rest. What the oracle (75.1%) against the size baseline (25.7%) shows is that most characters sit
+in not-needed outputs, so a policy that never dropped a needed one could free most of them — the
+scorer's tail just ranks some needed outputs too low to get there.
+
+The honest catch: a better scorer was already tried and lost. The neural sidecars (Laya, and Study
+2's LLMLingua-2 / Selective-Context) all scored *worse* than this logistic on the same task. So the
+headroom is real but unclaimed, and the lever is better **features**, not a heavier model — and even
+that cannot be validated until the live A/B above runs on a second operator's corpus. That corpus is
+the one thing every study here waits on; `recordSignals` already accumulates the raw material
+opt-in, but a trustworthy result needs more, and more diverse, real sessions than one machine holds.

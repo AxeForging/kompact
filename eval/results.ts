@@ -417,6 +417,42 @@ not reproducible in CI. This is the standing credibility ceiling; naming it prec
 outcome. The harness belongs beside \`eval/outcome.ts\`, which already measures the necessary
 condition (whether the dropped information was later needed) without the sufficient one (whether its
 absence changed the work).`;
+
+// Study 11 (offline-optimal headroom): reads its committed fixture.
+const oo = JSON.parse(readFileSync(join(here, 'fixtures', 'offline-optimal.json'), 'utf8')) as {
+  calls: number; neededPct: number; oracleFreedPct: number; policyFreedAt100Pct: number;
+  logisticRawFreedAt100Pct: number; sizeFreedAt100Pct: number; forceKeptPct: number;
+};
+const offlineSection = `
+## How far is the scorer from the offline optimum? — \`eval/offline-optimal.ts\`
+
+kompact's keep/drop is an eviction policy; the reuse labels give perfect foresight, so we can
+compute the best-possible decision (keep an output iff it is needed later) and measure the gap. Over
+${oo.calls.toLocaleString()} labelled calls (${oo.neededPct}% needed later):
+
+\`\`\`
+freed at 100% needed-retention (never drop a needed output):
+  offline optimum (oracle):         ${oo.oracleFreedPct}%   <- ceiling: drop exactly the not-needed
+  kompact policy (force-keeps on):  ${oo.policyFreedAt100Pct}%
+  raw logistic ranking:             ${oo.logisticRawFreedAt100Pct}%
+  size-only baseline:               ${oo.sizeFreedAt100Pct}%
+  (${oo.forceKeptPct}% of calls force-kept: mutating / unrepeatable)
+\`\`\`
+
+Read it carefully. **freed@100% is a stringent, outlier-dominated metric** — one needed output
+ranked below everything blocks all safe freeing, which is what drives the ~0% here. It does NOT mean
+kompact frees nothing in practice: at the shipped floor (0.2) it frees ~23% while accepting ~23%
+needed-loss (see the decision-policy section), leaning on re-run and the local archive to recover the
+rest. What the oracle (${oo.oracleFreedPct}%) against the size baseline (${oo.sizeFreedAt100Pct}%) shows is that most characters sit
+in not-needed outputs, so a policy that never dropped a needed one could free most of them — the
+scorer's tail just ranks some needed outputs too low to get there.
+
+The honest catch: a better scorer was already tried and lost. The neural sidecars (Laya, and Study
+2's LLMLingua-2 / Selective-Context) all scored *worse* than this logistic on the same task. So the
+headroom is real but unclaimed, and the lever is better **features**, not a heavier model — and even
+that cannot be validated until the live A/B above runs on a second operator's corpus. That corpus is
+the one thing every study here waits on; \`recordSignals\` already accumulates the raw material
+opt-in, but a trustworthy result needs more, and more diverse, real sessions than one machine holds.`;
 const cap = maybe('cap.ts');
 const mass = maybe('mass.ts');
 const inputs = maybe('inputs.ts');
@@ -590,7 +626,7 @@ anything. \`applyDecisions\` never touches prose, so what kompact leaves behind 
 verbatim tool calls and the user's and assistant's own words — not a narrative.
 \`maxPasses\` is the backstop for that, and its value is a judgement: the floor
 would allow more.
-${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}${skillPayoffSection}${cacheSection}${archiveSection}
+${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}${skillPayoffSection}${cacheSection}${archiveSection}${offlineSection}
 `;
 
 const snapshotBody = `# Snapshot — one machine's own transcripts
