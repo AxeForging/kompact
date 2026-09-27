@@ -42,7 +42,7 @@
     case.
   </p>
   <div class="colophon reveal" style="--d:210ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>252</b> tests</span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>258</b> tests</span>
     <span><b>0</b> network calls</span><span><b>5</b> claims <a href="evidence.html#checked">not verified</a></span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
 </div>
@@ -642,10 +642,12 @@
     <li>The plugin writes nothing on disk by default. Turn the recorder on with
       <code>recordSignals: true</code> and it keeps counts of the shapes you repeat in
       <code>~/.claude/kompact&#8209;signals.json</code> — capped, never leaving the machine. From those
-      counts it can draft a reusable <b>skill</b> for a repeated flow, or a reusable <b>tool</b> for an
-      ad-hoc script you keep re-writing (<code>python&nbsp;-c</code>, a heredoc), clustered by what the
-      script does rather than its filename. Drafted proposals land in
-      <code>.kompact/proposals/</code>, which Claude Code does not read.</li>
+      counts it can draft a reusable <b>skill</b> for a repeated flow, or scaffold a runnable <b>tool</b>
+      &#8212; an actual script file with a shebang, the detected imports and a stub &#8212; from an
+      ad-hoc one you keep re-writing (<code>python&nbsp;-c</code>, a heredoc), clustered by what the
+      script does rather than its filename. Proposals land in
+      <code>.kompact/proposals/</code>, which Claude Code does not read; promoting one is a
+      <code>mv</code> you do yourself.</li>
     <li>Remove it with <code>claude plugin uninstall kompact</code>, or unset
       <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> to turn every function hook off. Either way
       the next compaction is Claude Code’s own summary again.</li>

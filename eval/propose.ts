@@ -194,6 +194,97 @@ seeing the repetition written down was the useful part.
 `;
 }
 
+/**
+ * What each language a tool signature can carry needs to become a real file: the
+ * extension, the shebang, its line-comment marker, and a body stub that runs (and
+ * fails loudly) until someone writes it. python and node cover all but a handful
+ * of the ad-hoc scripts on real corpora; ruby and perl are here so an unusual one
+ * still scaffolds rather than erroring.
+ */
+const LANGS: Record<string, { ext: string; shebang: string; line: string; stub: string }> = {
+  python: {
+    ext: 'py', shebang: '#!/usr/bin/env python3', line: '#',
+    stub: 'def main() -> None:\n    # TODO: kompact knows you keep writing this; it does not know the\n    # logic. Start from a sample above and generalise.\n    raise SystemExit("scaffold: fill in main()")\n\n\nif __name__ == "__main__":\n    main()',
+  },
+  node: {
+    ext: 'mjs', shebang: '#!/usr/bin/env node', line: '//',
+    stub: 'function main() {\n  // TODO: start from a sample above and generalise.\n  throw new Error("scaffold: fill in main()");\n}\n\nmain();',
+  },
+  ruby: {
+    ext: 'rb', shebang: '#!/usr/bin/env ruby', line: '#',
+    stub: 'def main\n  abort "scaffold: fill in main"\nend\n\nmain',
+  },
+  perl: {
+    ext: 'pl', shebang: '#!/usr/bin/env perl', line: '#',
+    stub: 'use strict;\nuse warnings;\n\ndie "scaffold: fill in main\\n";',
+  },
+};
+
+/** A short kebab tool name from a `tool:<lang>:<tokens>` signature. */
+export function toolSlug(sig: string): string {
+  const [, lang = 'script', tokens = ''] = sig.split(':');
+  const base = [lang, ...tokens.split(',')].join('-')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48)
+    .replace(/-+$/, '');
+  return base || 'proposed-tool';
+}
+
+/**
+ * A runnable scaffold for a repeated ad-hoc script — the tool half of the
+ * proposer, where `draft` is the skill half.
+ *
+ * It cannot write the logic: `--publish` strips the samples and even a kept one
+ * is a starting point, not a spec. So it writes what it does know — the shape it
+ * was counted under, the samples it grouped, and how to promote the file once it
+ * works — around a body stub that runs and fails until filled in. The header is
+ * line comments, valid in every language here, rather than a per-language
+ * docstring. Promotion is a human `mv` onto PATH, deliberately: nothing here has
+ * measured whether the tool is worth having, exactly as with a drafted skill.
+ */
+export function scaffoldTool(row: Proposal): { filename: string; content: string } {
+  const [, lang = 'python', tokenList = ''] = row.sig.split(':');
+  const spec = LANGS[lang] ?? LANGS.python!;
+  const L = spec.line;
+  const name = toolSlug(row.sig);
+  const filename = `${name}.${spec.ext}`;
+  const tokens = tokenList.split(',').filter(Boolean);
+  // A module is the head of any dotted call (`json` from `json.load`); the rest
+  // are calls or bare names the author will sort out. Best-effort, python only —
+  // guessing import syntax for four languages would be wrong more than it helps.
+  const modules = [...new Set(tokens.filter((t) => t.includes('.')).map((t) => t.split('.')[0]!))].sort();
+  const importLine = lang === 'python' && modules.length
+    ? `import ${modules.join(', ')}  ${L} detected — add any others you need`
+    : `${L} detected symbols: ${tokens.join(', ') || '(none)'}`;
+  const samples = row.samples.length
+    ? row.samples.map((s) => `${L}     ${s.replace(/\s+/g, ' ').trim().slice(0, 200)}`).join('\n')
+    : `${L}     (no sample was kept for this shape — run on your own machine keeps them)`;
+
+  const header = [
+    spec.shebang,
+    `${L} ${name} — a tool kompact proposed from work you keep redoing.`,
+    L,
+    `${L} \`npm run propose\` counted this ad-hoc ${lang} script ${row.n} times across`,
+    `${L} ${row.sessions.length} sessions on this machine, grouped by what it does, not its name:`,
+    L,
+    `${L}     ${row.sig}`,
+    L,
+    `${L} Redacted examples of what was grouped here:`,
+    samples,
+    L,
+    `${L} This is a scaffold, not a finished tool. When the body works, promote it`,
+    `${L} out of this inert proposals directory onto your PATH:`,
+    L,
+    `${L}     chmod +x ${filename} && mv ${filename} ~/.local/bin/${name}`,
+    L,
+    `${L} Counts are from this machine only; nothing was sent anywhere.`,
+  ].join('\n');
+
+  return { filename, content: `${header}\n\n${importLine}\n\n${spec.stub}\n` };
+}
+
 function table(title: string, rows: Proposal[], offset: number): void {
   if (rows.length === 0) return;
   console.log(`\n${title}`);
@@ -279,6 +370,17 @@ function main(): void {
   const skillsDir = join(homedir(), '.claude', 'skills');
   for (const index of picked) {
     const row = all[index - 1] as Proposal;
+    // A tool row becomes a runnable script, not a SKILL.md — that is the whole
+    // point of the split. Everything else drafts a skill as before.
+    if (row.kind === 'tool') {
+      const { filename, content } = scaffoldTool(row);
+      const path = join(PROPOSALS_DIR, toolSlug(row.sig), filename);
+      if (path.startsWith(skillsDir)) throw new Error('refusing to write into a skills directory');
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path, content);
+      console.log(`wrote ${path}  — a runnable scaffold; fill in main(), then move it onto your PATH`);
+      continue;
+    }
     const path = join(PROPOSALS_DIR, slugFor(row.kind, row.sig), 'SKILL.md');
     // Never into a skills directory. Promotion is a human `mv`, because nothing
     // here has measured whether these drafts are worth having.
@@ -287,8 +389,9 @@ function main(): void {
     writeFileSync(path, draft(row));
     console.log(`wrote ${path}`);
   }
-  console.log('\nDrafts only, and inert: .kompact/proposals/ is not a directory Claude Code reads.');
-  console.log('Write the steps, then move one into ~/.claude/skills/ if you agree with it.');
+  console.log('\nDrafts and scaffolds only, and inert: .kompact/proposals/ is not a directory');
+  console.log('Claude Code reads. Fill one in, then move a skill into ~/.claude/skills/ or a tool');
+  console.log('onto your PATH if you agree with it.');
 }
 
 if (import.meta.main) main();

@@ -10,7 +10,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { type Proposal, draft, rank, slugFor } from '../eval/propose.js';
+import { type Proposal, draft, rank, scaffoldTool, slugFor, toolSlug } from '../eval/propose.js';
 
 const row = (over: Partial<Proposal> = {}): Proposal => ({
   kind: 'command',
@@ -115,5 +115,72 @@ describe('ranking', () => {
     const sigs = rank(rows, 3, 2).map((proposal) => proposal.sig);
     expect(sigs, 'a two-occurrence row was proposed').not.toContain('rare');
     expect(sigs, 'a one-session row was proposed as a habit').not.toContain('lonely');
+  });
+});
+
+describe('the tool scaffold a proposal creates', () => {
+  const tool = (sig: string, over: Partial<Proposal> = {}): Proposal => ({
+    kind: 'tool',
+    sig,
+    n: 17,
+    calls: 17,
+    chars: 11_391,
+    sessions: ['s1', 's2'],
+    samples: [],
+    lastSeen: 1,
+    saved: 28,
+    ...over,
+  });
+
+  it('names the file after the purpose, kebab-cased, with the language extension', () => {
+    const { filename } = scaffoldTool(tool('tool:python:json,json.load,load,sys'));
+    expect(filename).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*\.py$/);
+    expect(toolSlug('tool:node:fs,readFileSync')).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+    // Never empty, even from a signature that is only punctuation.
+    expect(toolSlug('tool:python:')).toMatch(/^[a-z0-9-]+$/);
+  });
+
+  it('writes a real, runnable script rather than a SKILL.md', () => {
+    const { filename, content } = scaffoldTool(tool('tool:python:json,json.load,load,sys'));
+    expect(filename.endsWith('.py')).toBe(true);
+    expect(content.startsWith('#!/usr/bin/env python3')).toBe(true);
+    // A stub that runs and fails until filled in, so a scaffold left untouched
+    // cannot be mistaken for a working tool.
+    expect(content).toContain('def main()');
+    expect(content).toContain('raise SystemExit');
+    // Not skill frontmatter.
+    expect(content).not.toContain('description:');
+  });
+
+  it('carries the signature it was counted under and how to promote it', () => {
+    const { content } = scaffoldTool(tool('tool:python:json,json.load,load,sys'));
+    expect(content, 'the scaffold drops the purpose it was grouped by')
+      .toContain('tool:python:json,json.load,load,sys');
+    expect(content, 'the scaffold does not say how many times it was seen').toContain('17 times');
+    expect(content, 'the scaffold does not say how to promote it onto PATH')
+      .toContain('~/.local/bin/');
+  });
+
+  it('guesses the import from the dotted calls in the signature', () => {
+    expect(scaffoldTool(tool('tool:python:json,json.load,load,sys')).content).toContain('import json');
+    expect(scaffoldTool(tool('tool:python:is_available,torch,torch.cuda.is_available')).content)
+      .toContain('import torch');
+  });
+
+  it('includes a kept sample when the store has one, so the author has a start', () => {
+    const { content } = scaffoldTool(tool('tool:python:json,json.load,load,sys', {
+      samples: ["python3 -c 'import json,sys; print(json.load(sys.stdin))'"],
+    }));
+    expect(content).toContain('print(json.load(sys.stdin))');
+  });
+
+  it('scaffolds node and an unfamiliar language rather than erroring', () => {
+    const node = scaffoldTool(tool('tool:node:fs,readFileSync'));
+    expect(node.filename.endsWith('.mjs')).toBe(true);
+    expect(node.content.startsWith('#!/usr/bin/env node')).toBe(true);
+    expect(node.content).toContain('function main()');
+    // An unknown language still returns a file (falls back to python) instead of
+    // throwing, so an odd signature scaffolds rather than crashing --write.
+    expect(() => scaffoldTool(tool('tool:cobol:frobnicate'))).not.toThrow();
   });
 });
