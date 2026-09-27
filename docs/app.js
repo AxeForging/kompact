@@ -430,6 +430,7 @@ armOnce('.spark');
 armOnce('#spread');
 armOnce('#floorcurve');
 armOnce('#bill');
+armOnce('#transfer');
 
 /* ── the cut, sweeping the plate ───────────────────────────────────────────
    Walks the line from the shipped floor to where the markup already leaves it,

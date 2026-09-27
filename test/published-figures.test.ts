@@ -804,6 +804,34 @@ describe('published figures match eval/RESULTS.md', () => {
     }
   });
 
+  /**
+   * The cross-harness transfer figure, against the fixture it was drawn from.
+   *
+   * `docs/index.html` states these by hand — the figure is a static, animated-on-
+   * scroll block with no generator — so this is what stops it drifting from
+   * `eval/fixtures/codex-transfer.json`. The story the section makes (fails on a
+   * foreign harness, recovers on a local refit) only holds if the four numbers
+   * are the measured ones.
+   */
+  it('states the cross-harness transfer figures its fixture reports', () => {
+    const f = JSON.parse(read('eval/fixtures/codex-transfer.json')) as {
+      calls: number; positives: number; transferAuc: number; recoveredAuc: number;
+      freed85: number; recoveredFreed85: number;
+    };
+    const page = read('docs/index.html');
+    for (const figure of [
+      `${f.transferAuc}`, `${f.recoveredAuc}`,
+      `${f.freed85}%`, `${f.recoveredFreed85}%`,
+      `<b>${f.calls}</b>`, `<b>${f.positives}</b>`,
+    ]) {
+      expect(page, `the transfer figure no longer quotes ${figure}`).toContain(figure);
+    }
+    // The transferred AUC is below chance, and the section says so rather than
+    // drawing an empty bar with no explanation.
+    expect(f.transferAuc, 'the transferred AUC is no longer below chance').toBeLessThan(0.5);
+    expect(page).toContain('below chance');
+  });
+
   it('quotes the shipped defaults the sweep actually reports', () => {
     expect(shippedPath, 'eval/RESULTS.md has no shipped-code-path line to bind to').not.toBeNull();
     const [, freed, kept] = shippedPath!;

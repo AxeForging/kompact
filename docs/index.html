@@ -42,7 +42,7 @@
     case.
   </p>
   <div class="colophon reveal" style="--d:210ms">
-    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>244</b> tests</span>
+    <span>v<b>0.1.0</b></span><span><b>MIT</b></span><span><b>251</b> tests</span>
     <span><b>0</b> network calls</span><span><b>5</b> claims <a href="evidence.html#checked">not verified</a></span><span>Claude&nbsp;Code; Codex&nbsp;CLI <b>via&nbsp;fixture</b></span>
   </div>
 </div>
@@ -181,6 +181,48 @@
     <span class="num val">0.789</span> and <span class="num val">0.051</span>:
     <a href="evidence.html#next">the gaps in section 08</a> says why that is the pair to plan around.
   </p>
+
+  <h3 class="figure-title">The same scorer, on a harness it never saw</h3>
+  <figure class="transfer reveal" id="transfer">
+    <p class="transfer__lead">Run unchanged on <b>108</b> tool calls from <b>7</b> Codex&nbsp;CLI
+      sessions, the shipped scorer is a coin flip. Refit on those same sessions&#8217; own labels,
+      it recovers &#8212; which is why the answer is to calibrate per context, not to ship one
+      set of weights for every harness.</p>
+    <ol class="transfer__list">
+      <li class="transfer__metric" style="--i:0">
+        <p class="transfer__name">Ranking quality<span><a href="glossary.html#g-auc">AUC</a>, 0.50 is chance</span></p>
+        <div class="transfer__row transfer__row--was">
+          <span class="transfer__tag">shipped default, on Codex</span>
+          <span class="transfer__track"><span class="transfer__fill" style="--w:0"></span></span>
+          <span class="transfer__val">0.469 <b>below chance</b></span>
+        </div>
+        <div class="transfer__row transfer__row--now">
+          <span class="transfer__tag">refit on those sessions</span>
+          <span class="transfer__track"><span class="transfer__fill transfer__fill--now" style="--w:0.808"></span></span>
+          <span class="transfer__val">0.904</span>
+        </div>
+      </li>
+      <li class="transfer__metric" style="--i:1">
+        <p class="transfer__name">Tokens freed<span>at 85% of calls kept</span></p>
+        <div class="transfer__row transfer__row--was">
+          <span class="transfer__tag">shipped default, on Codex</span>
+          <span class="transfer__track"><span class="transfer__fill" style="--w:0.013"></span></span>
+          <span class="transfer__val">1.3%</span>
+        </div>
+        <div class="transfer__row transfer__row--now">
+          <span class="transfer__tag">refit on those sessions</span>
+          <span class="transfer__track"><span class="transfer__fill transfer__fill--now" style="--w:0.675"></span></span>
+          <span class="transfer__val">67.5%</span>
+        </div>
+      </li>
+    </ol>
+    <figcaption class="caption">A small sample &#8212; <b>108</b> calls, <b>28</b> of them reused
+      later &#8212; measured once on this machine&#8217;s <code>~/.codex</code> and committed as scrubbed
+      aggregates, so treat it as directional. The AUC bar for the shipped default is empty because
+      <b>0.469</b> is below the 0.50 coin flip. The recovery is the point: the same thirteen features
+      carry the signal once their weights are fit to the harness in front of them, which is what
+      <code>calibrate&nbsp;--contribute</code> is for.</figcaption>
+  </figure>
 </section>
 
 <section class="wrap" id="demo" aria-labelledby="demo-h">
@@ -599,7 +641,10 @@
       the session; the transcript in <code>~/.claude/projects</code> is untouched.</li>
     <li>The plugin writes nothing on disk by default. Turn the recorder on with
       <code>recordSignals: true</code> and it keeps counts of the shapes you repeat in
-      <code>~/.claude/kompact&#8209;signals.json</code> — capped, never leaving the machine. Drafted proposals land in
+      <code>~/.claude/kompact&#8209;signals.json</code> — capped, never leaving the machine. From those
+      counts it can draft a reusable <b>skill</b> for a repeated flow, or a reusable <b>tool</b> for an
+      ad-hoc script you keep re-writing (<code>python&nbsp;-c</code>, a heredoc), clustered by what the
+      script does rather than its filename. Drafted proposals land in
       <code>.kompact/proposals/</code>, which Claude Code does not read.</li>
     <li>Remove it with <code>claude plugin uninstall kompact</code>, or unset
       <code>CLAUDE_CODE_ENABLE_FUNCTION_HOOKS</code> to turn every function hook off. Either way

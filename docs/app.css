@@ -1212,6 +1212,54 @@ table.data tr.same td.mark, table.data tr.same th.mark{ color: var(--accent-ink)
   /* Armed is the session before the pass: the bar still full. */
   .spread.reveal--armed .spread__kept{ transform: scaleX(1); }
 }
+
+/* ── the cross-harness transfer figure ─────────────────────────────────────
+   Ships settled (each fill at its --w); armOnce collapses it to zero and lets
+   it grow once on screen. With scripts blocked or motion reduced it is simply
+   correct. Two bars per metric: shipped default vs a local refit. */
+.transfer{ margin: var(--space-lg) 0 var(--space-2xl); max-width: 74ch; }
+.transfer__lead{
+  margin:0 0 var(--space-md); font-family: var(--sans); font-size: var(--text-sm);
+  color: var(--ink-2); max-width: 62ch;
+}
+.transfer__lead b{ color: var(--ink); font-variant-numeric: tabular-nums; }
+.transfer__list{
+  list-style:none; margin:0 0 var(--space-sm); padding:0;
+  display:flex; flex-direction:column; gap: var(--space-lg);
+}
+.transfer__name{
+  margin:0 0 var(--space-2xs); font-family: var(--sans); font-size: var(--text-sm);
+  font-weight:600; color: var(--ink);
+}
+.transfer__name span{ font-weight:400; color: var(--ink-3); font-size: var(--text-xs); margin-left: 1ch; }
+.transfer__row{
+  display:grid; grid-template-columns: 19ch minmax(0,1fr) 11ch; gap: var(--space-md);
+  align-items:center; padding: 4px 0;
+  font-family: var(--sans); font-size: var(--text-xs); color: var(--ink-3);
+}
+.transfer__tag{ color: var(--ink-2); }
+.transfer__row--now .transfer__tag{ color: var(--ink); font-weight:600; }
+.transfer__track{
+  position:relative; height:16px; min-width:0;
+  border:1px solid var(--rule-firm); background: var(--paper);
+}
+.transfer__fill{
+  position:absolute; inset:0; background: var(--ink-3);
+  transform-origin:left center; transform: scaleX(var(--w, 0));
+}
+.transfer__fill--now{ background: var(--accent); }
+.transfer__val{ text-align:right; font-weight:600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.transfer__val b{ display:block; font-weight:400; font-size: 0.82em; color: var(--ink-3); }
+.transfer figcaption{ margin-top: var(--space-sm); }
+
+@media (prefers-reduced-motion: no-preference){
+  .transfer__fill{ transition: transform 720ms cubic-bezier(0.16,1,0.3,1) calc(var(--i) * 140ms); }
+  .transfer.reveal--armed .transfer__fill{ transform: scaleX(0); }
+}
+@media (max-width: 640px){
+  .transfer__row{ grid-template-columns: minmax(0,1fr) 9ch; }
+  .transfer__tag{ grid-column: 1 / -1; }
+}
 @media (max-width: 640px){
   .spread__row{
     grid-template-columns: minmax(0,1fr) 6ch; gap: var(--space-2xs) var(--space-md);
