@@ -491,11 +491,19 @@ the full shipped set at deciding whether an OUTPUT is needed (${ftrSizeOnly.resu
 CALL still matters it collapses to ${ftrSizeOnly.callAuc.toFixed(3)} — that decision rides on whether the target was touched
 or read again, not on how big the output was.
 
-Modest but real, and free at scoring time: the state builder already computes the size it buckets, so
-the raw count is in hand. The catch is the standing one — a ${signed(ftrBest.resultAuc - ftrBase.resultAuc)}/${signed(ftrBest.callAuc - ftrBase.callAuc)} AUC gain on one operator's
-${ftr.sessions} sessions is not yet evidence it transfers, and a fourteenth feature would invalidate every operator's
-saved \`KOMPACT_WEIGHTS\`. Shipping it is a deliberate call, not an automatic one; the measurement is
-the deliverable.`;
+Modest, and free at scoring time — so it was built and wired all the way in to ship. **It was then
+reverted, because the operating metric moved the wrong way.** Refitting the 14-feature scorer and
+replaying the keep/drop policy (\`decideAll\`) over the corpus: at the retention the shipped scorer holds
+(≈85% of needed kept), the log-size feature freed **8.3% of characters against the shipped 42.5%** — to
+free 42.5% it had to drop retention to ≈62%. The shipped 13-feature scorer dominates its freed-vs-retention
+curve everywhere in the useful range.
+
+The reason is the mismatch AUC hides: AUC weights every call equally, but freed% is weighted by size, and
+\`log(chars)\` earns a *positive* weight (bigger output → likelier needed), so it protects large outputs
+wholesale — and large outputs are where the characters are. A per-call ranking gain (+0.02 AUC) became a
+character-weighted loss. This is the whole case for judging the scorer on Study 11's freed-at-retention
+curve rather than on AUC: the feature is a clean win on the metric that does not decide anything and a
+clear regression on the one that does. Not shipped.`;
 const cap = maybe('cap.ts');
 const mass = maybe('mass.ts');
 const inputs = maybe('inputs.ts');
