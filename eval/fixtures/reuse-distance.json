@@ -1,0 +1,7 @@
+{
+  "reuses": 1098,
+  "medianDistanceMsgs": 19,
+  "withinPreserveWindowPct": 37.6,
+  "longRangePct": 36.7,
+  "recencyPredictsReuseAuc": 0.407
+}

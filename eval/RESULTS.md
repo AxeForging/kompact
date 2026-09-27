@@ -527,3 +527,56 @@ trustworthy anchor); and this counts cache tokens only, not the primary benefit 
 (staying under the window cap and avoiding the built-in's two-minute summary). A cache-aware gate
 would help only a compaction with very few turns left in the session. **Measured, real, but not
 proven worth a gate — recorded, not shipped.**
+## Could a local archive recover the dropped outputs that matter? — `eval/archive-recall.ts`
+
+kompact drops a stale output betting it can be re-run; `eval/recovery.ts` showed that bet fails
+for outputs nothing reproduces. The fitting alternative (local, no model, no network): park the
+verbatim output in a BM25-indexed archive and re-inject on demand. This tests the retrieval
+mechanism — of the 1098 outputs needed verbatim later, does a BM25 query built from the reusing
+message return the correct original from the whole archive?
+
+```
+reused outputs: 1098 across 69 sessions;  archive 8,721 docs
+BM25 recall@1: 23.2%    recall@5: 52.5%
+```
+
+The mechanism is **not good enough on its own**: over an archive of thousands of similar outputs
+(many near-duplicate reads and diffs), a naive keyword query returns the right original only
+52.5% of the time in the top five. The idea is not dead — kompact knows each output's tool and
+target, so scoping the archive by target before BM25 should lift this sharply — but plain BM25 does
+not by itself beat re-running. And this is a ceiling: the query overlaps the output verbatim only
+because the output was present when reused; whether the model would issue such a query with the
+content absent needs a live A/B.
+
+## How far back is an output when it is reused? — `eval/reuse-distance.ts`
+
+If reuse were mostly near-range, kompact's preserve-recent window would already protect what matters
+and dropping old outputs would be safe. It is not. Over 1098 verbatim reuses:
+
+```
+distance production -> first reuse: median 19 messages
+within preserve-recent (<= 6):     37.6%
+long-range (> 50 messages):        36.7%
+recency predicts reuse:            AUC 0.407  (0.5 = no signal)
+```
+
+**36.7% of reuses are long-range** — an output produced fifty or more messages ago, reused
+verbatim. Dropping old outputs is exactly where kompact's risk sits, which is why the archive above
+matters and why the re-run guarantee is doing real work. Recency is a weak-to-negative predictor of
+reuse (AUC 0.407, partly a censoring artifact: late outputs have little session left in which to be
+reused), so "keep it because it is recent" is not the signal it feels like — the scorer's other
+features carry the weight.
+
+## What settles the payoff — the live A/B (specified, not run)
+
+Every study here ends at the same wall: recurrence, retrieval recall, cache cost, reuse distance are
+all *measurable*, but whether kompact (or an archive, or a skill) changes what the assistant
+actually accomplishes is not, retrospectively. The test that would settle it: replay a set of real
+tasks twice — once with kompact, once without — through the model, and compare task success, tokens,
+and wall-clock. It is **not run here**, for two reasons this machine cannot fix: it needs a second
+operator's corpus (this one has four substantial sessions, one project, three days) so the result is
+not one person's habits, and it needs live session replay through the model, which is expensive and
+not reproducible in CI. This is the standing credibility ceiling; naming it precisely is the honest
+outcome. The harness belongs beside `eval/outcome.ts`, which already measures the necessary
+condition (whether the dropped information was later needed) without the sufficient one (whether its
+absence changed the work).

@@ -209,6 +209,10 @@ export function labelSession(path: string, session: string, today: string): Labe
 }
 
 const root = join(homedir(), '.claude', 'projects');
+
+// Guarded so importing labelSession (e.g. from eval/archive-recall.ts) does not
+// run the extraction or write labels.jsonl.
+if (import.meta.main) {
 const outfile = process.argv[2] ?? join(import.meta.dirname, 'labels.jsonl');
 const today = new Date().toISOString().slice(0, 10);
 const rows: LabelRow[] = [];
@@ -240,4 +244,5 @@ for (const row of rows) {
 console.log('\nper tool (n, result_needed%)');
 for (const [tool, [n, p]] of [...byTool].sort((a, b) => b[1][0] - a[1][0]).slice(0, 12)) {
   console.log(`  ${tool.padEnd(18)} ${String(n).padStart(5)}  ${((100 * p) / n).toFixed(1)}%`);
+}
 }

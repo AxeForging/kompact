@@ -1,0 +1,8 @@
+{
+  "sessionsWithReuse": 69,
+  "reusedOutputs": 1098,
+  "recallAt1Pct": 23.2,
+  "recallAt5Pct": 52.5,
+  "archiveDocs": 8721,
+  "archiveMedianCharsPerDoc": 1798
+}
