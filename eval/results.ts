@@ -577,6 +577,39 @@ shipped design on freed-at-retention. With Study 12, that is four ranking-level 
 and did not survive the operating metric. It is the same conclusion Study 11 reached from the other side: the
 scorer is near its ceiling for this corpus, and the remaining lever is a second operator's data, not a cleverer
 method or a heavier model.`;
+
+// Study 16 (cross-harness transfer): reads a scrubbed aggregate measured on this
+// machine's Codex sessions. Unlike the others this corpus is NOT committed (it is
+// another tool's private transcripts); the aggregate is, and eval/codex-transfer.ts
+// reproduces it on any machine that has ~/.codex.
+const ct = JSON.parse(readFileSync(join(here, 'fixtures', 'codex-transfer.json'), 'utf8')) as {
+  calls: number; sessions: number; positives: number; neededPct: number;
+  transferAuc: number; freed85: number; tools: Record<string, number>;
+};
+const codexSection = `
+## Does the scorer transfer to a different harness? — \`eval/codex-transfer.ts\`
+
+Every study above runs on one operator's Claude Code sessions, and Studies 11–15 keep concluding the
+lever is a second corpus, not method. The closest genuinely-different distribution on hand is Codex CLI
+(\`~/.codex/sessions\`) — a different harness, different tools (\`exec_command\`, \`apply_patch\`), the client
+\`jev-compact\` targets. Its outputs are mapped onto kompact's tool categories, reuse-labelled with the same
+8-word-shingle method, and scored with the **shipped weights, no refit**.
+
+\`\`\`
+Codex: ${ct.calls} calls, ${ct.sessions} sessions, ${ct.positives} needed (${ct.neededPct}% — higher than Claude Code's 11%)
+shipped weights, no refit:  result_needed AUC ${ct.transferAuc.toFixed(3)}   (in-distribution: 0.789)
+                            freed@85% retention ${ct.freed85}%   (Claude Code decideAll: 20.7%)
+\`\`\`
+
+**The scorer does not transfer.** On Codex it scores at chance (${ct.transferAuc.toFixed(3)}), and freed collapses to
+${ct.freed85}%. The corpus is labellable — outputs are reused more often than in Claude Code — so this is the
+scorer failing to generalise, not a data problem. Read it with its limits: ${ct.positives} positives is a small
+sample (AUC 95% CI ≈ ±0.12, so "chance", not proven anti-correlation), and the Codex→kompact adapter is
+approximate. But the direction is unambiguous and it is the first cross-distribution evidence here: it is
+the concrete case for local calibration — \`eval/calibrate.ts\` refits on an operator's own sessions, and
+\`--contribute\` shares the aggregate so the "does it transfer" question can be answered with more than one
+machine. This aggregate is committed; the raw Codex corpus is not (it is another tool's private
+transcripts) — run \`eval/codex-transfer.ts\` on your own \`~/.codex\` to reproduce it.`;
 const cap = maybe('cap.ts');
 const mass = maybe('mass.ts');
 const inputs = maybe('inputs.ts');
@@ -750,7 +783,7 @@ anything. \`applyDecisions\` never touches prose, so what kompact leaves behind 
 verbatim tool calls and the user's and assistant's own words — not a narrative.
 \`maxPasses\` is the backstop for that, and its value is a judgement: the floor
 would allow more.
-${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}${skillPayoffSection}${cacheSection}${archiveSection}${offlineSection}${featureSearchSection}${costAwareSection}${reuseTargetSection}${operatingPointSection}
+${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}${skillPayoffSection}${cacheSection}${archiveSection}${offlineSection}${featureSearchSection}${costAwareSection}${reuseTargetSection}${operatingPointSection}${codexSection}
 `;
 
 const snapshotBody = `# Snapshot — one machine's own transcripts

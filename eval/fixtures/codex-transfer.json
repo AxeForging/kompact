@@ -1,0 +1,15 @@
+{
+  "calls": 108,
+  "sessions": 7,
+  "positives": 28,
+  "neededPct": 25.9,
+  "transferAuc": 0.469,
+  "freed90": 1.3,
+  "freed85": 1.3,
+  "tools": {
+    "Bash": 91,
+    "Edit": 12,
+    "Read": 5
+  },
+  "note": "aggregates only, measured on THIS machine's ~/.codex; re-run eval/codex-transfer.ts on your own. Small sample: treat as directional."
+}

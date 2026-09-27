@@ -714,3 +714,26 @@ shipped design on freed-at-retention. With Study 12, that is four ranking-level 
 and did not survive the operating metric. It is the same conclusion Study 11 reached from the other side: the
 scorer is near its ceiling for this corpus, and the remaining lever is a second operator's data, not a cleverer
 method or a heavier model.
+## Does the scorer transfer to a different harness? — `eval/codex-transfer.ts`
+
+Every study above runs on one operator's Claude Code sessions, and Studies 11–15 keep concluding the
+lever is a second corpus, not method. The closest genuinely-different distribution on hand is Codex CLI
+(`~/.codex/sessions`) — a different harness, different tools (`exec_command`, `apply_patch`), the client
+`jev-compact` targets. Its outputs are mapped onto kompact's tool categories, reuse-labelled with the same
+8-word-shingle method, and scored with the **shipped weights, no refit**.
+
+```
+Codex: 108 calls, 7 sessions, 28 needed (25.9% — higher than Claude Code's 11%)
+shipped weights, no refit:  result_needed AUC 0.469   (in-distribution: 0.789)
+                            freed@85% retention 1.3%   (Claude Code decideAll: 20.7%)
+```
+
+**The scorer does not transfer.** On Codex it scores at chance (0.469), and freed collapses to
+1.3%. The corpus is labellable — outputs are reused more often than in Claude Code — so this is the
+scorer failing to generalise, not a data problem. Read it with its limits: 28 positives is a small
+sample (AUC 95% CI ≈ ±0.12, so "chance", not proven anti-correlation), and the Codex→kompact adapter is
+approximate. But the direction is unambiguous and it is the first cross-distribution evidence here: it is
+the concrete case for local calibration — `eval/calibrate.ts` refits on an operator's own sessions, and
+`--contribute` shares the aggregate so the "does it transfer" question can be answered with more than one
+machine. This aggregate is committed; the raw Codex corpus is not (it is another tool's private
+transcripts) — run `eval/codex-transfer.ts` on your own `~/.codex` to reproduce it.
