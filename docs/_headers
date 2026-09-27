@@ -1,0 +1,9 @@
+# Cloudflare Pages response headers (https://developers.cloudflare.com/pages/configuration/headers/)
+# Ignored by GitHub Pages; active once deployed on Cloudflare Pages.
+/*
+  Link: </sitemap.xml>; rel="sitemap"
+  Link: </llms.txt>; rel="alternate"; type="text/plain"; title="LLM-readable summary"
+  Link: </eval.html>; rel="service-doc"; title="Evaluation methods and results"
+  Link: </evidence.html>; rel="describedby"; title="Measured evidence"
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

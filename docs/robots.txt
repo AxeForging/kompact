@@ -1,0 +1,61 @@
+# robots.txt — kompact (https://github.com/AxeForging/kompact)
+# Open MIT documentation for a Claude Code plugin. Agents are welcome here.
+# NOTE: replace REPLACE_ME_DOMAIN with the real host once on Cloudflare Pages.
+
+Sitemap: https://REPLACE_ME_DOMAIN/sitemap.xml
+
+# Content signals — how this content may be used (https://contentsignals.org).
+# This is public docs for an open-source dev tool; all uses are permitted.
+# Flip ai-train=no here if you ever want to opt out of model training.
+User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
+Allow: /
+
+# Explicit AI crawler rules. All allowed on purpose: discoverability is the goal.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Timpibot
+Allow: /

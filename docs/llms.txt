@@ -1,0 +1,38 @@
+# kompact
+
+> A Claude Code plugin that scores every tool call before context compaction and
+> drops only what is no longer needed verbatim — locally, with no API key, no GPU
+> and no network call. It keeps the file, not a summary of it.
+
+kompact replaces Claude Code's summarise-and-forget compaction with a local
+logistic scorer over facts already computed for each tool call. Every claim on
+the site is measured and carries its uncertainty; negative results are shown too.
+
+## What it does
+- Scores each tool call and keeps only outputs still needed verbatim.
+- Never drops a mutating call, or an answer you gave (AskUserQuestion result,
+  approved plan) — asking again would be a new question.
+- Hands back to Claude Code's own summary, not a half-compacted transcript.
+
+## Measured results (see /eval.html and /evidence.html)
+- Ranking quality (result-needed), leave-one-session-out over 41 sessions: AUC 0.789.
+- Paired corpus (1063 calls, 10 grouped splits): AUC 0.905 +/- 0.078, worst split 0.684, ECE 0.019.
+- "Output size alone" baseline: AUC 0.876 — most of the signal is one feature.
+- ~29% of tokens freed on real sessions; ~281 ms to score 3,591 tool calls.
+- A better neural scorer (Laya sidecar) was tried and lost: best AUC 0.721.
+
+## Install
+- Enable hooks: CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
+- claude plugin marketplace add AxeForging/kompact
+- claude plugin install kompact
+
+## Docs
+- [Landing](/): what it is, install, live demo.
+- [Evidence](/evidence.html): measured results with uncertainty.
+- [Evaluation](/eval.html): methods, corpus, and every study (reproducible).
+- [Trigger](/trigger.html): when compaction runs.
+- [Glossary](/glossary.html): terms.
+
+## Source and license
+- Repository: https://github.com/AxeForging/kompact
+- MIT licensed. Derivative of tamaratran/fast-jev-compaction and fatelei/jev-compact.

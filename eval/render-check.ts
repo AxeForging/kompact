@@ -16,7 +16,7 @@
  * Run: bun eval/render-check.ts [--keep]
  */
 import { execSync, spawn } from 'node:child_process';
-import { copyFileSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { copyFileSync, mkdtempSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -286,7 +286,11 @@ const PROBE = String.raw`
 `;
 
 const dir = mkdtempSync(join(tmpdir(), 'render-check-'));
-for (const file of readdirSync(docs)) copyFileSync(join(docs, file), join(dir, file));
+// Only top-level files — docs/ now also holds sub-directories (e.g. Cloudflare
+// Pages `functions/`), which copyFileSync cannot copy and the render never needs.
+for (const file of readdirSync(docs)) {
+  if (statSync(join(docs, file)).isFile()) copyFileSync(join(docs, file), join(dir, file));
+}
 /**
  * Every page a reader can reach, not just the landing page.
  *
