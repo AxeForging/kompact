@@ -781,6 +781,36 @@ describe('published figures match eval/RESULTS.md', () => {
     }
   });
 
+  /**
+   * The tool-proposal half of the feature, on the evidence page.
+   *
+   * `eval/propose.ts` gives tool rows their own table because they rank below the
+   * command and sequence rows and would otherwise fall off the TOP cut — so the
+   * whole second half of the proposer (a durable tool, not a skill) would be
+   * invisible on the page. This binds that: if the fixture has tool rows, the
+   * rendered report has to show them under their own heading.
+   */
+  it('shows the ad-hoc-script proposals its fixture holds', () => {
+    const fixture = JSON.parse(read('eval/fixtures/signals.json')) as {
+      rows: Record<string, { kind: string; n: number; sessions: string[] }>;
+    };
+    const toolKeys = Object.keys(fixture.rows).filter((k) => k.startsWith('tool::'));
+    const repeated = toolKeys.filter((k) => {
+      const row = fixture.rows[k]!;
+      return row.n >= 3 && row.sessions.length >= 2;
+    });
+    expect(repeated.length, 'the fixture has no repeated tool rows, so this proves nothing')
+      .toBeGreaterThan(0);
+
+    const report = read('docs/evidence.html');
+    expect(report, 'the propose report no longer separates tools from skills')
+      .toContain('Scripts you keep re-writing');
+    for (const key of repeated) {
+      const sig = key.slice('tool::'.length);
+      expect(report, `the report no longer shows the tool candidate ${sig}`).toContain(sig);
+    }
+  });
+
   it('states the summary-cost figures from its fixture', () => {
     const f = JSON.parse(read('eval/fixtures/summary-cost.json')) as {
       count: number; medianSec: number; minSec: number; maxSec: number; medianReductionPct: number;

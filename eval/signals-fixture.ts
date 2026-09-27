@@ -32,6 +32,7 @@ import {
   isCorrection,
   isSequenceWorthKeeping,
   sequenceSignature,
+  toolSignature,
 } from '../src/signals.js';
 import { collectToolCalls } from '../src/state.js';
 import { readTranscript } from './transcript.js';
@@ -189,6 +190,11 @@ function replay(rows: Aggregate, path: string, session: string): number {
       bump(rows, 'command', sig, step.command, session, 1, call.resultChars, at);
       if (call.isError) awaitingFix.add(sig);
       else if (awaitingFix.delete(sig)) bump(rows, 'error-fix', sig, step.command, session, 2, 0, at);
+      // The same call, counted a second time as a tool when it is an ad-hoc
+      // script (python -c, a heredoc): a repeated *purpose* is a tool candidate.
+      // Mirrors hooks/kompact-signals.ts; does not touch the command stream.
+      const toolSig = toolSignature(step.command);
+      if (toolSig) bump(rows, 'tool', toolSig, step.command, session, 1, call.resultChars, at);
     });
     const sequence = sequenceSignature(steps);
     recent.push(...steps);

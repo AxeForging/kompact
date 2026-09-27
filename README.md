@@ -524,10 +524,14 @@ to `~/.claude/kompact-signals.json` so the CLI can read it. No raw output is sto
 nothing is sent anywhere, and drafts land in `.kompact/proposals/`, which Claude Code
 does not read — promoting one is a `mv` you do yourself.
 
-**This part is new and its usefulness is not established.** Replaying 4,534 tool
-calls from 40 real sessions through the recorder's own functions, 30 of 2,000
-recorded shapes repeated at all — and all 12 of the repeated *command* shapes
-were generic shell verbs (`sed -n`, `grep -n | head`, `cat`). The classifier
+**This part is new and its usefulness is not established.** Replaying 6,585 tool
+calls from 40 real sessions through the recorder's own functions, 69 of 2,000
+recorded shapes repeated at all — and all 17 of the repeated *command* shapes
+were generic shell verbs (`sed -n`, `grep -n | head`, `cat`) or `git` incantations,
+which want no skill. What did turn up worth a **tool** rather than a skill: repeated
+ad-hoc scripts, grouped by what they do rather than their filename, led by a
+`python -c` that reads JSON from stdin — the same one-liner written again from
+scratch across sessions. The classifier
 works; whether what it proposes is worth writing is measured by nobody yet, and
 has its own row in the verification ledger. `bun eval/signals-fixture.ts` runs
 that replay on your own transcripts.
@@ -667,7 +671,7 @@ And a live Codex CLI, which needs >= 0.155 (this machine has 0.131).
 ```sh
 bun install
 npm run typecheck   # src + test + eval + hooks
-npm run test        # 251 tests
+npm run test        # 252 tests
 npm run validate    # plugin manifest
 ```
 

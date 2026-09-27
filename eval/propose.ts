@@ -220,14 +220,21 @@ function main(): void {
   }
 
   const ranked = rank(rows, MIN_TIMES, MIN_SESSIONS);
-  const work = ranked.filter((row) => KINDS[row.kind].ranked).slice(0, TOP);
+  // Tools get their own table, like corrections do — for the opposite reason.
+  // A repeated ad-hoc script is a proposal for a durable *tool*, not a skill, and
+  // it estimates lower than the command and sequence rows it sits among (one call,
+  // little output), so in a single ranked table it falls below the TOP cut and the
+  // whole second half of the feature is invisible. Split out, it is always shown.
+  const tools = ranked.filter((row) => row.kind === 'tool').slice(0, TOP);
+  const work = ranked
+    .filter((row) => KINDS[row.kind].ranked && row.kind !== 'tool').slice(0, TOP);
   const corrections = ranked.filter((row) => !KINDS[row.kind].ranked).slice(0, TOP);
 
   console.log(`Run: ${FILE}`);
   console.log(`${Object.keys(rows).length} shapes recorded; ` +
     `${ranked.length} seen ${MIN_TIMES}+ times in ${MIN_SESSIONS}+ sessions.`);
 
-  if (work.length === 0 && corrections.length === 0) {
+  if (work.length === 0 && tools.length === 0 && corrections.length === 0) {
     console.log('\nNothing has repeated enough to propose yet. Lower the bar with ' +
       '`--min 2 --min-sessions 1` to see what is close.');
     return;
@@ -237,7 +244,14 @@ function main(): void {
   console.log('\n  est. = total tool calls + total output characters / 1000. A model of effort,');
   console.log('  not a measurement of time, and every input to it is on the row.');
 
-  table('What you keep having to correct', corrections, work.length);
+  table('Scripts you keep re-writing — a tool, not a skill', tools, work.length);
+  if (tools.length > 0) {
+    console.log('\n  Same ad-hoc script (a python -c, a heredoc) written again from scratch,');
+    console.log('  grouped by what it does rather than its filename. These want a saved tool,');
+    console.log('  not a skill: write it once, then call it.');
+  }
+
+  table('What you keep having to correct', corrections, work.length + tools.length);
   if (corrections.length > 0) {
     console.log('\n  Not ranked by est. — a correction costs no tool calls, so its estimate is 0');
     console.log('  by construction. These usually want a line in CLAUDE.md, not a skill.');
@@ -249,7 +263,9 @@ function main(): void {
     return;
   }
 
-  const all = [...work, ...corrections];
+  // Same order the three tables were printed in, so a --write index matches the
+  // number beside the row: work first, then tools, then corrections.
+  const all = [...work, ...tools, ...corrections];
   const picked = WRITE.split(',')
     .map((part) => Number(part.trim()))
     .filter((index) => Number.isInteger(index) && index >= 1 && index <= all.length);

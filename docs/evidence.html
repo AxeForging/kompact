@@ -90,22 +90,22 @@
   </p>
 
   <!-- signals:render -->
-  <p class="caption caption--fig">30 shapes that repeated, of 2,000 recorded over 40 sessions and 4,534 tool calls</p>
-      <h3 class="figure-title">The 10 costliest of the 30 shapes that repeated</h3>
+  <p class="caption caption--fig">69 shapes that repeated, of 2,000 recorded over 40 sessions and 6,585 tool calls</p>
+      <h3 class="figure-title">The 10 costliest of the 69 shapes that repeated</h3>
 <div class="scroller" data-label="Table: what repeated">
   <table class="data">
     <thead><tr><th>Kind</th><th>Signature</th><th class="n">times</th><th class="n">sessions</th><th class="n">calls</th><th class="n">chars</th><th class="n">est.</th></tr></thead>
     <tbody>
-      <tr class="dim"><td>the same command</td><td><code>sed -n</code></td><td class="n">297</td><td class="n">2</td><td class="n">297</td><td class="n">544,077</td><td class="n">841.1</td></tr>
-      <tr class="dim"><td>the same command</td><td><code>python3 -c</code></td><td class="n">105</td><td class="n">2</td><td class="n">105</td><td class="n">61,374</td><td class="n">166.4</td></tr>
-      <tr class="dim"><td>the same command</td><td><code>grep -n | head -&lt;n&gt;</code></td><td class="n">69</td><td class="n">2</td><td class="n">69</td><td class="n">55,292</td><td class="n">124.3</td></tr>
-      <tr class="dim"><td>the same command</td><td><code>cat &lt;path&gt;</code></td><td class="n">18</td><td class="n">2</td><td class="n">18</td><td class="n">62,292</td><td class="n">80.3</td></tr>
-      <tr><td>the same run of tools</td><td><code>Read → Edit → Edit</code></td><td class="n">19</td><td class="n">3</td><td class="n">57</td><td class="n">&#8212;</td><td class="n">57.0</td></tr>
-      <tr><td>the same run of tools</td><td><code>Read → Read → Edit</code></td><td class="n">14</td><td class="n">2</td><td class="n">42</td><td class="n">&#8212;</td><td class="n">42.0</td></tr>
-      <tr><td>the same run of tools</td><td><code>Bash(grep -n) → Bash(sed -n) → Bash(sed -n)</code></td><td class="n">11</td><td class="n">2</td><td class="n">33</td><td class="n">&#8212;</td><td class="n">33.0</td></tr>
-      <tr><td>the same run of tools</td><td><code>Read → Write → Write</code></td><td class="n">7</td><td class="n">2</td><td class="n">21</td><td class="n">&#8212;</td><td class="n">21.0</td></tr>
-      <tr><td>the same run of tools</td><td><code>Read → Bash(grep -n) → Bash(sed -n)</code></td><td class="n">7</td><td class="n">2</td><td class="n">21</td><td class="n">&#8212;</td><td class="n">21.0</td></tr>
-      <tr class="dim"><td>the same command</td><td><code>grep -n</code></td><td class="n">16</td><td class="n">2</td><td class="n">16</td><td class="n">4,294</td><td class="n">20.3</td></tr>
+      <tr class="dim"><td>the same command</td><td><code>sed -n</code></td><td class="n">418</td><td class="n">3</td><td class="n">418</td><td class="n">828,769</td><td class="n">1246.8</td></tr>
+      <tr class="dim"><td>the same command</td><td><code>python3 -c</code></td><td class="n">118</td><td class="n">3</td><td class="n">118</td><td class="n">94,954</td><td class="n">213.0</td></tr>
+      <tr class="dim"><td>the same command</td><td><code>cat &lt;path&gt;</code></td><td class="n">40</td><td class="n">2</td><td class="n">40</td><td class="n">112,749</td><td class="n">152.7</td></tr>
+      <tr class="dim"><td>the same command</td><td><code>grep -n | head -&lt;n&gt;</code></td><td class="n">85</td><td class="n">2</td><td class="n">85</td><td class="n">65,499</td><td class="n">150.5</td></tr>
+      <tr><td>the same run of tools</td><td><code>Read → Edit → Edit</code></td><td class="n">39</td><td class="n">3</td><td class="n">117</td><td class="n">&#8212;</td><td class="n">117.0</td></tr>
+      <tr><td>the same run of tools</td><td><code>Bash(python3 -) → Bash(python3 -c) → Bash(python3 -)</code></td><td class="n">28</td><td class="n">2</td><td class="n">84</td><td class="n">&#8212;</td><td class="n">84.0</td></tr>
+      <tr><td>the same run of tools</td><td><code>Bash(python3 -c) → Bash(python3 -) → Bash(python3 -)</code></td><td class="n">25</td><td class="n">2</td><td class="n">75</td><td class="n">&#8212;</td><td class="n">75.0</td></tr>
+      <tr><td>the same run of tools</td><td><code>Read → Read → Edit</code></td><td class="n">24</td><td class="n">3</td><td class="n">72</td><td class="n">&#8212;</td><td class="n">72.0</td></tr>
+      <tr><td>the same run of tools</td><td><code>Bash(grep -n) → Bash(sed -n) → Bash(sed -n)</code></td><td class="n">24</td><td class="n">2</td><td class="n">72</td><td class="n">&#8212;</td><td class="n">72.0</td></tr>
+      <tr><td>the same run of tools</td><td><code>Bash(grep -nE) → Bash(sed -n) → Bash(python3 -)</code></td><td class="n">19</td><td class="n">2</td><td class="n">57</td><td class="n">&#8212;</td><td class="n">57.0</td></tr>
     </tbody>
   </table>
   </div>
@@ -117,17 +117,17 @@
 
   <div class="finding finding--loss reveal">
     <p>Of <span class="val">2,000</span> shapes recorded,
-      <span class="val">30</span> repeated enough to propose, and
-      <span class="val">10</span> of the 12 repeated command shapes are generic
+      <span class="val">69</span> repeated enough to propose, and
+      <span class="val">13</span> of the 17 repeated command shapes are generic
       shell verbs. The highest-ranked thing this found is
       <code>sed -n</code>.</p>
   </div>
   <p>
-    10 of the 12 are verbs like
-    <code>sed</code>, <code>grep</code> or <code>cat</code>. No skill helps with those. The 2 that fall outside that list
-      (<code>git diff | head -&lt;n&gt;</code> and <code>git status --short</code>) are not
+    13 of the 17 are verbs like
+    <code>sed</code>, <code>grep</code> or <code>cat</code>. No skill helps with those. The 4 that fall outside that list
+      (<code>git diff | head -&lt;n&gt;</code> and <code>git add &amp;&amp; git commit &amp;&amp; git log</code> and <code>git status --short</code> and <code>git add &amp;&amp; git commit &amp;&amp; git log | head -&lt;n&gt;</code>) are not
       workflows either; they are simply verbs the list was not written to catch, and adding them
-      to it to keep a sentence tidy is the kind of tuning this page exists to avoid. The best row that reads like an actual workflow, <code>Bash(grep -n) → Bash(sed -n) → Bash(sed -n)</code>, is ranked 7th, because the ranking
+      to it to keep a sentence tidy is the kind of tuning this page exists to avoid. The best row that reads like an actual workflow, <code>Bash(python3 -) → Bash(python3 -c) → Bash(python3 -)</code>, is ranked 6th, because the ranking
       rewards total work and a generic verb runs more often than a workflow does.
   </p>
   <!-- /signals:render -->
@@ -139,7 +139,7 @@
       <button class="copy" type="button" data-copy hidden aria-label="Copy the command that prints this report">Copy</button>
       <p class="visually-hidden" role="status" aria-live="polite"></p>
     </div>
-    <pre tabindex="0" data-label="Shell command and the ranked report it prints"><code><span class="cmd__line">npm run propose:demo</span><span class="cmd__gap"></span><span class="cmd__line">Run: eval/fixtures/signals.json</span><span class="cmd__line">30 shapes recorded; 30 seen 3+ times in 2+ sessions.</span><span class="cmd__line">&#8203;</span><span class="cmd__line">What repeating costs you</span><span class="cmd__line">    #  times sess  calls     chars    est.  what</span><span class="cmd__line">    1    297    2    297   544,077   841.1  the same command: sed -n</span><span class="cmd__line">    2    105    2    105    61,374   166.4  the same command: python3 -c</span><span class="cmd__line">    3     69    2     69    55,292   124.3  the same command: grep -n | head -&lt;n&gt;</span><span class="cmd__line">    4     18    2     18    62,292    80.3  the same command: cat &lt;path&gt;</span><span class="cmd__line">    5     19    3     57         0    57.0  the same run of tools: Read → Edit → Edit</span><span class="cmd__line">    6     14    2     42         0    42.0  the same run of tools: Read → Read → Edit</span><span class="cmd__line">    7     11    2     33         0    33.0  the same run of tools: Bash(grep -n) → Bash(sed -n) → Bash(sed -n)</span><span class="cmd__line">    8      7    2     21         0    21.0  the same run of tools: Read → Write → Write</span><span class="cmd__line">    9      7    2     21         0    21.0  the same run of tools: Read → Bash(grep -n) → Bash(sed -n)</span><span class="cmd__line">   10     16    2     16     4,294    20.3  the same command: grep -n</span><span class="cmd__line">   11      5    2      5    13,813    18.8  the same command: git diff | head -&lt;n&gt;</span><span class="cmd__line">   12      6    2     18         0    18.0  the same run of tools: Read → Read → Write</span><span class="cmd__line">&#8203;</span><span class="cmd__line">  est. = total tool calls + total output characters / 1000. A model of effort,</span><span class="cmd__line">  not a measurement of time, and every input to it is on the row.</span><span class="cmd__line">&#8203;</span><span class="cmd__line">Nothing written. `npm run propose -- --write 1,3` drafts those rows into .kompact/proposals/.</span></code></pre>
+    <pre tabindex="0" data-label="Shell command and the ranked report it prints"><code><span class="cmd__line">npm run propose:demo</span><span class="cmd__gap"></span><span class="cmd__line">Run: eval/fixtures/signals.json</span><span class="cmd__line">69 shapes recorded; 69 seen 3+ times in 2+ sessions.</span><span class="cmd__line">&#8203;</span><span class="cmd__line">What repeating costs you</span><span class="cmd__line">    #  times sess  calls     chars    est.  what</span><span class="cmd__line">    1    418    3    418   828,769  1246.8  the same command: sed -n</span><span class="cmd__line">    2    118    3    118    94,954   213.0  the same command: python3 -c</span><span class="cmd__line">    3     40    2     40   112,749   152.7  the same command: cat &lt;path&gt;</span><span class="cmd__line">    4     85    2     85    65,499   150.5  the same command: grep -n | head -&lt;n&gt;</span><span class="cmd__line">    5     39    3    117         0   117.0  the same run of tools: Read → Edit → Edit</span><span class="cmd__line">    6     28    2     84         0    84.0  the same run of tools: Bash(python3 -) → Bash(python3 -c) → Bash(python3 -)</span><span class="cmd__line">    7     25    2     75         0    75.0  the same run of tools: Bash(python3 -c) → Bash(python3 -) → Bash(python3 -)</span><span class="cmd__line">    8     24    3     72         0    72.0  the same run of tools: Read → Read → Edit</span><span class="cmd__line">    9     24    2     72         0    72.0  the same run of tools: Bash(grep -n) → Bash(sed -n) → Bash(sed -n)</span><span class="cmd__line">   10     19    2     57         0    57.0  the same run of tools: Bash(grep -nE) → Bash(sed -n) → Bash(python3 -)</span><span class="cmd__line">   11     14    2     42         0    42.0  the same run of tools: Bash(python3 -) → Bash(python3 -) → Bash(python3 -c)</span><span class="cmd__line">   12     14    2     42         0    42.0  the same run of tools: Bash(python3 -c) → Bash(python3 -c) → Bash(python3 -)</span><span class="cmd__line">&#8203;</span><span class="cmd__line">  est. = total tool calls + total output characters / 1000. A model of effort,</span><span class="cmd__line">  not a measurement of time, and every input to it is on the row.</span><span class="cmd__line">&#8203;</span><span class="cmd__line">Scripts you keep re-writing — a tool, not a skill</span><span class="cmd__line">    #  times sess  calls     chars    est.  what</span><span class="cmd__line">   13     14    2     14    22,692    36.7  the same ad-hoc script: tool:python:json,json.load,load,open</span><span class="cmd__line">   14     17    2     17    11,391    28.4  the same ad-hoc script: tool:python:json,json.load,load,sys</span><span class="cmd__line">   15      4    2      4     6,755    10.8  the same ad-hoc script: tool:python:dumps,json,json.dumps,json.load,load,open</span><span class="cmd__line">   16      3    2      3     1,882     4.9  the same ad-hoc script: tool:python:is_available,torch,torch.cuda.is_available</span><span class="cmd__line">   17      4    2      4       372     4.4  the same ad-hoc script: tool:python:Image,Image.open,PIL,open</span><span class="cmd__line">&#8203;</span><span class="cmd__line">  Same ad-hoc script (a python -c, a heredoc) written again from scratch,</span><span class="cmd__line">  grouped by what it does rather than its filename. These want a saved tool,</span><span class="cmd__line">  not a skill: write it once, then call it.</span><span class="cmd__line">&#8203;</span><span class="cmd__line">Nothing written. `npm run propose -- --write 1,3` drafts those rows into .kompact/proposals/.</span></code></pre>
   </div>
   <p class="caption">Real output, captured from <code>eval/propose.ts</code> when this page was
     built, over the same committed corpus as the table above. Not a mock-up.
@@ -527,9 +527,10 @@
       <p class="ledger__claim">That a proposed skill is worth having <span class="flag">— not verified</span></p>
       <p class="ledger__how">The repetition in <a href="./#signals">section 05, What you repeat</a> is measured, and
         the drafts validate as skills. Whether writing one saves anyone anything is not measured at
-        all: it needs the same work done twice, once with the skill and once without. Ten of the 12
-        repeated command shapes are generic shell verbs and the other two are
-        <code>git status</code> and <code>git diff</code>, which is evidence against rather than for.</p>
+        all: it needs the same work done twice, once with the skill and once without. Thirteen of the 17
+        repeated command shapes are generic shell verbs and the other four are
+        <code>git</code> incantations, which is evidence against rather than for. The ad-hoc
+        <em>scripts</em> it found are a better case, and get their own table above.</p>
     </div>
     <div class="ledger__row ledger__row--open">
       <p class="ledger__claim">What deferring the summary costs <span class="flag">— not verified</span></p>
