@@ -1,0 +1,28 @@
+{
+  "calls": 2239,
+  "smallCap": 363,
+  "scoreMsPerCorpus": 1,
+  "curve": [
+    {
+      "floor": 0.95,
+      "p": 0.9,
+      "c": 0
+    },
+    {
+      "floor": 0.9,
+      "p": 0.9,
+      "c": 2
+    },
+    {
+      "floor": 0.85,
+      "p": 3.2,
+      "c": 4.5
+    },
+    {
+      "floor": 0.8,
+      "p": 4.4,
+      "c": 10.1
+    }
+  ],
+  "verdict": "NO GAIN: cost-aware within 1.3 pts of the plain threshold at 85% realized retention."
+}

@@ -1,0 +1,26 @@
+{
+  "calls": 2239,
+  "targets": [
+    {
+      "target": "any reuse (shipped)",
+      "f90": 1.9,
+      "f85": 4
+    },
+    {
+      "target": "reused <= 10 msgs",
+      "f90": 2.8,
+      "f85": 4.7
+    },
+    {
+      "target": "reused <= 25 msgs",
+      "f90": 2.1,
+      "f85": 4.9
+    },
+    {
+      "target": "reused <= 50 msgs",
+      "f90": 2.7,
+      "f85": 4.8
+    }
+  ],
+  "verdict": "NO GAIN: no near-term target beats binary result_needed by >2 pts at 85% retention — for one-shot compaction, \"needed at all\" already is the Belady target."
+}

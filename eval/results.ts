@@ -493,10 +493,10 @@ or read again, not on how big the output was.
 
 Modest, and free at scoring time — so it was built and wired all the way in to ship. **It was then
 reverted, because the operating metric moved the wrong way.** Refitting the 14-feature scorer and
-replaying the keep/drop policy (\`decideAll\`) over the corpus: at the retention the shipped scorer holds
-(≈85% of needed kept), the log-size feature freed **8.3% of characters against the shipped 42.5%** — to
-free 42.5% it had to drop retention to ≈62%. The shipped 13-feature scorer dominates its freed-vs-retention
-curve everywhere in the useful range.
+replaying the keep/drop policy (\`decideAll\`) over the corpus, at the shipped 0.2 threshold and the
+retention it holds (≈85% of needed kept), the log-size scorer freed only **8.3% of characters against the
+shipped scorer's 20.7%** (the real \`decideAll\` freed, Study 15) — freed cut by more than half for no gain
+in retention. The shipped 13-feature scorer dominates its freed-vs-retention curve everywhere useful.
 
 The reason is the mismatch AUC hides: AUC weights every call equally, but freed% is weighted by size, and
 \`log(chars)\` earns a *positive* weight (bigger output → likelier needed), so it protects large outputs
@@ -504,6 +504,79 @@ wholesale — and large outputs are where the characters are. A per-call ranking
 character-weighted loss. This is the whole case for judging the scorer on Study 11's freed-at-retention
 curve rather than on AUC: the feature is a clean win on the metric that does not decide anything and a
 clear regression on the one that does. Not shipped.`;
+
+// Studies 13-15: three credibility-ranked leads (cache-eviction / reuse-prediction /
+// imitation-learning literature, ranked by citations), each tested on freed@retention
+// and timed. All read committed fixtures.
+const ca = JSON.parse(readFileSync(join(here, 'fixtures', 'cost-aware.json'), 'utf8')) as {
+  calls: number; smallCap: number; scoreMsPerCorpus: number;
+  curve: { floor: number; p: number; c: number }[]; verdict: string;
+};
+const caAt85 = ca.curve.find((r) => r.floor === 0.85)!;
+const costAwareSection = `
+## Cost-aware eviction: drop big uncertain outputs first — \`eval/cost-aware.ts\`
+
+Study 12's trap was that freed% is size-weighted while the score is per call. The size-aware *decision*
+(the CDN "beyond-Belady byte-miss-ratio" line, and cost-aware replacement like GDSF) is the principled
+response: keep small outputs cheaply, spend drops on the big uncertain ones. Tested realistically — the
+shipped scorer's out-of-fold P(needed), two keep-policies swept over the threshold, both read on the true
+labels (realized retention, no oracle): keep iff \`P ≥ t\`, versus keep iff \`P ≥ t\` OR the output is at or
+below the corpus-median ${ca.smallCap} characters.
+
+| realized retention | freed (P ≥ t) | freed (+ keep small) | Δ |
+| --- | --- | --- | --- |
+${ca.curve.map((r) => `| ${(100 * r.floor).toFixed(0)}% | ${r.p.toFixed(1)}% | ${r.c.toFixed(1)}% | ${(r.c - r.p >= 0 ? '+' : '') + (r.c - r.p).toFixed(1)} |`).join('\n')}
+
+At kompact's operating retention (85–90%) cost-aware is **${(caAt85.c - caAt85.p >= 0 ? '+' : '') + (caAt85.c - caAt85.p).toFixed(1)} pts** — within noise; it only pulls ahead at
+80%, below where kompact runs. No gain at the operating point. An earlier cut of this study used an *oracle*
+retention budget and reported +10.8 pts — but that was the oracle choosing which needed outputs to sacrifice,
+not the scorer; corrected here to realized retention. Speed: scoring all ${ca.calls.toLocaleString()} calls takes ~${ca.scoreMsPerCorpus} ms
+(≈0.5 µs/call), three orders of magnitude inside the 500 ms budget.`;
+
+const rt = JSON.parse(readFileSync(join(here, 'fixtures', 'reuse-target.json'), 'utf8')) as {
+  calls: number; targets: { target: string; f90: number; f85: number }[]; verdict: string;
+};
+const reuseTargetSection = `
+## Does imitating the Belady oracle's target help? — \`eval/reuse-target.ts\`
+
+The imitation-learning line for cache replacement (Liu et al., ICML 2020) and reuse prediction (Faldu, 2020)
+train on the future reuse *pattern*, not a bare needed/not bit. kompact trains on binary \`result_needed\`
+(reused ever). This retrains on near-term targets — "reused within N messages" — and scores each on freed at
+the true \`result_needed\` retention:
+
+| trained-on target | freed@90% | freed@85% |
+| --- | --- | --- |
+${rt.targets.map((t) => `| ${t.target} | ${t.f90.toFixed(1)}% | ${t.f85.toFixed(1)}% |`).join('\n')}
+
+No near-term target beats the binary one by more than ~1 pt. The reuse-distance refinement that matters for
+CPU and CDN caches — where a line is evicted and re-fetched repeatedly over time — has no purchase on a
+one-shot drop at compaction: here "needed at all after this point" already *is* the Belady target. No gain.`;
+
+const op = JSON.parse(readFileSync(join(here, 'fixtures', 'operating-point.json'), 'utf8')) as {
+  calls: number; shipped: number; curve: { thr: number; kept: number; freed: number }[]; verdict: string;
+};
+const opShipped = op.curve.find((r) => r.thr === op.shipped)!;
+const operatingPointSection = `
+## Is the shipped keepThreshold on the frontier? — \`eval/operating-point.ts\`
+
+Study 12 made the operating point a first-class lever, so before touching the model: sweep \`keepThreshold\`
+through the real policy (\`decideAll\`, with its force-keeps and drop_call/truncation) and read needed-retention
+and freed characters at each.
+
+| keepThreshold | kept/needed | freed |
+| --- | --- | --- |
+${op.curve.map((r) => `| ${r.thr.toFixed(2)}${r.thr === op.shipped ? ' (shipped)' : ''} | ${r.kept.toFixed(1)}% | ${r.freed.toFixed(1)}% |`).join('\n')}
+
+No swept threshold beats the shipped ${op.shipped.toFixed(2)} on both axes — 0.25 frees more but retains less, and 0.30
+collapses retention to ${op.curve.find((r) => r.thr === 0.3)?.kept.toFixed(0)}%. The default is Pareto-optimal on this corpus, and its ${opShipped.freed.toFixed(1)}% freed at
+${opShipped.kept.toFixed(1)}% retention is the true \`decideAll\` figure the Study 12 regression is read against.
+
+Taken together, Studies 13–15 test the three most-cited leads from the cache-eviction and reuse-prediction
+literature — cost-aware ordering, an imitation-learning target, and threshold re-tuning — and none beats the
+shipped design on freed-at-retention. With Study 12, that is four ranking-level ideas that looked promising
+and did not survive the operating metric. It is the same conclusion Study 11 reached from the other side: the
+scorer is near its ceiling for this corpus, and the remaining lever is a second operator's data, not a cleverer
+method or a heavier model.`;
 const cap = maybe('cap.ts');
 const mass = maybe('mass.ts');
 const inputs = maybe('inputs.ts');
@@ -677,7 +750,7 @@ anything. \`applyDecisions\` never touches prose, so what kompact leaves behind 
 verbatim tool calls and the user's and assistant's own words — not a narrative.
 \`maxPasses\` is the backstop for that, and its value is a judgement: the floor
 would allow more.
-${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}${skillPayoffSection}${cacheSection}${archiveSection}${offlineSection}${featureSearchSection}
+${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}${skillPayoffSection}${cacheSection}${archiveSection}${offlineSection}${featureSearchSection}${costAwareSection}${reuseTargetSection}${operatingPointSection}
 `;
 
 const snapshotBody = `# Snapshot — one machine's own transcripts
