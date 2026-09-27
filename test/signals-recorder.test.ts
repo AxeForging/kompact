@@ -128,6 +128,15 @@ describe('counting', () => {
     expect(commands[0]?.samples).toHaveLength(2);
   });
 
+  it('records a re-created ad-hoc script as a tool, by purpose', async () => {
+    const h = harness();
+    await h.fire('classic.PostToolBatch', batch([bash(`python3 -c 'import json,sys; print(json.load(sys.stdin))'`)]));
+    await h.fire('classic.PostToolBatch', batch([bash(`python3 -c "import sys, json; d = json.load(sys.stdin)"`)]));
+    const tools = Object.values(h.rows()).filter((row) => row.kind === 'tool');
+    expect(tools, 'two same-purpose one-liners should be one tool row').toHaveLength(1);
+    expect(tools[0]?.n).toBe(2);
+  });
+
   it('records a retry loop when a failed command later succeeds', async () => {
     const h = harness();
     await h.fire('classic.PostToolBatch', batch([bash('npm run build', { is_error: true })]));

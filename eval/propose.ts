@@ -30,7 +30,7 @@ import { dirname, join, resolve } from 'node:path';
 
 import { estimateSaved } from '../src/signals.js';
 
-type Kind = 'command' | 'sequence' | 'intent' | 'error-fix' | 'correction' | 'orient' | 'verify';
+type Kind = 'command' | 'sequence' | 'intent' | 'error-fix' | 'correction' | 'orient' | 'verify' | 'tool';
 
 type Row = {
   kind: Kind;
@@ -75,6 +75,7 @@ const KINDS: Record<Kind, { label: string; ranked: boolean }> = {
   orient: { label: 'rebuilding context at the start', ranked: true },
   verify: { label: 'checked before handing back', ranked: true },
   intent: { label: 'the same request', ranked: true },
+  tool: { label: 'the same ad-hoc script', ranked: true },
   correction: { label: 'had to correct the assistant', ranked: false },
 };
 
@@ -125,6 +126,7 @@ function describe(row: Proposal): string {
     case 'error-fix': return `getting \`${what}\` to work after it failed`;
     case 'orient': return `starting a session with ${what}`;
     case 'verify': return `verifying with ${what} before handing back`;
+    case 'tool': return `re-writing the same ${what} script`;
     case 'correction': return `the correction "${what}"`;
     default: return `asking for ${what}`;
   }

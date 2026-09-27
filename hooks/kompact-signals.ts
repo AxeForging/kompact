@@ -38,6 +38,7 @@ import {
   isSequenceWorthKeeping,
   redact,
   sequenceSignature,
+  toolSignature,
 } from '../src/signals.js';
 
 /** One counted shape. Totals, not a log — see the 4 MiB cap above. */
@@ -299,6 +300,10 @@ export function registerSignals(on: On, options: PluginOptions): void {
         else if (awaitingFix.delete(sig)) {
           bump(rows, 'error-fix', sig, command, session, 2, 0, at);
         }
+        // The same throwaway script, re-created by what it does: a tool waiting
+        // to be written rather than re-typed. Signed by imports/calls, not name.
+        const toolSig = toolSignature(command);
+        if (toolSig) bump(rows, 'tool', toolSig, command, session, 1, responseChars(call.tool_response), at);
       }
 
       // A run of tools has to be counted across batches, not inside one. Measured

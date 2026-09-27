@@ -1,0 +1,60 @@
+{
+  "transcripts": 241,
+  "bashCalls": 7339,
+  "scripts": 1194,
+  "scriptPct": 16.3,
+  "clusters": 637,
+  "proposable": 32,
+  "top": [
+    {
+      "purpose": "tool:python:json,json.load,load,sys",
+      "n": 49,
+      "sessions": 8,
+      "saved": 113
+    },
+    {
+      "purpose": "tool:python:Image,Image.open,PIL,crop,im.crop,open",
+      "n": 72,
+      "sessions": 8,
+      "saved": 77
+    },
+    {
+      "purpose": "tool:python:json,json.load,load,open",
+      "n": 26,
+      "sessions": 5,
+      "saved": 72
+    },
+    {
+      "purpose": "tool:python:index,open,read,s.index",
+      "n": 23,
+      "sessions": 2,
+      "saved": 36
+    },
+    {
+      "purpose": "tool:python:open,read",
+      "n": 13,
+      "sessions": 2,
+      "saved": 32
+    },
+    {
+      "purpose": "tool:python:open,re,re.sub,read,sub",
+      "n": 4,
+      "sessions": 3,
+      "saved": 27
+    },
+    {
+      "purpose": "tool:python:dumps,json,json.dumps,json.load,load,open",
+      "n": 8,
+      "sessions": 5,
+      "saved": 27
+    },
+    {
+      "purpose": "tool:python:d.get,get,json,json.load,load,open",
+      "n": 12,
+      "sessions": 2,
+      "saved": 24
+    }
+  ],
+  "verdict": "WORTH BUILDING — 32 distinct tasks recur across sessions; purpose-clustering turns the 831-blob into 637 nameable candidates, 32 proposable.",
+  "note": "aggregates only; signatures are module/function names (redaction-filtered), no literals or content. Local corpus — re-run eval/tool-proposals.ts."
+}

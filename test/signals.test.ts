@@ -13,6 +13,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   commandSignature, estimateSaved, intentSignature, isCorrection, redact, sequenceSignature,
+  toolSignature,
 } from '../src/signals.js';
 
 /**
@@ -190,6 +191,38 @@ describe('sequence signatures', () => {
     const a = sequenceSignature([{ tool: 'Bash', command: 'npm test' }]);
     const b = sequenceSignature([{ tool: 'Bash', command: 'git status' }]);
     expect(a).not.toBe(b);
+  });
+});
+
+describe('tool signatures', () => {
+  it('collapses two one-liners that do the same work, whatever their literals', () => {
+    const a = toolSignature(`python3 -c 'import json,sys; print(json.load(sys.stdin))'`);
+    const b = toolSignature(`python3 -c "import sys, json; d = json.load(sys.stdin); print(d['k'])"`);
+    expect(a, 'same-purpose scripts must collapse').toBe(b);
+    expect(a).toBeTruthy();
+  });
+
+  it('keeps scripts that do different work apart', () => {
+    const load = toolSignature(`python3 -c 'import json,sys; print(json.load(sys.stdin))'`);
+    const fetch = toolSignature(`python3 -c 'import urllib.request; urllib.request.urlopen("http://x")'`);
+    expect(load).not.toBe(fetch);
+  });
+
+  it('reads a heredoc that writes a script the same as the inline form', () => {
+    const heredoc = toolSignature("cat > eval/_x.py <<'EOF'\nimport json, sys\nprint(json.load(sys.stdin))\nEOF");
+    expect(heredoc, 'a heredoc writing a .py is an ad-hoc script too').toBeTruthy();
+    expect(heredoc).toContain('tool:python');
+  });
+
+  it('returns null for an ordinary command, not a script', () => {
+    expect(toolSignature('npm test -- test/a.spec.ts')).toBeNull();
+    expect(toolSignature('git status')).toBeNull();
+    expect(toolSignature('grep -n foo src/a.ts | head')).toBeNull();
+  });
+
+  it('redacts a secret planted in the script body', () => {
+    const sig = toolSignature(`python3 -c 'import requests; requests.get("x", headers={"Authorization":"Bearer ${FAKE.github}"})'`);
+    expect(sig, 'a credential in the body must never reach the signature').not.toContain(FAKE.github);
   });
 });
 

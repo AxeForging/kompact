@@ -44,6 +44,7 @@ const LABELS: Record<string, string> = {
   correction: 'had to correct the assistant',
   orient: 'how a session starts',
   verify: 'checked before handing back',
+  tool: 'the same ad-hoc script',
 };
 
 /** Whether a row names work anyone would write a skill about. Judged, and marked. */

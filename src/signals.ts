@@ -29,7 +29,8 @@ export type SignalKind =
   | 'error-fix'    // a failure and the call that resolved it
   | 'correction'   // the developer correcting the assistant
   | 'orient'       // the same files read at the start of a session
-  | 'verify';      // the same checks run before handing back
+  | 'verify'       // the same checks run before handing back
+  | 'tool';        // the same ad-hoc script re-created, by what it does
 
 /** One observation, already redacted, ready to be counted. */
 export interface Signal {
@@ -258,4 +259,83 @@ export function isSequenceWorthKeeping(steps: ReadonlyArray<{ tool: string; comm
  */
 export function estimateSaved(occurrences: number, calls: number, chars: number): number {
   return occurrences * (calls + chars / 1000);
+}
+
+/** Interpreters run inline, and file extensions written as a script, mapped to a language. */
+const INLINE_LANGS: ReadonlyArray<readonly [RegExp, string]> = [
+  [/\bpython[0-9.]*\s+-c\b/, 'python'],
+  [/\bnode\s+-e\b/, 'node'],
+  [/\bperl\s+-e\b/, 'perl'],
+  [/\bruby\s+-e\b/, 'ruby'],
+];
+const EXT_LANG: Readonly<Record<string, string>> = {
+  py: 'python', js: 'node', mjs: 'node', cjs: 'node', ts: 'node', sh: 'bash', rb: 'ruby', pl: 'perl',
+};
+/**
+ * Call/identifier names too generic to say what a script is *for*. Keeps the
+ * signature about the work (`json.load`, `subprocess.run`) not the plumbing
+ * (`print`, `len`, `for`). Same spirit as `STOPWORDS`, for code instead of prose.
+ */
+const TOOL_STOP = new Set([
+  'print', 'len', 'range', 'str', 'int', 'float', 'bool', 'list', 'dict', 'set', 'tuple', 'enumerate',
+  'zip', 'map', 'filter', 'sorted', 'type', 'repr', 'format', 'join', 'split', 'strip', 'append',
+  'if', 'for', 'while', 'return', 'def', 'lambda', 'else', 'elif', 'and', 'or', 'not', 'in', 'is',
+  'with', 'try', 'except', 'finally', 'raise', 'class', 'function', 'const', 'let', 'var', 'await',
+  'require', 'import', 'from', 'console', 'log', 'error', 'warn', 'string', 'number', 'array', 'object',
+]);
+const TOOL_KEEP = 6;
+
+/** Purpose tokens of a script body: imported modules and the functions it calls. */
+function purposeTokens(lang: string, body: string): string[] {
+  const b = redact(body);
+  const toks = new Set<string>();
+  if (lang === 'python' || lang === 'ruby' || lang === 'perl') {
+    // `import json, sys` / `from os import path` — take the base module names.
+    for (const m of b.matchAll(/\b(?:import|from|require|use)\s+([\w., ]+)/g)) {
+      for (const mod of m[1]!.split(/[,\s]+/)) { const base = mod.split('.')[0]!.trim(); if (base) toks.add(base); }
+    }
+  } else {
+    for (const m of b.matchAll(/\brequire\(\s*['"]([^'"]+)['"]|\bimport[^'"]*['"]([^'"]+)['"]/g)) {
+      const mod = (m[1] ?? m[2])!.replace(/^node:/, '').split('/')[0]!;
+      if (mod) toks.add(mod);
+    }
+  }
+  // Dotted calls keep their shape (`json.load`), bare calls keep the name (`open`).
+  for (const m of b.matchAll(/\b([a-zA-Z_][\w]*(?:\.[a-zA-Z_][\w]*)+)\s*\(/g)) toks.add(m[1]!);
+  for (const m of b.matchAll(/\b([a-zA-Z_][\w]*)\s*\(/g)) { const w = m[1]!; if (!TOOL_STOP.has(w)) toks.add(w); }
+  return [...toks].filter((t) => !TOOL_STOP.has(t) && !/^<(?:token|secret|hex|blob|jwt|auth-header|credentials)>/.test(t)).sort();
+}
+
+/**
+ * The countable shape of an ad-hoc script — by what it *does*, not its filename.
+ *
+ * We re-create the same throwaway scripts constantly (an inline `python3 -c`, a
+ * heredoc into a `.py`): 17% of Bash calls in the corpus. Signing by the target
+ * name collapses everything into one `inline:python` blob, so this signs by the
+ * modules imported and functions called instead — two "parse JSON from a file"
+ * one-liners with different literals land on one signature, an HTTP-fetch script
+ * on another. `redact` runs on the body first, like every other signature here.
+ * Returns `null` when the command is not an ad-hoc script or the body is too
+ * trivial to name a purpose.
+ */
+export function toolSignature(command: string): string | null {
+  let lang = '';
+  let body = '';
+  for (const [re, l] of INLINE_LANGS) {
+    if (re.test(command)) {
+      lang = l;
+      const m = /\s-[ce]\s+(['"])([\s\S]*?)\1/.exec(command);
+      if (m) body = m[2]!;
+      break;
+    }
+  }
+  if (!lang) {
+    // A heredoc (or redirect) writing a script file: `cat > f.py << 'EOF' … EOF`.
+    const h = /(?:cat|tee)\b[^\n<]*>+\s*(?:['"])?([^\s'"|;&]+)\.(py|js|mjs|cjs|ts|sh|rb|pl)\b[^\n]*<<-?\s*['"]?(\w+)['"]?\r?\n([\s\S]*?)\r?\n\3\b/.exec(command);
+    if (h) { lang = EXT_LANG[h[2]!] ?? h[2]!; body = h[4]!; }
+  }
+  if (!lang || !body.trim()) return null;
+  const tokens = purposeTokens(lang, body).slice(0, TOOL_KEEP);
+  if (tokens.length === 0) return null;
+  return `tool:${lang}:${tokens.join(',')}`;
 }
