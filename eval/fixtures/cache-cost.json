@@ -1,0 +1,22 @@
+{
+  "steadyStateCreationTokens": 990,
+  "builtin": {
+    "n": 11,
+    "empiricalRecacheTokens": 58218,
+    "modeledRecacheTokens": 35106,
+    "medianFreedTokens": 697939,
+    "medianTurnsToNext": 456
+  },
+  "kompact": {
+    "n": 3,
+    "empiricalRecacheTokens": 0,
+    "modeledRecacheTokens": 261711,
+    "medianFreedTokens": 395347,
+    "medianTurnsToNext": 445
+  },
+  "kompactBreakevenTurns": 7.6,
+  "assumptions": {
+    "cacheReadMult": 0.1,
+    "cacheWriteMult": 1.25
+  }
+}
