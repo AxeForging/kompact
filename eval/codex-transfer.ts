@@ -23,6 +23,7 @@ import { performance } from 'node:perf_hooks';
 import { callContexts, buildCallState, MUTATING, UNREPEATABLE } from '../src/state.js';
 import { featureVector, score, KEEP_RESULT_WEIGHTS, KEEP_CALL_WEIGHTS } from '../src/features.js';
 import { auc } from './metrics.js';
+import { outOfFold } from './logistic.js';
 import type { ToolCall } from '../src/types.js';
 
 const SHINGLE = 8, BOILER = 3;
@@ -163,11 +164,21 @@ function main() {
     console.log(`  result_needed AUC ${transferAuc.toFixed(3)}  (Claude Code corpus: 0.789 LOSO)`);
     console.log(`  freed@90% retention ${f90}%  freed@85% ${f85}%`);
     console.log(`  (Claude Code shipped decideAll: 20.7% freed @ 85.4% retention)`);
+    // Recovery (Study 17): refit on Codex itself, out-of-fold by Codex session.
+    // Does local calibration undo the transfer failure? 7 sessions / 28 positives is
+    // tiny, so this is directional — but it is the point of calibrate --contribute.
+    const oof = outOfFold(rows.map((r) => ({ session: r.session })), rows.map((r) => r.feats), needed.map((b) => (b ? 1 : 0)));
+    const recAuc = Number(auc(oof, needed).toFixed(3));
+    const recF85 = freedAt(oof, needed, chars, forced, 0.85);
+    console.log(`\nLOCAL calibration (refit on Codex, out-of-fold by session):`);
+    console.log(`  result_needed AUC ${recAuc.toFixed(3)}  (shipped-on-Codex was ${transferAuc.toFixed(3)})`);
+    console.log(`  freed@85% retention ${recF85}%  (shipped-on-Codex was ${f85}%)`);
     if (process.argv.includes('--write')) {
       const fixture = {
         calls: rows.length, sessions: files.length, positives: pos,
         neededPct: Number((100 * pos / rows.length).toFixed(1)),
         transferAuc, freed90: f90, freed85: f85,
+        recoveredAuc: recAuc, recoveredFreed85: recF85,
         tools: Object.fromEntries(byTool),
         note: 'aggregates only, measured on THIS machine\'s ~/.codex; re-run eval/codex-transfer.ts on your own. Small sample: treat as directional.',
       };

@@ -584,7 +584,8 @@ method or a heavier model.`;
 // reproduces it on any machine that has ~/.codex.
 const ct = JSON.parse(readFileSync(join(here, 'fixtures', 'codex-transfer.json'), 'utf8')) as {
   calls: number; sessions: number; positives: number; neededPct: number;
-  transferAuc: number; freed85: number; tools: Record<string, number>;
+  transferAuc: number; freed85: number; recoveredAuc: number; recoveredFreed85: number;
+  tools: Record<string, number>;
 };
 const codexSection = `
 ## Does the scorer transfer to a different harness? — \`eval/codex-transfer.ts\`
@@ -609,7 +610,15 @@ approximate. But the direction is unambiguous and it is the first cross-distribu
 the concrete case for local calibration — \`eval/calibrate.ts\` refits on an operator's own sessions, and
 \`--contribute\` shares the aggregate so the "does it transfer" question can be answered with more than one
 machine. This aggregate is committed; the raw Codex corpus is not (it is another tool's private
-transcripts) — run \`eval/codex-transfer.ts\` on your own \`~/.codex\` to reproduce it.`;
+transcripts) — run \`eval/codex-transfer.ts\` on your own \`~/.codex\` to reproduce it.
+
+And the recovery makes the case concrete: refit the same features on Codex itself, out-of-fold by Codex
+session, and the scorer comes all the way back — **AUC ${ct.recoveredAuc.toFixed(3)} against ${ct.transferAuc.toFixed(3)} for the shipped weights, freed@85%
+${ct.recoveredFreed85}% against ${ct.freed85}%**. So the failure above is not that these features are wrong for Codex; it is
+that the *weights* are Claude Code's. Local calibration — which \`eval/calibrate.ts\` already does, and
+\`--contribute\` already shares — fully closes the gap. (Both Codex figures rest on ${ct.positives} positives across
+${ct.sessions} sessions, so the exact numbers are noisy; the ${(ct.recoveredAuc - ct.transferAuc).toFixed(2)}-point swing is not.) That is the whole
+architecture in one experiment: ship a reasonable default, and refit locally where the distribution differs.`;
 const cap = maybe('cap.ts');
 const mass = maybe('mass.ts');
 const inputs = maybe('inputs.ts');

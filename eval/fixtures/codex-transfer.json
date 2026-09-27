@@ -6,6 +6,8 @@
   "transferAuc": 0.469,
   "freed90": 1.3,
   "freed85": 1.3,
+  "recoveredAuc": 0.904,
+  "recoveredFreed85": 67.5,
   "tools": {
     "Bash": 91,
     "Edit": 12,
