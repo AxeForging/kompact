@@ -605,7 +605,39 @@ scorer's tail just ranks some needed outputs too low to get there.
 
 The honest catch: a better scorer was already tried and lost. The neural sidecars (Laya, and Study
 2's LLMLingua-2 / Selective-Context) all scored *worse* than this logistic on the same task. So the
-headroom is real but unclaimed, and the lever is better **features**, not a heavier model — and even
-that cannot be validated until the live A/B above runs on a second operator's corpus. That corpus is
-the one thing every study here waits on; `recordSignals` already accumulates the raw material
-opt-in, but a trustworthy result needs more, and more diverse, real sessions than one machine holds.
+headroom is real but unclaimed, and the lever is better **features**, not a heavier model — the next
+section tests exactly that. But no feature change can be trusted off this machine until it is refit
+and re-scored on a second operator's corpus. That corpus is the one thing every study here waits on:
+`eval/calibrate.ts --contribute` writes an aggregates-only file (counts and AUC/ECE, no session
+content, no weights) that a second operator can share to grow the evidence base — the scorer-corpus
+path, distinct from `recordSignals`, which counts repeated command shapes for skill proposals. A
+trustworthy result still needs more, and more diverse, real sessions than one machine holds.
+## Can better features close that gap? — `eval/feature-search.ts`
+
+Study 11 said the lever is features, not a heavier model. The shipped scorer buckets output size into
+three levels because a *model* cannot read digits — but a logistic can, and three buckets throw away a
+long right tail. So this adds one continuous log-size feature and measures leave-one-session-out AUC
+and calibration (ECE) for both heads, over 2,239 calls / 41 sessions, against the shipped thirteen
+(continuous columns standardised with train-fold statistics only, so a fold never sees its test rows):
+
+| feature set | result_needed AUC (Δ) | ECE | call_needed AUC (Δ) | ECE |
+| --- | --- | --- | --- | --- |
+| shipped-13 | 0.789 (—) | 0.051 | 0.909 (—) | 0.047 |
+| size-only (log chars) | 0.812 (+0.023) | 0.025 | 0.588 (-0.321) | 0.076 |
+| shipped + log chars | 0.807 (+0.018) | 0.033 | 0.916 (+0.007) | 0.027 |
+| shipped + log chars + sq | 0.807 (+0.018) | 0.033 | 0.917 (+0.008) | 0.023 |
+| shipped + log chars + tools | 0.808 (+0.019) | 0.032 | 0.916 (+0.007) | 0.030 |
+
+Reading it: **one continuous log-size feature helps both heads** — result_needed
+0.789→0.807 and call_needed 0.909→0.916, and it roughly halves calibration error
+(ECE 0.051→0.033 and 0.047→0.027). A squared term and extra tool indicators add nothing
+beyond that. The two heads disagree about size, which is the telling part: size *alone* already beats
+the full shipped set at deciding whether an OUTPUT is needed (0.812 vs 0.789), but for whether the
+CALL still matters it collapses to 0.588 — that decision rides on whether the target was touched
+or read again, not on how big the output was.
+
+Modest but real, and free at scoring time: the state builder already computes the size it buckets, so
+the raw count is in hand. The catch is the standing one — a +0.018/+0.007 AUC gain on one operator's
+41 sessions is not yet evidence it transfers, and a fourteenth feature would invalidate every operator's
+saved `KOMPACT_WEIGHTS`. Shipping it is a deliberate call, not an automatic one; the measurement is
+the deliverable.

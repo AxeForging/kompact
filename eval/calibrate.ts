@@ -39,15 +39,27 @@ if (sessions.size < 3 || positives < 20) {
 }
 
 const xs = rows.map((r) => featureVector(r.state, r.tool, r.is_error));
-const compare = (name: string, target: (r: LabelRow) => boolean, shipped: readonly number[]): number[] => {
+/** Aggregate numbers safe to share — no session content, no weights. */
+interface Metrics { shippedAuc: number; shippedEce: number; refitAuc: number; refitEce: number }
+const compare = (
+  name: string,
+  target: (r: LabelRow) => boolean,
+  shipped: readonly number[],
+): { weights: number[]; metrics: Metrics } => {
   const ys = rows.map((r) => (target(r) ? 1 : 0));
   const labels = ys.map(Boolean);
   const local = outOfFold(rows, xs, ys);
   const shippedScores = xs.map((x) => sigmoid(dot(x, shipped)));
+  const metrics: Metrics = {
+    shippedAuc: auc(shippedScores, labels),
+    shippedEce: ece(shippedScores, labels),
+    refitAuc: auc(local, labels),
+    refitEce: ece(local, labels),
+  };
   console.log(`${name}`);
-  console.log(`  shipped weights  AUC ${auc(shippedScores, labels).toFixed(3)}  ECE ${ece(shippedScores, labels).toFixed(3)}  (in-sample here if these are your sessions)`);
-  console.log(`  refit here       AUC ${auc(local, labels).toFixed(3)}  ECE ${ece(local, labels).toFixed(3)}  (held out by session)`);
-  const delta = auc(local, labels) - auc(shippedScores, labels);
+  console.log(`  shipped weights  AUC ${metrics.shippedAuc.toFixed(3)}  ECE ${metrics.shippedEce.toFixed(3)}  (in-sample here if these are your sessions)`);
+  console.log(`  refit here       AUC ${metrics.refitAuc.toFixed(3)}  ECE ${metrics.refitEce.toFixed(3)}  (held out by session)`);
+  const delta = metrics.refitAuc - metrics.shippedAuc;
   // The two columns are not measured the same way. For a new operator the
   // shipped column is genuinely out-of-sample and the comparison is fair; on
   // the machine the shipped weights were fitted on it is in-sample and will
@@ -57,11 +69,40 @@ const compare = (name: string, target: (r: LabelRow) => boolean, shipped: readon
     `${delta >= 0 ? '+' : ''}${delta.toFixed(3)} AUC (held-out minus in-sample; ` +
     `only meaningful if the shipped weights were NOT fitted on these sessions)\n`,
   );
-  return fitLogistic(xs, ys);
+  return { weights: fitLogistic(xs, ys), metrics };
 };
 
-const keepResult = compare('result_needed', (r) => r.result_needed, KEEP_RESULT_WEIGHTS);
-const keepCall = compare('call_needed', (r) => r.call_needed, KEEP_CALL_WEIGHTS);
+const resultFit = compare('result_needed', (r) => r.result_needed, KEEP_RESULT_WEIGHTS);
+const callFit = compare('call_needed', (r) => r.call_needed, KEEP_CALL_WEIGHTS);
+const keepResult = resultFit.weights;
+const keepCall = callFit.weights;
+
+// `--contribute`: write ONLY aggregate numbers, so a second operator can grow
+// the evidence base for whether the shipped scorer transfers off this machine —
+// the one thing every "does it help" study here is blocked on. No weights, no
+// state, no output: counts and AUC/ECE. See the reassurance line it prints.
+if (process.argv.includes('--contribute')) {
+  const date = new Date().toISOString().slice(0, 10);
+  const aggregate = {
+    calls: rows.length,
+    sessions: sessions.size,
+    positives_result: positives,
+    positives_call: rows.filter((r) => r.call_needed).length,
+    result: resultFit.metrics,
+    call: callFit.metrics,
+    generated: date,
+    note: 'aggregates only — no session content, no weights, safe to share',
+  };
+  const out = join(dir, `contrib-${date}.json`);
+  writeFileSync(out, `${JSON.stringify(aggregate, null, 2)}\n`);
+  console.log(
+    `wrote ${out}\n` +
+    `  It holds only counts and AUC/ECE — open it, confirm there is no session\n` +
+    `  content, and share it (an issue or PR on the repo) to grow the evidence\n` +
+    `  base for whether these weights transfer. Nothing here leaves your machine\n` +
+    `  until you send it.\n`,
+  );
+}
 
 const weights = {
   keepResult: keepResult.map((v) => Number(v.toFixed(6))),

@@ -1,0 +1,43 @@
+{
+  "calls": 2239,
+  "sessions": 41,
+  "neededPct": 11,
+  "best": "shipped + log chars",
+  "sets": [
+    {
+      "name": "shipped-13",
+      "resultAuc": 0.789,
+      "resultEce": 0.051,
+      "callAuc": 0.909,
+      "callEce": 0.047
+    },
+    {
+      "name": "size-only (log chars)",
+      "resultAuc": 0.812,
+      "resultEce": 0.025,
+      "callAuc": 0.588,
+      "callEce": 0.076
+    },
+    {
+      "name": "shipped + log chars",
+      "resultAuc": 0.807,
+      "resultEce": 0.033,
+      "callAuc": 0.916,
+      "callEce": 0.027
+    },
+    {
+      "name": "shipped + log chars + sq",
+      "resultAuc": 0.807,
+      "resultEce": 0.033,
+      "callAuc": 0.917,
+      "callEce": 0.023
+    },
+    {
+      "name": "shipped + log chars + tools",
+      "resultAuc": 0.808,
+      "resultEce": 0.032,
+      "callAuc": 0.916,
+      "callEce": 0.03
+    }
+  ]
+}

@@ -10,3 +10,6 @@ eval/scores.json
 
 # Drafted skill proposals: the developer's own data, never committed.
 .kompact/
+
+# per-operator calibrate --contribute outputs (aggregates, share deliberately)
+eval/contrib-*.json

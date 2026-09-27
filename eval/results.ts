@@ -449,10 +449,53 @@ scorer's tail just ranks some needed outputs too low to get there.
 
 The honest catch: a better scorer was already tried and lost. The neural sidecars (Laya, and Study
 2's LLMLingua-2 / Selective-Context) all scored *worse* than this logistic on the same task. So the
-headroom is real but unclaimed, and the lever is better **features**, not a heavier model — and even
-that cannot be validated until the live A/B above runs on a second operator's corpus. That corpus is
-the one thing every study here waits on; \`recordSignals\` already accumulates the raw material
-opt-in, but a trustworthy result needs more, and more diverse, real sessions than one machine holds.`;
+headroom is real but unclaimed, and the lever is better **features**, not a heavier model — the next
+section tests exactly that. But no feature change can be trusted off this machine until it is refit
+and re-scored on a second operator's corpus. That corpus is the one thing every study here waits on:
+\`eval/calibrate.ts --contribute\` writes an aggregates-only file (counts and AUC/ECE, no session
+content, no weights) that a second operator can share to grow the evidence base — the scorer-corpus
+path, distinct from \`recordSignals\`, which counts repeated command shapes for skill proposals. A
+trustworthy result still needs more, and more diverse, real sessions than one machine holds.`;
+
+// Study 12 (feature search): reads its committed fixture.
+const ftr = JSON.parse(readFileSync(join(here, 'fixtures', 'feature-search.json'), 'utf8')) as {
+  calls: number; sessions: number; neededPct: number; best: string;
+  sets: { name: string; resultAuc: number; resultEce: number; callAuc: number; callEce: number }[];
+};
+const ftrBase = ftr.sets[0]!;
+const ftrBest = ftr.sets.find((s) => s.name === ftr.best) ?? ftrBase;
+const ftrSizeOnly = ftr.sets.find((s) => s.name.startsWith('size-only')) ?? ftrBase;
+const signed = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(3)}`;
+const ftrRow = (s: (typeof ftr.sets)[number]) =>
+  `| ${s.name} | ${s.resultAuc.toFixed(3)} (${s === ftrBase ? '—' : signed(s.resultAuc - ftrBase.resultAuc)}) `
+  + `| ${s.resultEce.toFixed(3)} | ${s.callAuc.toFixed(3)} (${s === ftrBase ? '—' : signed(s.callAuc - ftrBase.callAuc)}) `
+  + `| ${s.callEce.toFixed(3)} |`;
+const featureSearchSection = `
+## Can better features close that gap? — \`eval/feature-search.ts\`
+
+Study 11 said the lever is features, not a heavier model. The shipped scorer buckets output size into
+three levels because a *model* cannot read digits — but a logistic can, and three buckets throw away a
+long right tail. So this adds one continuous log-size feature and measures leave-one-session-out AUC
+and calibration (ECE) for both heads, over ${ftr.calls.toLocaleString()} calls / ${ftr.sessions} sessions, against the shipped thirteen
+(continuous columns standardised with train-fold statistics only, so a fold never sees its test rows):
+
+| feature set | result_needed AUC (Δ) | ECE | call_needed AUC (Δ) | ECE |
+| --- | --- | --- | --- | --- |
+${ftr.sets.map(ftrRow).join('\n')}
+
+Reading it: **one continuous log-size feature helps both heads** — result_needed
+${ftrBase.resultAuc.toFixed(3)}→${ftrBest.resultAuc.toFixed(3)} and call_needed ${ftrBase.callAuc.toFixed(3)}→${ftrBest.callAuc.toFixed(3)}, and it roughly halves calibration error
+(ECE ${ftrBase.resultEce.toFixed(3)}→${ftrBest.resultEce.toFixed(3)} and ${ftrBase.callEce.toFixed(3)}→${ftrBest.callEce.toFixed(3)}). A squared term and extra tool indicators add nothing
+beyond that. The two heads disagree about size, which is the telling part: size *alone* already beats
+the full shipped set at deciding whether an OUTPUT is needed (${ftrSizeOnly.resultAuc.toFixed(3)} vs ${ftrBase.resultAuc.toFixed(3)}), but for whether the
+CALL still matters it collapses to ${ftrSizeOnly.callAuc.toFixed(3)} — that decision rides on whether the target was touched
+or read again, not on how big the output was.
+
+Modest but real, and free at scoring time: the state builder already computes the size it buckets, so
+the raw count is in hand. The catch is the standing one — a ${signed(ftrBest.resultAuc - ftrBase.resultAuc)}/${signed(ftrBest.callAuc - ftrBase.callAuc)} AUC gain on one operator's
+${ftr.sessions} sessions is not yet evidence it transfers, and a fourteenth feature would invalidate every operator's
+saved \`KOMPACT_WEIGHTS\`. Shipping it is a deliberate call, not an automatic one; the measurement is
+the deliverable.`;
 const cap = maybe('cap.ts');
 const mass = maybe('mass.ts');
 const inputs = maybe('inputs.ts');
@@ -626,7 +669,7 @@ anything. \`applyDecisions\` never touches prose, so what kompact leaves behind 
 verbatim tool calls and the user's and assistant's own words — not a narrative.
 \`maxPasses\` is the backstop for that, and its value is a judgement: the floor
 would allow more.
-${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}${skillPayoffSection}${cacheSection}${archiveSection}${offlineSection}
+${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}${skillPayoffSection}${cacheSection}${archiveSection}${offlineSection}${featureSearchSection}
 `;
 
 const snapshotBody = `# Snapshot — one machine's own transcripts
