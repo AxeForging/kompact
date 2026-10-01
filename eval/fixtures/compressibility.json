@@ -1,0 +1,14 @@
+{
+  "calls": 2239,
+  "needed": 247,
+  "gzipAuc": 0.367,
+  "encodedAuc": 0.475,
+  "correlation": -0.355,
+  "hiQuartile": {
+    "charShare": 0.9,
+    "reuse": 1.4,
+    "baseReuse": 11
+  },
+  "proxy": "state snippet, not raw output",
+  "verdict": "INCONCLUSIVE ON THE PROXY: on the stored snippet, compressibility ranks need a little (gzip AUC 0.367, encoded AUC 0.475) and the incompressible quartile holds 0.9% of chars at 1.4% reuse. The snippet is a weak proxy (mostly kompact's own prose, the blob often truncated out), so this neither confirms nor kills the idea — the raw-text column in extract-labels.ts is the test that would. Not worth a refit on this evidence alone."
+}

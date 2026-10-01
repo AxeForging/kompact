@@ -712,6 +712,33 @@ signal is largely independent of size and age. This is the first lead in Studies
 It is **not shipped**: Study 12 showed an AUC lift can still regress freed@retention, so the honest next step is a
 refit with this feature judged on freed@retention — not a claim that it helps. The remaining lever is still either a
 second operator's corpus (Study 16) or, now, this one content feature proven out.`;
+
+// Study 23 (compressibility): is gzip-ratio / encoding a reuse signal? (hex/compress)
+const cmp = JSON.parse(readFileSync(join(here, 'fixtures', 'compressibility.json'), 'utf8')) as {
+  calls: number; gzipAuc: number; encodedAuc: number; correlation: number;
+  hiQuartile: { charShare: number; reuse: number; baseReuse: number };
+};
+const compressibilitySection = `
+## Is compressibility / encoding a reuse signal? — \`eval/compressibility.ts\`
+
+Encoded blobs (base64, hex, data-URIs), hashes and minified data are large yet rarely reused verbatim, and a
+gzip compression ratio spots them with no model (incompressible → encoded/random). The hypothesis: low
+compressibility predicts "not needed", and those blobs are a big, safe slice to drop. The cheap screen measures
+gzip-ratio on the stored state snippet (the raw output is not in the corpus):
+
+\`\`\`
+gzip-ratio AUC vs needed        ${cmp.gzipAuc.toFixed(3)}   (<0.5 = less compressible is less needed — the hypothesised direction)
+encoded-run (base64/hex) AUC    ${cmp.encodedAuc.toFixed(3)}
+gzip-ratio vs shipped score     ${cmp.correlation.toFixed(3)}   (partly redundant with the size features)
+least-compressible quartile     ${cmp.hiQuartile.charShare}% of output chars, reused ${cmp.hiQuartile.reuse}% vs ${cmp.hiQuartile.baseReuse}% overall
+\`\`\`
+
+The direction is right — less-compressible state is less likely to be needed — but the screen is **inconclusive**,
+and for a structural reason: the least-compressible quartile holds only **${cmp.hiQuartile.charShare}% of the characters**. The
+large encoded blobs that would be worth dropping are truncated out of the stored snippet, so the proxy cannot see
+them, and what it does flag is small and partly already captured by the size features (corr ${cmp.correlation.toFixed(2)}). The honest
+test is a gzip-ratio column in \`eval/extract-labels.ts\` (which holds the raw output), refit and judged on
+freed@retention. Not worth that refit on this evidence — recorded so the idea is not re-tried blind.`;
 const cap = maybe('cap.ts');
 const mass = maybe('mass.ts');
 const inputs = maybe('inputs.ts');
@@ -885,7 +912,7 @@ anything. \`applyDecisions\` never touches prose, so what kompact leaves behind 
 verbatim tool calls and the user's and assistant's own words — not a narrative.
 \`maxPasses\` is the backstop for that, and its value is a judgement: the floor
 would allow more.
-${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}${skillPayoffSection}${cacheSection}${archiveSection}${offlineSection}${featureSearchSection}${costAwareSection}${reuseTargetSection}${operatingPointSection}${codexSection}${errorPolicySection}${recencySection}${conformalSection}${contentSection}
+${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}${skillPayoffSection}${cacheSection}${archiveSection}${offlineSection}${featureSearchSection}${costAwareSection}${reuseTargetSection}${operatingPointSection}${codexSection}${errorPolicySection}${recencySection}${conformalSection}${contentSection}${compressibilitySection}
 `;
 
 const snapshotBody = `# Snapshot — one machine's own transcripts
