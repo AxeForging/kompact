@@ -652,6 +652,66 @@ baseline's ${ep.baseline.neededFailLost}. A pure loss. The literature agrees: Re
 current context-engineering guidance keep failure feedback precisely so the model does not repeat a dead end.
 So the learned \`isError\` feature already does the job; blind-dropping failures would free almost nothing and
 cost retention. A sixth ranking-level idea tested on freed-at-retention, and the design holds.`;
+
+// Study 20 (recency baseline): does the learned scorer beat trivial rules?
+const rb = JSON.parse(readFileSync(join(here, 'fixtures', 'recency-baseline.json'), 'utf8')) as {
+  calls: number; sessions: number; needed: number;
+  shipped: { freed: number; kept: number }; recency: { freed: number; kept: number };
+  random: { freed: number; kept: number };
+};
+const recencySection = `
+## Does the scorer beat a recency rule? — \`eval/recency-baseline.ts\`
+
+The baseline missing from Studies 11–15 is the dumbest one: keep the most recent calls, drop the oldest. At a
+matched freed level (each rule frees the same ~${rb.shipped.freed}% of characters the shipped \`decideAll\` does),
+retention is:
+
+| policy | freed | kept/needed |
+| --- | --- | --- |
+| shipped scorer | ${rb.shipped.freed}% | ${rb.shipped.kept}% |
+| keep most recent, drop oldest | ${rb.recency.freed}% | ${rb.recency.kept}% |
+| random (no-information floor) | ${rb.random.freed}% | ${rb.random.kept}% |
+
+The scorer keeps **${(rb.shipped.kept - rb.recency.kept).toFixed(1)} points** more needed output than pure recency and
+${(rb.shipped.kept - rb.random.kept).toFixed(1)} more than random — recency itself is no better than chance here. The
+edge is real but modest, which is the same story Studies 11–15 tell: the model works, and it is near its ceiling.`;
+
+// Study 21 (conformal floor): can a per-session floor guarantee retention cheaply?
+const cf = JSON.parse(readFileSync(join(here, 'fixtures', 'conformal-floor.json'), 'utf8')) as {
+  fixed: { threshold: number; kept: number; freed: number };
+  targets: { target: number; floor: number; kept: number; freed: number; sessionCoverage: number }[];
+};
+const conformalSection = `
+## A conformal floor, and why the fixed one stays — \`eval/conformal-floor.ts\`
+
+"90% retention is defensible" is asserted; split conformal prediction can make it a distribution-free guarantee by
+setting the floor from the operator's own sessions (leave-one-session-out). It works — realized retention meets each
+target — but the freed cost is ruinous:
+
+| target | floor | realized kept | freed |
+| --- | --- | --- | --- |
+${cf.targets.map((t) => `| ${t.target}% | ${t.floor} | ${t.kept}% | ${t.freed}% |`).join('\n')}
+
+The fixed \`keepThreshold ${cf.fixed.threshold}\` already gives **${cf.fixed.kept}% retention at ${cf.fixed.freed}% freed** — it clears
+the 85–90% targets while freeing ten times as much. The conformal floor lands below 0.2 and keeps almost everything,
+because the scorer's scores are coarse and clustered (the columns in the strip plot), so a needed-score quantile is
+uninformative. The fixed threshold is already on the Study 15 frontier: conformal buys rigor, not freed. **Not
+implemented** — the idea only pays off if a future corpus needs a retention the frontier cannot be tuned to.`;
+
+// Study 22 (content feature): does a content signal beat the structural features?
+const cfeat = JSON.parse(readFileSync(join(here, 'fixtures', 'content-feature.json'), 'utf8')) as {
+  calls: number; needed: number; scoreAuc: number; noveltyAuc: number; correlation: number;
+};
+const contentSection = `
+## Is there content signal the 13 structural features miss? — \`eval/content-feature.ts\`
+
+Every scorer feature is structural; the one class never tried is content. A cheap, local **lexical-novelty**
+feature — the fraction of a call's state tokens not seen earlier in the session — ranks needed outputs on its own
+at **AUC ${cfeat.noveltyAuc}** (the shipped score is ${cfeat.scoreAuc}), and correlates only ${cfeat.correlation} with that score, so the
+signal is largely independent of size and age. This is the first lead in Studies 11–22 to pass the cheap screen.
+It is **not shipped**: Study 12 showed an AUC lift can still regress freed@retention, so the honest next step is a
+refit with this feature judged on freed@retention — not a claim that it helps. The remaining lever is still either a
+second operator's corpus (Study 16) or, now, this one content feature proven out.`;
 const cap = maybe('cap.ts');
 const mass = maybe('mass.ts');
 const inputs = maybe('inputs.ts');
@@ -825,7 +885,7 @@ anything. \`applyDecisions\` never touches prose, so what kompact leaves behind 
 verbatim tool calls and the user's and assistant's own words — not a narrative.
 \`maxPasses\` is the backstop for that, and its value is a judgement: the floor
 would allow more.
-${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}${skillPayoffSection}${cacheSection}${archiveSection}${offlineSection}${featureSearchSection}${costAwareSection}${reuseTargetSection}${operatingPointSection}${codexSection}${errorPolicySection}
+${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}${skillPayoffSection}${cacheSection}${archiveSection}${offlineSection}${featureSearchSection}${costAwareSection}${reuseTargetSection}${operatingPointSection}${codexSection}${errorPolicySection}${recencySection}${conformalSection}${contentSection}
 `;
 
 const snapshotBody = `# Snapshot — one machine's own transcripts

@@ -1,0 +1,33 @@
+{
+  "calls": 2239,
+  "sessions": 41,
+  "fixed": {
+    "threshold": 0.2,
+    "kept": 85.4,
+    "freed": 20.7
+  },
+  "targets": [
+    {
+      "target": 85,
+      "floor": 0.081,
+      "kept": 93.5,
+      "freed": 1.9,
+      "sessionCoverage": 96.6
+    },
+    {
+      "target": 90,
+      "floor": 0.081,
+      "kept": 95.5,
+      "freed": 1.2,
+      "sessionCoverage": 96.6
+    },
+    {
+      "target": 95,
+      "floor": 0.081,
+      "kept": 100,
+      "freed": 0.5,
+      "sessionCoverage": 100
+    }
+  ],
+  "verdict": "DOMINATED — DO NOT IMPLEMENT: the floor keeps its retention promise (realized ≥ target for 3/3 targets) but frees far too little to do it — only 1.9%–1.2% at the 85–90% retention the product targets, against the fixed 0.2's 20.7% freed at 85.4% retention, which already clears those targets. The floor lands at 0.081 (below the fixed 0.2) because the scorer's scores are coarse and clustered, so a needed-score quantile keeps almost everything. The fixed threshold is already on the Study 15 frontier; conformal buys rigor, not freed. Keep the fixed floor."
+}

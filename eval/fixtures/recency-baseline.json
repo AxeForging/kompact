@@ -1,0 +1,18 @@
+{
+  "calls": 2239,
+  "sessions": 41,
+  "needed": 247,
+  "shipped": {
+    "freed": 20.7,
+    "kept": 85.4
+  },
+  "recency": {
+    "freed": 21.2,
+    "kept": 82.6
+  },
+  "random": {
+    "freed": 21.8,
+    "kept": 82.6
+  },
+  "verdict": "EARNS ITS KEEP: at the same ~20.7% freed the scorer retains 85.4% of needed outputs against 82.6% for pure recency (+2.8%) and 82.6% for random — the model is doing real work."
+}

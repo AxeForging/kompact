@@ -767,3 +767,44 @@ baseline's 1. A pure loss. The literature agrees: Reflexion (arXiv:2303.11366) a
 current context-engineering guidance keep failure feedback precisely so the model does not repeat a dead end.
 So the learned `isError` feature already does the job; blind-dropping failures would free almost nothing and
 cost retention. A sixth ranking-level idea tested on freed-at-retention, and the design holds.
+## Does the scorer beat a recency rule? — `eval/recency-baseline.ts`
+
+The baseline missing from Studies 11–15 is the dumbest one: keep the most recent calls, drop the oldest. At a
+matched freed level (each rule frees the same ~20.7% of characters the shipped `decideAll` does),
+retention is:
+
+| policy | freed | kept/needed |
+| --- | --- | --- |
+| shipped scorer | 20.7% | 85.4% |
+| keep most recent, drop oldest | 21.2% | 82.6% |
+| random (no-information floor) | 21.8% | 82.6% |
+
+The scorer keeps **2.8 points** more needed output than pure recency and
+2.8 more than random — recency itself is no better than chance here. The
+edge is real but modest, which is the same story Studies 11–15 tell: the model works, and it is near its ceiling.
+## A conformal floor, and why the fixed one stays — `eval/conformal-floor.ts`
+
+"90% retention is defensible" is asserted; split conformal prediction can make it a distribution-free guarantee by
+setting the floor from the operator's own sessions (leave-one-session-out). It works — realized retention meets each
+target — but the freed cost is ruinous:
+
+| target | floor | realized kept | freed |
+| --- | --- | --- | --- |
+| 85% | 0.081 | 93.5% | 1.9% |
+| 90% | 0.081 | 95.5% | 1.2% |
+| 95% | 0.081 | 100% | 0.5% |
+
+The fixed `keepThreshold 0.2` already gives **85.4% retention at 20.7% freed** — it clears
+the 85–90% targets while freeing ten times as much. The conformal floor lands below 0.2 and keeps almost everything,
+because the scorer's scores are coarse and clustered (the columns in the strip plot), so a needed-score quantile is
+uninformative. The fixed threshold is already on the Study 15 frontier: conformal buys rigor, not freed. **Not
+implemented** — the idea only pays off if a future corpus needs a retention the frontier cannot be tuned to.
+## Is there content signal the 13 structural features miss? — `eval/content-feature.ts`
+
+Every scorer feature is structural; the one class never tried is content. A cheap, local **lexical-novelty**
+feature — the fraction of a call's state tokens not seen earlier in the session — ranks needed outputs on its own
+at **AUC 0.707** (the shipped score is 0.845), and correlates only 0.451 with that score, so the
+signal is largely independent of size and age. This is the first lead in Studies 11–22 to pass the cheap screen.
+It is **not shipped**: Study 12 showed an AUC lift can still regress freed@retention, so the honest next step is a
+refit with this feature judged on freed@retention — not a claim that it helps. The remaining lever is still either a
+second operator's corpus (Study 16) or, now, this one content feature proven out.

@@ -1,0 +1,8 @@
+{
+  "calls": 2239,
+  "needed": 247,
+  "scoreAuc": 0.845,
+  "noveltyAuc": 0.707,
+  "correlation": 0.451,
+  "verdict": "WORTH A REFIT: lexical novelty ranks needed outputs on its own (AUC 0.707, |Δ|=0.207) and is only weakly correlated with the shipped score (0.45), so it carries content signal the structural features miss. Next: refit with it and judge on freed@retention (Study 12's lesson — AUC lift is necessary, not sufficient)."
+}
