@@ -1,0 +1,49 @@
+{
+  "calls": 2239,
+  "sessions": 41,
+  "failed": {
+    "n": 121,
+    "reuse": 5,
+    "charShare": 1.1
+  },
+  "succeeded": {
+    "n": 2118,
+    "reuse": 11.4
+  },
+  "baseline": {
+    "kept": 85.4,
+    "freed": 20.7,
+    "failedDropRate": 50.4,
+    "neededFailLost": 1
+  },
+  "hardDrop": {
+    "kept": 83.8,
+    "freed": 21,
+    "failedDropRate": 85.1,
+    "neededFailLost": 5
+  },
+  "penalties": [
+    {
+      "penalty": 0.1,
+      "kept": 85.4,
+      "freed": 20.7,
+      "failedDropRate": 50.4,
+      "neededFailLost": 1
+    },
+    {
+      "penalty": 0.2,
+      "kept": 84.6,
+      "freed": 20.7,
+      "failedDropRate": 52.1,
+      "neededFailLost": 3
+    },
+    {
+      "penalty": 0.3,
+      "kept": 84.6,
+      "freed": 20.7,
+      "failedDropRate": 52.1,
+      "neededFailLost": 3
+    }
+  ],
+  "verdict": "CONFIRMS THE DESIGN: failures are 1.1% of output mass and the shipped weight already drops 50.4% of them; a harder drop adds only +0.3% freed and costs needed outputs. The learned isError feature already does the job — do not blind-drop."
+}

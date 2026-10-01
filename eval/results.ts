@@ -619,6 +619,39 @@ that the *weights* are Claude Code's. Local calibration — which \`eval/calibra
 \`--contribute\` already shares — fully closes the gap. (Both Codex figures rest on ${ct.positives} positives across
 ${ct.sessions} sessions, so the exact numbers are noisy; the ${(ct.recoveredAuc - ct.transferAuc).toFixed(2)}-point swing is not.) That is the whole
 architecture in one experiment: ship a reasonable default, and refit locally where the distribution differs.`;
+
+// Study 19 (failed tool calls): isolates the isError feature — does dropping
+// failed/invalid calls earn its keep, or is the learned weight already enough?
+const ep = JSON.parse(readFileSync(join(here, 'fixtures', 'error-policy.json'), 'utf8')) as {
+  calls: number; failed: { n: number; reuse: number; charShare: number };
+  succeeded: { n: number; reuse: number };
+  baseline: { kept: number; freed: number; failedDropRate: number; neededFailLost: number };
+  hardDrop: { kept: number; freed: number; failedDropRate: number; neededFailLost: number };
+  verdict: string;
+};
+const errorPolicySection = `
+## Do failed tool calls earn their keep? — \`eval/error-policy.ts\`
+
+A natural instinct is to drop failed/invalid tool calls and keep only what succeeded. kompact already
+carries \`isError\` as a fitted scorer feature (small negative weight); this isolates it against the real
+\`decideAll\`, rather than trusting the instinct or the single coefficient.
+
+Two facts settle most of it before any policy runs. Failed calls are reused verbatim **${ep.failed.reuse}%** of the
+time against **${ep.succeeded.reuse}%** for successful ones — less, but not never — and they are only
+**${ep.failed.charShare}% of all output characters**, because an error message is short. There is almost nothing to
+free by dropping them, and the shipped weight already drops **${ep.baseline.failedDropRate}%** of them.
+
+| policy | kept/needed | freed | failed dropped | needed failures lost |
+| --- | --- | --- | --- | --- |
+| baseline (shipped) | ${ep.baseline.kept}% | ${ep.baseline.freed}% | ${ep.baseline.failedDropRate}% | ${ep.baseline.neededFailLost} |
+| hard-drop failed+repeatable | ${ep.hardDrop.kept}% | ${ep.hardDrop.freed}% | ${ep.hardDrop.failedDropRate}% | ${ep.hardDrop.neededFailLost} |
+
+Hard-dropping every failed, repeatable, non-mutating call frees **+${(ep.hardDrop.freed - ep.baseline.freed).toFixed(1)} points** —
+and drops retention from ${ep.baseline.kept}% to ${ep.hardDrop.kept}% while losing ${ep.hardDrop.neededFailLost} needed outputs against the
+baseline's ${ep.baseline.neededFailLost}. A pure loss. The literature agrees: Reflexion (arXiv:2303.11366) and
+current context-engineering guidance keep failure feedback precisely so the model does not repeat a dead end.
+So the learned \`isError\` feature already does the job; blind-dropping failures would free almost nothing and
+cost retention. A sixth ranking-level idea tested on freed-at-retention, and the design holds.`;
 const cap = maybe('cap.ts');
 const mass = maybe('mass.ts');
 const inputs = maybe('inputs.ts');
@@ -792,7 +825,7 @@ anything. \`applyDecisions\` never touches prose, so what kompact leaves behind 
 verbatim tool calls and the user's and assistant's own words — not a narrative.
 \`maxPasses\` is the backstop for that, and its value is a judgement: the floor
 would allow more.
-${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}${skillPayoffSection}${cacheSection}${archiveSection}${offlineSection}${featureSearchSection}${costAwareSection}${reuseTargetSection}${operatingPointSection}${codexSection}
+${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}${skillPayoffSection}${cacheSection}${archiveSection}${offlineSection}${featureSearchSection}${costAwareSection}${reuseTargetSection}${operatingPointSection}${codexSection}${errorPolicySection}
 `;
 
 const snapshotBody = `# Snapshot — one machine's own transcripts
