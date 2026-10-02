@@ -1,0 +1,14 @@
+{
+  "calls": 2239,
+  "shipped": {
+    "auc": 0.789,
+    "kept": 79.4,
+    "freed": 22.2
+  },
+  "withNovelty": {
+    "auc": 0.789,
+    "kept": 77.3,
+    "freed": 19.6
+  },
+  "verdict": "DO NOT IMPLEMENT: novelty moves AUC +0.000 but freed@retention -2.6% at -2.0% retention — it does not Pareto-beat the shipped thirteen on the real objective. Same shape as Study 12's log-size: an AUC screen is necessary, not sufficient. The content lead is closed."
+}

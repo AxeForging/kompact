@@ -739,6 +739,30 @@ large encoded blobs that would be worth dropping are truncated out of the stored
 them, and what it does flag is small and partly already captured by the size features (corr ${cmp.correlation.toFixed(2)}). The honest
 test is a gzip-ratio column in \`eval/extract-labels.ts\` (which holds the raw output), refit and judged on
 freed@retention. Not worth that refit on this evidence — recorded so the idea is not re-tried blind.`;
+
+// Study 24 (content refit): Study 22's novelty feature, refit and judged on freed@retention.
+const crf = JSON.parse(readFileSync(join(here, 'fixtures', 'content-refit.json'), 'utf8')) as {
+  shipped: { auc: number; kept: number; freed: number };
+  withNovelty: { auc: number; kept: number; freed: number };
+};
+const contentRefitSection = `
+## Does the content feature survive a refit? — \`eval/content-refit.ts\`
+
+Study 22's lexical novelty passed the cheap screen (AUC 0.707 on its own), so the honest decision is a refit judged
+on freed@retention — not AUC, per Study 12. Both heads are refit leave-one-session-out, with and without novelty,
+and the real \`decideAll\` is run on the out-of-fold scores:
+
+| feature set | LOSO AUC | kept/needed | freed |
+| --- | --- | --- | --- |
+| shipped-13 (refit) | ${crf.shipped.auc} | ${crf.shipped.kept}% | ${crf.shipped.freed}% |
+| + lexical novelty | ${crf.withNovelty.auc} | ${crf.withNovelty.kept}% | ${crf.withNovelty.freed}% |
+
+(Both rows are LOSO refits at 6k steps, so shipped-13 sits near but not at the committed weights' 20.7%/85.4%
+operating point — only the within-table delta is the comparison.) Adding novelty moves AUC by
+${(crf.withNovelty.auc - crf.shipped.auc).toFixed(3)} and freed@retention **down** (${(crf.withNovelty.freed - crf.shipped.freed).toFixed(1)} points, at
+${(crf.withNovelty.kept - crf.shipped.kept).toFixed(1)} points retention): the 0.707 it scored alone was redundant with size and age once
+combined. **Not implemented.** That closes the last open lead from Studies 20–23 — a seventh ranking-level idea
+tested on freed@retention and declined. The remaining lever stays a second operator's corpus (Study 16).`;
 const cap = maybe('cap.ts');
 const mass = maybe('mass.ts');
 const inputs = maybe('inputs.ts');
@@ -912,7 +936,7 @@ anything. \`applyDecisions\` never touches prose, so what kompact leaves behind 
 verbatim tool calls and the user's and assistant's own words — not a narrative.
 \`maxPasses\` is the backstop for that, and its value is a judgement: the floor
 would allow more.
-${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}${skillPayoffSection}${cacheSection}${archiveSection}${offlineSection}${featureSearchSection}${costAwareSection}${reuseTargetSection}${operatingPointSection}${codexSection}${errorPolicySection}${recencySection}${conformalSection}${contentSection}${compressibilitySection}
+${proseSection}${proseExtractiveSection}${flowSection}${discoverySection}${skillPayoffSection}${cacheSection}${archiveSection}${offlineSection}${featureSearchSection}${costAwareSection}${reuseTargetSection}${operatingPointSection}${codexSection}${errorPolicySection}${recencySection}${conformalSection}${contentSection}${compressibilitySection}${contentRefitSection}
 `;
 
 const snapshotBody = `# Snapshot — one machine's own transcripts

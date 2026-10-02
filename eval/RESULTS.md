@@ -828,3 +828,20 @@ large encoded blobs that would be worth dropping are truncated out of the stored
 them, and what it does flag is small and partly already captured by the size features (corr -0.35). The honest
 test is a gzip-ratio column in `eval/extract-labels.ts` (which holds the raw output), refit and judged on
 freed@retention. Not worth that refit on this evidence — recorded so the idea is not re-tried blind.
+## Does the content feature survive a refit? — `eval/content-refit.ts`
+
+Study 22's lexical novelty passed the cheap screen (AUC 0.707 on its own), so the honest decision is a refit judged
+on freed@retention — not AUC, per Study 12. Both heads are refit leave-one-session-out, with and without novelty,
+and the real `decideAll` is run on the out-of-fold scores:
+
+| feature set | LOSO AUC | kept/needed | freed |
+| --- | --- | --- | --- |
+| shipped-13 (refit) | 0.789 | 79.4% | 22.2% |
+| + lexical novelty | 0.789 | 77.3% | 19.6% |
+
+(Both rows are LOSO refits at 6k steps, so shipped-13 sits near but not at the committed weights' 20.7%/85.4%
+operating point — only the within-table delta is the comparison.) Adding novelty moves AUC by
+0.000 and freed@retention **down** (-2.6 points, at
+-2.1 points retention): the 0.707 it scored alone was redundant with size and age once
+combined. **Not implemented.** That closes the last open lead from Studies 20–23 — a seventh ranking-level idea
+tested on freed@retention and declined. The remaining lever stays a second operator's corpus (Study 16).
